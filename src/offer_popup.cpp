@@ -658,6 +658,13 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
     // The Kenshi_EditBox skin draws a caption as well as its text, and a stale
     // caption showed through behind the body. Both are set every time.
     SafeSetCaption(g_text, "");
+
+    // Play standard Kenshi notification chime when offer popup appears
+    if (ou != NULL)
+    {
+        TR_TRY { ou->playNotification(NULL); }
+        TR_CATCH { }
+    }
     SafeSetOnlyText(g_text, npcLine.c_str());
 
     if (haveAccept)

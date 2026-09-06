@@ -178,6 +178,7 @@ void CopyName(Character* character, char* buffer, size_t size)
 void PostMessage(const char* text, bool queued)
 {
     ou->showPlayerAMessage(std::string(text), queued);
+    ou->playNotification(NULL);
 }
 
 // Takes cats out of the player's purse. Money lives on the squad leader, and
@@ -672,11 +673,11 @@ bool SettlePrice(Character* character, int cats, const std::string& name)
 
     if (!ChargePlayer(cats))
     {
-        TellPlayer(name + ": could not pay " + IntToString(cats) + " cats", true);
+        TellPlayer(name + ": no tienes suficientes fondos (" + IntToString(cats) + " cats)", true);
         return false;
     }
 
-    TellPlayer(name + ": paid " + IntToString(cats) + " cats", false);
+    TellPlayer(name + ": pagaste " + IntToString(cats) + " cats", false);
     return true;
 }
 } // namespace totalrecruit
