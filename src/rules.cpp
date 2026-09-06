@@ -6,6 +6,7 @@
 #include "log.h"
 
 #include <sstream>
+#include <map>
 
 namespace totalrecruit
 {
@@ -240,6 +241,48 @@ bool SafePlayerMoney(Character* leader, int* out)
 {
     TR_TRY { *out = leader->getMoney(); return true; }
     TR_CATCH { return false; }
+}
+
+// How long this captive has been held, in in-game hours.
+//
+// The engine does not record when captivity began, so the first sighting is
+// taken as the start. That undercounts a prisoner taken before the plugin ever
+// saw them, which errs towards making the player wait -- the safe direction.
+// It lives only in memory: a reload restarts the clock rather than freeing
+// someone the player never actually held.
+std::map<Character*, double> g_heldSince;
+
+bool SafeGameHours(double* out)
+{
+    TR_TRY
+    {
+        if (ou == NULL)
+        {
+            return false;
+        }
+        *out = ou->getTimeStamp_inGameHours().getTotalHours();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+float HoursHeld(Character* character)
+{
+    double now = 0.0;
+    if (!SafeGameHours(&now))
+    {
+        return 0.0f;
+    }
+
+    std::map<Character*, double>::iterator found = g_heldSince.find(character);
+    if (found == g_heldSince.end())
+    {
+        g_heldSince[character] = now;
+        return 0.0f;
+    }
+
+    const double held = now - found->second;
+    return (held > 0.0) ? (float)held : 0.0f;
 }
 
 // Faction relation runs roughly -100..100. It only ever shifts the price, and
@@ -482,6 +525,56 @@ std::string DescribeOffer(Character* character, const Verdict& verdict)
         return verdict.viaRescue
                    ? name + " te debe la vida y desea unirse a tu grupo."
                    : name + " desea unirse a tu grupo.";
+    }
+}
+
+// Several lines per personality so a prisoner shouting twice does not repeat
+// himself word for word. Kept short: this is a bubble the player reads in
+// passing, not a speech.
+std::string HailLine(Character* character)
+{
+    Traits traits;
+    if (character == NULL || !SafeReadTraits(character, &traits))
+    {
+        return "\xc2\xa1" "Eh! Hablemos.";
+    }
+
+    // Cheap rotation off the pointer, so the same NPC keeps his own flavour of
+    // line while different ones in a row do not all say the same thing.
+    const unsigned int pick =
+        (unsigned int)((reinterpret_cast<size_t>(character) >> 4) % 3);
+
+    switch (traits.personality)
+    {
+    case PT_FEARFUL:
+        if (pick == 0) return "\xc2\xa1" "Espera! Podemos hablar, \xc2\xbfs\xc3\xad?";
+        if (pick == 1) return "No me dejes aqu\xc3\xad... escucha un momento.";
+        return "Por favor. Solo escucha lo que tengo que decir.";
+
+    case PT_HONORABLE:
+        if (pick == 0) return "Est\xc3\xa1 bien. Te escucho.";
+        if (pick == 1) return "Has ganado. Habla y te oir\xc3\xa9.";
+        return "Ya no tengo nada que probar. Di lo tuyo.";
+
+    case PT_MANIACAL:
+        if (pick == 0) return "\xc2\xa1" "Ja! Ven aqu\xc3\xad, quiero hablar contigo.";
+        if (pick == 1) return "\xc2\xa1" "Eh, t\xc3\xba! S\xc3\xad, t\xc3\xba. Acerca" "te.";
+        return "Esto se puso interesante. Hablemos.";
+
+    case PT_COLD_CRUEL:
+        if (pick == 0) return "Tenemos algo que discutir. Ven.";
+        if (pick == 1) return "Acerca" "te. No voy a gritarlo.";
+        return "Hablemos, antes de que cambie de idea.";
+
+    case PT_BRAVE:
+        if (pick == 0) return "\xc2\xa1" "Eh! Ven, quiero hablar.";
+        if (pick == 1) return "No me voy a quedar callado. Hablemos.";
+        return "Ven aqu\xc3\xad. Tengo algo que proponerte.";
+
+    default:
+        if (pick == 0) return "\xc2\xa1" "Eh! Hablemos.";
+        if (pick == 1) return "Oye... ven un momento.";
+        return "\xc2\xbf" "Tienes un momento? Quiero hablar.";
     }
 }
 
@@ -734,6 +827,21 @@ Verdict Evaluate(Character* character)
         return verdict;
     }
 
+    // Easy mode, the healing half: someone patched all the way back up owes the
+    // player whether or not the engine happened to credit the first aid. The
+    // applyFirstAid hook only fires while the player's own medic is working, so
+    // a prisoner healed by a bed or by time would otherwise slip through.
+    if (config.rescueEnabled && config.prices.easyHoursCaged > 0.0f &&
+        !condition.wounded && !condition.starving && condition.health >= 1.0f &&
+        IsInPlayerCage(character))
+    {
+        verdict.willJoin = true;
+        verdict.viaRescue = true;
+        verdict.currency = Currency_Care;
+        verdict.reason = "sano gracias a ti, y quiere unirse";
+        return verdict;
+    }
+
     // Route C -- surrender. Someone you beat, still on their feet but with the
     // fight gone, can yield rather than be cut down.
     if (config.surrenderEnabled && !animal && IsSurrendered(character))
@@ -769,6 +877,21 @@ Verdict Evaluate(Character* character)
 
     bool unique = false;
     SafeIsUnique(character, &unique);
+
+    // Easy mode: time alone breaks anyone. Whoever they are and whatever they
+    // would normally charge, long enough in a cage is its own argument -- and
+    // the player only has to wait, not work out what this particular NPC wants.
+    if (config.prices.easyHoursCaged > 0.0f)
+    {
+        const float held = HoursHeld(character);
+        if (held >= config.prices.easyHoursCaged)
+        {
+            verdict.willJoin = true;
+            verdict.currency = Currency_Submission;
+            verdict.reason = "lleva bastante encerrado y se rinde";
+            return verdict;
+        }
+    }
 
     verdict.currency = ChooseCurrency(traits, condition, animal);
 

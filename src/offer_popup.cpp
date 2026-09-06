@@ -168,6 +168,7 @@ MyGUI::ImageBox* SafeCreatePortrait(MyGUI::Widget* parent, int left, int top, in
     TR_CATCH { return NULL; }
 }
 
+
 // createPortraitImage hands back a PortraitImage that knows how to paint itself
 // into an ImageBox, which is exactly what the squad bar does with it.
 void LoadPortrait(Character* npc, int* outStage)
@@ -439,6 +440,7 @@ bool Build()
 
     g_portrait = SafeCreatePortrait(g_client, kMargin, kMargin, portraitSide);
 
+
     const char* buttonSkins[2] = { "Kenshi_Button1", "Button" };
     for (int i = 0; i < 2 && g_accept == NULL; ++i)
     {
@@ -551,6 +553,9 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
     // the body, where there is room for a full name.
     SafeSetCaption(g_root, "Reclutamiento");
     SafeLoadPortrait(npc);
+    // The Kenshi_EditBox skin draws a caption as well as its text, and a stale
+    // caption showed through behind the body. Both are set every time.
+    SafeSetCaption(g_text, "");
     SafeSetOnlyText(g_text, npcLine.c_str());
     // An empty accept label means there is nothing to agree to, so that button
     // is hidden and the decline one widens to fill the row.

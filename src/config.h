@@ -40,6 +40,10 @@ enum Preset
 // cannot be paid is never a refusal, only a "not yet" with a reason attached.
 struct Prices
 {
+    // Easy mode: hours a captive must simply be held before they give in,
+    // regardless of who they are. 0 disables it and leaves the per-archetype
+    // prices as the only route.
+    float easyHoursCaged;
     // Route B: cats demanded, scaled from the NPC's rough level.
     int catsPerLevel;
     int catsMinimum;
@@ -63,7 +67,8 @@ struct Prices
     float factionWeight;
 
     Prices()
-        : catsPerLevel(40),
+        : easyHoursCaged(12.0f),
+          catsPerLevel(40),
           catsMinimum(250),
           hungerThreshold(0.0f),
           woundedThreshold(0.5f),
@@ -119,6 +124,9 @@ struct Config
     // memory at a fixed offset, so it is a switch: if a game update moves the
     // field, turning this off restores plain behaviour without a new build.
     bool resolveCageOccupant;
+    // Captives call out when they are ready, so the player learns it without
+    // right-clicking on spec.
+    bool hailWhenReady;
 
     int preset; // Preset enum
     // Route A: recruit someone you saved from dying. The one route no existing
@@ -147,6 +155,7 @@ struct Config
           probeOnClick(false),
           showTalkCursor(true),
           resolveCageOccupant(true),
+          hailWhenReady(true),
           preset(Preset_Balanced),
           rescueEnabled(true),
           rescuePlayerOnly(true),

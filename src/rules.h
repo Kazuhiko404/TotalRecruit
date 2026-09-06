@@ -82,4 +82,10 @@ std::string SpeakAcceptLine(const Verdict& verdict);
 // repeating those words in the window wastes the only line it has -- this
 // states what is happening and why instead.
 std::string DescribeOffer(Character* character, const Verdict& verdict);
+
+// A short line a captive calls out when they are ready to be recruited, so the
+// player learns it without having to right-click on spec. Varies by personality
+// -- a fearful prisoner pleads, a proud one concedes grudgingly -- and picks
+// from several so the same prisoner does not repeat himself word for word.
+std::string HailLine(Character* character);
 } // namespace totalrecruit

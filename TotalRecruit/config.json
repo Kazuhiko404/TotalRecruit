@@ -8,6 +8,7 @@
   "probeOnClick": false,
   "showTalkCursor": true,
   "resolveCageOccupant": true,
+  "hailWhenReady": true,
 
   "preset": 1,
 
@@ -17,6 +18,7 @@
   "surrenderEnabled": true,
   "animalsEnabled": true,
 
+  "easyHoursCaged": 12.0,
   "catsPerLevel": 40,
   "catsMinimum": 250,
   "hungerThreshold": 0.0,

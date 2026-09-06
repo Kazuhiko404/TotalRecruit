@@ -179,6 +179,7 @@ void LoadConfig(const std::string& modDirectory)
     ReadBool(text, "probeOnClick", &g_config.probeOnClick);
     ReadBool(text, "showTalkCursor", &g_config.showTalkCursor);
     ReadBool(text, "resolveCageOccupant", &g_config.resolveCageOccupant);
+    ReadBool(text, "hailWhenReady", &g_config.hailWhenReady);
 
     ReadInt(text, "preset", &g_config.preset);
     ReadBool(text, "rescueEnabled", &g_config.rescueEnabled);
@@ -187,6 +188,7 @@ void LoadConfig(const std::string& modDirectory)
     ReadBool(text, "surrenderEnabled", &g_config.surrenderEnabled);
     ReadBool(text, "animalsEnabled", &g_config.animalsEnabled);
 
+    ReadFloat(text, "easyHoursCaged", &g_config.prices.easyHoursCaged);
     ReadInt(text, "catsPerLevel", &g_config.prices.catsPerLevel);
     ReadInt(text, "catsMinimum", &g_config.prices.catsMinimum);
     ReadFloat(text, "hungerThreshold", &g_config.prices.hungerThreshold);

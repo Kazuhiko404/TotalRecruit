@@ -1,6 +1,7 @@
 #include "common.h"
 #include "frame_tick.h"
 #include "rescue.h"
+#include "hail.h"
 #include "log.h"
 
 #include <kenshi/gui/ForgottenGUI.h>
@@ -15,7 +16,7 @@ void (*g_forgottenGuiUpdate_orig)(ForgottenGUI*) = NULL;
 // the game's GUI update down with it.
 void SafeTick()
 {
-    TR_TRY { RescueTick(); }
+    TR_TRY { RescueTick(); HailTick(); }
     TR_CATCH { }
 }
 

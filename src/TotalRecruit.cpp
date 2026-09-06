@@ -25,6 +25,7 @@
 #include "settings_panel.h"
 #include "offer_popup.h"
 #include "cursor_hint.h"
+#include "hail.h"
 #include "spawn_panel.h"
 
 
@@ -167,6 +168,7 @@ __declspec(dllexport) void startPlugin()
 
     // Makes the mod visible: the cursor tells the player who can be talked to.
     const bool cursorOk = InstallCursorHint();
+    InstallHailing();
 
     if (!overlayOk && !inputOk)
     {
@@ -184,6 +186,7 @@ __declspec(dllexport) void startPlugin()
 __declspec(dllexport) void stopPlugin()
 {
     using namespace totalrecruit;
+    ShutdownHailing();
     ShutdownCursorHint();
     ShutdownOfferPopup();
     ShutdownSettingsPanel();
