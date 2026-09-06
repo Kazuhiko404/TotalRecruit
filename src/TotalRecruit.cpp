@@ -14,6 +14,7 @@
 //   * A GUI-update hook completes recruits a frame after the conversation ends.
 //   * An InputHandler hook opens the spawn panel on Shift+K.
 
+
 #include "common.h"
 #include "config.h"
 #include "log.h"
@@ -22,7 +23,7 @@
 #include "dialogue_bridge.h"
 #include "rescue.h"
 #include "frame_tick.h"
-#include "settings_panel.h"
+#include "mod_hub_integration.h"
 #include "offer_popup.h"
 #include "cursor_hint.h"
 #include "hail.h"
@@ -96,7 +97,7 @@ void InputHandler_keyDownEvent_hook(InputHandler* thisptr, OIS::KeyCode key)
 
     if (ctrlHeld)
     {
-        ToggleSettingsPanel();
+        // Settings are in Mod Hub
     }
     else if (shiftHeld)
     {
@@ -169,6 +170,7 @@ __declspec(dllexport) void startPlugin()
     // Makes the mod visible: the cursor tells the player who can be talked to.
     const bool cursorOk = InstallCursorHint();
     InstallHailing();
+    InitModHub();
 
     if (!overlayOk && !inputOk)
     {
@@ -176,20 +178,17 @@ __declspec(dllexport) void startPlugin()
         return;
     }
 
-    LogInfo(std::string("Subsystems: dialogue=") + (dialogueOk ? "on" : "off") +
-            " rescue=" + (rescueOk ? "on" : "off") +
-            " tick=" + (tickOk ? "on" : "off") +
-            " cursor=" + (cursorOk ? "on" : "off") + ".");
-    LogInfo("Ready. Right-click an NPC to recruit; Ctrl+K settings, Shift+K spawn panel.");
+    LogInfo("startPlugin complete.");
 }
 
 __declspec(dllexport) void stopPlugin()
 {
     using namespace totalrecruit;
+    LogInfo("stopPlugin called.");
+
     ShutdownHailing();
     ShutdownCursorHint();
     ShutdownOfferPopup();
-    ShutdownSettingsPanel();
     ShutdownFrameTick();
     ShutdownRescueHooks();
     ShutdownDialogueBridge();

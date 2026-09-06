@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Release|x64">
@@ -71,7 +71,7 @@
     <ClCompile Include="src\dialogue_bridge.cpp" />
     <ClCompile Include="src\rescue.cpp" />
     <ClCompile Include="src\frame_tick.cpp" />
-    <ClCompile Include="src\settings_panel.cpp" />
+    <ClCompile Include="src\mod_hub_integration.cpp" />
     <ClCompile Include="src\surrender.cpp" />
     <ClCompile Include="src\dialogue_authoring.cpp" />
     <ClCompile Include="src\offer_popup.cpp" />
@@ -93,7 +93,7 @@
     <ClInclude Include="src\dialogue_bridge.h" />
     <ClInclude Include="src\rescue.h" />
     <ClInclude Include="src\frame_tick.h" />
-    <ClInclude Include="src\settings_panel.h" />
+    <ClInclude Include="src\mod_hub_integration.h" />
     <ClInclude Include="src\surrender.h" />
     <ClInclude Include="src\dialogue_authoring.h" />
     <ClInclude Include="src\offer_popup.h" />
