@@ -419,7 +419,7 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
         switch (traits.personality)
         {
         case PT_HONORABLE:
-            return "Me venciste con honor, pero eso no me hace tuyo. Todav\xc3\xada no.";
+            return "Me venciste con honor, pero eso no me hace tuyo. Todav\xc3\xad" "a no.";
         case PT_MANIACAL:
             return "\xc2\xa1""Adelante! Haz lo peor que puedas, solo me da risa.";
         case PT_FEARFUL:
@@ -437,11 +437,11 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
         case OT_TRADER:
             return "Hablemos de negocios. Yo no trabajo gratis.";
         case OT_SLAVER:
-            return "\xc2\xbfMe quieres? C\xc3\xb3mprame, igual que yo te comprar\xc3\xada.";
+            return "\xc2\xbfMe quieres? C\xc3\xb3mprame, igual que yo te comprar\xc3\xad" "a.";
         default:
             return (traits.personality == PT_FEARFUL)
                        ? "Solo quiero salir de aqu\xc3\xad. \xc2\xbfMe haces que valga la pena?"
-                       : "Sigo a quien pague. \xc2\xbfEst\xc3\xa1s pagando?";
+                       : "Sigo a quien pague. \xc2\xbf" "Est\xc3\xa1" "s pagando?";
         }
     }
 }
@@ -770,7 +770,7 @@ Verdict Evaluate(Character* character)
         if (cared)
         {
             verdict.willJoin = true;
-            verdict.reason = animal ? "alimentado y curado: conf\xc3\xada en ti"
+            verdict.reason = animal ? "alimentado y curado: conf\xc3\xad" "a en ti"
                                     : "alimentado y curado: se unir\xc3\xa1";
         }
         else if (condition.starving && condition.wounded)
