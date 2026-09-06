@@ -188,5 +188,10 @@ const int kHailRepeatsMax = 10;
 // the permissive defaults in place and is reported, never fatal.
 void LoadConfig(const std::string& modDirectory);
 
+// Saves the active config back to config.json.
+bool SaveConfig(const std::string& modDirectory = "");
+
+std::string GetModDirectory();
+
 Config& GetConfig();
 } // namespace totalrecruit

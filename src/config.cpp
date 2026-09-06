@@ -11,6 +11,7 @@ namespace totalrecruit
 namespace
 {
 Config g_config;
+std::string g_modDirectory;
 
 std::string Slurp(const std::string& path)
 {
@@ -232,7 +233,95 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.hailRepeatHours, kHailRepeatHoursMin, kHailRepeatHoursMax);
     ClampInt(&g_config.hailRepeats, kHailRepeatsMin, kHailRepeatsMax);
 
+    g_modDirectory = modDirectory;
     LogInfo("Loaded config from " + path);
+}
+
+std::string GetModDirectory()
+{
+    return g_modDirectory;
+}
+
+bool SaveConfig(const std::string& modDirectory)
+{
+    std::string dir = modDirectory.empty() ? g_modDirectory : modDirectory;
+    if (dir.empty())
+    {
+        return false;
+    }
+
+    const std::string path = dir + "\\config.json";
+    std::ofstream file(path.c_str(), std::ios::trunc);
+    if (!file.is_open())
+    {
+        LogError("Failed to open " + path + " for writing config.");
+        return false;
+    }
+
+    file << "{\n";
+    file << "  \"enabled\": " << (g_config.enabled ? "true" : "false") << ",\n";
+    file << "  \"showRecruitButton\": " << (g_config.showRecruitButton ? "true" : "false") << ",\n";
+    file << "  \"autoRecruit\": " << (g_config.autoRecruit ? "true" : "false") << ",\n";
+    file << "  \"recruitLabel\": \"" << g_config.recruitLabel << "\",\n";
+    file << "  \"maxSpawnedCharacters\": " << g_config.maxSpawnedCharacters << ",\n";
+    file << "  \"panelToggleKey\": " << g_config.panelToggleKey << ",\n";
+    file << "  \"probeOnClick\": " << (g_config.probeOnClick ? "true" : "false") << ",\n";
+    file << "  \"showTalkCursor\": " << (g_config.showTalkCursor ? "true" : "false") << ",\n";
+    file << "  \"resolveCageOccupant\": " << (g_config.resolveCageOccupant ? "true" : "false") << ",\n";
+    file << "  \"hailWhenReady\": " << (g_config.hailWhenReady ? "true" : "false") << ",\n";
+    file << "  \"hailFirstHours\": " << g_config.hailFirstHours << ",\n";
+    file << "  \"hailRepeatHours\": " << g_config.hailRepeatHours << ",\n";
+    file << "  \"hailRepeats\": " << g_config.hailRepeats << ",\n\n";
+
+    file << "  \"preset\": " << g_config.preset << ",\n\n";
+
+    file << "  \"rescueEnabled\": " << (g_config.rescueEnabled ? "true" : "false") << ",\n";
+    file << "  \"rescuePlayerOnly\": " << (g_config.rescuePlayerOnly ? "true" : "false") << ",\n";
+    file << "  \"captivityEnabled\": " << (g_config.captivityEnabled ? "true" : "false") << ",\n";
+    file << "  \"surrenderEnabled\": " << (g_config.surrenderEnabled ? "true" : "false") << ",\n";
+    file << "  \"animalsEnabled\": " << (g_config.animalsEnabled ? "true" : "false") << ",\n\n";
+
+    file << "  \"easyHoursCaged\": " << g_config.prices.easyHoursCaged << ",\n";
+    file << "  \"catsPerLevel\": " << g_config.prices.catsPerLevel << ",\n";
+    file << "  \"catsMinimum\": " << g_config.prices.catsMinimum << ",\n";
+    file << "  \"hungerThreshold\": " << g_config.prices.hungerThreshold << ",\n";
+    file << "  \"woundedThreshold\": " << g_config.prices.woundedThreshold << ",\n";
+    file << "  \"hoursCagedForProud\": " << g_config.prices.hoursCagedForProud << ",\n";
+    file << "  \"uniqueExtraHours\": " << g_config.prices.uniqueExtraHours << ",\n";
+    file << "  \"fearfulMultiplier\": " << g_config.prices.fearfulMultiplier << ",\n";
+    file << "  \"braveMultiplier\": " << g_config.prices.braveMultiplier << ",\n";
+    file << "  \"factionWeight\": " << g_config.prices.factionWeight << ",\n\n";
+
+    file << "  \"dialoguePackage\": \"" << g_config.dialogue.package << "\",\n";
+    file << "  \"dialogueRescue\": \"" << g_config.dialogue.rescue << "\",\n";
+    file << "  \"dialogueCaptive\": \"" << g_config.dialogue.captive << "\",\n";
+    file << "  \"dialogueAcceptKey\": \"" << g_config.dialogue.acceptKey << "\",\n\n";
+
+    file << "  \"exclude\": {\n";
+    file << "    \"dead\": " << (g_config.exclude.dead ? "true" : "false") << ",\n";
+    file << "    \"unconscious\": " << (g_config.exclude.unconscious ? "true" : "false") << ",\n";
+    file << "    \"animals\": " << (g_config.exclude.animals ? "true" : "false") << ",\n";
+    file << "    \"sameFaction\": " << (g_config.exclude.sameFaction ? "true" : "false") << ",\n";
+    file << "    \"factions\": [";
+    for (size_t i = 0; i < g_config.exclude.factions.size(); ++i)
+    {
+        if (i > 0) file << ", ";
+        file << "\"" << g_config.exclude.factions[i] << "\"";
+    }
+    file << "],\n";
+    file << "    \"characterNames\": [";
+    for (size_t i = 0; i < g_config.exclude.characterNames.size(); ++i)
+    {
+        if (i > 0) file << ", ";
+        file << "\"" << g_config.exclude.characterNames[i] << "\"";
+    }
+    file << "]\n";
+    file << "  }\n";
+    file << "}\n";
+
+    file.close();
+    LogInfo("Saved config to " + path);
+    return true;
 }
 
 Config& GetConfig()

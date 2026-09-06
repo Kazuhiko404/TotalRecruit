@@ -54,20 +54,20 @@ void BuildGeneralPage()
 {
     g_panel->clearPage(kCatGeneral);
 
-    g_panel->setLine("How strict recruiting is", "", kCatGeneral, false, true);
+    g_panel->setLine("Dificultad y balance de reclutamiento", "", kCatGeneral, false, true);
     DataPanelLine_DropBox* preset =
-        g_panel->setLineDropBox("Preset", kCatGeneral, &g_presetValue, false, 0.7f);
+        g_panel->setLineDropBox("Perfil (Preset)", kCatGeneral, &g_presetValue, false, 0.7f);
     if (preset != NULL)
     {
-        preset->addAValue("Cheat - anyone, instantly", Preset_Cheat);
-        preset->addAValue("Balanced - each NPC has a price", Preset_Balanced);
-        preset->addAValue("Vanilla+ - price shifts with faction", Preset_VanillaPlus);
+        preset->addAValue("Sin limites (Cheat) - Cualquiera, inmediato", Preset_Cheat);
+        preset->addAValue("Equilibrado (Balanced) - Cada NPC exige su precio", Preset_Balanced);
+        preset->addAValue("Vanilla+ - Precios escalan con faccion y honor", Preset_VanillaPlus);
         preset->setSelectedValue(g_presetValue);
     }
 
     g_panel->addSpace(kCatGeneral, 0.5f);
-    g_panel->setLineCheckbox("Show the recruit button", &GetConfig().showRecruitButton, kCatGeneral);
-    g_panel->setLineCheckbox("Log NPC traits on click (diagnostic)",
+    g_panel->setLineCheckbox("Mostrar boton de reclutar en interfaz", &GetConfig().showRecruitButton, kCatGeneral);
+    g_panel->setLineCheckbox("Registrar rasgos en log al hacer clic (Diagnostico)",
                              &GetConfig().probeOnClick, kCatGeneral);
 }
 
@@ -75,25 +75,25 @@ void BuildRoutesPage()
 {
     g_panel->clearPage(kCatRoutes);
 
-    g_panel->setLine("Rescue", "", kCatRoutes, false, true);
-    g_panel->setLineCheckbox("Recruit those you save from dying",
+    g_panel->setLine("Rescate y Primeros Auxilios", "", kCatRoutes, false, true);
+    g_panel->setLineCheckbox("Permitir reclutar a quienes salves de morir",
                              &GetConfig().rescueEnabled, kCatRoutes);
-    g_panel->setLineCheckbox("Only your own medics count",
+    g_panel->setLineCheckbox("Solo cuentan curaciones de tus propios medicos",
                              &GetConfig().rescuePlayerOnly, kCatRoutes);
 
     g_panel->addSpace(kCatRoutes, 0.5f);
-    g_panel->setLine("Captivity", "", kCatRoutes, false, true);
-    g_panel->setLineCheckbox("Recruit prisoners in your cages",
+    g_panel->setLine("Cautiverio (Jaulas)", "", kCatRoutes, false, true);
+    g_panel->setLineCheckbox("Permitir reclutar prisioneros en tus jaulas",
                              &GetConfig().captivityEnabled, kCatRoutes);
 
     g_panel->addSpace(kCatRoutes, 0.5f);
-    g_panel->setLine("Surrender", "", kCatRoutes, false, true);
-    g_panel->setLineCheckbox("Beaten enemies can yield to you",
+    g_panel->setLine("Rendicion en Combate", "", kCatRoutes, false, true);
+    g_panel->setLineCheckbox("Enemigos derrotados pueden suplicar unirse",
                              &GetConfig().surrenderEnabled, kCatRoutes);
 
     g_panel->addSpace(kCatRoutes, 0.5f);
-    g_panel->setLine("Animals", "", kCatRoutes, false, true);
-    g_panel->setLineCheckbox("Tame animals with food and care",
+    g_panel->setLine("Fauna y Animales", "", kCatRoutes, false, true);
+    g_panel->setLineCheckbox("Domesticar animales con comida y cuidados",
                              &GetConfig().animalsEnabled, kCatRoutes);
 }
 
@@ -102,50 +102,48 @@ void BuildPricesPage()
     g_panel->clearPage(kCatPrices);
     Prices& prices = GetConfig().prices;
 
-    g_panel->setLine("What they charge", "", kCatPrices, false, true);
+    g_panel->setLine("Costos monetarios (Cats)", "", kCatPrices, false, true);
 
     DataPanelLine_SliderEditable* line =
-        g_panel->setLineSliderEditable("Cats per level", kCatPrices, true, 0.0f, 500.0f,
+        g_panel->setLineSliderEditable("Cats por nivel de habilidad", kCatPrices, true, 0.0f, 500.0f,
                                        &g_catsPerLevel);
     if (line != NULL) line->setPrecision(0);
 
-    line = g_panel->setLineSliderEditable("Minimum cats", kCatPrices, true, 0.0f, 10000.0f,
+    line = g_panel->setLineSliderEditable("Precio minimo de soborno", kCatPrices, true, 0.0f, 10000.0f,
                                           &g_catsMinimum);
     if (line != NULL) line->setPrecision(0);
 
     g_panel->addSpace(kCatPrices, 0.5f);
-    g_panel->setLine("When they will listen", "", kCatPrices, false, true);
+    g_panel->setLine("Condiciones para escuchar ofertas", "", kCatPrices, false, true);
 
-    // 0 leaves it to the engine's own isReallyHungry; the raw field is not a
-    // 0..1 fraction, so the useful range runs well above 1.
-    line = g_panel->setLineSliderEditable("Extra hunger trigger (0 = engine)", kCatPrices,
+    line = g_panel->setLineSliderEditable("Nivel de hambre extra (0 = motor Kenshi)", kCatPrices,
                                           true, 0.0f, 10.0f, &prices.hungerThreshold);
     if (line != NULL) line->setPrecision(1);
 
-    line = g_panel->setLineSliderEditable("Wounds needed", kCatPrices, true, 0.0f, 1.0f,
+    line = g_panel->setLineSliderEditable("Gravedad de heridas requerida", kCatPrices, true, 0.0f, 1.0f,
                                           &prices.woundedThreshold);
     if (line != NULL) line->setPrecision(2);
 
-    line = g_panel->setLineSliderEditable("Hours caged (proud)", kCatPrices, true, 0.0f, 72.0f,
+    line = g_panel->setLineSliderEditable("Horas enjaulado (Orgullosos)", kCatPrices, true, 0.0f, 72.0f,
                                           &prices.hoursCagedForProud);
     if (line != NULL) line->setPrecision(0);
 
-    line = g_panel->setLineSliderEditable("Extra hours (unique)", kCatPrices, true, 0.0f, 168.0f,
+    line = g_panel->setLineSliderEditable("Horas extra (Personajes unicos)", kCatPrices, true, 0.0f, 168.0f,
                                           &prices.uniqueExtraHours);
     if (line != NULL) line->setPrecision(0);
 
     g_panel->addSpace(kCatPrices, 0.5f);
-    g_panel->setLine("Personality", "", kCatPrices, false, true);
+    g_panel->setLine("Influencia de personalidad", "", kCatPrices, false, true);
 
-    line = g_panel->setLineSliderEditable("Fearful pay less", kCatPrices, true, 0.1f, 2.0f,
+    line = g_panel->setLineSliderEditable("Miedosos cobran menos (Multiplicador)", kCatPrices, true, 0.1f, 2.0f,
                                           &prices.fearfulMultiplier);
     if (line != NULL) line->setPrecision(2);
 
-    line = g_panel->setLineSliderEditable("Brave pay more", kCatPrices, true, 0.1f, 4.0f,
+    line = g_panel->setLineSliderEditable("Valientes cobran mas (Multiplicador)", kCatPrices, true, 0.1f, 4.0f,
                                           &prices.braveMultiplier);
     if (line != NULL) line->setPrecision(2);
 
-    line = g_panel->setLineSliderEditable("Faction weight (Vanilla+)", kCatPrices, true, 0.0f, 2.0f,
+    line = g_panel->setLineSliderEditable("Peso de relacion con faccion", kCatPrices, true, 0.0f, 2.0f,
                                           &prices.factionWeight);
     if (line != NULL) line->setPrecision(2);
 }
@@ -157,14 +155,15 @@ void BuildPanel()
         return;
     }
 
-    g_panel = gui->createDatapanel(0.06f, 0.62f, 0.30f, 0.56f, true, "Window", true);
+    // Proporciones ampliadas para mejor legibilidad (ancho 0.44f, alto 0.72f)
+    g_panel = gui->createDatapanel(0.08f, 0.52f, 0.44f, 0.72f, true, "Window", true);
     if (g_panel == NULL)
     {
         return;
     }
 
-    g_panel->setCaption("TotalRecruit");
-    g_panel->setPanelName("TotalRecruit");
+    g_panel->setCaption("TotalRecruit - Configuracion");
+    g_panel->setPanelName("TotalRecruitConfig");
     g_panel->setLineSpacing(28.0f);
 
     BuildGeneralPage();
@@ -174,8 +173,8 @@ void BuildPanel()
     g_panel->showTabs(true);
     g_panel->changeCategory(kCatGeneral);
     g_panel->addTab(kCatGeneral, "General", "");
-    g_panel->addTab(kCatRoutes, "Routes", "");
-    g_panel->addTab(kCatPrices, "Prices", "");
+    g_panel->addTab(kCatRoutes, "Rutas", "");
+    g_panel->addTab(kCatPrices, "Precios", "");
 }
 
 void SafeBuildPanel()
@@ -232,6 +231,11 @@ void ToggleSettingsPanel()
         // Closing is the natural commit point for the values the widgets wrote
         // into their bound variables.
         PullPanelVarsToConfig();
+        std::string modDir = GetModDirectory();
+        if (!modDir.empty())
+        {
+            SaveConfig(modDir);
+        }
     }
 }
 
@@ -243,6 +247,11 @@ void ShutdownSettingsPanel()
     }
 
     PullPanelVarsToConfig();
+    std::string modDir = GetModDirectory();
+    if (!modDir.empty())
+    {
+        SaveConfig(modDir);
+    }
     SafeDestroyPanel();
     g_panel = NULL;
     g_visible = false;
