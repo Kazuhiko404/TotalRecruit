@@ -38,6 +38,9 @@ struct Verdict
     // Carried on the verdict so the spoken line and the reason cannot disagree
     // about how well the two of you get on.
     std::string band;
+    // Animals reach every route a person does, but they do not speak. Carried
+    // so the caller knows to draw a sound instead of a sentence.
+    bool isAnimal;
 
     Verdict()
         : willJoin(false),
@@ -46,7 +49,8 @@ struct Verdict
           cats(0),
           reason(),
           viaRescue(false),
-          viaCaptivity(false)
+          viaCaptivity(false),
+          isAnimal(false)
     {
     }
 };

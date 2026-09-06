@@ -385,7 +385,10 @@ bool ConfigureText()
         g_text->setEditWordWrap(true);
         g_text->setTextAlign(MyGUI::Align::Left | MyGUI::Align::Top);
         g_text->setNeedKeyFocus(false);
-        g_text->setNeedMouseFocus(false);
+        // The scrollbar below is useless without mouse focus: it draws, and no
+        // click ever reaches it. Text that overflows the tallest allowed window
+        // has to stay reachable rather than silently disappear.
+        g_text->setNeedMouseFocus(true);
         g_text->setVisibleVScroll(true);
         g_text->setVisibleHScroll(false);
         return true;
@@ -659,9 +662,36 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
     g_windowWidth = kBaseWidth;
     g_windowHeight = haveExtra ? kBaseHeightWithExtra : kBaseHeightNoExtra;
     
-    if (npcLine.length() > 60)
+    // Grow with the text instead of guessing once. The line runs beside the
+    // portrait, so it is much narrower than the window: about 48 characters,
+    // not 60. A long name -- "Iridescent Beak Thing" eats a fifth of a line on
+    // its own -- was pushing the last sentence below the frame and clipping it.
     {
-        g_windowHeight += ((npcLine.length() - 60) / 50 + 1) * 24;
+        const int kCharsPerLine = 48;
+        const int kLineHeight = 22;
+        const int kLinesThatFit = 4;
+
+        int lines = (int)(npcLine.length() / kCharsPerLine) + 1;
+        // Author-written newlines cost a line each on top of the wrapping.
+        for (size_t i = 0; i < npcLine.size(); ++i)
+        {
+            if (npcLine[i] == '\n')
+            {
+                ++lines;
+            }
+        }
+
+        if (lines > kLinesThatFit)
+        {
+            g_windowHeight += (lines - kLinesThatFit) * kLineHeight;
+        }
+
+        // A window taller than the screen is its own kind of clipped.
+        const int kMaxHeight = 620;
+        if (g_windowHeight > kMaxHeight)
+        {
+            g_windowHeight = kMaxHeight;
+        }
     }
 
     if (!Build())

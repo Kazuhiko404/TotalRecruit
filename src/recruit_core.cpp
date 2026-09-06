@@ -311,7 +311,10 @@ bool PresentOffer(Character* character, const Verdict& verdict, const std::strin
     // will not join and there is no remedy to offer, the speech bubble has
     // already said everything -- repeating it in a box with a single dismiss
     // button is noise the player has to click away.
-    if (!verdict.willJoin && extraLabel.empty())
+    // An animal's bubble is a noise, not an explanation, so the window is the
+    // only place a refusal can actually say why. People keep the old rule:
+    // their bubble already said it, and a box with one dismiss button is noise.
+    if (!verdict.willJoin && extraLabel.empty() && !verdict.isAnimal)
     {
         return false;
     }
@@ -580,11 +583,16 @@ void AttemptRecruit(Character* character)
         return;
     }
 
-    // No window at all: fall back to acting on the click itself rather than
-    // leaving the player with nothing.
+    // No window. This used to recruit outright when the verdict was yes, which
+    // is the same defect the rescue route had: the squad changed with nobody
+    // agreeing to it, and from the player's side it looks like the popup simply
+    // never appeared. Say what happened instead, and log why the window failed
+    // -- silence here is what made this hard to see.
     if (verdict.willJoin)
     {
-        CompleteOffer(character, true);
+        LogError("Offer window would not open for " + name +
+                 "; not recruiting without a confirmation.");
+        TellPlayer(name + ": " + verdict.reason, false);
     }
     else
     {

@@ -518,6 +518,27 @@ const char* CurrencyName(Currency currency)
 // open the same way, without the mod author writing a branch for each pairing.
 std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
 {
+    // A beak thing does not negotiate in Spanish. It gets a sound rather than a
+    // sentence, and blanking these keys in messages.json silences it entirely --
+    // which is the other reasonable answer.
+    if (verdict.isAnimal)
+    {
+        if (verdict.viaRescue)
+        {
+            return Say("animal.rescued", "*gime bajo y no te quita los ojos de encima*",
+                       character);
+        }
+        if (verdict.currency == Currency_Care)
+        {
+            return Say("animal.hungry", "*olfatea tus manos, buscando comida*", character);
+        }
+        if (verdict.currency == Currency_Refused)
+        {
+            return Say("animal.refused", "*gruñe y retrocede*", character);
+        }
+        return Say("animal.calm", "*te observa, quieto*", character);
+    }
+
     Traits traits;
     if (character == NULL || !SafeReadTraits(character, &traits))
     {
@@ -859,6 +880,7 @@ Verdict Evaluate(Character* character)
 
     bool animal = false;
     SafeIsAnimal(character, &animal);
+    verdict.isAnimal = animal;
     if (animal && !config.animalsEnabled)
     {
         verdict.reason = "los animales est\xc3\xa1n desactivados";

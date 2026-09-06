@@ -114,6 +114,29 @@
     "default": "Pudiste seguir de largo. No lo hiciste."
   },
 
+  "_animales": [
+    "Los animales no hablan: se les dibuja un sonido, no una frase.",
+    "Dejalos vacios si preferis que no salga ninguna burbuja."
+  ],
+  "animal": {
+    "rescued": [
+      "*gime bajo y no te quita los ojos de encima*",
+      "*se arrastra hacia ti y apoya la cabeza*"
+    ],
+    "hungry": [
+      "*olfatea tus manos, buscando comida*",
+      "*mira tu mochila y gimotea*"
+    ],
+    "refused": [
+      "*grune y retrocede*",
+      "*ensena los dientes*"
+    ],
+    "calm": [
+      "*te observa, quieto*",
+      "*ladea la cabeza sin apartarse*"
+    ]
+  },
+
   "mercy": {
     "plea": "Piedad. Ya no puedo pelear. Hare lo que me pidas.",
     "spared": "Gracias... no lo olvidare.",
