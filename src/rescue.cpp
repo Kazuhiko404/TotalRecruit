@@ -139,12 +139,12 @@ bool SendDialogEvent_hook(Character* thisptr, Character* target, EventTriggerEnu
                 // silently changing the player's squad.
                 if (!OpenConversation(thisptr, config.dialogue.rescue))
                 {
-                    std::string message;
-                    if (Recruit(thisptr, &message))
-                    {
-                        TellPlayer(name + " te debe la vida, y se une a tu grupo.", false);
-                        LogInfo("Rescued " + message + " joined on waking.");
-                    }
+                    // Without an FCS package the plugin's own window asks, the
+                    // same one the "Hablar" button opens. Joining outright was
+                    // the one path that changed the player's squad without
+                    // anyone agreeing to it.
+                    AttemptRecruit(thisptr);
+                    LogInfo("Rescued " + name + " woke and was offered.");
                 }
             }
         }

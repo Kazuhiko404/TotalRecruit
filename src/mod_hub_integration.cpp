@@ -45,22 +45,49 @@ static EMC_Result __cdecl cbSetInt(void* user_data, int32_t value, char* err_buf
 static EMC_Result __cdecl cbGetFloat(void* user_data, float* out_value) { *out_value = *(float*)user_data; return EMC_OK; }
 static EMC_Result __cdecl cbSetFloat(void* user_data, float value, char* err_buf, uint32_t err_buf_size) { *(float*)user_data = value; SaveConfig(); return EMC_OK; }
 
+// Every register_* result was being dropped, so a hub that refused a setting
+// looked identical to one that accepted it and the panel just came up short.
+// Now a refusal names itself in the log.
+static void reportReg(const char* kind, const char* id, EMC_Result r)
+{
+    if (r == EMC_OK) return;
+    char buf[160] = { 0 };
+    _snprintf_s(buf, sizeof(buf), _TRUNCATE,
+                "Mod Hub rejected %s setting '%s' (result %d).", kind, id, (int)r);
+    LogError(std::string(buf));
+}
+
 static void regBool(const EMC_HubApiV1* api, EMC_ModHandle mod, const char* id, const char* label, const char* desc, bool* field)
 {
+    if (api->register_bool_setting == NULL)
+    {
+        LogError(std::string("Mod Hub has no register_bool_setting; '") + id + "' skipped.");
+        return;
+    }
     EMC_BoolSettingDefV1 d = { id, label, desc, field, &cbGetBool, &cbSetBool };
-    api->register_bool_setting(mod, &d);
+    reportReg("bool", id, api->register_bool_setting(mod, &d));
 }
 
 static void regInt(const EMC_HubApiV1* api, EMC_ModHandle mod, const char* id, const char* label, const char* desc, int32_t lo, int32_t hi, int32_t step, int32_t* field)
 {
+    if (api->register_int_setting == NULL)
+    {
+        LogError(std::string("Mod Hub has no register_int_setting; '") + id + "' skipped.");
+        return;
+    }
     EMC_IntSettingDefV1 d = { id, label, desc, field, lo, hi, step, &cbGetInt, &cbSetInt };
-    api->register_int_setting(mod, &d);
+    reportReg("int", id, api->register_int_setting(mod, &d));
 }
 
 static void regFloat(const EMC_HubApiV1* api, EMC_ModHandle mod, const char* id, const char* label, const char* desc, float lo, float hi, float step, int dec, float* field)
 {
+    if (api->register_float_setting == NULL)
+    {
+        LogError(std::string("Mod Hub has no register_float_setting; '") + id + "' skipped.");
+        return;
+    }
     EMC_FloatSettingDefV1 d = { id, label, desc, field, lo, hi, step, (uint32_t)dec, &cbGetFloat, &cbSetFloat };
-    api->register_float_setting(mod, &d);
+    reportReg("float", id, api->register_float_setting(mod, &d));
 }
 
 static bool g_hubHardFail = false;
@@ -76,8 +103,24 @@ static bool DoRegisterModHub()
     EMC_Result gr = getApi(EMC_HUB_API_VERSION_1, EMC_HUB_API_V1_MIN_SIZE, &api, &apiSize);
     if (gr != EMC_OK || !api || apiSize < EMC_HUB_API_V1_MIN_SIZE)
     {
+        char buf[160] = { 0 };
+        _snprintf_s(buf, sizeof(buf), _TRUNCATE,
+                    "Mod Hub API negotiation failed: result=%d size=%u (need >= %u).",
+                    (int)gr, (unsigned)apiSize, (unsigned)EMC_HUB_API_V1_MIN_SIZE);
+        LogError(std::string(buf));
         g_hubHardFail = true;
         return true;
+    }
+
+    // Which slots the hub actually handed back decides which settings can be
+    // registered at all: a smaller struct silently ends before the later
+    // register_* pointers.
+    {
+        char buf[160] = { 0 };
+        _snprintf_s(buf, sizeof(buf), _TRUNCATE,
+                    "Mod Hub attached: api v%u, size %u bytes.",
+                    (unsigned)api->api_version, (unsigned)apiSize);
+        LogInfo(std::string(buf));
     }
 
     EMC_ModDescriptorV1 desc = {0};

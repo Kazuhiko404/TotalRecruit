@@ -90,10 +90,18 @@ struct Condition
     float hunger;
     float health;
     float blood;
+    // Diagnostics only. These are what the engine reports piecemeal; the
+    // verdict never reads them, but the log does when a call looks wrong.
+    bool rawUnconscious;
+    bool rawTrauma;
+    bool rawSub50KO;
+    float rawKOTimer;
 
     Condition()
         : dying(false), unconscious(false), starving(false), wounded(false),
-          hunger(0.0f), health(1.0f), blood(1.0f)
+          hunger(0.0f), health(1.0f), blood(1.0f),
+          rawUnconscious(false), rawTrauma(false), rawSub50KO(false),
+          rawKOTimer(0.0f)
     {
     }
 };
@@ -108,7 +116,18 @@ bool SafeReadCondition(Character* character, Condition* out)
             return false;
         }
         out->dying       = medical->isProbablyDying();
-        out->unconscious = medical->isUnconcious() || medical->isInBloodlossTrauma() || medical->knockoutTimer > 0.0f || medical->sub50KO;
+        // The engine's own answer, and the only one that means "actually out
+        // cold". The four raw flags this used to OR together are each true for
+        // reasons that are not unconsciousness -- sub50KO in particular stays
+        // set for a crippled limb, so an NPC walking around with a lost arm
+        // was reported as asleep and could never be recruited. _NV_ because
+        // the virtual cannot be resolved from a plugin (see notes S11).
+        out->unconscious = character->_NV_isLiterallyUnconciousNotPretending();
+        // Kept only as corroboration for the log, never as the verdict.
+        out->rawUnconscious = medical->isUnconcious();
+        out->rawTrauma      = medical->isInBloodlossTrauma();
+        out->rawKOTimer     = medical->knockoutTimer;
+        out->rawSub50KO     = medical->sub50KO;
         out->hunger      = medical->hunger;
         out->health      = medical->getOverallHealthRating();
         out->blood       = medical->blood;
@@ -116,6 +135,21 @@ bool SafeReadCondition(Character* character, Condition* out)
         return true;
     }
     TR_CATCH { return false; }
+}
+
+// Why a character was judged down or dead, in the log. Written whenever a
+// verdict turns on medical state, because those are the calls that have been
+// wrong before and the headers cannot say which flag lied.
+void LogCondition(Character* character, const Condition& c, const char* gate)
+{
+    char buf[256] = { 0 };
+    _snprintf_s(buf, sizeof(buf), _TRUNCATE,
+                "[%s] literal=%d raw_unc=%d trauma=%d sub50KO=%d koTimer=%.1f "
+                "blood=%.2f health=%.2f dying=%d",
+                gate, c.unconscious ? 1 : 0, c.rawUnconscious ? 1 : 0,
+                c.rawTrauma ? 1 : 0, c.rawSub50KO ? 1 : 0, c.rawKOTimer,
+                c.blood, c.health, c.dying ? 1 : 0);
+    LogInfo(CharacterName(character) + " " + buf);
 }
 
 // PS_PLAYING_DEAD is a real prone state, so "unconscious" alone would let the
@@ -808,6 +842,7 @@ Verdict Evaluate(Character* character)
     // going negative only happens to a body that has actually bled out.
     if (condition.blood < 0.0f)
     {
+        LogCondition(character, condition, "blood<0");
         verdict.reason = "se desangr\xc3\xb3, ya no hay nada que hacer";
         return verdict;
     }
@@ -831,6 +866,7 @@ Verdict Evaluate(Character* character)
     // saved them.
     if (condition.unconscious)
     {
+        LogCondition(character, condition, "unconscious");
         if (config.rescueEnabled && RemembersPlayerAsSaviour(character))
         {
             verdict.viaRescue = true;
