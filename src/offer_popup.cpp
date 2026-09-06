@@ -5,6 +5,7 @@
 #include "recruit_core.h"
 #include "feeding.h"
 #include "log.h"
+#include "mercy.h"
 
 #include <kenshi/gui/PortraitManager.h>
 #include <mygui/MyGUI_ImageBox.h>
@@ -592,7 +593,18 @@ void OnDecline(MyGUI::Widget* /*sender*/)
 
     if (npc != NULL)
     {
-        CompleteOffer(npc, false);
+        // Refusing a plea is a real answer: nothing changes, they stay hostile,
+        // and the fight goes on. It is not the same as the captive decline,
+        // which only reports that they were left where they are.
+        if (IsMercyPending(npc))
+        {
+            ForgetMercy(npc);
+            TellPlayer(CharacterName(npc) + ": ignoraste su súplica.", false);
+        }
+        else
+        {
+            CompleteOffer(npc, false);
+        }
     }
 }
 
@@ -606,7 +618,17 @@ void OnExtra(MyGUI::Widget* /*sender*/)
 
     if (npc != NULL)
     {
-        HelpCaptive(npc);
+        // The third button is context: it feeds a starving captive, but for
+        // someone pleading over a lost limb it is the one answer that is
+        // neither joining nor killing.
+        if (IsMercyPending(npc))
+        {
+            GrantMercy(npc);
+        }
+        else
+        {
+            HelpCaptive(npc);
+        }
     }
 }
 } // namespace

@@ -5,6 +5,7 @@
 #include "config.h"
 #include "recruit_core.h"
 #include "log.h"
+#include "mercy.h"
 
 namespace totalrecruit
 {
@@ -111,6 +112,15 @@ bool SendDialogEvent_hook(Character* thisptr, Character* target, EventTriggerEnu
                               : false;
 
     const Config& config = GetConfig();
+
+    // Losing a limb ends the fight for them whatever their personality says,
+    // and the engine announces it rather than leaving us to infer it.
+    if (config.surrenderEnabled && thisptr != NULL &&
+        (what == EV_LOST_ARM || what == EV_LOST_LEG))
+    {
+        OfferMercy(thisptr);
+    }
+
     if (config.rescueEnabled && what == EV_GET_UP_PEACE && thisptr != NULL)
     {
         // Already one of yours? Then there is nothing to offer. This also stops

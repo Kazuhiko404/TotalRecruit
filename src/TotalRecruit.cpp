@@ -27,6 +27,7 @@
 #include "offer_popup.h"
 #include "cursor_hint.h"
 #include "hail.h"
+#include "mercy.h"
 #include "spawn_panel.h"
 
 
@@ -187,6 +188,7 @@ __declspec(dllexport) void stopPlugin()
     LogInfo("stopPlugin called.");
 
     ShutdownHailing();
+    ShutdownMercy();
     ShutdownCursorHint();
     ShutdownOfferPopup();
     ShutdownFrameTick();
