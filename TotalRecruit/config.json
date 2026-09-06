@@ -22,7 +22,10 @@
   "animalsEnabled": true,
 
   "easyHoursCaged": 12.0,
-  "catsPerLevel": 120,
+  "catsPerLevel": 40,
+  "catsCeiling": 72000,
+  "priceCurveSteepness": 0.11,
+  "priceCurveMidpoint": 45.0,
   "catsMinimum": 200,
   "hungerThreshold": 0.0,
   "woundedThreshold": 0.5,

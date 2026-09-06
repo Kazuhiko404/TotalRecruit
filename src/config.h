@@ -45,7 +45,17 @@ struct Prices
     // prices as the only route.
     float easyHoursCaged;
     // Route B: cats demanded, scaled from the NPC's rough level.
+    // Price = (catsPerLevel/10) * level^2 + catsCeiling * logistic(level).
+    // The square term keeps low levels affordable; the logistic carries the top
+    // and flattens instead of running away. See PriceInCats for the calibration.
     int catsPerLevel;
+    // What the strongest characters approach. Not a hard cap: talent, faction
+    // and personality still multiply on top.
+    int catsCeiling;
+    // How sharply the price accelerates around the midpoint.
+    float priceCurveSteepness;
+    // The level at which the curve is steepest -- roughly "a serious fighter".
+    float priceCurveMidpoint;
     int catsMinimum;
     // Optional extra trigger for "starving". The engine's own isReallyHungry
     // and isHungerKO already decide this, so 0 (off) is the sane default: the
@@ -72,7 +82,10 @@ struct Prices
 
     Prices()
         : easyHoursCaged(12.0f),
-          catsPerLevel(120),
+          catsPerLevel(40),
+          catsCeiling(72000),
+          priceCurveSteepness(0.11f),
+          priceCurveMidpoint(45.0f),
           catsMinimum(200),
           hungerThreshold(0.0f),
           woundedThreshold(0.5f),

@@ -171,7 +171,10 @@ static bool DoRegisterModHub()
 
     // Prices
     regInt(api, mod, "preset", "Dificultad (Preset)", "0: Cheat, 1: Balanced, 2: Vanilla+", 0, 2, 1, &c.preset);
-    regInt(api, mod, "cats_per_level", "Cats por nivel", "Precio base multiplicador de nivel", 0, 500, 10, &c.prices.catsPerLevel);
+    regInt(api, mod, "cats_per_level", "Cats por nivel", "Peso del tramo bajo: mantiene baratos los niveles chicos", 0, 200, 5, &c.prices.catsPerLevel);
+    regInt(api, mod, "cats_ceiling", "Cats: techo", "A cuanto tiende el precio de los mas fuertes", 0, 200000, 5000, &c.prices.catsCeiling);
+    regFloat(api, mod, "price_steepness", "Curva: pendiente", "Que tan brusco encarece alrededor del punto medio", 0.02f, 0.4f, 0.01f, 2, &c.prices.priceCurveSteepness);
+    regFloat(api, mod, "price_midpoint", "Curva: punto medio", "Nivel donde el precio sube mas rapido", 5.0f, 90.0f, 5.0f, 0, &c.prices.priceCurveMidpoint);
     regInt(api, mod, "cats_minimum", "Cats (Mínimo)", "Precio mínimo para cualquier recluta", 0, 10000, 100, &c.prices.catsMinimum);
     regFloat(api, mod, "hunger_threshold", "Hambre extra", "Suma requerimiento extra de hambre (0 por defecto)", 0.0f, 10.0f, 0.5f, 1, &c.prices.hungerThreshold);
     regFloat(api, mod, "wounded_threshold", "Salud (Máximo para reclutar)", "Si la salud es <= a esto, escuchan (0..1)", 0.0f, 1.0f, 0.1f, 2, &c.prices.woundedThreshold);

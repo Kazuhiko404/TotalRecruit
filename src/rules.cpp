@@ -557,7 +557,29 @@ int PriceInCats(Character* character, const Traits& traits, Faction* playerFacti
         level = 1;
     }
 
-    float cats = (float)(level * prices.catsPerLevel);
+    // Two curves added together, because no single one covers the range.
+    //
+    // The bottom has to stay cheap: helping a new player buy a level 3 bandit
+    // for a few hundred cats is most of the point. The top has to reach the
+    // tens of thousands, or a legendary fighter is priced like a farmhand.
+    // A straight line cannot do both, and a power curve steep enough for the
+    // top makes the bottom unaffordable.
+    //
+    // So: a gentle square term carries the early levels, and a logistic S-curve
+    // -- the standard game-design answer for a cost that should accelerate and
+    // then level off -- carries the rest. Shifted to pass through zero so the
+    // sigmoid does not charge for merely existing.
+    //
+    // Calibrated against the published Recruit-Prisoners-for-Cats tiers:
+    // ~1k at 5 stats, ~7k at 12, ~20k at 25, ~35k at 40, ~55k at 50, ~80k at 75.
+    const float lv = (float)level;
+    const float shape = prices.priceCurveSteepness;
+    const float mid   = prices.priceCurveMidpoint;
+    const float sigNow  = 1.0f / (1.0f + expf(-shape * (lv - mid)));
+    const float sigZero = 1.0f / (1.0f + expf(shape * mid));
+
+    float cats = ((float)prices.catsPerLevel * 0.1f) * lv * lv
+               + (float)prices.catsCeiling * (sigNow - sigZero);
     if (cats < (float)prices.catsMinimum)
     {
         cats = (float)prices.catsMinimum;

@@ -206,6 +206,9 @@ void LoadConfig(const std::string& modDirectory)
 
     ReadFloat(text, "easyHoursCaged", &g_config.prices.easyHoursCaged);
     ReadInt(text, "catsPerLevel", &g_config.prices.catsPerLevel);
+    ReadInt(text, "catsCeiling", &g_config.prices.catsCeiling);
+    ReadFloat(text, "priceCurveSteepness", &g_config.prices.priceCurveSteepness);
+    ReadFloat(text, "priceCurveMidpoint", &g_config.prices.priceCurveMidpoint);
     ReadInt(text, "catsMinimum", &g_config.prices.catsMinimum);
     ReadFloat(text, "hungerThreshold", &g_config.prices.hungerThreshold);
     ReadFloat(text, "woundedThreshold", &g_config.prices.woundedThreshold);
