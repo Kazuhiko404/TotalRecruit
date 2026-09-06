@@ -25,11 +25,15 @@ const char* const kPortraitName = "TR_OfferPortrait";
 // The native context menu sits on the Popup layer, so this goes above it.
 const char* const kLayer = "Info";
 
-const int kWidth = 460;
-const int kHeight = 230;
-const int kMargin = 14;
-const int kButtonHeight = 30;
-const int kTextHeight = 96;
+const int kBaseWidth = 560;
+const int kBaseHeightNoExtra = 260;
+const int kBaseHeightWithExtra = 310;
+const int kMargin = 16;
+const int kButtonHeight = 32;
+const int kPortraitSide = 110;
+
+int g_windowWidth = kBaseWidth;
+int g_windowHeight = kBaseHeightNoExtra;
 
 MyGUI::Window* g_root = NULL;
 MyGUI::Widget* g_client = NULL;
@@ -63,6 +67,18 @@ void SafeSetCaption(MyGUI::TextBox* widget, const char* text)
     TR_CATCH { }
 }
 
+void ApplyCoord(MyGUI::Widget* widget, int left, int top, int width, int height)
+{
+    widget->setCoord(left, top, width, height);
+}
+
+void SafeSetCoord(MyGUI::Widget* widget, int left, int top, int width, int height)
+{
+    if (widget == NULL) return;
+    TR_TRY { ApplyCoord(widget, left, top, width, height); }
+    TR_CATCH { }
+}
+
 
 
 // setOnlyText avoids the caption's markup parsing, which would swallow any
@@ -93,7 +109,7 @@ MyGUI::Window* CreateRoot(MyGUI::Gui* guiManager, const char* skin, int left, in
 {
     return guiManager->createWidget<MyGUI::Window>(
         skin,
-        MyGUI::IntCoord(left, top, kWidth, kHeight),
+        MyGUI::IntCoord(left, top, g_windowWidth, g_windowHeight),
         MyGUI::Align::Default,
         kLayer,
         kRootName);
@@ -285,32 +301,74 @@ MyGUI::Button* SafeCreateButton(MyGUI::Widget* parent, const char* skin, const c
     TR_CATCH { return NULL; }
 }
 
-// The decline button spans the row on its own when there is no accept button
-// beside it, so a lone option does not sit oddly in half the window.
-void LayoutDecline(bool sharingRow)
+// Layout the buttons and text dynamically according to the actual client area
+// and whether accept or extra buttons are visible.
+void LayoutComponents(bool haveAccept, bool haveExtra)
 {
-    int clientWidth = kWidth;
-    int clientHeight = kHeight;
-    clientWidth = g_client->getWidth();
-    clientHeight = g_client->getHeight();
+    if (g_client == NULL) return;
 
-    const int buttonTop = clientHeight - kMargin - kButtonHeight;
-    const int halfWidth = (clientWidth - kMargin * 3) / 2;
+    int clientWidth = g_windowWidth;
+    int clientHeight = g_windowHeight;
+    SafeClientSize(g_client, &clientWidth, &clientHeight);
 
-    if (sharingRow)
+    // Calculate vertical space from the bottom up:
+    // Bottom row: Aceptar / Rechazar (or Cerrar)
+    const int mainButtonTop = clientHeight - kMargin - kButtonHeight;
+
+    // Extra row (e.g. DARLE COMIDA): sits above the bottom row
+    int extraTop = mainButtonTop;
+    if (haveExtra)
     {
-        g_decline->setCoord(kMargin * 2 + halfWidth, buttonTop, halfWidth, kButtonHeight);
+        extraTop = mainButtonTop - kButtonHeight - 8;
+        if (g_extra != NULL)
+        {
+            g_extra->setCoord(kMargin, extraTop, clientWidth - kMargin * 2, kButtonHeight);
+        }
+    }
+
+    // Bottom action buttons:
+    const int buttonWidth = (clientWidth - kMargin * 3) / 2;
+    if (haveAccept)
+    {
+        if (g_accept != NULL)
+        {
+            g_accept->setCoord(kMargin, mainButtonTop, buttonWidth, kButtonHeight);
+        }
+        if (g_decline != NULL)
+        {
+            g_decline->setCoord(kMargin * 2 + buttonWidth, mainButtonTop, buttonWidth, kButtonHeight);
+        }
     }
     else
     {
-        g_decline->setCoord(kMargin, buttonTop, clientWidth - kMargin * 2, kButtonHeight);
+        if (g_decline != NULL)
+        {
+            g_decline->setCoord(kMargin, mainButtonTop, clientWidth - kMargin * 2, kButtonHeight);
+        }
+    }
+
+    // Top area: Portrait on left, text on right
+    // The available height for the top section is up to the uppermost button row:
+    const int topLimit = (haveExtra ? extraTop : mainButtonTop) - 10;
+    const int textTop = kMargin;
+    const int textHeight = (topLimit > textTop) ? (topLimit - textTop) : 80;
+
+    if (g_portrait != NULL)
+    {
+        g_portrait->setCoord(kMargin, textTop, kPortraitSide, kPortraitSide);
+    }
+
+    if (g_text != NULL)
+    {
+        const int textLeft = kMargin + kPortraitSide + kMargin;
+        const int textWidth = clientWidth - textLeft - kMargin;
+        g_text->setCoord(textLeft, textTop, textWidth, textHeight);
     }
 }
 
-void SafeLayoutDecline(bool sharingRow)
+void SafeLayoutComponents(bool haveAccept, bool haveExtra)
 {
-    if (g_decline == NULL || g_client == NULL) return;
-    TR_TRY { LayoutDecline(sharingRow); }
+    TR_TRY { LayoutComponents(haveAccept, haveExtra); }
     TR_CATCH { }
 }
 
@@ -395,8 +453,8 @@ void SafeDestroyWidget(MyGUI::Widget* widget)
 }
 
 // Centred horizontally, a little above centre vertically, so it does not sit on
-// top of whatever the player just clicked.
-void ChoosePosition(int* outLeft, int* outTop)
+// top of whatever the player just clicked. Responsive to current render view size.
+void ChoosePosition(int width, int height, int* outLeft, int* outTop)
 {
     int viewWidth = 0;
     int viewHeight = 0;
@@ -411,11 +469,11 @@ void ChoosePosition(int* outLeft, int* outTop)
     }
     TR_CATCH { viewWidth = 0; viewHeight = 0; }
 
-    *outLeft = (viewWidth > kWidth) ? (viewWidth - kWidth) / 2 : 40;
-    *outTop = (viewHeight > kHeight) ? (viewHeight / 2) - kHeight : 40;
-    if (*outTop < 0)
+    *outLeft = (viewWidth > width) ? (viewWidth - width) / 2 : 40;
+    *outTop = (viewHeight > height) ? (viewHeight - height) / 2 : 40;
+    if (*outTop < 30)
     {
-        *outTop = 40;
+        *outTop = 30;
     }
 }
 
@@ -434,7 +492,7 @@ bool Build()
 
     int left = 0;
     int top = 0;
-    ChoosePosition(&left, &top);
+    ChoosePosition(g_windowWidth, g_windowHeight, &left, &top);
 
     const char* panelSkins[3] = { "Kenshi_WindowCX", "WindowCSX", "WindowC" };
     for (int i = 0; i < 3 && g_root == NULL; ++i)
@@ -454,15 +512,11 @@ bool Build()
         return false;
     }
 
-    // Lay out against the client area's real size rather than the window's, so
-    // the title bar does not push everything off the bottom edge.
-    int clientWidth = kWidth;
-    int clientHeight = kHeight;
+    int clientWidth = g_windowWidth;
+    int clientHeight = g_windowHeight;
     SafeClientSize(g_client, &clientWidth, &clientHeight);
 
-    // A portrait square on the left, text to its right -- the same shape the
-    // vanilla dialogue window uses, so the two read as the same kind of moment.
-    const int portraitSide = 84;
+    const int portraitSide = kPortraitSide;
     const int textLeft = kMargin + portraitSide + kMargin;
     const int textWidth = clientWidth - textLeft - kMargin;
     const int buttonTop = clientHeight - kMargin - kButtonHeight;
@@ -478,7 +532,6 @@ bool Build()
 
     g_portrait = SafeCreatePortrait(g_client, kMargin, kMargin, portraitSide);
 
-
     const char* buttonSkins[2] = { "Kenshi_Button1", "Button" };
     for (int i = 0; i < 2 && g_accept == NULL; ++i)
     {
@@ -491,9 +544,7 @@ bool Build()
                                      kMargin * 2 + buttonWidth, buttonTop, buttonWidth);
     }
 
-    // The third button sits on its own row above the other two, so a long label
-    // like "Give them food (Foodcube)" is not squeezed into a third of a row.
-    const int extraTop = buttonTop - kButtonHeight - kMargin / 2;
+    const int extraTop = buttonTop - kButtonHeight - 8;
     for (int i = 0; i < 2 && g_extra == NULL; ++i)
     {
         g_extra = SafeCreateButton(g_client, buttonSkins[i], kExtraName,
@@ -579,10 +630,23 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
         return false;
     }
 
+    const bool haveAccept = !acceptLabel.empty();
+    const bool haveExtra = !extraLabel.empty();
+
+    // Responsive dimensions: give more vertical room if there is an extra button
+    g_windowWidth = kBaseWidth;
+    g_windowHeight = haveExtra ? kBaseHeightWithExtra : kBaseHeightNoExtra;
+
     if (!Build())
     {
         return false;
     }
+
+    // Reposition and resize window to fit content cleanly
+    int left = 0;
+    int top = 0;
+    ChoosePosition(g_windowWidth, g_windowHeight, &left, &top);
+    SafeSetCoord(g_root, left, top, g_windowWidth, g_windowHeight);
 
     g_subject = npc;
     g_open = true;
@@ -595,25 +659,23 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
     // caption showed through behind the body. Both are set every time.
     SafeSetCaption(g_text, "");
     SafeSetOnlyText(g_text, npcLine.c_str());
-    // An empty accept label means there is nothing to agree to, so that button
-    // is hidden and the decline one widens to fill the row.
-    const bool haveAccept = !acceptLabel.empty();
+
     if (haveAccept)
     {
         SafeSetCaption(g_accept, acceptLabel.c_str());
     }
     SafeSetVisible(g_accept, haveAccept);
-    SafeLayoutDecline(haveAccept);
 
     SafeSetCaption(g_decline, declineLabel.c_str());
 
-    // The third row only appears when there is actually something to offer.
-    const bool haveExtra = !extraLabel.empty();
     if (haveExtra)
     {
         SafeSetCaption(g_extra, extraLabel.c_str());
     }
     SafeSetVisible(g_extra, haveExtra);
+
+    // Dynamic layout coordinates for all child widgets
+    SafeLayoutComponents(haveAccept, haveExtra);
 
     SafeSetVisible(g_root, true);
 
