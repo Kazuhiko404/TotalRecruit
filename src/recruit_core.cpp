@@ -10,25 +10,25 @@
 
 #include <algorithm>
 
-// Building.h and Building/UseableStuff.h cannot be included here: they redefine
-// BuildingDesignation against Platoon.h. Only two methods are needed, so they
-// are declared at global scope -- putting them inside a namespace would mangle
-// the symbols differently and fail to link against KenshiLib.lib.
-//
-// getUseableStuff is the engine's own checked downcast: it returns null for a
-// Building that is not one, which is what makes the cast safe. Blindly
-// reinterpreting any BUILDING as UseableStuff would read a wrong layout.
+// Building/UseableStuff.h cannot be included here: it redefines
+// BuildingDesignation against Platoon.h. Only one method is needed, so it is
+// declared at global scope -- putting it inside a namespace would mangle the
+// symbol differently and fail to link against KenshiLib.lib.
 class UseableStuff
 {
 public:
     const hand& getOccupant() const;
 };
 
-class Building
-{
-public:
-    virtual UseableStuff* getUseableStuff();
-};
+// UseableStuff::getOccupant is non-virtual and exported, so it can be declared
+// and called directly. Whether the pointer really IS a UseableStuff is decided
+// by reading Building::specialFunction rather than by a virtual call.
+//
+// An earlier version declared Building::getUseableStuff as virtual here. That
+// built a vtable of this plugin's own and placed the method at slot 0, while
+// the engine keeps it at offset 0x300 -- so the call jumped to whatever
+// function actually lived at slot 0, which destroyed the cage and crashed the
+// game. Nothing in this file may declare a virtual belonging to an engine type.
 
 namespace totalrecruit
 {
@@ -239,17 +239,30 @@ std::string IntToString(int value)
     return std::string(buffer);
 }
 
+// Building::specialFunction, read at its documented offset rather than through
+// getSpecialFunction() -- that is virtual, and this plugin cannot safely
+// declare an engine virtual (see the note above the class declarations).
+const size_t kSpecialFunctionOffset = 0x158;
+
+bool LooksLikeCage(RootObject* target)
+{
+    const int function = *reinterpret_cast<const int*>(
+        reinterpret_cast<const char*>(target) + kSpecialFunctionOffset);
+    return function == BF_CAGE;
+}
+
 // getOccupant returns a hand reference, and the compiler counts that as an
 // object in whatever frame touches it, so the read lives in a plain function
 // and only the call crosses the guard.
 void ReadOccupant(RootObject* target, Character** out)
 {
-    Building* building = reinterpret_cast<Building*>(target);
-    UseableStuff* stuff = building->getUseableStuff();
-    if (stuff != NULL)
+    if (!LooksLikeCage(target))
     {
-        *out = stuff->getOccupant().getCharacter();
+        return;
     }
+
+    UseableStuff* stuff = reinterpret_cast<UseableStuff*>(target);
+    *out = stuff->getOccupant().getCharacter();
 }
 
 Character* SafeReadOccupant(RootObject* target)
@@ -274,7 +287,7 @@ bool SafeDataType(RootObject* target, itemType* out)
 // itemType of its own.
 Character* OccupantOf(RootObject* target, itemType type)
 {
-    if (type != BUILDING)
+    if (type != BUILDING || !GetConfig().resolveCageOccupant)
     {
         return NULL;
     }

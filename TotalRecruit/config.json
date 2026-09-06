@@ -7,6 +7,7 @@
   "panelToggleKey": 37,
   "probeOnClick": false,
   "showTalkCursor": true,
+  "resolveCageOccupant": true,
 
   "preset": 1,
 

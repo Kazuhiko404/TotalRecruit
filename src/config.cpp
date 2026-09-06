@@ -178,6 +178,7 @@ void LoadConfig(const std::string& modDirectory)
     ReadInt(text, "panelToggleKey", &g_config.panelToggleKey);
     ReadBool(text, "probeOnClick", &g_config.probeOnClick);
     ReadBool(text, "showTalkCursor", &g_config.showTalkCursor);
+    ReadBool(text, "resolveCageOccupant", &g_config.resolveCageOccupant);
 
     ReadInt(text, "preset", &g_config.preset);
     ReadBool(text, "rescueEnabled", &g_config.rescueEnabled);

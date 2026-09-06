@@ -115,6 +115,10 @@ struct Config
     // game already signals a conversation. Without it the mod is invisible
     // until the player right-clicks on spec.
     bool showTalkCursor;
+    // Right-clicking a cage resolves to the person inside it. This reads engine
+    // memory at a fixed offset, so it is a switch: if a game update moves the
+    // field, turning this off restores plain behaviour without a new build.
+    bool resolveCageOccupant;
 
     int preset; // Preset enum
     // Route A: recruit someone you saved from dying. The one route no existing
@@ -142,6 +146,7 @@ struct Config
           panelToggleKey(37), // KC_K
           probeOnClick(false),
           showTalkCursor(true),
+          resolveCageOccupant(true),
           preset(Preset_Balanced),
           rescueEnabled(true),
           rescuePlayerOnly(true),
