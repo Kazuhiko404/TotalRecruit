@@ -159,7 +159,12 @@ bool SafeIsPretending(Character* character, bool* out)
 {
     TR_TRY
     {
-        *out = character->isDown() && !character->isLiterallyUnconciousNotPretending();
+        // PS_PLAYING_DEAD is the engine's own answer, so ask for it. The old
+        // test -- down but not unconscious -- also caught anyone whose legs are
+        // crippled: they cannot stand, so isDown() is true, and they are wide
+        // awake, so the negation is true too. A one-legged NPC standing there
+        // talking was being called a faker.
+        *out = (character->getProneState() == PS_PLAYING_DEAD);
         return true;
     }
     TR_CATCH { return false; }
@@ -907,30 +912,6 @@ Verdict Evaluate(Character* character)
         return verdict;
     }
 
-    // Past saving, judged by blood rather than by health: getOverallHealthRating
-    // reads 0 for anyone merely knocked out, so testing health here declared
-    // every KO'd character beyond saving and shut the whole mod down. Blood
-    // going negative only happens to a body that has actually bled out.
-    if (condition.blood < 0.0f)
-    {
-        LogCondition(character, condition, "blood<0");
-        verdict.reason = "se desangr\xc3\xb3, ya no hay nada que hacer";
-        return verdict;
-    }
-
-    // The one honest no. Unlike faction hatred, this is a reason the player
-    // understands and could have avoided.
-    if (leader != NULL)
-    {
-        bool grudge = false;
-        if (SafeMemoryTag(character, leader, LT_KILLED_MY_FRIEND, &grudge) && grudge)
-        {
-            verdict.currency = Currency_Refused;
-            verdict.reason = "se niega: mataste a alguien suyo";
-            return verdict;
-        }
-    }
-
     // Nobody agrees to anything while they are out cold. A deal struck with an
     // unconscious body is not a deal, and it undercuts the rescue route, whose
     // whole point is that the offer arrives when they wake and find out who
@@ -954,6 +935,19 @@ Verdict Evaluate(Character* character)
             verdict.reason = "inconsciente: espera a que despierte";
         }
         return verdict;
+    }
+
+    // The one honest no. Unlike faction hatred, this is a reason the player
+    // understands and could have avoided.
+    if (leader != NULL)
+    {
+        bool grudge = false;
+        if (SafeMemoryTag(character, leader, LT_KILLED_MY_FRIEND, &grudge) && grudge)
+        {
+            verdict.currency = Currency_Refused;
+            verdict.reason = "se niega: mataste a alguien suyo";
+            return verdict;
+        }
     }
 
     // Route A -- rescue. Someone you pulled out of the dirt owes you nothing
