@@ -177,6 +177,7 @@ void LoadConfig(const std::string& modDirectory)
     ReadInt(text, "maxSpawnedCharacters", &g_config.maxSpawnedCharacters);
     ReadInt(text, "panelToggleKey", &g_config.panelToggleKey);
     ReadBool(text, "probeOnClick", &g_config.probeOnClick);
+    ReadBool(text, "showTalkCursor", &g_config.showTalkCursor);
 
     ReadInt(text, "preset", &g_config.preset);
     ReadBool(text, "rescueEnabled", &g_config.rescueEnabled);

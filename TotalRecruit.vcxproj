@@ -76,6 +76,7 @@
     <ClCompile Include="src\dialogue_authoring.cpp" />
     <ClCompile Include="src\offer_popup.cpp" />
     <ClCompile Include="src\feeding.cpp" />
+    <ClCompile Include="src\cursor_hint.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h" />
@@ -96,6 +97,7 @@
     <ClInclude Include="src\dialogue_authoring.h" />
     <ClInclude Include="src\offer_popup.h" />
     <ClInclude Include="src\feeding.h" />
+    <ClInclude Include="src\cursor_hint.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

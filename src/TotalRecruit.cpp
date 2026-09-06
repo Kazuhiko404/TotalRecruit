@@ -24,6 +24,7 @@
 #include "frame_tick.h"
 #include "settings_panel.h"
 #include "offer_popup.h"
+#include "cursor_hint.h"
 #include "spawn_panel.h"
 
 
@@ -164,6 +165,9 @@ __declspec(dllexport) void startPlugin()
     const bool rescueOk = InstallRescueHooks();
     const bool tickOk = InstallFrameTick();
 
+    // Makes the mod visible: the cursor tells the player who can be talked to.
+    const bool cursorOk = InstallCursorHint();
+
     if (!overlayOk && !inputOk)
     {
         LogError("No hooks installed; the mod will do nothing.");
@@ -172,13 +176,15 @@ __declspec(dllexport) void startPlugin()
 
     LogInfo(std::string("Subsystems: dialogue=") + (dialogueOk ? "on" : "off") +
             " rescue=" + (rescueOk ? "on" : "off") +
-            " tick=" + (tickOk ? "on" : "off") + ".");
+            " tick=" + (tickOk ? "on" : "off") +
+            " cursor=" + (cursorOk ? "on" : "off") + ".");
     LogInfo("Ready. Right-click an NPC to recruit; Ctrl+K settings, Shift+K spawn panel.");
 }
 
 __declspec(dllexport) void stopPlugin()
 {
     using namespace totalrecruit;
+    ShutdownCursorHint();
     ShutdownOfferPopup();
     ShutdownSettingsPanel();
     ShutdownFrameTick();

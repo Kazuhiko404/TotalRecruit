@@ -111,6 +111,10 @@ struct Config
     // Diagnostic: log personality, archetype and medical state for the clicked
     // character. Off by default; turn it on when something behaves oddly.
     bool probeOnClick;
+    // Swap the cursor to the talk icon over anyone recruitable, the way the
+    // game already signals a conversation. Without it the mod is invisible
+    // until the player right-clicks on spec.
+    bool showTalkCursor;
 
     int preset; // Preset enum
     // Route A: recruit someone you saved from dying. The one route no existing
@@ -137,6 +141,7 @@ struct Config
           maxSpawnedCharacters(150),
           panelToggleKey(37), // KC_K
           probeOnClick(false),
+          showTalkCursor(true),
           preset(Preset_Balanced),
           rescueEnabled(true),
           rescuePlayerOnly(true),

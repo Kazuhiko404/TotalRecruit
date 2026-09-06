@@ -6,6 +6,7 @@
   "maxSpawnedCharacters": 150,
   "panelToggleKey": 37,
   "probeOnClick": false,
+  "showTalkCursor": true,
 
   "preset": 1,
 

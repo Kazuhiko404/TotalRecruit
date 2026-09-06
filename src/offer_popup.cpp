@@ -6,6 +6,9 @@
 #include "feeding.h"
 #include "log.h"
 
+#include <kenshi/gui/PortraitManager.h>
+#include <mygui/MyGUI_ImageBox.h>
+
 namespace totalrecruit
 {
 namespace
@@ -17,6 +20,7 @@ const char* const kTextName    = "TR_OfferText";
 const char* const kAcceptName  = "TR_OfferAccept";
 const char* const kDeclineName = "TR_OfferDecline";
 const char* const kExtraName   = "TR_OfferExtra";
+const char* const kPortraitName = "TR_OfferPortrait";
 
 // The native context menu sits on the Popup layer, so this goes above it.
 const char* const kLayer = "Info";
@@ -30,6 +34,7 @@ const int kTextHeight = 96;
 MyGUI::Window* g_root = NULL;
 MyGUI::Widget* g_client = NULL;
 MyGUI::TextBox* g_text = NULL;
+MyGUI::ImageBox* g_portrait = NULL;
 MyGUI::Button* g_accept = NULL;
 MyGUI::Button* g_decline = NULL;
 MyGUI::Button* g_extra = NULL;
@@ -127,6 +132,57 @@ MyGUI::TextBox* SafeCreateText(MyGUI::Widget* parent, const char* skin,
 {
     TR_TRY { return CreateText(parent, skin, left, top, width, height); }
     TR_CATCH { return NULL; }
+}
+
+// The portrait uses the engine's own PortraitManager, so the face in this
+// window is the same one the squad bar and the vanilla dialogue draw -- no
+// second rendering path to keep in step.
+MyGUI::ImageBox* CreatePortrait(MyGUI::Widget* parent, int left, int top, int side)
+{
+    return parent->createWidget<MyGUI::ImageBox>(
+        "ImageBox",
+        MyGUI::IntCoord(left, top, side, side),
+        MyGUI::Align::Default,
+        kPortraitName);
+}
+
+MyGUI::ImageBox* SafeCreatePortrait(MyGUI::Widget* parent, int left, int top, int side)
+{
+    TR_TRY { return CreatePortrait(parent, left, top, side); }
+    TR_CATCH { return NULL; }
+}
+
+// createPortraitImage hands back a PortraitImage that knows how to paint itself
+// into an ImageBox, which is exactly what the squad bar does with it.
+void LoadPortrait(Character* npc)
+{
+    PortraitManager* manager = PortraitManager::getInstance();
+    if (manager == NULL)
+    {
+        return;
+    }
+
+    PortraitImage* image = NULL;
+    if (manager->createPortraitImage(image, npc) && image != NULL)
+    {
+        image->updateImageWidget(g_portrait, true);
+    }
+}
+
+void SafeLoadPortrait(Character* npc)
+{
+    if (g_portrait == NULL || npc == NULL)
+    {
+        return;
+    }
+
+    bool loaded = false;
+    TR_TRY { LoadPortrait(npc); loaded = true; }
+    TR_CATCH { }
+
+    // A missing portrait is not worth failing the window over; the frame just
+    // stays empty.
+    SafeSetVisible(g_portrait, loaded);
 }
 
 MyGUI::Button* CreateButton(MyGUI::Widget* parent, const char* skin, const char* name,
@@ -314,7 +370,11 @@ bool Build()
     int clientHeight = kHeight;
     SafeClientSize(g_client, &clientWidth, &clientHeight);
 
-    const int textWidth = clientWidth - kMargin * 2;
+    // A portrait square on the left, text to its right -- the same shape the
+    // vanilla dialogue window uses, so the two read as the same kind of moment.
+    const int portraitSide = 84;
+    const int textLeft = kMargin + portraitSide + kMargin;
+    const int textWidth = clientWidth - textLeft - kMargin;
     const int buttonTop = clientHeight - kMargin - kButtonHeight;
     const int textHeight = buttonTop - kMargin * 2;
     const int buttonWidth = (clientWidth - kMargin * 3) / 2;
@@ -322,9 +382,11 @@ bool Build()
     const char* textSkins[3] = { "Kenshi_TextboxStandardText", "TextBox", "StaticText" };
     for (int i = 0; i < 3 && g_text == NULL; ++i)
     {
-        g_text = SafeCreateText(g_client, textSkins[i], kMargin, kMargin,
+        g_text = SafeCreateText(g_client, textSkins[i], textLeft, kMargin,
                                 textWidth, textHeight);
     }
+
+    g_portrait = SafeCreatePortrait(g_client, kMargin, kMargin, portraitSide);
 
     const char* buttonSkins[2] = { "Kenshi_Button1", "Button" };
     for (int i = 0; i < 2 && g_accept == NULL; ++i)
@@ -437,6 +499,7 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
     // The name belongs in the window's own title bar, which the skin already
     // draws; repeating it in the body just wastes a line.
     SafeSetCaption(g_root, CharacterName(npc).c_str());
+    SafeLoadPortrait(npc);
     SafeSetCaption(g_text, npcLine.c_str());
     // An empty accept label means there is nothing to agree to, so that button
     // is hidden and the decline one widens to fill the row.
@@ -473,6 +536,7 @@ void ShutdownOfferPopup()
 
     g_root = NULL;
     g_text = NULL;
+    g_portrait = NULL;
     g_accept = NULL;
     g_decline = NULL;
     g_extra = NULL;
