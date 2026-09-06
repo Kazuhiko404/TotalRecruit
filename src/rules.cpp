@@ -446,22 +446,50 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
     }
 }
 
-std::string SpeakAcceptLine(const Verdict& verdict)
+// The window's own voice. Short, because the window has one line for it, and
+// factual, because the NPC's own words are already on screen in their bubble.
+std::string DescribeOffer(Character* character, const Verdict& verdict)
 {
-    if (verdict.currency == Currency_Cats && verdict.cats > 0)
+    const std::string name = CharacterName(character);
+
+    if (!verdict.willJoin)
     {
-        std::ostringstream text;
-        text << "Pagarle " << verdict.cats << " cats.";
-        return text.str();
+        // A refusal only reaches the window when something can be done about
+        // it, so the reason is the useful half.
+        return name + " no se une todav\xc3\xad" "a: " + verdict.reason + ".";
     }
 
     switch (verdict.currency)
     {
-    case Currency_Freedom:    return "Liberarlo.";
-    case Currency_Submission: return "Sumarlo a tu escuadr\xc3\xb3n.";
-    case Currency_Care:       return "Decirle que ahora es de los tuyos.";
-    default:                  return "Darle la bienvenida.";
+    case Currency_Cats:
+    {
+        std::ostringstream text;
+        text << name << " se unir\xc3\xa1 a tu grupo por " << verdict.cats << " cats.";
+        return text.str();
     }
+
+    case Currency_Freedom:
+        return name + " se unir\xc3\xa1 a tu grupo si lo liberas.";
+
+    case Currency_Submission:
+        return name + " ya no tiene voluntad de pelear y desea unirse a tu grupo.";
+
+    case Currency_Care:
+        return name + " te debe la comida y las curas, y desea unirse a tu grupo.";
+
+    case Currency_None:
+    default:
+        return verdict.viaRescue
+                   ? name + " te debe la vida y desea unirse a tu grupo."
+                   : name + " desea unirse a tu grupo.";
+    }
+}
+
+std::string SpeakAcceptLine(const Verdict& verdict)
+{
+    // Short enough to fit the button. What the player is agreeing to is spelled
+    // out in the window's body, so the button only has to say yes.
+    return "ACEPTAR";
 }
 
 bool IsInPlayerCage(Character* character)

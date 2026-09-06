@@ -239,10 +239,13 @@ bool AnchorToMenu(ContextMenu* menu)
         return false;
     }
 
-    int width = optionsCoord.width;
-    if (width < kMinButtonWidth)
+    // The caption is a single word now, so matching the menu's full width would
+    // leave a mostly empty button. Narrower also means less of the world is
+    // covered by it.
+    int width = kMinButtonWidth;
+    if (optionsCoord.width < width)
     {
-        width = kMinButtonWidth;
+        width = optionsCoord.width;
     }
 
     // Sit to the right of the menu rather than below it: other mods
@@ -360,14 +363,11 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
                 " (" + CurrencyName(verdict.currency) + ") " + verdict.reason);
     }
 
-    std::string caption = config.recruitLabel + ": " + CharacterName(character);
-    if (config.preset != Preset_Cheat)
-    {
-        caption += verdict.willJoin ? "  [" : "  (";
-        caption += verdict.reason;
-        caption += verdict.willJoin ? "]" : ")";
-    }
-    SafeSetCaption(g_button, caption.c_str());
+    // Just the verb. The name is already in the menu this button is attached
+    // to, and the price and the reason are in the window it opens -- packing
+    // them in here made a caption too long to read, which is worse than saying
+    // less.
+    SafeSetCaption(g_button, config.recruitLabel.c_str());
 
     // The native menu sizes itself during show, so the first anchor attempt can
     // read a stale rect; update() re-anchors every frame while it is open.

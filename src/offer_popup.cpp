@@ -33,7 +33,7 @@ const int kTextHeight = 96;
 
 MyGUI::Window* g_root = NULL;
 MyGUI::Widget* g_client = NULL;
-MyGUI::TextBox* g_text = NULL;
+MyGUI::EditBox* g_text = NULL;
 MyGUI::ImageBox* g_portrait = NULL;
 MyGUI::Button* g_accept = NULL;
 MyGUI::Button* g_decline = NULL;
@@ -64,6 +64,20 @@ void SafeSetCaption(MyGUI::TextBox* widget, const char* text)
 }
 
 
+
+// setOnlyText avoids the caption's markup parsing, which would swallow any
+// stray formatting characters in a character name.
+void ApplyOnlyText(MyGUI::EditBox* box, const char* text)
+{
+    box->setOnlyText(text);
+}
+
+void SafeSetOnlyText(MyGUI::EditBox* box, const char* text)
+{
+    if (box == NULL) return;
+    TR_TRY { ApplyOnlyText(box, text); }
+    TR_CATCH { }
+}
 
 void SafeSetVisible(MyGUI::Widget* widget, bool visible)
 {
@@ -115,19 +129,21 @@ bool SafeClientSize(MyGUI::Widget* client, int* outWidth, int* outHeight)
     TR_CATCH { return false; }
 }
 
-// A TextBox rather than an EditBox: this only displays, and an EditBox brings
-// caret and focus behaviour that has no business in a two-button prompt.
-MyGUI::TextBox* CreateText(MyGUI::Widget* parent, const char* skin,
+// An EditBox rather than a TextBox, because only EditBox can word-wrap: a
+// TextBox draws one line and clips whatever does not fit, which is how the
+// message ended up cut off mid-sentence. Its editing behaviour is switched off
+// below so it still reads as a label.
+MyGUI::EditBox* CreateText(MyGUI::Widget* parent, const char* skin,
                            int left, int top, int width, int height)
 {
-    return parent->createWidget<MyGUI::TextBox>(
+    return parent->createWidget<MyGUI::EditBox>(
         skin,
         MyGUI::IntCoord(left, top, width, height),
         MyGUI::Align::Default,
         kTextName);
 }
 
-MyGUI::TextBox* SafeCreateText(MyGUI::Widget* parent, const char* skin,
+MyGUI::EditBox* SafeCreateText(MyGUI::Widget* parent, const char* skin,
                                int left, int top, int width, int height)
 {
     TR_TRY { return CreateText(parent, skin, left, top, width, height); }
@@ -154,19 +170,38 @@ MyGUI::ImageBox* SafeCreatePortrait(MyGUI::Widget* parent, int left, int top, in
 
 // createPortraitImage hands back a PortraitImage that knows how to paint itself
 // into an ImageBox, which is exactly what the squad bar does with it.
-void LoadPortrait(Character* npc)
+void LoadPortrait(Character* npc, int* outStage)
 {
+    *outStage = 1;
     PortraitManager* manager = PortraitManager::getInstance();
     if (manager == NULL)
     {
         return;
     }
 
+    *outStage = 2;
     PortraitImage* image = NULL;
-    if (manager->createPortraitImage(image, npc) && image != NULL)
+    if (!manager->createPortraitImage(image, npc))
     {
-        image->updateImageWidget(g_portrait, true);
+        return;
     }
+
+    *outStage = 3;
+    if (image == NULL)
+    {
+        return;
+    }
+
+    image->updateImageWidget(g_portrait, true);
+    *outStage = 4;
+}
+
+int GuardedLoadPortrait(Character* npc)
+{
+    int stage = 0;
+    TR_TRY { LoadPortrait(npc, &stage); }
+    TR_CATCH { return -stage; }
+    return stage;
 }
 
 void SafeLoadPortrait(Character* npc)
@@ -176,9 +211,18 @@ void SafeLoadPortrait(Character* npc)
         return;
     }
 
-    bool loaded = false;
-    TR_TRY { LoadPortrait(npc); loaded = true; }
-    TR_CATCH { }
+    // The stage says how far the load got, so a blank frame can be told apart
+    // from a manager that was never there. The guarded call keeps a POD-only
+    // frame; the reporting happens outside it.
+    const int stage = GuardedLoadPortrait(npc);
+
+    const bool loaded = (stage == 4);
+    if (!loaded && GetConfig().probeOnClick)
+    {
+        char stageText[16] = { 0 };
+        _snprintf_s(stageText, sizeof(stageText), _TRUNCATE, "%d", stage);
+        LogInfo("Portrait not drawn (stage " + std::string(stageText) + ").");
+    }
 
     // A missing portrait is not worth failing the window over; the frame just
     // stays empty.
@@ -231,14 +275,21 @@ void SafeLayoutDecline(bool sharingRow)
     TR_CATCH { }
 }
 
-// Word-wrapped, top-left aligned, and never taking focus.
+// Word-wrapped, read-only, and never taking focus: a label that happens to be
+// an EditBox because that is the only widget here that wraps.
 bool ConfigureText()
 {
     TR_TRY
     {
+        g_text->setEditStatic(true);
+        g_text->setEditReadOnly(true);
+        g_text->setEditMultiLine(true);
+        g_text->setEditWordWrap(true);
         g_text->setTextAlign(MyGUI::Align::Left | MyGUI::Align::Top);
         g_text->setNeedKeyFocus(false);
         g_text->setNeedMouseFocus(false);
+        g_text->setVisibleVScroll(false);
+        g_text->setVisibleHScroll(false);
         return true;
     }
     TR_CATCH { return false; }
@@ -379,7 +430,7 @@ bool Build()
     const int textHeight = buttonTop - kMargin * 2;
     const int buttonWidth = (clientWidth - kMargin * 3) / 2;
 
-    const char* textSkins[3] = { "Kenshi_TextboxStandardText", "TextBox", "StaticText" };
+    const char* textSkins[3] = { "Kenshi_EditBox", "EditBox", "TextBox" };
     for (int i = 0; i < 3 && g_text == NULL; ++i)
     {
         g_text = SafeCreateText(g_client, textSkins[i], textLeft, kMargin,
@@ -496,11 +547,11 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
     g_subject = npc;
     g_open = true;
 
-    // The name belongs in the window's own title bar, which the skin already
-    // draws; repeating it in the body just wastes a line.
-    SafeSetCaption(g_root, CharacterName(npc).c_str());
+    // A fixed title says what kind of window this is; who it is about is in
+    // the body, where there is room for a full name.
+    SafeSetCaption(g_root, "Reclutamiento");
     SafeLoadPortrait(npc);
-    SafeSetCaption(g_text, npcLine.c_str());
+    SafeSetOnlyText(g_text, npcLine.c_str());
     // An empty accept label means there is nothing to agree to, so that button
     // is hidden and the decline one widens to fill the row.
     const bool haveAccept = !acceptLabel.empty();

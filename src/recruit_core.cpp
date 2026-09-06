@@ -315,12 +315,17 @@ bool PresentOffer(Character* character, const Verdict& verdict, const std::strin
         return false;
     }
 
+    // The window narrates the situation; the NPC's own words are already in a
+    // bubble over their head, so repeating them here would waste the one line
+    // the window has.
+    const std::string body = DescribeOffer(character, verdict);
+
     if (!verdict.willJoin)
     {
-        return ShowOffer(character, spoken, "", "Dejarlo.", extraLabel);
+        return ShowOffer(character, body, "", "CERRAR", extraLabel);
     }
 
-    return ShowOffer(character, spoken, SpeakAcceptLine(verdict), "Ahora no.", extraLabel);
+    return ShowOffer(character, body, SpeakAcceptLine(verdict), "RECHAZAR", extraLabel);
 }
 } // namespace
 

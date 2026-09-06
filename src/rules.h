@@ -76,4 +76,10 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict);
 // The label for the "yes" reply, naming the price so the player sees what they
 // are agreeing to.
 std::string SpeakAcceptLine(const Verdict& verdict);
+
+// What the offer window says about the situation, in the narrator's voice
+// rather than the NPC's. The NPC already speaks in a bubble over their head, so
+// repeating those words in the window wastes the only line it has -- this
+// states what is happening and why instead.
+std::string DescribeOffer(Character* character, const Verdict& verdict);
 } // namespace totalrecruit

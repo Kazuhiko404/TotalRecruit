@@ -141,7 +141,7 @@ struct Config
         : enabled(true),
           showRecruitButton(true),
           autoRecruit(true),
-          recruitLabel("Recruit"),
+          recruitLabel("Hablar"),
           maxSpawnedCharacters(150),
           panelToggleKey(37), // KC_K
           probeOnClick(false),
