@@ -1,0 +1,41 @@
+{
+  "enabled": true,
+  "showRecruitButton": true,
+  "autoRecruit": true,
+  "recruitLabel": "Recruit",
+  "maxSpawnedCharacters": 150,
+  "panelToggleKey": 37,
+  "probeOnClick": false,
+
+  "preset": 1,
+
+  "rescueEnabled": true,
+  "rescuePlayerOnly": true,
+  "captivityEnabled": true,
+  "surrenderEnabled": true,
+  "animalsEnabled": true,
+
+  "catsPerLevel": 40,
+  "catsMinimum": 250,
+  "hungerThreshold": 0.0,
+  "woundedThreshold": 0.5,
+  "hoursCagedForProud": 12.0,
+  "uniqueExtraHours": 24.0,
+  "fearfulMultiplier": 0.6,
+  "braveMultiplier": 1.6,
+  "factionWeight": 0.75,
+
+  "dialoguePackage": "",
+  "dialogueRescue": "",
+  "dialogueCaptive": "",
+  "dialogueAcceptKey": "totalrecruit accept",
+
+  "exclude": {
+    "dead": true,
+    "unconscious": false,
+    "animals": false,
+    "sameFaction": true,
+    "factions": [],
+    "characterNames": []
+  }
+}

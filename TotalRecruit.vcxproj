@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{7c4e1f92-3a8d-4b16-9e5c-2d0f8a6b1c34}</ProjectGuid>
+    <RootNamespace>TotalRecruit</RootNamespace>
+    <TargetName>TotalRecruit</TargetName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v100</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir)src;$(KENSHILIB_DIR)\Include;$(KENSHILIB_DIR)\Include\ogre;$(BOOST_INCLUDE_PATH);$(IncludePath)</IncludePath>
+    <LibraryPath>$(KENSHILIB_DIR)\Libraries;$(BOOST_INCLUDE_PATH)\stage\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;BOOST_SYSTEM_NO_LIB;BOOST_SYSTEM_NO_DEPRECATED;BOOST_ALL_NO_LIB;BOOST_ERROR_CODE_HEADER_ONLY;BOOST_THREAD_NO_LIB;BOOST_CHRONO_NO_LIB;BOOST_DATE_TIME_NO_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <!-- /EHa: the plugin guards engine memory with __try, which MSVC only
+           allows alongside C++ objects under asynchronous exception handling. -->
+      <ExceptionHandling>Async</ExceptionHandling>
+      <ForcedIncludeFiles>$(KENSHILIB_DIR)\Include\kenshi\util\OgreUnordered.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>KenshiLib.lib;OgreMain_x64.lib;MyGUIEngine_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\TotalRecruit.cpp" />
+    <ClCompile Include="src\recruit_overlay.cpp" />
+    <ClCompile Include="src\recruit_core.cpp" />
+    <ClCompile Include="src\spawn_panel.cpp" />
+    <ClCompile Include="src\spawn_core.cpp" />
+    <ClCompile Include="src\game_data.cpp" />
+    <ClCompile Include="src\config.cpp" />
+    <ClCompile Include="src\log.cpp" />
+    <ClCompile Include="src\probe.cpp" />
+    <ClCompile Include="src\rules.cpp" />
+    <ClCompile Include="src\dialogue_bridge.cpp" />
+    <ClCompile Include="src\rescue.cpp" />
+    <ClCompile Include="src\frame_tick.cpp" />
+    <ClCompile Include="src\settings_panel.cpp" />
+    <ClCompile Include="src\surrender.cpp" />
+    <ClCompile Include="src\dialogue_authoring.cpp" />
+    <ClCompile Include="src\offer_popup.cpp" />
+    <ClCompile Include="src\feeding.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\recruit_overlay.h" />
+    <ClInclude Include="src\recruit_core.h" />
+    <ClInclude Include="src\spawn_panel.h" />
+    <ClInclude Include="src\spawn_core.h" />
+    <ClInclude Include="src\game_data.h" />
+    <ClInclude Include="src\config.h" />
+    <ClInclude Include="src\log.h" />
+    <ClInclude Include="src\probe.h" />
+    <ClInclude Include="src\rules.h" />
+    <ClInclude Include="src\dialogue_bridge.h" />
+    <ClInclude Include="src\rescue.h" />
+    <ClInclude Include="src\frame_tick.h" />
+    <ClInclude Include="src\settings_panel.h" />
+    <ClInclude Include="src\surrender.h" />
+    <ClInclude Include="src\dialogue_authoring.h" />
+    <ClInclude Include="src\offer_popup.h" />
+    <ClInclude Include="src\feeding.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
