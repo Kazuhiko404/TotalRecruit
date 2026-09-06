@@ -214,6 +214,7 @@ void LoadConfig(const std::string& modDirectory)
     ReadFloat(text, "braveMultiplier", &g_config.prices.braveMultiplier);
     ReadFloat(text, "uniqueExtraHours", &g_config.prices.uniqueExtraHours);
     ReadFloat(text, "factionWeight", &g_config.prices.factionWeight);
+    ReadFloat(text, "talentWeight", &g_config.prices.talentWeight);
 
     ReadString(text, "dialoguePackage", &g_config.dialogue.package);
     ReadString(text, "dialogueRescue", &g_config.dialogue.rescue);

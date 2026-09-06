@@ -22,8 +22,8 @@
   "animalsEnabled": true,
 
   "easyHoursCaged": 12.0,
-  "catsPerLevel": 40,
-  "catsMinimum": 250,
+  "catsPerLevel": 120,
+  "catsMinimum": 200,
   "hungerThreshold": 0.0,
   "woundedThreshold": 0.5,
   "hoursCagedForProud": 12.0,
@@ -31,6 +31,7 @@
   "fearfulMultiplier": 0.6,
   "braveMultiplier": 1.6,
   "factionWeight": 0.75,
+  "talentWeight": 1.0,
 
   "dialoguePackage": "",
   "dialogueRescue": "",

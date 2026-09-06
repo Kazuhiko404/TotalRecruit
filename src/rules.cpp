@@ -6,6 +6,9 @@
 #include "log.h"
 #include "messages.h"
 
+#include <kenshi/CharacterAnimal.h>
+#include <kenshi/CharStats.h>
+
 #include <sstream>
 #include <map>
 
@@ -186,6 +189,55 @@ bool SafeIsAnimal(Character* character, bool* out)
 {
     TR_TRY { *out = (character->isAnimal() != NULL); return true; }
     TR_CATCH { return false; }
+}
+
+// How grown an animal is, 0..1 of its own lifespan. A pup and an old bull are
+// not the same negotiation, and the engine tracks both numbers already.
+bool SafeAnimalMaturity(Character* character, float* out)
+{
+    TR_TRY
+    {
+        CharacterAnimal* beast = character->isAnimal();
+        if (beast == NULL || beast->lifespanInDays <= 0.0f)
+        {
+            return false;
+        }
+        float m = beast->age / beast->lifespanInDays;
+        if (m < 0.0f) m = 0.0f;
+        if (m > 1.0f) m = 1.0f;
+        *out = m;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// Feeding a starving animal is the whole of taming when the animal is small,
+// and only the opening when it is not.
+//
+// The shape borrowed from survival games that do this well: a young or weak
+// creature bonds on the meal alone, because it has no other option and no
+// reason to distrust you. A grown one weighs whether you can keep feeding it,
+// which in Kenshi terms means whether you look stronger than it is.
+//
+// So the cost is one number -- meals -- and maturity and level decide how many.
+int MealsToTame(int npcLevel, int playerLevel, float maturity)
+{
+    // A cub or a weakling: one meal and it follows you home.
+    if (maturity < 0.25f || npcLevel <= 10)
+    {
+        return 1;
+    }
+
+    // Everyone else pays for their size, then discounts for your reputation as
+    // something that can clearly feed itself.
+    int meals = 2 + (int)(maturity * 3.0f);          // 2..5
+    meals += (npcLevel > 30) ? 1 : 0;
+
+    const int edge = playerLevel - npcLevel;
+    if (edge >= 20)      meals -= 2;
+    else if (edge >= 10) meals -= 1;
+
+    return meals < 1 ? 1 : meals;
 }
 
 bool SafeRoughLevel(Character* character, int* out)
@@ -426,6 +478,74 @@ float PersonalityMultiplier(int personality)
     }
 }
 
+// What someone is actually good at, and how far past their own level it goes.
+//
+// getRoughLevel() is an average, so a level 30 assassin and a level 30 baker
+// with a sword price identically -- which is exactly the complaint Recruit
+// Prisoners for Cats answers by hand-pricing every NPC. Reading the stats gets
+// there without a table, and without a patch per mod.
+struct Talent
+{
+    // Best stat found, and how far above the character's own level it sits.
+    // 1.0 means "as good as their level suggests"; 2.0 means twice that.
+    float edge;
+    // Which family that best stat belongs to, for the line the player reads.
+    const char* kind;
+
+    Talent() : edge(1.0f), kind("") {}
+};
+
+bool SafeReadTalent(Character* character, int level, Talent* out)
+{
+    TR_TRY
+    {
+        CharStats* stats = character->getStats();
+        if (stats == NULL || level < 1)
+        {
+            return false;
+        }
+
+        // Three families, because they are three different reasons to want
+        // somebody. Combat is what every other mod prices; the other two are
+        // what Kenshi actually makes scarce.
+        const StatsEnumerated combat[5] = {
+            STAT_MELEE_ATTACK, STAT_MELEE_DEFENCE, STAT_DODGE,
+            STAT_TOUGHNESS, STAT_MARTIALARTS
+        };
+        const StatsEnumerated shadow[4] = {
+            STAT_STEALTH, STAT_ASSASSINATION, STAT_THIEVING, STAT_LOCKPICKING
+        };
+        const StatsEnumerated craft[8] = {
+            STAT_SCIENCE, STAT_ENGINEERING, STAT_ROBOTICS, STAT_SMITHING_WEAPON,
+            STAT_SMITHING_ARMOUR, STAT_MEDIC, STAT_FARMING, STAT_LABOURING
+        };
+
+        float best = 0.0f;
+        const char* kind = "";
+
+        for (int i = 0; i < 5; ++i)
+        {
+            const float v = stats->getStat(combat[i], false);
+            if (v > best) { best = v; kind = "combate"; }
+        }
+        for (int i = 0; i < 4; ++i)
+        {
+            const float v = stats->getStat(shadow[i], false);
+            if (v > best) { best = v; kind = "sombra"; }
+        }
+        for (int i = 0; i < 8; ++i)
+        {
+            const float v = stats->getStat(craft[i], false);
+            if (v > best) { best = v; kind = "oficio"; }
+        }
+
+        out->edge = best / (float)level;
+        out->kind = kind;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
 int PriceInCats(Character* character, const Traits& traits, Faction* playerFaction)
 {
     const Prices& prices = GetConfig().prices;
@@ -441,6 +561,26 @@ int PriceInCats(Character* character, const Traits& traits, Faction* playerFacti
     if (cats < (float)prices.catsMinimum)
     {
         cats = (float)prices.catsMinimum;
+    }
+
+    // Talent, only in the presets that price at all. An edge of 1.0 is somebody
+    // exactly as good as their level suggests and changes nothing; the multiplier
+    // only bites for people who are unusually good at something.
+    const Config& cfg = GetConfig();
+    if (cfg.preset != Preset_Cheat && cfg.prices.talentWeight > 0.0f)
+    {
+        Talent talent;
+        if (SafeReadTalent(character, level, &talent) && talent.edge > 1.0f)
+        {
+            // A craftsman is worth more than a swordsman of the same level:
+            // Kenshi hands you fighters constantly and engineers almost never.
+            float familyWeight = 1.0f;
+            if (strcmp(talent.kind, "oficio") == 0)      familyWeight = 1.6f;
+            else if (strcmp(talent.kind, "sombra") == 0) familyWeight = 1.3f;
+
+            const float over = (talent.edge - 1.0f) * familyWeight;
+            cats *= 1.0f + (over * cfg.prices.talentWeight);
+        }
     }
 
     cats *= PersonalityMultiplier(traits.personality);
@@ -1231,6 +1371,36 @@ Verdict Evaluate(Character* character)
         }
 
         const bool cared = !condition.starving && !condition.wounded;
+
+        // Animals earn their own arithmetic. A cub follows the first person who
+        // feeds it; a grown one wants to see that you can keep doing it.
+        if (animal && condition.starving)
+        {
+            float maturity = 0.5f;
+            SafeAnimalMaturity(character, &maturity);
+            const int meals = MealsToTame(npcLevel, playerLevel, maturity);
+
+            verdict.currency = Currency_Care;
+            verdict.wantsFood = true;
+            verdict.cats = meals;   // meals, not money: the window reads it as the price
+
+            if (meals <= 1)
+            {
+                verdict.reason = (maturity < 0.25f)
+                    ? "cachorro hambriento: una comida y te sigue"
+                    : "d\xc3\xa9" "bil y hambriento: una comida basta";
+            }
+            else
+            {
+                char buf[96] = { 0 };
+                _snprintf_s(buf, sizeof(buf), _TRUNCATE,
+                            "hambriento pero cr\xc3\xa9" "dulo: %d comidas y te seguir\xc3\xa1",
+                            meals);
+                verdict.reason = buf;
+            }
+            break;
+        }
+
         if (cared)
         {
             verdict.willJoin = true;

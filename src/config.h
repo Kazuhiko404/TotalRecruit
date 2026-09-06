@@ -65,18 +65,23 @@ struct Prices
     // Vanilla+ only: how much faction relation shifts the price. Relation runs
     // roughly -100..100; this is the fraction of the base price added at -100.
     float factionWeight;
+    // How hard an unusual talent moves the price. 0 disables it and prices by
+    // level alone. A stat far above the character's own level is the only thing
+    // that reads as "they know something you cannot see from here".
+    float talentWeight;
 
     Prices()
         : easyHoursCaged(12.0f),
-          catsPerLevel(40),
-          catsMinimum(250),
+          catsPerLevel(120),
+          catsMinimum(200),
           hungerThreshold(0.0f),
           woundedThreshold(0.5f),
           hoursCagedForProud(12.0f),
           fearfulMultiplier(0.6f),
           braveMultiplier(1.6f),
           uniqueExtraHours(24.0f),
-          factionWeight(0.75f)
+          factionWeight(0.75f),
+          talentWeight(1.0f)
     {
     }
 };

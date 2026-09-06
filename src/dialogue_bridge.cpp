@@ -234,6 +234,17 @@ bool IsConversationActive()
 
 bool OpenConversation(Character* npc, const std::string& dialogueStringId)
 {
+    // DISABLED. The bridge is written and compiles, but no FCS package has ever
+    // fired it, so every path through here is unproven code sitting in front of
+    // the one that actually works. Returning false sends every caller to the
+    // plugin's own offer window, which is the path players are using anyway.
+    //
+    // To re-enable: delete this return and set dialoguePackage / dialogueRescue
+    // / dialogueCaptive in config.json to real FCS string IDs. Nothing else in
+    // the module was removed.
+    return false;
+
+#if 0
     if (npc == NULL || dialogueStringId.empty())
     {
         return false;
@@ -282,6 +293,7 @@ bool OpenConversation(Character* npc, const std::string& dialogueStringId)
     g_conversationNpc = npc;
     g_conversationActive = true;
     return true;
+#endif
 }
 
 void RememberPendingPrice(Character* npc, int cats)
