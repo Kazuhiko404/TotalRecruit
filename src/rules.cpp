@@ -894,16 +894,7 @@ Verdict Evaluate(Character* character)
         return verdict;
     }
 
-    // Insistence check: si el jugador ha insistido demasiado recientemente
-    double remainingHours = 0.0;
-    if (IsIgnoringPlayer(character, &remainingHours))
-    {
-        verdict.currency = Currency_Refused;
-        verdict.reason = "est\xc3\xa1 harto de tu insistencia: d\xc3\xa9jalo en paz un rato";
-        return verdict;
-    }
-
-    // Nivel relativo del NPC vs líder del jugador
+    // Nivel relativo del NPC vs l\xc3\xadder del jugador
     int npcLevel = 1;
     SafeRoughLevel(character, &npcLevel);
     int playerLevel = 1;
@@ -912,14 +903,23 @@ Verdict Evaluate(Character* character)
         SafeRoughLevel(leader, &playerLevel);
     }
 
+    bool inAnyCage = false;
     const bool inMyCage = IsInPlayerCage(character);
     if (!inMyCage)
     {
-        bool inAnyCage = false;
         SafeInPrison(character, &inAnyCage);
         if (inAnyCage)
         {
             verdict.reason = "est\xc3\xa1 en la jaula de otro";
+            return verdict;
+        }
+
+        // Insistence check: si el jugador ha insistido demasiado recientemente
+        double remainingHours = 0.0;
+        if (IsIgnoringPlayer(character, &remainingHours))
+        {
+            verdict.currency = Currency_Refused;
+            verdict.reason = "est\xc3\xa1 harto de tu insistencia: d\xc3\xa9jalo en paz un rato";
             return verdict;
         }
 
