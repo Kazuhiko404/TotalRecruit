@@ -120,6 +120,14 @@ bool SendDialogEvent_hook(Character* thisptr, Character* target, EventTriggerEnu
         if (RemembersPlayerAsSaviour(thisptr) &&
             SafeIsPlayerCharacter(thisptr, &alreadyYours) && !alreadyYours)
         {
+            // Pacify immediately so they don't swing at the player who just saved them
+            Character* leader = NULL;
+            if (ou != NULL && ou->player != NULL && ou->player->currentPlatoon != NULL)
+            {
+                leader = ou->player->currentPlatoon->getSquadLeader();
+            }
+            SafePacify(thisptr, leader);
+
             const Verdict verdict = Evaluate(thisptr);
             if (verdict.willJoin && verdict.viaRescue)
             {
@@ -134,7 +142,7 @@ bool SendDialogEvent_hook(Character* thisptr, Character* target, EventTriggerEnu
                     std::string message;
                     if (Recruit(thisptr, &message))
                     {
-                        TellPlayer(name + " owes you their life, and joins you", false);
+                        TellPlayer(name + " te debe la vida, y se une a tu grupo.", false);
                         LogInfo("Rescued " + message + " joined on waking.");
                     }
                 }

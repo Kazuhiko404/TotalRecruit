@@ -277,88 +277,6 @@ bool SafeGameHours(double* out)
     TR_CATCH { return false; }
 }
 
-bool IsIgnoringPlayer(Character* character, double* outRemainingHours)
-{
-    if (character == NULL)
-    {
-        return false;
-    }
-
-    double now = 0.0;
-    if (!SafeGameHours(&now))
-    {
-        return false;
-    }
-
-    std::map<Character*, TalkState>::iterator it = g_talkStates.find(character);
-    if (it == g_talkStates.end())
-    {
-        return false;
-    }
-
-    if (it->second.ignoredUntilHour > now)
-    {
-        if (outRemainingHours != NULL)
-        {
-            *outRemainingHours = it->second.ignoredUntilHour - now;
-        }
-        return true;
-    }
-
-    return false;
-}
-
-bool RecordInteraction(Character* character, double nowHours)
-{
-    if (character == NULL)
-    {
-        return false;
-    }
-
-    TalkState& state = g_talkStates[character];
-    if (state.ignoredUntilHour > nowHours)
-    {
-        return true;
-    }
-
-    // Si pasaron más de 2 horas de juego desde el último intento, resetea el contador
-    if (nowHours - state.lastHour > 2.0)
-    {
-        state.attempts = 0;
-    }
-
-    state.lastHour = nowHours;
-    state.attempts++;
-
-    // 3 intentos seguidos sin éxito provocan que ignore al jugador por 4 horas
-    if (state.attempts >= 3)
-    {
-        state.ignoredUntilHour = nowHours + 4.0;
-        return true;
-    }
-
-    return false;
-}
-
-void SafePacify(Character* character, Character* playerLeader)
-{
-    if (character == NULL)
-    {
-        return;
-    }
-
-    TR_TRY
-    {
-        character->endCombatMode();
-        if (playerLeader != NULL)
-        {
-            character->clearTempEnemyStatus(playerLeader);
-        }
-        character->reThinkCurrentAIAction();
-    }
-    TR_CATCH { }
-}
-
 float HoursHeld(Character* character)
 {
     double now = 0.0;
@@ -467,24 +385,28 @@ Currency ChooseCurrency(const Traits& traits, const Condition& condition, bool a
         return Currency_Care;
     }
 
+    // Honorable y Warm/Kind nunca aceptan soborno por dinero (Cats)
+    if (traits.personality == PT_HONORABLE || traits.personality == PT_WARM_KIND)
+    {
+        return Currency_Care;
+    }
+
     switch (traits.npcType)
     {
     case OT_BANDIT:
     case OT_TRADER:
     case OT_SLAVER:
+    case OT_CIVILIAN:
+    case OT_ADVENTURER:
+    case OT_DIPLOMAT:
         return Currency_Cats;
 
     case OT_MILITARY:
     case OT_LAW_ENFORCEMENT:
         return Currency_Submission;
 
-    case OT_CIVILIAN:
-    case OT_ADVENTURER:
-    case OT_DIPLOMAT:
     default:
-        return (traits.personality == PT_HONORABLE || traits.personality == PT_BRAVE)
-                   ? Currency_Submission
-                   : Currency_Cats;
+        return (traits.personality == PT_BRAVE) ? Currency_Submission : Currency_Cats;
     }
 }
 } // namespace
@@ -520,6 +442,20 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
 
     if (verdict.currency == Currency_Refused)
     {
+        if (verdict.reason.find("harto") != std::string::npos ||
+            verdict.reason.find("pesado") != std::string::npos)
+        {
+            return "\xc2\xa1" "Me est\xc3\xa1" "s hartando! D\xc3\xa9jame en paz.";
+        }
+        if (verdict.reason.find("d\xc3\xa9" "bil") != std::string::npos ||
+            verdict.reason.find("fuerte") != std::string::npos)
+        {
+            return "\xc2\xbf" "T\xc3\xba pretender darme \xc3\xb3" "rdenes? Eres demasiado d\xc3\xa9" "bil. L\xc3\xa1" "rgate.";
+        }
+        if (verdict.reason.find("honor") != std::string::npos)
+        {
+            return "El honor no se compra con gatos. No me rebajar\xc3\xa9 a esto.";
+        }
         return "S\xc3\xa9 lo que hiciste. Fuera de mi vista.";
     }
 
@@ -545,6 +481,10 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
         return "Qu\xc3\xadtame estas cadenas y ser\xc3\xa9 tuyo.";
 
     case Currency_Care:
+        if (traits.personality == PT_HONORABLE || traits.personality == PT_WARM_KIND)
+        {
+            return "No me interesan tus monedas. Solo valoro a quien ayuda de coraz\xc3\xb3n.";
+        }
         if (traits.personality == PT_FEARFUL)
         {
             return "Por favor... dame algo de comer y te seguir\xc3\xa9.";
@@ -945,18 +885,87 @@ Verdict Evaluate(Character* character)
         return verdict;
     }
 
-    // Route B -- captivity. A cage is required, and that is the point: a
-    // stranger walking down the street does not sell themselves to whoever
-    // right-clicks them. Every NPC stays reachable -- but through one of the
-    // three routes, each of which asks something of the player first.
+    // Insistence check: si el jugador ha insistido demasiado recientemente
+    double remainingHours = 0.0;
+    if (IsIgnoringPlayer(character, &remainingHours))
+    {
+        verdict.currency = Currency_Refused;
+        verdict.reason = "est\xc3\xa1 harto de tu insistencia: d\xc3\xa9jalo en paz un rato";
+        return verdict;
+    }
+
+    // Nivel relativo del NPC vs líder del jugador
+    int npcLevel = 1;
+    SafeRoughLevel(character, &npcLevel);
+    int playerLevel = 1;
+    if (leader != NULL)
+    {
+        SafeRoughLevel(leader, &playerLevel);
+    }
+
     const bool inMyCage = IsInPlayerCage(character);
     if (!inMyCage)
     {
         bool inAnyCage = false;
         SafeInPrison(character, &inAnyCage);
-        verdict.reason = inAnyCage
-                             ? "est\xc3\xa1 en la jaula de otro"
-                             : "libre y sano: captur\xc3\xa1lo primero";
+        if (inAnyCage)
+        {
+            verdict.reason = "est\xc3\xa1 en la jaula de otro";
+            return verdict;
+        }
+
+        // NPC libre: Flujo normal de soborno y negociacion
+        // 1. Si el nivel del NPC es muy superior (+15 niveles), ni te escucha (desprecio por debilidad)
+        if (npcLevel - playerLevel > 15)
+        {
+            verdict.currency = Currency_Refused;
+            verdict.reason = "eres demasiado debil comparado con el: ni se molesta en escucharte";
+            return verdict;
+        }
+
+        // 2. Personalidades honorables o buenas nunca aceptan Cats
+        if (traits.personality == PT_HONORABLE || traits.personality == PT_WARM_KIND)
+        {
+            if (condition.starving)
+            {
+                verdict.currency = Currency_Care;
+                verdict.reason = "tiene hambre y aceptaria comida";
+            }
+            else
+            {
+                verdict.currency = Currency_Refused;
+                verdict.reason = "su honor le impide aceptar sobornos de desconocidos";
+            }
+            return verdict;
+        }
+
+        // 3. Si no tiene personalidad corruptible/sobornable (ej. militares en servicio libre)
+        if (traits.npcType == OT_MILITARY || traits.npcType == OT_LAW_ENFORCEMENT)
+        {
+            verdict.currency = Currency_Refused;
+            verdict.reason = "sirve con lealtad a su faccion: capturalo primero";
+            return verdict;
+        }
+
+        // 4. Acepta soborno dinámico
+        verdict.currency = Currency_Cats;
+        verdict.cats = PriceInCats(character, traits, playerFaction);
+
+        int purse = 0;
+        const bool havePurse = (leader != NULL) && SafePlayerMoney(leader, &purse);
+
+        std::ostringstream text;
+        if (havePurse && purse < verdict.cats)
+        {
+            text << "pide " << verdict.cats << " cats y tienes " << purse;
+            verdict.reason = text.str();
+        }
+        else
+        {
+            verdict.willJoin = true;
+            text << "se une por " << verdict.cats << " cats";
+            verdict.reason = text.str();
+        }
         return verdict;
     }
 
@@ -1081,5 +1090,87 @@ Verdict Evaluate(Character* character)
     }
 
     return verdict;
+}
+
+bool IsIgnoringPlayer(Character* character, double* outRemainingHours)
+{
+    if (character == NULL)
+    {
+        return false;
+    }
+
+    double now = 0.0;
+    if (!SafeGameHours(&now))
+    {
+        return false;
+    }
+
+    std::map<Character*, TalkState>::iterator it = g_talkStates.find(character);
+    if (it == g_talkStates.end())
+    {
+        return false;
+    }
+
+    if (it->second.ignoredUntilHour > now)
+    {
+        if (outRemainingHours != NULL)
+        {
+            *outRemainingHours = it->second.ignoredUntilHour - now;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+bool RecordInteraction(Character* character, double nowHours)
+{
+    if (character == NULL)
+    {
+        return false;
+    }
+
+    TalkState& state = g_talkStates[character];
+    if (state.ignoredUntilHour > nowHours)
+    {
+        return true;
+    }
+
+    // Si pasaron mas de 2 horas de juego desde el ultimo intento, resetea el contador
+    if (nowHours - state.lastHour > 2.0)
+    {
+        state.attempts = 0;
+    }
+
+    state.lastHour = nowHours;
+    state.attempts++;
+
+    // 3 intentos seguidos sin exito provocan que ignore al jugador por 4 horas
+    if (state.attempts >= 3)
+    {
+        state.ignoredUntilHour = nowHours + 4.0;
+        return true;
+    }
+
+    return false;
+}
+
+void SafePacify(Character* character, Character* playerLeader)
+{
+    if (character == NULL)
+    {
+        return;
+    }
+
+    TR_TRY
+    {
+        character->endCombatMode();
+        if (playerLeader != NULL)
+        {
+            character->clearTempEnemyStatus(playerLeader);
+        }
+        character->reThinkCurrentAIAction();
+    }
+    TR_CATCH { }
 }
 } // namespace totalrecruit

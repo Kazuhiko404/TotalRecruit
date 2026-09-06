@@ -487,6 +487,16 @@ bool Recruit(Character* character, std::string* outMessage)
         LogInfo("Recruited " + name + " via setFaction fallback.");
     }
 
+    // SafePacify resets combat mode, clears temporary enemy status with the player,
+    // and forces the character's AI package to rethink its action so they do not
+    // re-attack immediately.
+    Character* leader = NULL;
+    if (ou != NULL && ou->player != NULL && ou->player->currentPlatoon != NULL)
+    {
+        leader = ou->player->currentPlatoon->getSquadLeader();
+    }
+    SafePacify(character, leader);
+
     // Without this the new member can be missing from the portrait bar until
     // something else forces a refresh.
     SafeRefreshPortraits(character);
@@ -523,6 +533,13 @@ void AttemptRecruit(Character* character)
     {
         TellPlayer(name + ": " + excluded, true);
         return;
+    }
+
+    // Registra la interacción para evitar spam/insistencia (ignorar temporalmente tras 3 intentos seguidos)
+    if (ou != NULL)
+    {
+        double nowHours = ou->getTimeStamp_inGameHours().getTotalHours();
+        RecordInteraction(character, nowHours);
     }
 
     const Verdict verdict = Evaluate(character);
