@@ -9,6 +9,9 @@
   "showTalkCursor": true,
   "resolveCageOccupant": true,
   "hailWhenReady": true,
+  "hailFirstHours": 24.0,
+  "hailRepeatHours": 6.0,
+  "hailRepeats": 5,
 
   "preset": 1,
 

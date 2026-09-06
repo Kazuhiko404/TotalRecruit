@@ -127,6 +127,12 @@ struct Config
     // Captives call out when they are ready, so the player learns it without
     // right-clicking on spec.
     bool hailWhenReady;
+    // A single shout is easy to miss, so a captive who wants to talk keeps
+    // asking. In-game hours before the first call, then between each repeat,
+    // and how many calls in total. Clamped on load to the ranges below.
+    float hailFirstHours;
+    float hailRepeatHours;
+    int hailRepeats;
 
     int preset; // Preset enum
     // Route A: recruit someone you saved from dying. The one route no existing
@@ -156,6 +162,9 @@ struct Config
           showTalkCursor(true),
           resolveCageOccupant(true),
           hailWhenReady(true),
+          hailFirstHours(24.0f),
+          hailRepeatHours(6.0f),
+          hailRepeats(5),
           preset(Preset_Balanced),
           rescueEnabled(true),
           rescuePlayerOnly(true),
@@ -165,6 +174,15 @@ struct Config
     {
     }
 };
+
+// Bounds for the hailing schedule, applied when config.json is read so a hand
+// edited file cannot turn a prisoner into a siren or silence them entirely.
+const float kHailFirstHoursMin = 8.0f;
+const float kHailFirstHoursMax = 72.0f;
+const float kHailRepeatHoursMin = 1.0f;
+const float kHailRepeatHoursMax = 24.0f;
+const int kHailRepeatsMin = 1;
+const int kHailRepeatsMax = 10;
 
 // Loads config.json from the mod directory. A missing or malformed file leaves
 // the permissive defaults in place and is reported, never fatal.

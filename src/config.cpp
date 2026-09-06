@@ -90,6 +90,18 @@ void ReadInt(const std::string& text, const std::string& key, int* target)
 
 // atof returns 0.0 both for "0" and for garbage, so the value is only taken
 // when the text actually starts like a number.
+void ClampFloat(float* value, float low, float high)
+{
+    if (*value < low) *value = low;
+    if (*value > high) *value = high;
+}
+
+void ClampInt(int* value, int low, int high)
+{
+    if (*value < low) *value = low;
+    if (*value > high) *value = high;
+}
+
 void ReadFloat(const std::string& text, const std::string& key, float* target)
 {
     size_t valueStart = 0;
@@ -180,6 +192,9 @@ void LoadConfig(const std::string& modDirectory)
     ReadBool(text, "showTalkCursor", &g_config.showTalkCursor);
     ReadBool(text, "resolveCageOccupant", &g_config.resolveCageOccupant);
     ReadBool(text, "hailWhenReady", &g_config.hailWhenReady);
+    ReadFloat(text, "hailFirstHours", &g_config.hailFirstHours);
+    ReadFloat(text, "hailRepeatHours", &g_config.hailRepeatHours);
+    ReadInt(text, "hailRepeats", &g_config.hailRepeats);
 
     ReadInt(text, "preset", &g_config.preset);
     ReadBool(text, "rescueEnabled", &g_config.rescueEnabled);
@@ -210,6 +225,12 @@ void LoadConfig(const std::string& modDirectory)
     ReadBool(text, "sameFaction", &g_config.exclude.sameFaction);
     ReadStringArray(text, "factions", &g_config.exclude.factions);
     ReadStringArray(text, "characterNames", &g_config.exclude.characterNames);
+
+    // Clamped after reading rather than rejected: a nonsensical value should
+    // pull back to a sane one, not disable the feature or drop the whole file.
+    ClampFloat(&g_config.hailFirstHours, kHailFirstHoursMin, kHailFirstHoursMax);
+    ClampFloat(&g_config.hailRepeatHours, kHailRepeatHoursMin, kHailRepeatHoursMax);
+    ClampInt(&g_config.hailRepeats, kHailRepeatsMin, kHailRepeatsMax);
 
     LogInfo("Loaded config from " + path);
 }

@@ -19,11 +19,38 @@ const unsigned int kSweepIntervalMs = 4000;
 // Only captives close enough for the player to plausibly hear.
 const float kHailRadius = 900.0f;
 
-// Once each. A prisoner who keeps shouting the same line every few seconds
-// stops being a signal and becomes noise.
-std::map<Character*, bool> g_hailed;
+// A captive who wants to talk keeps asking, on the game clock: the first call
+// after hailFirstHours, then one every hailRepeatHours, up to hailRepeats in
+// total. A single shout was too easy to walk past and miss.
+struct HailState
+{
+    // Game hour at which the next call is due.
+    double dueAt;
+    // How many calls have already gone out.
+    int spoken;
+
+    HailState() : dueAt(0.0), spoken(0) {}
+};
+
+std::map<Character*, HailState> g_hailed;
 
 unsigned int g_nextSweep = 0;
+
+// The same clock the price rules use, so "hours" means one thing across the
+// mod: in-game hours, which stop when the game is paused.
+bool SafeGameHours(double* out)
+{
+    TR_TRY
+    {
+        if (ou == NULL)
+        {
+            return false;
+        }
+        *out = ou->getTimeStamp_inGameHours().getTotalHours();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
 
 bool SafePlayerAnchor(Ogre::Vector3* out)
 {
@@ -110,6 +137,12 @@ bool WorthHailing(Character* npc)
 
 void SweepForHails()
 {
+    double now = 0.0;
+    if (!SafeGameHours(&now))
+    {
+        return;
+    }
+
     Ogre::Vector3 centre;
     if (!SafePlayerAnchor(&centre))
     {
@@ -130,18 +163,36 @@ void SweepForHails()
             continue;
         }
 
-        if (g_hailed.find(npc) != g_hailed.end())
-        {
-            continue;
-        }
-
         if (!WorthHailing(npc))
         {
             continue;
         }
 
-        g_hailed[npc] = true;
+        const Config& config = GetConfig();
+        std::map<Character*, HailState>::iterator found = g_hailed.find(npc);
+        if (found == g_hailed.end())
+        {
+            // First sighting only starts the clock. They have just been caged;
+            // shouting immediately would make the wait meaningless.
+            HailState fresh;
+            fresh.dueAt = now + config.hailFirstHours;
+            g_hailed[npc] = fresh;
+            continue;
+        }
+
+        HailState& state = found->second;
+        if (state.spoken >= config.hailRepeats || now < state.dueAt)
+        {
+            continue;
+        }
+
+        state.spoken += 1;
+        state.dueAt = now + config.hailRepeatHours;
+
         SpeakAloud(npc, HailLine(npc));
+        // The bubble floats over their head and fades; the roller keeps a line
+        // the player can still read after turning the camera away.
+        TellPlayer(CharacterName(npc) + " quiere hablar contigo.", false);
         LogInfo(CharacterName(npc) + " called out to the player.");
     }
 

@@ -598,10 +598,10 @@ void HelpCaptive(Character* character)
     std::string extraLabel;
     if (!after.willJoin && after.currency == Currency_Care && PlayerHasFood())
     {
-        extraLabel = "Give them more food";
+        extraLabel = "Darle mas comida";
     }
 
-    ShowOffer(character, spoken, SpeakAcceptLine(after), "Not now.", extraLabel);
+    ShowOffer(character, spoken, SpeakAcceptLine(after), "Ahora no.", extraLabel);
 }
 
 void CompleteOffer(Character* character, bool accepted)
@@ -615,7 +615,7 @@ void CompleteOffer(Character* character, bool accepted)
 
     if (!accepted)
     {
-        TellPlayer(name + ": left them where they are", false);
+        TellPlayer(name + ": lo dejaste donde estaba.", false);
         return;
     }
 
