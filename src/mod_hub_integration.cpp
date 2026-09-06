@@ -141,48 +141,48 @@ static bool DoRegisterModHub()
 
     Config& c = GetConfig();
 
-    regBool(api, mod, "showRecruitButton", "Mostrar botón UI", "Muestra un botón de reclutar en el panel", &c.showRecruitButton);
+    regBool(api, mod, "show_recruit_button", "Mostrar botón UI", "Muestra un botón de reclutar en el panel", &c.showRecruitButton);
     regBool(api, mod, "enabled", "Mod activo", "Apaga el mod entero sin desinstalarlo", &c.enabled);
-    regBool(api, mod, "autoRecruit", "Reclutar al aceptar", "Ejecuta el reclutamiento al aceptar la oferta", &c.autoRecruit);
-    regBool(api, mod, "showTalkCursor", "Cursor de hablar", "Cambia el cursor sobre reclutables (sin efecto conocido)", &c.showTalkCursor);
-    regBool(api, mod, "resolveCageOccupant", "Resolver ocupante de jaula", "Al clickear una jaula, apunta a quien esta dentro", &c.resolveCageOccupant);
-    regBool(api, mod, "probeOnClick", "Debug Log (Rasgos)", "Muestra rasgos en el log al hacer clic", &c.probeOnClick);
+    regBool(api, mod, "auto_recruit", "Reclutar al aceptar", "Ejecuta el reclutamiento al aceptar la oferta", &c.autoRecruit);
+    regBool(api, mod, "show_talk_cursor", "Cursor de hablar", "Cambia el cursor sobre reclutables (sin efecto conocido)", &c.showTalkCursor);
+    regBool(api, mod, "resolve_cage_occupant", "Resolver ocupante de jaula", "Al clickear una jaula, apunta a quien esta dentro", &c.resolveCageOccupant);
+    regBool(api, mod, "probe_on_click", "Debug Log (Rasgos)", "Muestra rasgos en el log al hacer clic", &c.probeOnClick);
     
     // Rutas
-    regBool(api, mod, "rescueEnabled", "Ruta: Rescate", "Permite reclutar curando a gente", &c.rescueEnabled);
-    regBool(api, mod, "rescuePlayerOnly", "Rescate: solo tus medicos", "Solo cuenta si lo curo alguien de tu escuadron", &c.rescuePlayerOnly);
-    regBool(api, mod, "captivityEnabled", "Ruta: Jaulas", "Permite reclutar de jaulas", &c.captivityEnabled);
-    regBool(api, mod, "surrenderEnabled", "Ruta: Rendición", "Los enemigos se rinden al estar heridos", &c.surrenderEnabled);
-    regBool(api, mod, "animalsEnabled", "Ruta: Animales", "Aplica al reclutamiento animal", &c.animalsEnabled);
+    regBool(api, mod, "rescue_enabled", "Ruta: Rescate", "Permite reclutar curando a gente", &c.rescueEnabled);
+    regBool(api, mod, "rescue_player_only", "Rescate: solo tus medicos", "Solo cuenta si lo curo alguien de tu escuadron", &c.rescuePlayerOnly);
+    regBool(api, mod, "captivity_enabled", "Ruta: Jaulas", "Permite reclutar de jaulas", &c.captivityEnabled);
+    regBool(api, mod, "surrender_enabled", "Ruta: Rendición", "Los enemigos se rinden al estar heridos", &c.surrenderEnabled);
+    regBool(api, mod, "animals_enabled", "Ruta: Animales", "Aplica al reclutamiento animal", &c.animalsEnabled);
     
     // Aviso de cautivos
-    regBool(api, mod, "hailWhenReady", "Aviso: activo", "Los cautivos llaman cuando estan listos", &c.hailWhenReady);
-    regFloat(api, mod, "hailFirstHours", "Aviso: primeras horas", "Horas de juego antes del primer llamado", 8.0f, 72.0f, 1.0f, 0, &c.hailFirstHours);
-    regFloat(api, mod, "hailRepeatHours", "Aviso: cada cuantas horas", "Horas entre repeticiones", 1.0f, 24.0f, 1.0f, 0, &c.hailRepeatHours);
-    regInt(api, mod, "hailRepeats", "Aviso: repeticiones", "Cuantas veces llama en total", 1, 10, 1, &c.hailRepeats);
+    regBool(api, mod, "hail_when_ready", "Aviso: activo", "Los cautivos llaman cuando estan listos", &c.hailWhenReady);
+    regFloat(api, mod, "hail_first_hours", "Aviso: primeras horas", "Horas de juego antes del primer llamado", 8.0f, 72.0f, 1.0f, 0, &c.hailFirstHours);
+    regFloat(api, mod, "hail_repeat_hours", "Aviso: cada cuantas horas", "Horas entre repeticiones", 1.0f, 24.0f, 1.0f, 0, &c.hailRepeatHours);
+    regInt(api, mod, "hail_repeats", "Aviso: repeticiones", "Cuantas veces llama en total", 1, 10, 1, &c.hailRepeats);
 
     // Exclusiones
-    regBool(api, mod, "excludeDead", "Excluir muertos", "Nunca reclutar cadaveres", &c.exclude.dead);
-    regBool(api, mod, "excludeUnconscious", "Excluir inconscientes", "Nunca reclutar a quien esta KO", &c.exclude.unconscious);
-    regBool(api, mod, "excludeAnimals", "Excluir animales", "Deja los animales fuera por completo", &c.exclude.animals);
-    regBool(api, mod, "excludeSameFaction", "Excluir tu faccion", "Ignora a los que ya son tuyos", &c.exclude.sameFaction);
+    regBool(api, mod, "exclude_dead", "Excluir muertos", "Nunca reclutar cadaveres", &c.exclude.dead);
+    regBool(api, mod, "exclude_unconscious", "Excluir inconscientes", "Nunca reclutar a quien esta KO", &c.exclude.unconscious);
+    regBool(api, mod, "exclude_animals", "Excluir animales", "Deja los animales fuera por completo", &c.exclude.animals);
+    regBool(api, mod, "exclude_same_faction", "Excluir tu faccion", "Ignora a los que ya son tuyos", &c.exclude.sameFaction);
 
-    regInt(api, mod, "maxSpawnedCharacters", "Spawn: maximo", "Tope del panel de spawn", 1, 500, 10, &c.maxSpawnedCharacters);
+    regInt(api, mod, "max_spawned_characters", "Spawn: maximo", "Tope del panel de spawn", 1, 500, 10, &c.maxSpawnedCharacters);
 
     // Prices
     regInt(api, mod, "preset", "Dificultad (Preset)", "0: Cheat, 1: Balanced, 2: Vanilla+", 0, 2, 1, &c.preset);
-    regInt(api, mod, "catsPerLevel", "Cats por nivel", "Precio base multiplicador de nivel", 0, 500, 10, &c.prices.catsPerLevel);
-    regInt(api, mod, "catsMinimum", "Cats (Mínimo)", "Precio mínimo para cualquier recluta", 0, 10000, 100, &c.prices.catsMinimum);
-    regFloat(api, mod, "hungerThreshold", "Hambre extra", "Suma requerimiento extra de hambre (0 por defecto)", 0.0f, 10.0f, 0.5f, 1, &c.prices.hungerThreshold);
-    regFloat(api, mod, "woundedThreshold", "Salud (Máximo para reclutar)", "Si la salud es <= a esto, escuchan (0..1)", 0.0f, 1.0f, 0.1f, 2, &c.prices.woundedThreshold);
-    regFloat(api, mod, "easyHoursCaged", "Horas jaula (modo facil)", "Horas en jaula que bastan por si solas. 0 lo desactiva", 0.0f, 72.0f, 1.0f, 0, &c.prices.easyHoursCaged);
-    regFloat(api, mod, "hoursCagedForProud", "Horas jaula (Orgullosos)", "Horas a esperar para NPCs orgullosos", 0.0f, 72.0f, 1.0f, 0, &c.prices.hoursCagedForProud);
-    regFloat(api, mod, "uniqueExtraHours", "Horas jaula (Únicos)", "Horas extra requeridas para únicos", 0.0f, 168.0f, 6.0f, 0, &c.prices.uniqueExtraHours);
+    regInt(api, mod, "cats_per_level", "Cats por nivel", "Precio base multiplicador de nivel", 0, 500, 10, &c.prices.catsPerLevel);
+    regInt(api, mod, "cats_minimum", "Cats (Mínimo)", "Precio mínimo para cualquier recluta", 0, 10000, 100, &c.prices.catsMinimum);
+    regFloat(api, mod, "hunger_threshold", "Hambre extra", "Suma requerimiento extra de hambre (0 por defecto)", 0.0f, 10.0f, 0.5f, 1, &c.prices.hungerThreshold);
+    regFloat(api, mod, "wounded_threshold", "Salud (Máximo para reclutar)", "Si la salud es <= a esto, escuchan (0..1)", 0.0f, 1.0f, 0.1f, 2, &c.prices.woundedThreshold);
+    regFloat(api, mod, "easy_hours_caged", "Horas jaula (modo facil)", "Horas en jaula que bastan por si solas. 0 lo desactiva", 0.0f, 72.0f, 1.0f, 0, &c.prices.easyHoursCaged);
+    regFloat(api, mod, "hours_caged_for_proud", "Horas jaula (Orgullosos)", "Horas a esperar para NPCs orgullosos", 0.0f, 72.0f, 1.0f, 0, &c.prices.hoursCagedForProud);
+    regFloat(api, mod, "unique_extra_hours", "Horas jaula (Únicos)", "Horas extra requeridas para únicos", 0.0f, 168.0f, 6.0f, 0, &c.prices.uniqueExtraHours);
     
     // Multipliers
-    regFloat(api, mod, "fearfulMultiplier", "Precio miedosos", "Multplicador para personalidades miedosas", 0.1f, 2.0f, 0.1f, 1, &c.prices.fearfulMultiplier);
-    regFloat(api, mod, "braveMultiplier", "Precio valientes", "Multplicador para personalidades valientes", 0.1f, 4.0f, 0.1f, 1, &c.prices.braveMultiplier);
-    regFloat(api, mod, "factionWeight", "Peso de Facción", "Impacto de rep en el precio (0..2)", 0.0f, 2.0f, 0.1f, 1, &c.prices.factionWeight);
+    regFloat(api, mod, "fearful_multiplier", "Precio miedosos", "Multplicador para personalidades miedosas", 0.1f, 2.0f, 0.1f, 1, &c.prices.fearfulMultiplier);
+    regFloat(api, mod, "brave_multiplier", "Precio valientes", "Multplicador para personalidades valientes", 0.1f, 4.0f, 0.1f, 1, &c.prices.braveMultiplier);
+    regFloat(api, mod, "faction_weight", "Peso de Facción", "Impacto de rep en el precio (0..2)", 0.0f, 2.0f, 0.1f, 1, &c.prices.factionWeight);
 
     return true;
 }
