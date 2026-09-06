@@ -88,4 +88,14 @@ std::string DescribeOffer(Character* character, const Verdict& verdict);
 // -- a fearful prisoner pleads, a proud one concedes grudgingly -- and picks
 // from several so the same prisoner does not repeat himself word for word.
 std::string HailLine(Character* character);
+
+// Checks if the NPC is currently ignoring the player due to excessive insistence.
+bool IsIgnoringPlayer(Character* character, double* outRemainingHours = NULL);
+
+// Records an interaction attempt for insistence tracking. Returns true if ignored.
+bool RecordInteraction(Character* character, double nowHours);
+
+// Stops hostility, clears temp enemies, and resets AI action so recruited or
+// rescued NPCs do not immediately turn and attack the player.
+void SafePacify(Character* character, Character* playerLeader = NULL);
 } // namespace totalrecruit

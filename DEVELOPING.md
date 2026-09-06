@@ -232,7 +232,183 @@ Usá rutas absolutas o encadená con `&&`.
 
 ---
 
-## 5. Verificar de verdad
+## 5. Cómo buscar en las fuentes
+
+Buscar bien acá es la mitad del trabajo. El SDK no tiene documentación: los
+headers son lo que hay, y la respuesta a "¿esto se puede hacer?" casi siempre
+está en un plugin que alguien ya escribió.
+
+**Usá `rg` (ripgrep), no `grep`.** Respeta `.gitignore`, no entra a `.git/` y
+recorre las 14 fuentes en segundos.
+
+### El mapa: qué hay en `f:\Proyectos\Kenshi-mods\`
+
+**El SDK — la verdad sobre qué existe**
+
+| Ruta | Qué es |
+|---|---|
+| `KenshiLib_Examples_deps/kenshilib/Include/kenshi/` | **160 headers.** El motor entero. Empezá siempre acá. |
+| `KenshiLib_Examples_deps/kenshilib/Include/kenshi/gui/` | GUI: `PortraitManager`, `DatapanelGUI`, `ForgottenGUI`, `ContextMenu` |
+| `KenshiLib_Examples_deps/kenshilib/Include/kenshi/util/` | `hand`, `lektor`, y los tipos que aparecen en todas las firmas |
+| `KenshiLib_Examples_deps/kenshilib/Include/kenshi/AI/`, `Building/`, `combat/` | Subsistemas (ojo: `AI.h` y `Building.h` tienen tipos duplicados, §4) |
+| `KenshiLib_Examples_deps/kenshilib/Libraries/KenshiLib.lib` | Los símbolos que **realmente** linkean |
+
+El resto de `KenshiLib_Examples_deps/` es Boost: ~11.400 de los 11.567 archivos.
+**Excluílo siempre** o cada búsqueda devuelve basura.
+
+**Plugins de referencia — cómo se hace en la práctica**
+
+| Ruta | Archivos | Para qué sirve |
+|---|---|---|
+| `KenshiExtensionPlugin/` (KEP) | 110 | El más completo. Diálogo, jaulas, paneles, hooks. |
+| `Shutori_Re_Kenshi_Source/` | 92 | UI grande y `PrisonerUtil.cpp` (1359 líneas de jaulas). |
+| `re_kenshi-personal-projects/` | 44 | **Trae `wiki/` y `docs/`** — ver abajo. |
+| `RE_Kenshi_Plugins_Source/` | 8 | Ocho plugins chicos y completos. Buen molde para empezar. |
+| `KenshiLib_Examples/` | 8 | Ejemplos oficiales. `Dialogue/Dialogue.cpp` es la plantilla del hook. |
+| `UnlimitedRecruitV2/` | 16 | El padre de este mod. |
+| `Loot-Scoot-Execute/`, `LimbRemoval/` | 6 / 1 | Chicos. Anclan overlays al menú contextual — por eso no usamos ese espacio. |
+| `KenshiLua/` | 936 + 13 lua | Bindings Lua. **`docs/BindingsReference.md` documenta APIs en prosa.** |
+
+**Mods instalados en el juego — la otra mitad del mapa**
+
+Hay mods que no viven en el repo sino en la carpeta del juego, y algunos son
+referencia valiosa aunque vengan sin fuentes:
+
+```
+d:\SteamLibrary\steamapps\common\Kenshi\mods\
+```
+
+| Mod | Qué tiene |
+|---|---|
+| `SentientSands/` | **Release compilado, sin fuentes C++.** Diálogo con LLM. La lógica abierta está en Python (`Kayak/`, `server/`) y su base de conocimiento en texto plano. Fuentes: `github.com/Starswimmer/Kayak` (ver su `PROJECT_LINKS.md`). |
+
+SentientSands importa a Kenshi por **`ContextMenu` y `Dialogue`** — los mismos
+dos sistemas que hookea TotalRecruit. Si algo raro pasa con el menú contextual
+o las conversaciones, es el primer sospechoso de conflicto.
+
+Que un mod venga sin fuentes no lo vuelve inútil: `dumpbin //IMPORTS` sobre su
+DLL dice qué APIs del motor toca, y eso ya responde si pisa lo mismo que vos.
+
+```bash
+MOD="/d/SteamLibrary/steamapps/common/Kenshi/mods/OtroMod/OtroMod.dll"
+"$DUMPBIN" //IMPORTS "$MOD" | rg -o "ContextMenu|Dialogue|ForgottenGUI|PortraitManager" | sort -u
+```
+
+**Documentación en prosa — lo escaso, y por eso valioso**
+
+| Ruta | Qué tiene |
+|---|---|
+| `re_kenshi-personal-projects/wiki/` | `For-Plugin-Authors.md`, `Conditions.md`, `FCS-Schema-Reference.md`, `Testing-Seams-and-Adapters.md` |
+| `KenshiLua/docs/` | `BindingsReference.md`, `UnboundRefrence.md` — qué se pudo exponer y qué no |
+| `ReKenshi_KenshiLib_Swagger/ReKenshi_KLIB_Navigator.html` | **Navegador del SDK en un HTML de 4 MB.** Abrilo en el browser para explorar clases visualmente. |
+| `../KENSHI-MODDING-NOTES.md` | Nuestras propias trampas. §11 es obligatoria. |
+
+### Las cuatro búsquedas que resuelven casi todo
+
+**A. ¿Existe este método? ¿Qué firma tiene?**
+
+```bash
+cd /f/Proyectos/Kenshi-mods
+rg -n "createPortraitImage" KenshiLib_Examples_deps/kenshilib/Include/kenshi/
+```
+
+El header da nombre, tipos, RVA y offset de vtable. **No da el rango de los
+valores** — eso solo lo da el juego corriendo (§6).
+
+**B. ¿Alguien ya lo usó? ¿Cómo?**
+
+Esta es la más valiosa, y la que más se olvida. Excluí el SDK para ver solo
+código de plugins reales:
+
+```bash
+rg -l "PortraitManager" --glob '!KenshiLib_Examples_deps/**' .
+```
+
+Si tres plugins llaman a algo de la misma forma, esa forma funciona. Si nadie
+llama a un método que parece obvio, preguntate por qué — puede ser una de las
+APIs que linkean y no hacen nada (§4).
+
+**C. ¿Qué puedo hacer con esta clase?**
+
+```bash
+sed -n '/^class PortraitManager/,/^};/p'   KenshiLib_Examples_deps/kenshilib/Include/kenshi/gui/PortraitManager.h
+```
+
+Leé la clase **entera**, no solo el método que buscabas. El vecino de al lado
+suele ser la respuesta: así apareció `setImageWidgetNPC`, dos líneas debajo del
+`createPortraitImage` que no funcionaba.
+
+**D. ¿Qué enum/constante necesito?**
+
+Casi todo vive en dos archivos:
+
+```bash
+rg -n "EV_GET_UP|DA_JOIN_SQUAD|DC_IS_IMPRISONED"   KenshiLib_Examples_deps/kenshilib/Include/kenshi/Enums.h   KenshiLib_Examples_deps/kenshilib/Include/kenshi/Dialogue.h
+```
+
+`Enums.h` tiene eventos (`EV_`), condiciones (`DC_`), arquetipos (`OT_`) y
+estados. `Dialogue.h` tiene las acciones (`DA_`).
+
+### Recetas que ahorran horas
+
+**Buscar sin ahogarse en Boost** — poné esto en tu `.bashrc`:
+
+```bash
+alias kgrep='rg --glob "!KenshiLib_Examples_deps/boost_1_60_0/**" --glob "!.git/**"'
+```
+
+**Solo headers del motor:**
+
+```bash
+rg -n "PATRON" --glob '*.h' KenshiLib_Examples_deps/kenshilib/Include/kenshi/
+```
+
+**Solo plugins, sin SDK ni docs:**
+
+```bash
+rg -n "PATRON" --glob '*.cpp' --glob '!KenshiLib_Examples_deps/**' .
+```
+
+**Encontrar un archivo por nombre:**
+
+```bash
+rg --files | rg -i "prisoner"
+```
+
+**Ver un enum completo:**
+
+```bash
+H=KenshiLib_Examples_deps/kenshilib/Include/kenshi
+sed -n '/enum CharacterPerceptionTags_LongTerm/,/};/p' "$H/Character.h"
+```
+
+**Confirmar que un símbolo linkea** (ver §4 para el detalle):
+
+```bash
+LIB=KenshiLib_Examples_deps/kenshilib/Libraries/KenshiLib.lib
+"$DUMPBIN" //LINKERMEMBER:1 "$LIB" | rg -o "\?[A-Za-z_]*@PortraitManager@@[^ ]*" | sort -u
+```
+
+### El orden que funciona
+
+1. **`rg` en los headers** — ¿existe? ¿qué firma?
+2. **`rg` en los plugins** — ¿alguien lo usó? Copiá esa forma.
+3. **Leé la clase entera** — el vecino suele ser la respuesta.
+4. **`dumpbin` en la lib** — ¿linkea de verdad?
+5. **Recién ahí, código.**
+
+Saltearse el paso 2 es el error caro. El SDK tiene APIs que compilan, linkean y
+no hacen nada; los plugins que ya corren son la única prueba de cuáles sirven.
+
+Un ejemplo real de esto: buscando `PortraitManager` en plugins aparece que
+Shutori lo usa en tres archivos, siempre con `setImageWidget(handle, ...)` —
+el camino del escuadrón, porque dibuja a sus propios luchadores. Nadie había
+resuelto el caso del NPC ajeno, y por eso no había ejemplo que copiar. Esa
+búsqueda de diez segundos explica por qué el retrato costó lo que costó.
+
+---
+
+## 6. Verificar de verdad
 
 Que compile no prueba nada sobre el juego. La §8 de `PLAN.md` mantiene la
 separación entre *confirmado jugando* y *solo compila*, y vale la pena

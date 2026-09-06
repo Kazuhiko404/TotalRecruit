@@ -252,6 +252,17 @@ bool SafePlayerMoney(Character* leader, int* out)
 // someone the player never actually held.
 std::map<Character*, double> g_heldSince;
 
+struct TalkState
+{
+    int attempts;
+    double lastHour;
+    double ignoredUntilHour;
+
+    TalkState() : attempts(0), lastHour(0.0), ignoredUntilHour(0.0) {}
+};
+
+std::map<Character*, TalkState> g_talkStates;
+
 bool SafeGameHours(double* out)
 {
     TR_TRY
@@ -264,6 +275,88 @@ bool SafeGameHours(double* out)
         return true;
     }
     TR_CATCH { return false; }
+}
+
+bool IsIgnoringPlayer(Character* character, double* outRemainingHours)
+{
+    if (character == NULL)
+    {
+        return false;
+    }
+
+    double now = 0.0;
+    if (!SafeGameHours(&now))
+    {
+        return false;
+    }
+
+    std::map<Character*, TalkState>::iterator it = g_talkStates.find(character);
+    if (it == g_talkStates.end())
+    {
+        return false;
+    }
+
+    if (it->second.ignoredUntilHour > now)
+    {
+        if (outRemainingHours != NULL)
+        {
+            *outRemainingHours = it->second.ignoredUntilHour - now;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+bool RecordInteraction(Character* character, double nowHours)
+{
+    if (character == NULL)
+    {
+        return false;
+    }
+
+    TalkState& state = g_talkStates[character];
+    if (state.ignoredUntilHour > nowHours)
+    {
+        return true;
+    }
+
+    // Si pasaron más de 2 horas de juego desde el último intento, resetea el contador
+    if (nowHours - state.lastHour > 2.0)
+    {
+        state.attempts = 0;
+    }
+
+    state.lastHour = nowHours;
+    state.attempts++;
+
+    // 3 intentos seguidos sin éxito provocan que ignore al jugador por 4 horas
+    if (state.attempts >= 3)
+    {
+        state.ignoredUntilHour = nowHours + 4.0;
+        return true;
+    }
+
+    return false;
+}
+
+void SafePacify(Character* character, Character* playerLeader)
+{
+    if (character == NULL)
+    {
+        return;
+    }
+
+    TR_TRY
+    {
+        character->endCombatMode();
+        if (playerLeader != NULL)
+        {
+            character->clearTempEnemyStatus(playerLeader);
+        }
+        character->reThinkCurrentAIAction();
+    }
+    TR_CATCH { }
 }
 
 float HoursHeld(Character* character)
