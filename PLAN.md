@@ -435,23 +435,33 @@ completes the same type and links normally.
 
 ## 8. Verification status
 
-**Verified against headers:** every API, offset, enum value and RVA cited.
+**Verified in a running game** (the premise holds):
+- `NPCType` and `myPersonality` come back populated for NPCs from other mods --
+  which is the entire reason this was built in code
+- the cage-ownership derivation works (`isMyCage=yes` in the log)
+- speech bubbles, the offer window, and recruiting all work end to end
 
-**Verified by building:** all phases compile Release|x64 clean and the DLL
-exports the mangled entry points (`?startPlugin@@YAXXZ`).
+**Found only by playing** -- each of these was a bug the headers could not have
+warned about, and all are written up in `../KENSHI-MODDING-NOTES.md` §11:
+- `getOverallHealthRating()` returns 0 for anyone unconscious, so a death check
+  on it disabled the whole mod
+- `hunger` is not a 0..1 fraction (a fed NPC reads ~3)
+- `inSomething == IN_PRISON` misses shackled and carried prisoners
+- right-clicking a cage resolves to the cage, not the occupant
+- declaring an engine `virtual` locally crashes the game
 
-**NOT verified — requires running the game.** This is the honest limit of what
-has been done: the code is written and it builds, but none of it has executed.
-- that `startPlayerConversation` opens the window with a runtime-attached package
-- that `_doActions` receives the player's chosen line
-- that `myPersonality` / `NPCType` are populated on modded NPCs
-- that `LT_MY_LIFESAVER` survives a save/load cycle
-- that `applyFirstAid` / `applyDoctoring` are called where we expect
-- that `EV_GET_UP_PEACE` fires when a healed character stands up
-- that the six installed hooks coexist with the other plugins in the load order
+**Still not working:**
+- **Portraits.** `PortraitManager::createPortraitImage` links and throws
+  nothing, but draws nothing for characters outside the player's squad. The
+  offer window logs how far the load got (`Portrait not drawn (stage N)`).
+- **The talk cursor.** `ForgottenGUI::changeMouseCursor` hooks cleanly and never
+  fires for the world cursor. Replaced by prisoners calling out to the player,
+  which is better anyway.
 
-Set `probeOnClick: true` in config.json to dump an NPC's traits on right-click;
-that answers most of the list above in one session.
+**Never exercised:** the FCS dialogue bridge. It is written and compiles, but no
+dialogue package has been authored to fire it, so `startPlayerConversation` with
+a runtime-attached package remains unproven. The plugin's own offer window is
+the path that actually runs.
 
 ---
 
