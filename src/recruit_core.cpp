@@ -10,6 +10,26 @@
 
 #include <algorithm>
 
+// Building.h and Building/UseableStuff.h cannot be included here: they redefine
+// BuildingDesignation against Platoon.h. Only two methods are needed, so they
+// are declared at global scope -- putting them inside a namespace would mangle
+// the symbols differently and fail to link against KenshiLib.lib.
+//
+// getUseableStuff is the engine's own checked downcast: it returns null for a
+// Building that is not one, which is what makes the cast safe. Blindly
+// reinterpreting any BUILDING as UseableStuff would read a wrong layout.
+class UseableStuff
+{
+public:
+    const hand& getOccupant() const;
+};
+
+class Building
+{
+public:
+    virtual UseableStuff* getUseableStuff();
+};
+
 namespace totalrecruit
 {
 namespace
@@ -219,6 +239,48 @@ std::string IntToString(int value)
     return std::string(buffer);
 }
 
+// getOccupant returns a hand reference, and the compiler counts that as an
+// object in whatever frame touches it, so the read lives in a plain function
+// and only the call crosses the guard.
+void ReadOccupant(RootObject* target, Character** out)
+{
+    Building* building = reinterpret_cast<Building*>(target);
+    UseableStuff* stuff = building->getUseableStuff();
+    if (stuff != NULL)
+    {
+        *out = stuff->getOccupant().getCharacter();
+    }
+}
+
+Character* SafeReadOccupant(RootObject* target)
+{
+    Character* occupant = NULL;
+    TR_TRY { ReadOccupant(target, &occupant); }
+    TR_CATCH { return NULL; }
+    return occupant;
+}
+
+bool SafeDataType(RootObject* target, itemType* out)
+{
+    TR_TRY
+    {
+        *out = target->getDataType();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// Cages are tagged BUILDING; UseableStuff derives from Building and has no
+// itemType of its own.
+Character* OccupantOf(RootObject* target, itemType type)
+{
+    if (type != BUILDING)
+    {
+        return NULL;
+    }
+    return SafeReadOccupant(target);
+}
+
 // Opens the window for a verdict, whether it is a yes or a no. A refusal still
 // gets a window because that is where the player can act on it -- feeding a
 // starving captive turns "no" into "not yet", which is the whole point.
@@ -271,17 +333,36 @@ Character* CharacterFromTarget(RootObject* target)
         return NULL;
     }
 
+    // The type read is the only thing guarded here; the logging below builds
+    // std::strings, and C2712 forbids those in any frame containing a __try.
     itemType type = NULL_ITEM;
-    TR_TRY { type = target->getDataType(); }
-    TR_CATCH { return NULL; }
-
-    if (type != CHARACTER && type != HUMAN_CHARACTER &&
-        type != ANIMAL_CHARACTER && type != WORLDMAP_CHARACTER)
+    if (!SafeDataType(target, &type))
     {
         return NULL;
     }
 
-    return static_cast<Character*>(target);
+    if (type == CHARACTER || type == HUMAN_CHARACTER ||
+        type == ANIMAL_CHARACTER || type == WORLDMAP_CHARACTER)
+    {
+        return static_cast<Character*>(target);
+    }
+
+    // Right-clicking a cage resolves to the cage, not the person inside it --
+    // the two overlap on screen and the building usually wins. Asking the cage
+    // who is in it turns that click into the one the player meant.
+    Character* occupant = OccupantOf(target, type);
+    if (occupant != NULL)
+    {
+        LogInfo("Target is a container; using its occupant instead.");
+        return occupant;
+    }
+
+    if (GetConfig().probeOnClick)
+    {
+        LogInfo("Right-click target is not a character (itemType " +
+                IntToString((int)type) + ") and holds nobody.");
+    }
+    return NULL;
 }
 
 bool IsRecruitable(Character* character, std::string* outReason)

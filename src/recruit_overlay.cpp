@@ -315,8 +315,27 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
     }
 
     Character* character = CharacterFromTarget(what);
-    if (character == NULL || !IsRecruitable(character, NULL))
+    if (character == NULL)
     {
+        // Logged because "nothing happened on right-click" is otherwise
+        // indistinguishable from the plugin not running at all.
+        if (GetConfig().probeOnClick)
+        {
+            LogInfo("Context menu: no character resolved from the target.");
+        }
+        HideButton();
+        ClearTarget();
+        return;
+    }
+
+    std::string excluded;
+    if (!IsRecruitable(character, &excluded))
+    {
+        if (GetConfig().probeOnClick)
+        {
+            LogInfo("Context menu: " + CharacterName(character) +
+                    " skipped (" + excluded + ").");
+        }
         HideButton();
         ClearTarget();
         return;
@@ -334,6 +353,13 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
     // The label carries the verdict, so the player learns what an NPC wants
     // without having to click and be refused. Telling them WHY is the feature.
     const Verdict verdict = Evaluate(character);
+    if (config.probeOnClick)
+    {
+        LogInfo("Context menu: " + CharacterName(character) + " -> " +
+                (verdict.willJoin ? "CAN JOIN" : "refuses") +
+                " (" + CurrencyName(verdict.currency) + ") " + verdict.reason);
+    }
+
     std::string caption = config.recruitLabel + ": " + CharacterName(character);
     if (config.preset != Preset_Cheat)
     {
