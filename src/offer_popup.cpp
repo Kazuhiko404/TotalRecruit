@@ -169,9 +169,31 @@ MyGUI::ImageBox* SafeCreatePortrait(MyGUI::Widget* parent, int left, int top, in
 }
 
 
-// createPortraitImage hands back a PortraitImage that knows how to paint itself
-// into an ImageBox, which is exactly what the squad bar does with it.
+// PortraitManager has two paths, and the difference is the whole bug.
+// setImageWidget/createPortraitImage go through characterPortraits, a map keyed
+// by hand that only holds the player's own people -- so for anyone else they
+// succeed and paint nothing. setImageWidgetNPC takes a raw Character* instead
+// of a handle precisely because it skips that map, which is the case we have.
 void LoadPortrait(Character* npc, int* outStage)
+{
+    *outStage = 1;
+    PortraitManager* manager = PortraitManager::getInstance();
+    if (manager == NULL)
+    {
+        return;
+    }
+
+    // The NPC path returns void, so it cannot report failure; reaching the
+    // next line is all the success signal the engine gives us.
+    *outStage = 2;
+    manager->setImageWidgetNPC(npc, g_portrait);
+    *outStage = 5;
+}
+
+// Kept as a second attempt for characters the NPC path leaves blank: someone
+// already in the squad does have a portrait in the map, and this is the call
+// that finds it.
+void LoadPortraitFromMap(Character* npc, int* outStage)
 {
     *outStage = 1;
     PortraitManager* manager = PortraitManager::getInstance();
@@ -205,6 +227,14 @@ int GuardedLoadPortrait(Character* npc)
     return stage;
 }
 
+int GuardedLoadPortraitFromMap(Character* npc)
+{
+    int stage = 0;
+    TR_TRY { LoadPortraitFromMap(npc, &stage); }
+    TR_CATCH { return -stage; }
+    return stage;
+}
+
 void SafeLoadPortrait(Character* npc)
 {
     if (g_portrait == NULL || npc == NULL)
@@ -213,11 +243,19 @@ void SafeLoadPortrait(Character* npc)
     }
 
     // The stage says how far the load got, so a blank frame can be told apart
-    // from a manager that was never there. The guarded call keeps a POD-only
-    // frame; the reporting happens outside it.
-    const int stage = GuardedLoadPortrait(npc);
+    // from a manager that was never there. The guarded calls keep a POD-only
+    // frame; the reporting happens outside them.
+    // Stage 5 = the NPC path ran, 4 = the map path painted, negative = threw.
+    int stage = GuardedLoadPortrait(npc);
+    if (stage != 5)
+    {
+        stage = GuardedLoadPortraitFromMap(npc);
+    }
 
-    const bool loaded = (stage == 4);
+    // The NPC path cannot say whether it painted anything, so a frame it
+    // touched stays visible. Hiding on "unknown" is what would keep a working
+    // portrait off screen.
+    const bool loaded = (stage == 5 || stage == 4);
     if (!loaded && GetConfig().probeOnClick)
     {
         char stageText[16] = { 0 };
