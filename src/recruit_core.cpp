@@ -302,7 +302,7 @@ bool PresentOffer(Character* character, const Verdict& verdict, const std::strin
 {
     // The remedy button appears only when the plugin can actually deliver it.
     std::string extraLabel;
-    if (!verdict.willJoin && verdict.currency == Currency_Care && PlayerHasFood())
+    if (!verdict.willJoin && verdict.currency == Currency_Care && verdict.wantsFood && PlayerHasFood())
     {
         extraLabel = "DARLE COMIDA";
     }
@@ -558,7 +558,10 @@ void AttemptRecruit(Character* character)
     // The NPC states their terms out loud, where they stand. The window that
     // follows only carries the decision.
     const std::string spoken = SpeakOpeningLine(character, verdict);
-    SpeakAloud(character, spoken);
+    if (!spoken.empty())
+    {
+        SpeakAloud(character, spoken);
+    }
 
     // An FCS dialogue is used when the author supplied one, because the native
     // conversation window is richer than anything built here. Otherwise the
@@ -611,10 +614,13 @@ void HelpCaptive(Character* character)
     // enough or there is more to do.
     const Verdict after = Evaluate(character);
     const std::string spoken = SpeakOpeningLine(character, after);
-    SpeakAloud(character, spoken);
+    if (!spoken.empty())
+    {
+        SpeakAloud(character, spoken);
+    }
 
     std::string extraLabel;
-    if (!after.willJoin && after.currency == Currency_Care && PlayerHasFood())
+    if (!after.willJoin && after.currency == Currency_Care && after.wantsFood && PlayerHasFood())
     {
         extraLabel = "Darle mas comida";
     }

@@ -25,7 +25,7 @@ const char* const kPortraitName = "TR_OfferPortrait";
 // The native context menu sits on the Popup layer, so this goes above it.
 const char* const kLayer = "Info";
 
-const int kBaseWidth = 560;
+const int kBaseWidth = 620;
 const int kBaseHeightNoExtra = 260;
 const int kBaseHeightWithExtra = 310;
 const int kMargin = 16;
@@ -385,7 +385,7 @@ bool ConfigureText()
         g_text->setTextAlign(MyGUI::Align::Left | MyGUI::Align::Top);
         g_text->setNeedKeyFocus(false);
         g_text->setNeedMouseFocus(false);
-        g_text->setVisibleVScroll(false);
+        g_text->setVisibleVScroll(true);
         g_text->setVisibleHScroll(false);
         return true;
     }
@@ -636,6 +636,11 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
     // Responsive dimensions: give more vertical room if there is an extra button
     g_windowWidth = kBaseWidth;
     g_windowHeight = haveExtra ? kBaseHeightWithExtra : kBaseHeightNoExtra;
+    
+    if (npcLine.length() > 60)
+    {
+        g_windowHeight += ((npcLine.length() - 60) / 50 + 1) * 24;
+    }
 
     if (!Build())
     {

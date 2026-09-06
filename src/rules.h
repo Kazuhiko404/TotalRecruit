@@ -23,6 +23,7 @@ enum Currency
 struct Verdict
 {
     bool willJoin;
+    bool wantsFood;
     Currency currency;
     // Cats demanded, when currency is Currency_Cats.
     int cats;
@@ -36,6 +37,7 @@ struct Verdict
 
     Verdict()
         : willJoin(false),
+          wantsFood(false),
           currency(Currency_None),
           cats(0),
           reason(),

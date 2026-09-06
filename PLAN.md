@@ -440,6 +440,9 @@ completes the same type and links normally.
   which is the entire reason this was built in code
 - the cage-ownership derivation works (`isMyCage=yes` in the log)
 - speech bubbles, the offer window, and recruiting all work end to end
+- **Portraits**: working via `PortraitManager::setImageWidgetNPC(Character*, MyGUI::ImageBox*)`
+- **Native notification sounds**: working via `ou->playNotification(NULL)`
+- **Dynamic bribery & level check**: working for free NPCs
 
 **Found only by playing** -- each of these was a bug the headers could not have
 warned about, and all are written up in `../KENSHI-MODDING-NOTES.md` §11:
@@ -449,14 +452,12 @@ warned about, and all are written up in `../KENSHI-MODDING-NOTES.md` §11:
 - `inSomething == IN_PRISON` misses shackled and carried prisoners
 - right-clicking a cage resolves to the cage, not the occupant
 - declaring an engine `virtual` locally crashes the game
+- `PortraitManager::setImageWidget/createPortraitImage` only draws player squad;
+  `setImageWidgetNPC` is the required path for non-squad NPCs
 
-**Still not working:**
-- **Portraits.** `PortraitManager::createPortraitImage` links and throws
-  nothing, but draws nothing for characters outside the player's squad. The
-  offer window logs how far the load got (`Portrait not drawn (stage N)`).
-- **The talk cursor.** `ForgottenGUI::changeMouseCursor` hooks cleanly and never
-  fires for the world cursor. Replaced by prisoners calling out to the player,
-  which is better anyway.
+**In progress / Needs refinement:**
+- **Offer popup text responsiveness**: long description/dialogue texts clip vertically if window dimensions and text area are not dynamically sized according to line length. Needs dynamic height adjustment and scroll visibility fallback.
+- **The talk cursor**: `ForgottenGUI::changeMouseCursor` hooks cleanly and never fires for the world cursor. Replaced by prisoners calling out to the player, which is better anyway.
 
 **Never exercised:** the FCS dialogue bridge. It is written and compiles, but no
 dialogue package has been authored to fire it, so `startPlayerConversation` with

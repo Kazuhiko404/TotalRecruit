@@ -108,7 +108,7 @@ bool SafeReadCondition(Character* character, Condition* out)
             return false;
         }
         out->dying       = medical->isProbablyDying();
-        out->unconscious = medical->isUnconcious();
+        out->unconscious = medical->isUnconcious() || medical->isInBloodlossTrauma() || medical->knockoutTimer > 0.0f || medical->sub50KO;
         out->hunger      = medical->hunger;
         out->health      = medical->getOverallHealthRating();
         out->blood       = medical->blood;
@@ -504,6 +504,13 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
             return "Me tienes enjaulado. Eso es todo lo que tienes.";
         }
 
+    case Currency_None:
+        if (!verdict.willJoin)
+        {
+            return "";
+        }
+        return "Estoy listo para unirme a ti.";
+
     case Currency_Cats:
     default:
         switch (traits.npcType)
@@ -777,6 +784,8 @@ Verdict Evaluate(Character* character)
     {
         condition.starving = true;
     }
+    
+    verdict.wantsFood = condition.starving;
 
     bool pretending = false;
     SafeIsPretending(character, &pretending);
@@ -993,6 +1002,14 @@ Verdict Evaluate(Character* character)
             verdict.reason = "lleva bastante encerrado y se rinde";
             return verdict;
         }
+    }
+
+    if (playerLevel - npcLevel >= 40)
+    {
+        verdict.willJoin = true;
+        verdict.currency = Currency_Submission;
+        verdict.reason = "intimidado por tu inmenso poder, se somete sin dudarlo";
+        return verdict;
     }
 
     verdict.currency = ChooseCurrency(traits, condition, animal);

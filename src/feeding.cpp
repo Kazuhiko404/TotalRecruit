@@ -43,8 +43,8 @@ bool FindFoodIn(Character* holder, Item** outItem, Inventory** outInventory)
                 continue;
             }
 
-            const itemType type = item->getItemType();
-            if (type == ITEM_FOOD || type == ITEM_FOOD_RESTRICTED)
+            const ItemFunction func = item->itemFunction;
+            if (func == ITEM_FOOD || func == ITEM_FOOD_RESTRICTED)
             {
                 *outItem = item;
                 *outInventory = inventory;
