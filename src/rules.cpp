@@ -4,6 +4,7 @@
 #include "recruit_core.h"
 #include "surrender.h"
 #include "log.h"
+#include "messages.h"
 
 #include <sstream>
 #include <map>
@@ -271,6 +272,50 @@ bool SafeFactionRelation(Character* character, Faction* playerFaction, float* ou
     TR_CATCH { return false; }
 }
 
+// Faction relation runs -100..100, and the player reads it constantly without
+// being taught: the cursor turns yellow over an ally. Naming the bands here
+// means the rules and the dialogue always agree about what a number means.
+const char* RelationBand(float relation)
+{
+    if (relation >= 75.0f)  return "aliado";
+    if (relation >= 25.0f)  return "amistoso";
+    if (relation >= 5.0f)   return "cordial";
+    if (relation >= -5.0f)  return "neutral";
+    if (relation >= -15.0f) return "receloso";
+    if (relation >= -30.0f) return "hostil";
+    return "enemigo";
+}
+
+// A chance the player cannot re-roll by clicking. PLAN.md settled that this mod
+// has no dice, and the reason was save-scumming: a percentage rolled per click
+// is really "click until it works". Seeding from the character means they see a
+// real chance that stays decided once it is decided.
+bool StableChance(Character* character, int percent)
+{
+    if (percent >= 100) return true;
+    if (percent <= 0)   return false;
+
+    const unsigned int seed = (unsigned int)((uintptr_t)character >> 4);
+    // Knuth's multiplicative hash, so neighbouring pointers do not land in
+    // neighbouring buckets.
+    return (int)((seed * 2654435761u) % 100u) < percent;
+}
+
+// Being on the same side is worth something even when the player is the weaker
+// one -- but not everything. Level gap decides how much.
+int AllyJoinChance(int npcLevel, int playerLevel)
+{
+    const int gap = npcLevel - playerLevel;
+    if (gap <= 0)
+    {
+        return 100;   // You are their equal or better; allies follow that.
+    }
+    // Falls off with the gap and floors at 10: an ally is never a flat no,
+    // which is the whole difference between a modifier and a gate.
+    const int chance = 100 - (gap * 6);
+    return chance < 10 ? 10 : chance;
+}
+
 bool SafePlayerMoney(Character* leader, int* out)
 {
     TR_TRY { *out = leader->getMoney(); return true; }
@@ -476,6 +521,19 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
 
     if (verdict.currency == Currency_Refused)
     {
+        // A refusal that comes from the relationship should sound like the
+        // relationship. An ally who thinks you are too green and a zealot who
+        // hates your banner are not saying the same thing.
+        if (!verdict.band.empty())
+        {
+            const std::string keyed =
+                Say("faction." + verdict.band + ".greeting", "", character);
+            if (!keyed.empty())
+            {
+                return keyed;
+            }
+        }
+
         if (verdict.reason.find("harto") != std::string::npos ||
             verdict.reason.find("pesado") != std::string::npos)
         {
@@ -969,6 +1027,72 @@ Verdict Evaluate(Character* character)
         {
             verdict.currency = Currency_Refused;
             verdict.reason = "est\xc3\xa1 harto de tu insistencia: d\xc3\xa9jalo en paz un rato";
+            return verdict;
+        }
+
+        // Faction relation, read once and used for everything below: who will
+        // talk, who will take money, and how they open. It is still never a
+        // flat gate for people who like you -- only for the ones who do not.
+        float relation = 0.0f;
+        const bool haveRelation = SafeFactionRelation(character, playerFaction, &relation);
+        const std::string band = haveRelation ? RelationBand(relation) : "neutral";
+        verdict.band = band;
+
+        const bool goodNatured = (traits.personality == PT_HONORABLE ||
+                                  traits.personality == PT_WARM_KIND);
+
+        // Allies. The player already knows they are allies -- the cursor goes
+        // yellow -- so refusing outright reads as a bug, not as a rule.
+        if (haveRelation && relation >= 25.0f)
+        {
+            // Cheat and Balanced-with-easy-mode: being on the same side is
+            // enough on its own.
+            if (config.preset == Preset_Cheat)
+            {
+                verdict.willJoin = true;
+                verdict.currency = Currency_None;
+                verdict.reason = Say("faction." + band + ".reason",
+                                     "sois aliados: se une a ti", character);
+                return verdict;
+            }
+
+            const int chance = AllyJoinChance(npcLevel, playerLevel);
+            if (StableChance(character, chance))
+            {
+                verdict.willJoin = true;
+                verdict.currency = Currency_None;
+                verdict.reason = Say("faction." + band + ".reason",
+                                     "os lleva\xc3\xads bien: se une a ti", character);
+                return verdict;
+            }
+
+            // Not a refusal to be argued with -- a "not you, not yet", which is
+            // what a level gap actually means between allies.
+            verdict.currency = Currency_Refused;
+            verdict.reason = Say("faction." + band + ".reasonMaybe",
+                                 "te aprecia, pero te mide: hazte m\xc3\xa1s fuerte",
+                                 character);
+            return verdict;
+        }
+
+        // Below -15 an honourable or kind NPC has nothing to discuss. Their
+        // objection is who you are, and no amount of money answers that.
+        if (haveRelation && relation < -15.0f && goodNatured)
+        {
+            verdict.currency = Currency_Refused;
+            verdict.reason = Say("faction." + band + ".reasonHonourable",
+                                 "su honor no le deja tratar con alguien de tu reputaci\xc3\xb3n",
+                                 character);
+            return verdict;
+        }
+
+        // Below -30 even the greedy stop listening. Money works because the
+        // seller expects to live to spend it; past open war that stops holding.
+        if (haveRelation && relation < -30.0f)
+        {
+            verdict.currency = Currency_Refused;
+            verdict.reason = Say("faction.enemigo.reasonGreedy",
+                                 "ni por dinero: te odia demasiado", character);
             return verdict;
         }
 

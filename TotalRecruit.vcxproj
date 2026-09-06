@@ -79,6 +79,7 @@
     <ClCompile Include="src\cursor_hint.cpp" />
     <ClCompile Include="src\hail.cpp" />
     <ClCompile Include="src\mercy.cpp" />
+    <ClCompile Include="src\messages.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h" />
@@ -102,6 +103,7 @@
     <ClInclude Include="src\cursor_hint.h" />
     <ClInclude Include="src\hail.h" />
     <ClInclude Include="src\mercy.h" />
+    <ClInclude Include="src\messages.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,0 +1,123 @@
+{
+  "_comment": [
+    "Todo lo que dicen los NPC y todos los motivos que ve el jugador.",
+    "Editalo para traducir, reescribir o agregar variantes: el mod lee este",
+    "archivo al arrancar y usa sus propios textos solo si falta una clave.",
+    "",
+    "Cada clave puede ser un texto o una LISTA de textos. Si es lista, se elige",
+    "uno de forma estable por personaje: el mismo NPC siempre te dice lo mismo,",
+    "pero dos NPC distintos no suenan igual.",
+    "",
+    "{name}  se reemplaza por el nombre del NPC",
+    "{cats}  por el precio en cats",
+    "{hours} por las horas que faltan",
+    "",
+    "Los tramos de faccion van de -100 a 100:",
+    "  aliado    >= 75    amistoso  25..74    cordial   5..24",
+    "  neutral   -5..4    receloso  -15..-6   hostil    -30..-16",
+    "  enemigo   < -30"
+  ],
+
+  "faction": {
+    "aliado": {
+      "greeting": [
+        "Peleamos del mismo lado. Si me necesitas, cuenta conmigo.",
+        "Tu gente y la mia se cubren las espaldas. Dime que hace falta."
+      ],
+      "joins": "Somos aliados. Voy contigo.",
+      "tooStrong": [
+        "Te aprecio, pero has visto pelear a los mios? Todavia no estas a esa altura.",
+        "Aliados si, pero no sigo a nadie que no aguante mi paso."
+      ],
+      "reason": "sois aliados: se une a ti",
+      "reasonMaybe": "sois aliados, pero te mide: hazte mas fuerte y aceptara"
+    },
+    "amistoso": {
+      "greeting": [
+        "Tu nombre suena bien por aqui. Que quieres?",
+        "Conozco tu bandera, y no me da mala espina. Habla."
+      ],
+      "joins": "Me han hablado bien de ti. Esta bien, voy contigo.",
+      "tooStrong": "Buena fama tienes, pero no me alcanza para seguirte. Todavia no.",
+      "reason": "te tiene buena fe: se une a ti",
+      "reasonMaybe": "te tiene buena fe, pero no le bastas aun"
+    },
+    "cordial": {
+      "greeting": [
+        "Te he visto por ahi. Que necesitas?",
+        "No tengo nada contra ti. Dime."
+      ],
+      "joins": "No tengo mejor sitio donde estar. Vamos.",
+      "tooStrong": "Apenas te conozco, y no me das motivos para seguirte.",
+      "reason": "te conoce de vista y acepta",
+      "reasonMaybe": "te conoce poco: gana mas fama con los suyos"
+    },
+    "neutral": {
+      "greeting": [
+        "Quien eres tu? Que quieres de mi?",
+        "No te conozco de nada. Habla rapido."
+      ],
+      "tooStrong": "No te conozco, y no pienso seguir a un desconocido.",
+      "reason": "no te conoce: gana fama con su faccion"
+    },
+    "receloso": {
+      "greeting": [
+        "Se lo que dicen de ti. Mantengamos las distancias.",
+        "Tu gente y la mia no se llevan. No insistas."
+      ],
+      "reason": "desconfia de los tuyos: mejora la relacion, o encarcelalo y sometelo",
+      "reasonHonourable": "su honor no le deja tratar con alguien de tu reputacion"
+    },
+    "hostil": {
+      "greeting": [
+        "Los tuyos me han dado motivos de sobra para odiarte.",
+        "Aparta. Contigo no hay trato."
+      ],
+      "reason": "os considera enemigos: solo por la fuerza",
+      "reasonHonourable": "jamas seguiria a alguien como tu: encarcelalo y sometelo",
+      "reasonGreedy": "te odia, pero el dinero sigue siendo dinero: {cats} cats"
+    },
+    "enemigo": {
+      "greeting": [
+        "Preferiria morir antes que caminar a tu lado.",
+        "Guarda tu dinero. No compras a los mios."
+      ],
+      "reason": "sois enemigos declarados: solo por la fuerza",
+      "reasonGreedy": "ni por dinero: te odia demasiado"
+    }
+  },
+
+  "refusal": {
+    "grudge": "Se lo que hiciste. Fuera de mi vista.",
+    "insistence": "Me estas hartando! Dejame en paz.",
+    "tooWeak": "Tu pretender darme ordenes? Eres demasiado debil. Largate.",
+    "honour": "El honor no se compra con gatos. No me rebajare a esto.",
+    "loyalty": "Quien eres tu? Que quieres de mi?",
+    "fallback": "Quien eres tu? No tengo nada que hablar contigo."
+  },
+
+  "currency": {
+    "freedom": "Quitame estas cadenas y sere tuyo.",
+    "careKind": "No me interesan tus monedas. Solo valoro a quien ayuda de corazon.",
+    "careFearful": "Por favor... dame algo de comer y te seguire.",
+    "care": "No he comido nada. Dame comida y hablamos.",
+    "submissionHonourable": "Me venciste con honor, pero eso no me hace tuyo. Todavia no.",
+    "submissionManiacal": "Adelante! Haz lo peor que puedas, solo me da risa.",
+    "submissionFearful": "No pienso pelear contigo. Solo... no me dejes aqui.",
+    "submission": "Me tienes enjaulado. Eso es todo lo que tienes."
+  },
+
+  "rescue": {
+    "honourable": "Estaba muerto y no me abandonaste. Eso es una deuda.",
+    "cruel": "Me curaste. Que raro. Nadie hace eso por aqui.",
+    "fearful": "Crei que era mi fin. Y te quedaste.",
+    "default": "Pudiste seguir de largo. No lo hiciste."
+  },
+
+  "mercy": {
+    "plea": "Piedad. Ya no puedo pelear. Hare lo que me pidas.",
+    "spared": "Gracias... no lo olvidare.",
+    "sparedNotice": "{name}: lo dejaste marchar.",
+    "ignoredNotice": "{name}: ignoraste su suplica."
+  }
+}

@@ -28,6 +28,7 @@
 #include "cursor_hint.h"
 #include "hail.h"
 #include "mercy.h"
+#include "messages.h"
 #include "spawn_panel.h"
 
 
@@ -144,6 +145,7 @@ __declspec(dllexport) void startPlugin()
     }
 
     LoadConfig(ModuleDirectory());
+    LoadMessages(ModuleDirectory());
     LogInfo("Config loaded from: " + ModuleDirectory());
 
     if (!GetConfig().enabled)

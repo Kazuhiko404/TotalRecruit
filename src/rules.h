@@ -34,6 +34,10 @@ struct Verdict
     // dialogue record to fire.
     bool viaRescue;
     bool viaCaptivity;
+    // Which faction-relation band this NPC sits in ("aliado", "hostil", ...).
+    // Carried on the verdict so the spoken line and the reason cannot disagree
+    // about how well the two of you get on.
+    std::string band;
 
     Verdict()
         : willJoin(false),
