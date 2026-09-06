@@ -490,7 +490,20 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
         {
             return "El honor no se compra con gatos. No me rebajar\xc3\xa9 a esto.";
         }
-        return "S\xc3\xa9 lo que hiciste. Fuera de mi vista.";
+        // A loyal soldier has no idea who the player is; the grudge line was
+        // accusing every one of them of something they never did.
+        if (verdict.reason.find("lealtad") != std::string::npos ||
+            verdict.reason.find("reputaci") != std::string::npos ||
+            verdict.reason.find("respeto") != std::string::npos)
+        {
+            return "\xc2\xbf" "Qui\xc3\xa9n eres t\xc3\xba? \xc2\xbf" "Qu\xc3\xa9 quieres de m\xc3\xad?";
+        }
+        // The one refusal that really is about something the player did.
+        if (verdict.reason.find("mataste") != std::string::npos)
+        {
+            return "S\xc3\xa9 lo que hiciste. Fuera de mi vista.";
+        }
+        return "\xc2\xbf" "Qui\xc3\xa9n eres t\xc3\xba? No tengo nada que hablar contigo.";
     }
 
     if (verdict.viaRescue)
@@ -979,7 +992,8 @@ Verdict Evaluate(Character* character)
             else
             {
                 verdict.currency = Currency_Refused;
-                verdict.reason = "su honor le impide aceptar sobornos de desconocidos";
+                verdict.reason = "su honor le impide aceptar sobornos: gana su respeto, "
+                                 "o enc\xc3\xa1" "rcelalo y som\xc3\xa9telo";
             }
             return verdict;
         }
@@ -988,7 +1002,11 @@ Verdict Evaluate(Character* character)
         if (traits.npcType == OT_MILITARY || traits.npcType == OT_LAW_ENFORCEMENT)
         {
             verdict.currency = Currency_Refused;
-            verdict.reason = "sirve con lealtad a su faccion: capturalo primero";
+            // A reason is only worth showing if it names the way out. Two
+            // exist here, so both are offered rather than only the one the
+            // mod happens to prefer.
+            verdict.reason = "sirve con lealtad a su facci\xc3\xb3n: gana reputaci\xc3\xb3n, "
+                             "o enc\xc3\xa1" "rcelalo y som\xc3\xa9telo";
             return verdict;
         }
 
