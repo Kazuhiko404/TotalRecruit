@@ -142,8 +142,12 @@ MSBUILD="/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/B
 "$MSBUILD" TotalRecruit.vcxproj -p:Configuration=Release -p:Platform=x64 -v:minimal -nologo
 ```
 
-Release | x64 only. See [PLAN.md](PLAN.md) for the design and every engine API
-it relies on, and `../KENSHI-MODDING-NOTES.md` for the build traps.
+Release | x64 only.
+
+See **[DEVELOPING.md](DEVELOPING.md)** for the full build/deploy cycle, a map of
+the source, and what to do when something breaks. [PLAN.md](PLAN.md) has the
+design and every engine API it relies on; `../KENSHI-MODDING-NOTES.md` has the
+SDK traps.
 
 ## Status
 

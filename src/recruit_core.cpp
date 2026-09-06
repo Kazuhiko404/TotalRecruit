@@ -303,7 +303,7 @@ bool PresentOffer(Character* character, const Verdict& verdict, const std::strin
     std::string extraLabel;
     if (!verdict.willJoin && verdict.currency == Currency_Care && PlayerHasFood())
     {
-        extraLabel = "Give them food";
+        extraLabel = "DARLE COMIDA";
     }
 
     // A window only earns its place when there is a choice inside it. If they
