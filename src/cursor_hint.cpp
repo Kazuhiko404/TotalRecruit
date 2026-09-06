@@ -6,12 +6,14 @@
 #include "log.h"
 
 #include <kenshi/gui/ForgottenGUI.h>
+#include <kenshi/Dialogue.h>
 
 namespace totalrecruit
 {
 namespace
 {
 void (*g_changeMouseCursor_orig)(ForgottenGUI*, CursorType, const hand&, const hand&) = NULL;
+bool (*g_hasDialogueFast_orig)(Dialogue*) = NULL;
 
 // Resolving the target costs a rules evaluation, and the cursor is recomputed
 // constantly, so the last answer is remembered and only recomputed when the
@@ -59,6 +61,21 @@ bool WorthTalkingTo(Character* npc)
            verdict.currency == Currency_Freedom;
 }
 
+// Dialogue::me is the character this dialogue belongs to (Dialogue.h:395).
+bool SafeDialogueOwner(Dialogue* dialogue, Character** out)
+{
+    TR_TRY
+    {
+        if (dialogue == NULL)
+        {
+            return false;
+        }
+        *out = dialogue->me;
+        return (*out != NULL);
+    }
+    TR_CATCH { return false; }
+}
+
 // The hand parameters are references, and the compiler counts those as objects,
 // so the guarded read lives in its own POD-only frame.
 bool CachedWorthTalkingTo(const hand& target)
@@ -71,6 +88,45 @@ bool CachedWorthTalkingTo(const hand& target)
         return false;
     }
 
+    if (npc != g_lastTarget)
+    {
+        g_lastTarget = npc;
+        g_lastWasRecruitable = WorthTalkingTo(npc);
+    }
+    return g_lastWasRecruitable;
+}
+
+
+// The vanilla speech-bubble marker over an NPC's head is drawn by the game
+// whenever that NPC has something to say, and the question it asks is
+// hasDialogue_Fast -- "Fast" because it runs constantly, once per candidate.
+//
+// So the marker needs no widget of our own and no 3D-to-screen projection:
+// answering yes for someone our rules would talk to makes Kenshi draw its own
+// icon, in its own style, in the right place. This is what the earlier attempt
+// at a custom overlay should have been.
+bool HasDialogueFast_hook(Dialogue* thisptr)
+{
+    bool original = false;
+    if (g_hasDialogueFast_orig != NULL)
+    {
+        original = g_hasDialogueFast_orig(thisptr);
+    }
+
+    // Never take the marker away: an NPC with real FCS dialogue keeps it.
+    if (original || !GetConfig().showTalkCursor)
+    {
+        return original;
+    }
+
+    Character* npc = NULL;
+    if (!SafeDialogueOwner(thisptr, &npc))
+    {
+        return original;
+    }
+
+    // Same cached question the cursor asks, so the icon and the cursor can
+    // never disagree about who is worth approaching.
     if (npc != g_lastTarget)
     {
         g_lastTarget = npc;
@@ -118,6 +174,19 @@ bool InstallCursorHint()
     }
 
     LogInfo("Talk cursor installed.");
+
+    // The marker is the part that actually shows on screen; the cursor hook
+    // above has never been observed firing (see notes S11), so this failing is
+    // worth its own line rather than being folded into the same result.
+    if (KenshiLib::SUCCESS != KenshiLib::AddHook(
+            KenshiLib::GetRealAddress(&Dialogue::hasDialogue_Fast),
+            HasDialogueFast_hook, &g_hasDialogueFast_orig))
+    {
+        LogError("Could not hook Dialogue::hasDialogue_Fast; no talk marker.");
+        return false;
+    }
+
+    LogInfo("Talk marker installed.");
     return true;
 }
 
