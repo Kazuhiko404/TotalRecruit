@@ -455,9 +455,46 @@ warned about, and all are written up in `../KENSHI-MODDING-NOTES.md` §11:
 - `PortraitManager::setImageWidget/createPortraitImage` only draws player squad;
   `setImageWidgetNPC` is the required path for non-squad NPCs
 
+**Fixed this session, compiled and deployed, not yet confirmed in game:**
+- **Crippled NPCs read as unconscious.** `sub50KO` (0x162) stays set for a lost
+  limb, so the four-flag OR called a walking, fighting, full-health character
+  asleep -- forever, and unrecruitable. Now the engine's own
+  `_NV_isLiterallyUnconciousNotPretending()`. All four raw flags are logged
+  beside any verdict that turns on medical state, so the next surprise arrives
+  with evidence.
+- **Rescued NPCs joined without being asked.** The missing-FCS fallback called
+  `Recruit()` directly. It now opens the same window the button does.
+- **Loyal soldiers were accused of murder.** Refusal lines are chosen by
+  searching the reason text; `"lealtad"` matched no branch, so every guard got
+  the line written for `LT_KILLED_MY_FRIEND`. Loyalty and honour now have their
+  own opening, and both refusals name the way out rather than only the wall.
+- **The rule engine had never run.** The deployed config carried `preset: 0`,
+  and Cheat returns from the first line of `Evaluate`. Every price, multiplier,
+  level check and insistence limit written since was dead code in practice --
+  the log shows a level 30 soldier in the player's own cage joining for nothing.
+  Default is now Balanced.
+- **Mod Hub carried 16 of 40 settings** and dropped every `register_*` result,
+  so a refusal looked identical to a success. Results are checked now, and the
+  panel carries everything the API can express (33). Removing the MyGUI panel
+  had left the other 24 with no interface at all.
+
+**Added this session:**
+- **Route D -- mercy.** `EV_LOST_ARM` / `EV_LOST_LEG` (Enums.h:788-789) are the
+  engine's own "they have stopped being a combatant" moment, which is why NPCs
+  break off and run. Three answers: join, spare (drop aggro, let them walk), or
+  refuse and keep fighting. Personality deliberately does not branch here -- the
+  wound outranks the temperament.
+- **The vanilla talk marker.** `Dialogue::hasDialogue_Fast` is the question the
+  engine asks before drawing its own speech bubble over a character. Hooking it
+  gets the marker with no widget and no 3D projection of ours.
+- **Scheduled hailing.** First call after `hailFirstHours`, then every
+  `hailRepeatHours`, up to `hailRepeats` -- each also written to the message
+  roller, because the bubble fades and a single shout was easy to miss.
+
 **In progress / Needs refinement:**
 - **Offer popup text responsiveness**: long description/dialogue texts clip vertically if window dimensions and text area are not dynamically sized according to line length. Needs dynamic height adjustment and scroll visibility fallback.
-- **The talk cursor**: `ForgottenGUI::changeMouseCursor` hooks cleanly and never fires for the world cursor. Replaced by prisoners calling out to the player, which is better anyway.
+- **The talk cursor**: `ForgottenGUI::changeMouseCursor` hooks cleanly and never fires for the world cursor. Superseded by the `hasDialogue_Fast` marker above, which is the signal the game itself uses.
+- **Recovery comas**: the four-flag OR existed because `isUnconcious()` alone misses them. Whether the literal predicate covers that case is the open question the new logging is there to answer.
 
 **Never exercised:** the FCS dialogue bridge. It is written and compiles, but no
 dialogue package has been authored to fire it, so `startPlayerConversation` with

@@ -108,13 +108,15 @@ qué existe — leelo antes que el `.cpp`.
 | `offer_popup.cpp` | La ventana de decisión. Acá vive el retrato. |
 | `hail.cpp` | Los cautivos avisan, programado sobre el reloj de juego. |
 | `dialogue_authoring.cpp` | Escribe las líneas y las burbujas. |
-| `settings_panel.cpp` | Panel de ajustes en `DatapanelGUI` nativo. |
+| `mercy.cpp` | Ruta piedad: al perder un miembro, tres respuestas. |
+| `mod_hub_integration.cpp` | Ajustes en el panel de Mod Hub (`src/emc/` es su API). |
 | `spawn_panel.cpp` / `spawn_core.cpp` | Panel de spawn. |
 
 ### Soporte
 
 | Archivo | Qué hace |
 |---|---|
+| `cursor_hint.cpp` | El globo de chat vanilla sobre NPCs hablables. |
 | `frame_tick.cpp` | Callback por frame, hookeado a `ForgottenGUI::update`. |
 | `probe.cpp` | Diagnóstico. Con `probeOnClick` loguea todo del NPC clickeado. |
 | `dialogue_bridge.cpp` | Puente a diálogo FCS. **Compila pero nunca se ejecutó.** |
