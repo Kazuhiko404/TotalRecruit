@@ -605,6 +605,15 @@ int PriceInCats(Character* character, const Traits& traits, Faction* playerFacti
         }
     }
 
+    // A named character is not just a strong one: they are the only one there
+    // is. The reference mod puts its uniques at 100-150k against ~80k for the
+    // strongest ordinary fighter, and that gap is the whole point of a name.
+    bool named = false;
+    if (SafeIsUnique(character, &named) && named)
+    {
+        cats *= GetConfig().prices.uniqueMultiplier;
+    }
+
     cats *= PersonalityMultiplier(traits.personality);
     cats *= FactionMultiplier(character, playerFaction);
 
@@ -613,6 +622,34 @@ int PriceInCats(Character* character, const Traits& traits, Faction* playerFacti
 
 // Which currency does this archetype deal in? Condition takes precedence over
 // archetype: a starving bandit wants food before he wants cats.
+// A named character is not one kind of problem. The bandit king and the Holy
+// Nation's leader are both unique, and only one of them has a price.
+//
+// The split is what they believe in. Someone who already sells people, or who
+// enjoys the cruelty, understands a transaction perfectly well -- money is a
+// language they speak. A zealot does not: offering coin to someone who thinks
+// you are unclean is the wrong tool entirely, and the only thing that moves
+// them is being kept and broken.
+//
+// Both are recruitable. Neither is free.
+bool UniqueTakesMoney(const Traits& traits)
+{
+    switch (traits.personality)
+    {
+    case PT_COLD_CRUEL:
+    case PT_TRAITOROUS:
+    case PT_MANIACAL:
+    case PT_SMART:
+        return true;
+    default:
+        break;
+    }
+
+    // Failing personality, the trade they chose says it instead.
+    return traits.npcType == OT_BANDIT || traits.npcType == OT_TRADER ||
+           traits.npcType == OT_SLAVER;
+}
+
 Currency ChooseCurrency(const Traits& traits, const Condition& condition, bool animal)
 {
     if (animal)
@@ -1370,6 +1407,15 @@ Verdict Evaluate(Character* character)
 
     verdict.currency = ChooseCurrency(traits, condition, animal);
 
+    // A named character overrides the ordinary table, because for them the
+    // currency IS the story. Someone starving or bleeding still gets care
+    // first -- a leader in that state is a person before they are a symbol.
+    if (unique && !animal && !condition.starving && !condition.wounded)
+    {
+        verdict.currency = UniqueTakesMoney(traits) ? Currency_Cats
+                                                    : Currency_Submission;
+    }
+
     switch (verdict.currency)
     {
     case Currency_Freedom:
@@ -1459,7 +1505,13 @@ Verdict Evaluate(Character* character)
         }
         else if (unique)
         {
-            verdict.reason = "demasiado orgulloso: deja que el hambre y las heridas hagan lo suyo";
+            // No price is coming for this one. Their objection is what they
+            // believe, and belief does not have an exchange rate -- only time
+            // in a cage and the body's own arguments.
+            verdict.reason = Say("unique.zealot",
+                                 "no hay dinero que compre lo que cree: "
+                                 "el hambre y las heridas harán el trabajo",
+                                 character);
         }
         else
         {

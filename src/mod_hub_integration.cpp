@@ -186,6 +186,7 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "fearful_multiplier", "Precio miedosos", "Multplicador para personalidades miedosas", 0.1f, 2.0f, 0.1f, 1, &c.prices.fearfulMultiplier);
     regFloat(api, mod, "brave_multiplier", "Precio valientes", "Multplicador para personalidades valientes", 0.1f, 4.0f, 0.1f, 1, &c.prices.braveMultiplier);
     regFloat(api, mod, "talent_weight", "Peso del talento", "Cuanto sube el precio un NPC con un oficio o habilidad rara", 0.0f, 4.0f, 0.25f, 2, &c.prices.talentWeight);
+    regFloat(api, mod, "unique_multiplier", "Precio de unicos", "Cuanto multiplican su precio los personajes con nombre", 1.0f, 5.0f, 0.25f, 2, &c.prices.uniqueMultiplier);
     regFloat(api, mod, "faction_weight", "Peso de Facción", "Impacto de rep en el precio (0..2)", 0.0f, 2.0f, 0.1f, 1, &c.prices.factionWeight);
 
     return true;

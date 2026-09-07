@@ -79,6 +79,10 @@ struct Prices
     // level alone. A stat far above the character's own level is the only thing
     // that reads as "they know something you cannot see from here".
     float talentWeight;
+    // What a named character multiplies their price by. They are not merely
+    // strong -- they are the only one there is, and there is no second attempt
+    // if you decide later that you wanted them.
+    float uniqueMultiplier;
 
     Prices()
         : easyHoursCaged(12.0f),
@@ -94,7 +98,8 @@ struct Prices
           braveMultiplier(1.6f),
           uniqueExtraHours(24.0f),
           factionWeight(0.75f),
-          talentWeight(1.0f)
+          talentWeight(1.0f),
+          uniqueMultiplier(2.0f)
     {
     }
 };

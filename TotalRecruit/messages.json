@@ -137,6 +137,21 @@
     ]
   },
 
+  "_unicos": [
+    "Los personajes con nombre se dividen por lo que creen:",
+    "los venales tienen precio, los fanaticos solo ceden en la jaula."
+  ],
+  "unique": {
+    "zealot": [
+      "No hay dinero que compre lo que cree: el hambre y las heridas haran el trabajo.",
+      "Antes muerto que comprado. Pero el cuerpo tiene sus propios argumentos."
+    ],
+    "venal": [
+      "Todo el mundo tiene un precio. El suyo solo es mas alto.",
+      "No le interesa tu causa, le interesa tu bolsa."
+    ]
+  },
+
   "mercy": {
     "plea": "Piedad. Ya no puedo pelear. Hare lo que me pidas.",
     "spared": "Gracias... no lo olvidare.",
