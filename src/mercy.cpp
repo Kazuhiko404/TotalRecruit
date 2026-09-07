@@ -45,12 +45,55 @@ bool SafePlayerLeaderLocal(Character** out)
     TR_CATCH { return false; }
 }
 
+bool SafeReadPersonality(Character* npc, int* out)
+{
+    TR_TRY
+    {
+        StateBroadcastData* broadcast = npc->getStateBroadcast();
+        if (broadcast == NULL)
+        {
+            return false;
+        }
+        *out = (int)broadcast->myPersonality;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
 // What they say while the window is open. Deliberately not branched on
 // personality: the whole point of this route is that the wound outranks the
 // temperament, so a maniac and a coward beg with the same words.
 std::string PleaLine()
 {
     return "Piedad. Ya no puedo pelear. Hare lo que me pidas.";
+}
+
+// Who can buy their way out of this, and who cannot.
+//
+// A coward, a turncoat or a plain brute will offer whatever they carry -- and
+// that is what gives "Ignorar" its weight, because walking away now costs the
+// player something concrete. An honourable or brave one will not: they join or
+// they die on their feet. Letting them purchase an exit would contradict the
+// one thing that defines them, and would cheapen both routes at once.
+bool CanBuyTheirLife(Character* npc)
+{
+    int personality = PT_NORMAL;
+    if (!SafeReadPersonality(npc, &personality))
+    {
+        return false;
+    }
+
+    switch (personality)
+    {
+    case PT_FEARFUL:
+    case PT_TRAITOROUS:
+    case PT_DUMB:
+    case PT_COLD_CRUEL:
+    case PT_MANIACAL:
+        return true;
+    default:
+        return false;   // honourable, brave, and anyone unread
+    }
 }
 } // namespace
 
@@ -62,6 +105,52 @@ bool IsMercyPending(Character* npc)
 void ForgetMercy(Character* /*npc*/)
 {
     g_pleading = NULL;
+}
+
+// Moves what the beaten NPC is carrying into the player's purse.
+//
+// takeMoney(n) removes n and reports whether the funds were there, so a
+// negative n is the documented way the engine adds -- the same call the price
+// path already relies on, run in reverse. Whatever the NPC actually has is
+// taken first, so this can never mint cats out of nothing.
+bool SafeMoveMoney(Character* from, Character* to, int* outAmount)
+{
+    TR_TRY
+    {
+        const int purse = from->_NV_getMoney();
+        if (purse <= 0)
+        {
+            return false;
+        }
+        if (!from->_NV_takeMoney(purse))
+        {
+            return false;
+        }
+        to->_NV_takeMoney(-purse);
+        *outAmount = purse;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+bool PayTribute(Character* npc)
+{
+    Character* leader = NULL;
+    if (!SafePlayerLeaderLocal(&leader))
+    {
+        return false;
+    }
+
+    int amount = 0;
+    if (!SafeMoveMoney(npc, leader, &amount))
+    {
+        return false;
+    }
+
+    char buf[64] = { 0 };
+    _snprintf_s(buf, sizeof(buf), _TRUNCATE, "%d", amount);
+    LogInfo("Tribute of " + std::string(buf) + " cats from " + CharacterName(npc));
+    return true;
 }
 
 void GrantMercy(Character* npc)
@@ -83,8 +172,18 @@ void GrantMercy(Character* npc)
 
     const std::string name = CharacterName(npc);
     SpeakAloud(npc, "Gracias... no lo olvidar\xc3\xa9.");
-    TellPlayer(name + ": lo dejaste marchar.", false);
-    LogInfo("Spared " + name + " after they lost a limb.");
+    // They pay for the road out with whatever they carry. That is what makes
+    // this "ignore" rather than "spare": the player is declining something
+    // concrete, not just being merciful in the abstract.
+    if (CanBuyTheirLife(npc) && PayTribute(npc))
+    {
+        TellPlayer(name + ": te dej\xc3\xb3 lo que llevaba y se fue.", false);
+    }
+    else
+    {
+        TellPlayer(name + ": lo dejaste marchar.", false);
+    }
+    LogInfo("Let " + name + " go after they lost a limb.");
 }
 
 void OfferMercy(Character* npc)
@@ -119,10 +218,11 @@ void OfferMercy(Character* npc)
     const std::string line = PleaLine();
     SpeakAloud(npc, line);
 
-    // Three buttons, because two would be a lie. Sparing them is a real
-    // outcome, and it is the only one here that costs the player nothing and
-    // gains them nothing.
-    if (!ShowOffer(npc, line, "ACEPTAR", "RECHAZAR", "PERDONAR"))
+    // Ignoring is only a third option when there is something to ignore. An
+    // honourable NPC has made this a two-answer question: take them or fight.
+    const char* thirdLabel = CanBuyTheirLife(npc) ? "IGNORAR" : "";
+
+    if (!ShowOffer(npc, line, "ACEPTAR", "RECHAZAR", thirdLabel))
     {
         // No window means no choice, and silently recruiting or silently
         // sparing would both be decisions the player never made.

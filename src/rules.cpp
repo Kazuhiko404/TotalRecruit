@@ -358,20 +358,89 @@ bool StableChance(Character* character, int percent)
     return (int)((seed * 2654435761u) % 100u) < percent;
 }
 
-// Being on the same side is worth something even when the player is the weaker
-// one -- but not everything. Level gap decides how much.
-int AllyJoinChance(int npcLevel, int playerLevel)
+// One chance calculation, four routes.
+//
+// Cage, friendly, rescue and submission were each asking the same question --
+// "given how they feel about us, how the levels compare, and who they are, will
+// they come?" -- so it lives once. Each input is its own small function, which
+// is what makes any of this testable: a wrong number can be traced to one term
+// instead of one big expression.
+
+// Level gap. Being their equal or better is the strongest single argument the
+// player can make without saying anything.
+int ChanceFromLevelGap(int npcLevel, int playerLevel)
 {
     const int gap = npcLevel - playerLevel;
     if (gap <= 0)
     {
-        return 100;   // You are their equal or better; allies follow that.
+        return 100;
     }
-    // Falls off with the gap and floors at 10: an ally is never a flat no,
-    // which is the whole difference between a modifier and a gate.
     const int chance = 100 - (gap * 6);
     return chance < 10 ? 10 : chance;
 }
+
+// Faction standing, as a percentage shift rather than a gate. Relation runs
+// -100..100 and is never a door on its own -- that decision predates this
+// engine and still holds.
+int ChanceFromRelation(float relation, bool haveRelation)
+{
+    if (!haveRelation)
+    {
+        return 0;
+    }
+    // A quarter of the relation: +100 adds 25 points, -100 removes 25.
+    return (int)(relation * 0.25f);
+}
+
+// Temperament. Not who is easiest to bully -- who is easiest to convince.
+int ChanceFromPersonality(int personality)
+{
+    switch (personality)
+    {
+    case PT_FEARFUL:    return  20;   // wants out of wherever this is
+    case PT_TRAITOROUS: return  15;   // loyalty was never the point
+    case PT_DUMB:       return  10;
+    case PT_NORMAL:     return   0;
+    case PT_SMART:      return  -5;   // sees the offer for what it is
+    case PT_BRAVE:      return -15;
+    case PT_HONORABLE:  return -20;   // convinced by conduct, not odds
+    case PT_MANIACAL:   return -25;   // convinced by nothing
+    default:            return   0;
+    }
+}
+
+struct ChanceInputs
+{
+    int npcLevel;
+    int playerLevel;
+    float relation;
+    bool haveRelation;
+    int personality;
+    // Route bonus: how much this particular situation argues for them coming.
+    // A saved life is worth more than a conversation.
+    int situation;
+
+    ChanceInputs()
+        : npcLevel(1), playerLevel(1), relation(0.0f), haveRelation(false),
+          personality(PT_NORMAL), situation(0)
+    {
+    }
+};
+
+// The four terms, clamped. Never 0 and never 100: a floor keeps every route a
+// "not yet" rather than a wall, and a ceiling keeps the roll meaningful.
+int JoinChance(const ChanceInputs& in)
+{
+    int chance = ChanceFromLevelGap(in.npcLevel, in.playerLevel)
+               + ChanceFromRelation(in.relation, in.haveRelation)
+               + ChanceFromPersonality(in.personality)
+               + in.situation;
+
+    if (chance < 5)  chance = 5;
+    if (chance > 95) chance = 95;
+    return chance;
+}
+
 
 bool SafePlayerMoney(Character* leader, int* out)
 {
@@ -1175,10 +1244,53 @@ Verdict Evaluate(Character* character)
     // else. Checked first because it outranks every price.
     if (config.rescueEnabled && RemembersPlayerAsSaviour(character))
     {
-        verdict.willJoin = true;
         verdict.viaRescue = true;
-        verdict.currency = Currency_None;
-        verdict.reason = "te debe la vida";
+
+        // The debt is real, but it is not a contract. Whether they can follow
+        // you depends on who they are and what they would be walking into --
+        // and a saved life weighs more than any other opening, hence the
+        // largest situation bonus in the mod.
+        // Read locally: this branch runs before the cage logic that normally
+        // gathers these, and a rescue can happen anywhere.
+        int rescueNpcLevel = 1, rescuePlayerLevel = 1;
+        SafeRoughLevel(character, &rescueNpcLevel);
+        if (leader != NULL)
+        {
+            SafeRoughLevel(leader, &rescuePlayerLevel);
+        }
+        float rescueRelation = 0.0f;
+        const bool rescueHaveRelation =
+            SafeFactionRelation(character, playerFaction, &rescueRelation);
+
+        ChanceInputs in;
+        in.npcLevel     = rescueNpcLevel;
+        in.playerLevel  = rescuePlayerLevel;
+        in.relation     = rescueRelation;
+        in.haveRelation = rescueHaveRelation;
+        in.personality  = traits.personality;
+        in.situation    = 45;
+
+        if (StableChance(character, JoinChance(in)))
+        {
+            verdict.willJoin = true;
+            verdict.currency = Currency_None;
+            verdict.reason = Say("rescue.joins", "te debe la vida", character);
+            return verdict;
+        }
+
+        // They cannot come, so they pay it forward with what they have. This is
+        // the NPC paying the player, never the reverse: charging someone for
+        // having saved them would invert the one route in this mod where the
+        // player is not exercising power.
+        //
+        // LT_MY_LIFESAVER persists in the save, so the debt outlives the
+        // refusal: meet them again later and the roll is the same, but a
+        // changed level or standing can turn it.
+        verdict.currency = Currency_Refused;
+        verdict.owesGift = true;
+        verdict.reason = Say("rescue.repays",
+                             "no puede seguirte, pero te deja algo en pago",
+                             character);
         return verdict;
     }
 
@@ -1271,7 +1383,15 @@ Verdict Evaluate(Character* character)
                 return verdict;
             }
 
-            const int chance = AllyJoinChance(npcLevel, playerLevel);
+            ChanceInputs in;
+            in.npcLevel     = npcLevel;
+            in.playerLevel  = playerLevel;
+            in.relation     = relation;
+            in.haveRelation = haveRelation;
+            in.personality  = traits.personality;
+            // Standing this good is itself an argument.
+            in.situation    = 10;
+            const int chance = JoinChance(in);
             if (StableChance(character, chance))
             {
                 verdict.willJoin = true;

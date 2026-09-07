@@ -41,6 +41,9 @@ struct Verdict
     // Animals reach every route a person does, but they do not speak. Carried
     // so the caller knows to draw a sound instead of a sentence.
     bool isAnimal;
+    // They will not join, but they want to pay their debt with what they carry.
+    // The NPC paying the player, never the reverse.
+    bool owesGift;
 
     Verdict()
         : willJoin(false),
@@ -50,7 +53,8 @@ struct Verdict
           reason(),
           viaRescue(false),
           viaCaptivity(false),
-          isAnimal(false)
+          isAnimal(false),
+          owesGift(false)
     {
     }
 };

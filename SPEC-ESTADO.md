@@ -30,8 +30,8 @@ atajo total. Son dos cosas distintas, y la de la especificación es mejor —
 mantiene el gesto y elimina el precio.
 
 > **NOTA (para llenar):**
->
->
+> Agarrar cualquier NPC y meterlo en una jaula  > que funcione y que si sea obligatorio
+>  Esperar X horas configurable > esta bien, dejarlo asi que no sea necesario esperar nada, que al meter al npc a la jaula despues de 1 min del game te salga la notificacion de que quiere hablar y unirse
 
 ### 1.2 Reclutar amistoso
 
@@ -42,8 +42,8 @@ mantiene el gesto y elimina el precio.
 | Animales piden comida y se unen, sin tope, en el mundo abierto | ✅ | |
 
 > **NOTA (para llenar):**
->
->
+> Umbral de relación configurable (ej. 50) aca que se configure, el defecto que sea 20
+> 
 
 ### 1.3 Reclutar por rescate
 
@@ -71,7 +71,7 @@ mantiene el gesto y elimina el precio.
 | **La diferencia de nivel da chance, en todos los NPC y bestias** | 🟡 | El nivel es **puerta binaria**, no chance: +15 → no te escucha; −40 → se somete. La chance por nivel existe solo para aliados |
 
 > **NOTA (para llenar):**
->
+> **La diferencia de nivel da chance, en todos los NPC y bestias** investigar esto
 >
 
 ### 2.2 Reclutar amistoso
@@ -86,8 +86,12 @@ mantiene el gesto y elimina el precio.
 | Animales: nivel, personalidad y edad, todo configurable | 🟡 | Nivel ✅ y edad ✅ (`CharacterAnimal::age` / `lifespanInDays`). **Personalidad de animales: no la leemos.** Las comidas no son configurables |
 
 > **NOTA (para llenar):**
->
->
+> Umbral de relación configurable > configurar
+> **Honorables: chance por relación y por diferencia de nivel** > si esto esta bien, al honorable y otros unicos y nivel alto hay que hacerlos morir de hambre o pegarles, etc, aca podemos poner una idea de 
+que cada x horas te permita pegarle dentro de la jaula y le quite x cantidad de vida para que ayude a sumision, es buena idea para que la analizemos
+> Si el gap es mayor a X configurable, rechazo cortés  > ok tenemos que configurar
+>las horas **no** son configurables > configurar > tambien cuantas veces hasta que te deje de hablar > formula horas * cant, si le hablas 5 veces seguidas * 1h > 5h cooldown si es que se puede, hay que validad si el sistema recuerda esto
+> Animales: nivel, personalidad y edad, todo configurable > ok , hay que confiigurar tambien el minimo de barra de hambre que tenemos que llenar para poder reclutar, por ejemplo si le damos de comer a un cachorro con llenarle no se pongamos 15% ya te pide unir, quiza animales mas fuerte sea ams comida, algo asi, podemos hacer un loop > barra actual > le das comida > aumento arriba el umbral ? si -> se une, no -> volver amostrar para darle mas comida.
 
 ### 2.3 Reclutar por rescate
 
@@ -101,7 +105,7 @@ Esta es la ruta más lejos de la especificación. Hoy el rescate es la puerta
 gratis del mod; la especificación la quiere con condiciones.
 
 > **NOTA (para llenar):**
->
+> tenemos que entonces diseñar esto y que quede bien
 >
 
 ---
@@ -124,9 +128,22 @@ RECHAZAR**— y la especificación los nombra **Aceptar / Ignorar / Rechazar**.
 "Perdonar" y "Ignorar" describen la misma consecuencia (se va sin agro) pero
 cuentan cosas distintas sobre el jugador.
 
+**DECIDIDO -- quien puede comprar su vida y quien no:**
+
+| Personalidad | Al rogar por su vida |
+|---|---|
+| `PT_FEARFUL`, `PT_TRAITOROUS`, `PT_DUMB` | Ofrece pago u objeto, o unirse |
+| `PT_COLD_CRUEL`, `PT_MANIACAL` | Ofrece pago -- no tiene honor que perder |
+| `PT_HONORABLE`, `PT_BRAVE` | **Se une o muere peleando.** Sin pago |
+
+Un honorable comprando su salida contradice lo unico que lo define, y
+abarataria las dos rutas a la vez.
+
 > **NOTA (para llenar):**
->
->
+>Chance de que pida unirse al estar cerca de morir  > aca podemos revisar cuanta vida le queda, por ejemplo configurable 5%-10%-30%, etc
+> O tras vencerlo X veces > podrias averiguar si esto se puede contar cuantas veces lo dejas inconcidente por ejemplo. y que sea configurable
+> hay que diseñar  Curarlo y pegarle de nuevo para que se someta y La personalidad afecta las veces y la chance 
+> tambien puede estar la opcion de la personalidad que te pida dinero y te perdone, por ejemplo.
 
 ---
 
@@ -196,7 +213,7 @@ consulten.
 lo vuelve permanente.
 
 > **RESPUESTA:**
->
+> A esta bien, pero siempre seguir clean code y SOLID, funciones flexibles, compactas, reusables, etc, facil de testear y analizar por bugs
 >
 
 ### P2 — El rescate: ¿cuánto deja de ser gratis?
@@ -213,8 +230,24 @@ donde el jugador **no** ejerce poder, y `LT_MY_LIFESAVER` es la deuda.
 - **(c) Como está**: quien te sacó del barro es tu gente.
 
 > **RESPUESTA:**
+> hagamos un brainstorm a partir de las respuestas que puse
 >
+> **DECIDIDO: (c) -- el rescatado ofrece, nunca cobra.**
 >
+> Releyendo la especificacion, "puede pedir plata o comida para pagarte" no es
+> un precio: es el NPC pagandote a vos. Eso cambia el signo de toda la ruta.
+>
+> - Se une si puede.
+> - Si no puede, te da lo que tiene: comida, cats, un objeto.
+> - Nunca te cobra por haberlo salvado.
+>
+> Asi el rescate sigue siendo la unica ruta donde el jugador no ejerce poder, y
+> deja de ser gratis sin volverse una transaccion. De fondo queda la opcion (b):
+> LT_MY_LIFESAVER persiste, asi que quien no se una hoy sigue en deuda.
+>
+> Lo mismo para la sumision (seccion 3): un vencido que ruega puede ofrecer un
+> pago u objeto en lugar de unirse -- y eso le da peso a Ignorar, porque dejas
+> de ganar algo concreto. Pero solo los cobardes: un honorable se une o muere.
 
 ### P3 — ¿Cheat mantiene el ritual?
 
@@ -227,7 +260,7 @@ condiciones.
   presets.
 
 > **RESPUESTA:**
->
+> b
 >
 
 ### P4 — ¿Los animales tienen personalidad?
@@ -241,7 +274,7 @@ hago antes de que decidas, o preferís que la lógica animal use solo nivel y
 edad?
 
 > **RESPUESTA:**
->
+> revisemos primero pero la logica base ya se puede agregar
 >
 
 ### P5 — ¿"Perdonar" o "Ignorar"?
@@ -252,8 +285,10 @@ Misma consecuencia, distinta historia. **Perdonar** dice algo del jugador;
 ¿Renombro, o quedan los dos como acciones separadas?
 
 > **RESPUESTA:**
+> Ignorar me parece mejor
 >
->
+> **DECIDIDO: "Ignorar".** Con el pago de la P2 el nombre se gana su lugar:
+> ignorar deja de ser solo dejarlo ir, es renunciar a lo que ofrecia.
 
 ### P6 — Sumisión por golpes: ¿qué contamos?
 
@@ -268,7 +303,7 @@ memoria: **una recarga lo reinicia**.
   sumisión — sin contador y a prueba de recargas.
 
 > **RESPUESTA:**
->
+> veamos una solucion inteligente con un fallback o algo asi
 >
 
 ### P7 — ¿Todos los números al hub?
@@ -279,5 +314,6 @@ Son unos 8-10 valores nuevos. El panel ya lleva 36.
 - **(b) Los importantes al hub, el resto solo en `config.json`.**
 
 > **RESPUESTA:**
->
+>  tenemos que ver como optimizar todo esto, esta bien que sea flexible pero veamos como ordenar, ideal agregar todo configurable ya sea al panel hub o config, el tema esque enel panel hub los cambios son automaticos
+el config tienes que relogear y importar, no es lo ideal.
 >

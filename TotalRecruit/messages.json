@@ -108,6 +108,11 @@
   },
 
   "rescue": {
+    "joins": "te debe la vida",
+    "repays": [
+      "no puede seguirte, pero te deja algo en pago",
+      "no esta en condiciones de seguirte; te paga con lo que lleva"
+    ],
     "honourable": "Estaba muerto y no me abandonaste. Eso es una deuda.",
     "cruel": "Me curaste. Que raro. Nadie hace eso por aqui.",
     "fearful": "Crei que era mi fin. Y te quedaste.",
