@@ -176,7 +176,7 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "price_steepness", "Curva: pendiente", "Que tan brusco encarece alrededor del punto medio", 0.02f, 0.4f, 0.01f, 2, &c.prices.priceCurveSteepness);
     regFloat(api, mod, "price_midpoint", "Curva: punto medio", "Nivel donde el precio sube mas rapido", 5.0f, 90.0f, 5.0f, 0, &c.prices.priceCurveMidpoint);
     regInt(api, mod, "cats_minimum", "Cats (Mínimo)", "Precio mínimo para cualquier recluta", 0, 10000, 100, &c.prices.catsMinimum);
-    regFloat(api, mod, "hunger_threshold", "Hambre extra", "Suma requerimiento extra de hambre (0 por defecto)", 0.0f, 10.0f, 0.5f, 1, &c.prices.hungerThreshold);
+    regFloat(api, mod, "hunger_threshold", "Umbral de hambre", "Considera hambriento por debajo de este % de estomago lleno (0 = usar solo el motor)", 0.0f, 1.0f, 0.05f, 2, &c.prices.hungerThreshold);
     regFloat(api, mod, "wounded_threshold", "Salud (Máximo para reclutar)", "Si la salud es <= a esto, escuchan (0..1)", 0.0f, 1.0f, 0.1f, 2, &c.prices.woundedThreshold);
     regFloat(api, mod, "easy_hours_caged", "Horas jaula (modo facil)", "Horas en jaula que bastan por si solas. 0 lo desactiva", 0.0f, 72.0f, 1.0f, 0, &c.prices.easyHoursCaged);
     regFloat(api, mod, "hours_caged_for_proud", "Horas jaula (Orgullosos)", "Horas a esperar para NPCs orgullosos", 0.0f, 72.0f, 1.0f, 0, &c.prices.hoursCagedForProud);
@@ -188,6 +188,20 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "talent_weight", "Peso del talento", "Cuanto sube el precio un NPC con un oficio o habilidad rara", 0.0f, 4.0f, 0.25f, 2, &c.prices.talentWeight);
     regFloat(api, mod, "unique_multiplier", "Precio de unicos", "Cuanto multiplican su precio los personajes con nombre", 1.0f, 5.0f, 0.25f, 2, &c.prices.uniqueMultiplier);
     regFloat(api, mod, "faction_weight", "Peso de Facción", "Impacto de rep en el precio (0..2)", 0.0f, 2.0f, 0.1f, 1, &c.prices.factionWeight);
+
+    // Animales: domesticacion por barra de hambre. Cada valor es una fraccion
+    // del estomago lleno, asi que lo que se escribe aqui es lo que la barra
+    // tiene que alcanzar.
+    regFloat(api, mod, "animal_cub_maturity", "Animal: umbral de cría", "Por debajo de esta fraccion de su vida cuenta como cachorro", 0.0f, 1.0f, 0.05f, 2, &c.animals.cubMaturity);
+    regInt(api, mod, "animal_weak_level", "Animal: nivel débil", "A este nivel o menos cuenta como debil, sea cual sea su edad", 0, 60, 1, &c.animals.weakLevel);
+    regFloat(api, mod, "animal_cub_fullness", "Animal: comida cría", "Cuanto estomago hay que llenarle a una cria o a un debil", 0.0f, 1.0f, 0.05f, 2, &c.animals.cubFullness);
+    regFloat(api, mod, "animal_base_fullness", "Animal: comida base", "Piso de comida para cualquier animal adulto", 0.0f, 1.0f, 0.05f, 2, &c.animals.baseFullness);
+    regFloat(api, mod, "animal_maturity_weight", "Animal: peso de la edad", "Cuanto suma estar completamente crecido", 0.0f, 1.0f, 0.05f, 2, &c.animals.maturityWeight);
+    regInt(api, mod, "animal_strong_level", "Animal: nivel fuerte", "Por encima de este nivel pide mas comida", 0, 100, 5, &c.animals.strongLevel);
+    regFloat(api, mod, "animal_strong_penalty", "Animal: recargo fuerte", "Cuanta comida extra pide un animal de nivel alto", 0.0f, 1.0f, 0.05f, 2, &c.animals.strongPenalty);
+    regFloat(api, mod, "animal_edge_discount", "Animal: descuento +10", "Descuento si le sacas 10 niveles o mas", 0.0f, 1.0f, 0.05f, 2, &c.animals.edgeDiscount);
+    regBool(api, mod, "animal_owned_need_cage", "Animal: domesticos solo por jaula", "Un animal con dueno no se convence con comida: hay que enjaularlo", &c.animals.ownedNeedCage);
+    regFloat(api, mod, "animal_big_edge_discount", "Animal: descuento +20", "Descuento si le sacas 20 niveles o mas", 0.0f, 1.0f, 0.05f, 2, &c.animals.bigEdgeDiscount);
 
     return true;
 }

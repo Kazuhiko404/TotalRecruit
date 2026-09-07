@@ -191,6 +191,65 @@ bool SafeIsAnimal(Character* character, bool* out)
     TR_CATCH { return false; }
 }
 
+// The engine's raw hunger field is NOT a 0..1 fraction and it runs the other
+// way round: it counts fullness, so 3.0 is a full stomach and 0 is empty.
+//
+// The span is 0..3. KEP writes hunger = 3.0f to repair a broken medical state
+// and treats hunger < 0 as invalid, and a fed pack beast measured 2.99 in game
+// -- which is the reading that settles it. KEP's other line, clamping
+// (hunger - 1.0) to 0..1, drives how gaunt a body is DRAWN; borrowing it as the
+// stomach scale put a 1.69 bonedog at 69% full and tamed it without a meal,
+// when the honest answer is 56%.
+const float kHungerFull  = 3.0f;
+const float kHungerEmpty = 0.0f;
+
+// Whether this character belongs to an organisation of people rather than
+// roaming loose. Kenshi keeps wildlife in bookkeeping factions it flags as not
+// real; anything owned sits in a genuine faction.
+//
+// Measured on three animals before being trusted: a bonedog in "Wild Dogs" read
+// notARealFaction=yes, while a Bone Mutt in the Holy Nation Outlaws and a pack
+// beast in the Viera Tribes both read no -- and the Bone Mutt had even
+// inherited its owners' OT_MILITARY type.
+//
+// The player's own animals are excluded because they are already home.
+bool SafeBelongsToRealFaction(Character* character, bool* out)
+{
+    TR_TRY
+    {
+        Faction* faction = character->getFaction();
+        if (faction == NULL)
+        {
+            return false;
+        }
+        *out = !faction->isNotARealFaction() && !faction->isThePlayer();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// Reads false when the answer cannot be had: refusing to recruit on the
+// strength of a pointer that would not resolve is the worse failure.
+bool BelongsToSomeone(Character* character)
+{
+    bool owned = false;
+    if (!GetConfig().animals.ownedNeedCage)
+    {
+        return false;
+    }
+    return SafeBelongsToRealFaction(character, &owned) && owned;
+}
+
+// Fullness as an honest 0..1, where 1 is sated and 0 is starving. This is the
+// only number the rest of the code should reason about in percentages.
+float HungerToFullness01(float rawHunger)
+{
+    float f = (rawHunger - kHungerEmpty) / (kHungerFull - kHungerEmpty);
+    if (f < 0.0f) f = 0.0f;
+    if (f > 1.0f) f = 1.0f;
+    return f;
+}
+
 // How grown an animal is, 0..1 of its own lifespan. A pup and an old bull are
 // not the same negotiation, and the engine tracks both numbers already.
 bool SafeAnimalMaturity(Character* character, float* out)
@@ -211,39 +270,48 @@ bool SafeAnimalMaturity(Character* character, float* out)
     TR_CATCH { return false; }
 }
 
-// Feeding a starving animal is the whole of taming when the animal is small,
-// and only the opening when it is not.
-//
-// The shape borrowed from survival games that do this well: a young or weak
-// creature bonds on the meal alone, because it has no other option and no
-// reason to distrust you. A grown one weighs whether you can keep feeding it,
-// which in Kenshi terms means whether you look stronger than it is.
-//
-// So the cost is one number -- meals -- and maturity and level decide how many.
-int MealsToTame(int npcLevel, int playerLevel, float maturity)
-{
-    // A cub or a weakling: one meal and it follows you home.
-    if (maturity < 0.25f || npcLevel <= 10)
-    {
-        return 1;
-    }
-
-    // Everyone else pays for their size, then discounts for your reputation as
-    // something that can clearly feed itself.
-    int meals = 2 + (int)(maturity * 3.0f);          // 2..5
-    meals += (npcLevel > 30) ? 1 : 0;
-
-    const int edge = playerLevel - npcLevel;
-    if (edge >= 20)      meals -= 2;
-    else if (edge >= 10) meals -= 1;
-
-    return meals < 1 ? 1 : meals;
-}
-
 bool SafeRoughLevel(Character* character, int* out)
 {
     TR_TRY { *out = character->getRoughLevel(); return true; }
     TR_CATCH { return false; }
+}
+
+// How full an animal has to be before it will follow the player, as a 0..1
+// fraction of its stomach. Replaces counting meals: the engine already tracks
+// fullness, and a bar the player can watch fill is honest in a way that a
+// hidden tally is not.
+//
+// Same shape the meal count had, because that shape was calibrated and works:
+// a cub or a weakling bonds on very little, a grown beast wants far more, and
+// looking stronger than it discounts the bill.
+float TamingFullnessNeeded(Character* character, int npcLevel, int playerLevel)
+{
+    const Config& config = GetConfig();
+
+    float maturity = 1.0f;
+    SafeAnimalMaturity(character, &maturity);
+
+    // A cub or a weakling: a mouthful and it follows you home.
+    if (maturity < config.animals.cubMaturity || npcLevel <= config.animals.weakLevel)
+    {
+        return config.animals.cubFullness;
+    }
+
+    float needed = config.animals.baseFullness +
+                   maturity * config.animals.maturityWeight;
+
+    if (npcLevel > config.animals.strongLevel)
+    {
+        needed += config.animals.strongPenalty;
+    }
+
+    const int edge = playerLevel - npcLevel;
+    if (edge >= 20)      needed -= config.animals.bigEdgeDiscount;
+    else if (edge >= 10) needed -= config.animals.edgeDiscount;
+
+    if (needed < config.animals.cubFullness) needed = config.animals.cubFullness;
+    if (needed > 1.0f) needed = 1.0f;
+    return needed;
 }
 
 // inSomething only reads IN_PRISON while the character is actually inside a
@@ -719,6 +787,71 @@ bool UniqueTakesMoney(const Traits& traits)
            traits.npcType == OT_SLAVER;
 }
 
+// A loose animal is tamed, not negotiated with. Kept apart from the human
+// bargaining path because every term there -- faction standing, bribes, honour,
+// military loyalty -- is meaningless to a beast, and letting an animal fall
+// through to it produced refusals like "his honour forbids accepting bribes"
+// aimed at a pack bull.
+//
+// The whole cost is food, and how full the animal already is decides whether
+// that cost has been paid. Maturity and level set the bar; the player's own
+// level discounts it, which in Kenshi terms is the animal judging whether you
+// can keep feeding it.
+Verdict EvaluateAnimal(Character* character, const Traits& traits,
+                       const Condition& condition, int npcLevel, int playerLevel,
+                       bool inMyCage)
+{
+    Verdict verdict;
+    verdict.isAnimal = true;
+    verdict.currency = Currency_Care;
+
+    // An animal that already belongs to someone is not tamed, it is stolen.
+    // Measured, not assumed: loose wildlife sits in bookkeeping factions the
+    // engine marks as not real (a bonedog in "Wild Dogs"), while an owned beast
+    // carries a real faction of people -- a Bone Mutt in the Holy Nation
+    // Outlaws even inherits their OT_MILITARY type. So food buys nothing here;
+    // the cage does.
+    if (!inMyCage && BelongsToSomeone(character))
+    {
+        verdict.currency = Currency_Refused;
+        verdict.reason = Say("animal.owned",
+                             "ya tiene due\xc3\xb1o: no lo vas a convencer con comida, "
+                             "m\xc3\xa9telo en una jaula",
+                             character);
+        return verdict;
+    }
+
+    const float fullness = HungerToFullness01(condition.hunger);
+    const float needed = TamingFullnessNeeded(character, npcLevel, playerLevel);
+
+    verdict.wantsFood = (fullness < needed);
+
+    if (condition.wounded)
+    {
+        verdict.reason = Say("animal.tame.wounded",
+                             "est\xc3\xa1 herido: c\xc3\xfa" "ralo antes de que conf\xc3\xad" "e en ti",
+                             character);
+        return verdict;
+    }
+
+    if (fullness >= needed)
+    {
+        verdict.willJoin = true;
+        verdict.reason = Say("animal.tame.ready",
+                             "comi\xc3\xb3 de tu mano y te sigue", character);
+        return verdict;
+    }
+
+    // The gap is what the player acts on, so it is the number the line carries.
+    const int missing = (int)((needed - fullness) * 100.0f + 0.5f);
+    verdict.cats = missing;   // percent, not money: the window reads it as the price
+    verdict.reason = Fill(Say("animal.tame.hungry",
+                              "todav\xc3\xad" "a tiene hambre: le falta {cats}% de barriga",
+                              character),
+                          CharacterName(character), missing, 0);
+    return verdict;
+}
+
 Currency ChooseCurrency(const Traits& traits, const Condition& condition, bool animal)
 {
     if (animal)
@@ -1176,11 +1309,14 @@ Verdict Evaluate(Character* character)
                             ? condition.dying
                             : (condition.health <= config.prices.woundedThreshold);
 
-    // The raw hunger field is NOT a 0..1 fraction -- a healthy NPC reads about
-    // 3 -- so the engine's own isReallyHungry decides, and this is only an
-    // opt-in extra trigger for players who raise the threshold deliberately.
+    // The engine's own isReallyHungry decides by default; this is an opt-in
+    // extra trigger for players who raise the threshold deliberately.
+    //
+    // The comparison runs DOWNWARDS because hunger counts fullness, not need:
+    // 3 is a full stomach. Configured as a 0..1 fullness so the number means
+    // what the player thinks it means -- "starving below 40% full" is 0.4.
     if (config.prices.hungerThreshold > 0.0f &&
-        condition.hunger >= config.prices.hungerThreshold)
+        HungerToFullness01(condition.hunger) <= config.prices.hungerThreshold)
     {
         condition.starving = true;
     }
@@ -1355,6 +1491,17 @@ Verdict Evaluate(Character* character)
             verdict.currency = Currency_Refused;
             verdict.reason = "est\xc3\xa1 harto de tu insistencia: d\xc3\xa9jalo en paz un rato";
             return verdict;
+        }
+
+        // Animals leave the human path here. Everything below this line --
+        // faction standing, bribes, honour, military loyalty -- is a human
+        // argument, and letting a beast fall through to it is what produced
+        // refusals like "his honour forbids accepting bribes" aimed at a pack
+        // bull. Taming is its own negotiation and it is settled in food.
+        if (animal)
+        {
+            return EvaluateAnimal(character, traits, condition, npcLevel, playerLevel,
+                                  false);
         }
 
         // Faction relation, read once and used for everything below: who will
@@ -1560,33 +1707,13 @@ Verdict Evaluate(Character* character)
 
         const bool cared = !condition.starving && !condition.wounded;
 
-        // Animals earn their own arithmetic. A cub follows the first person who
-        // feeds it; a grown one wants to see that you can keep doing it.
+        // A caged animal is still an animal, so it settles on the same stomach
+        // arithmetic as a loose one. Deciding this twice is how two rules that
+        // are meant to be one drift apart.
         if (animal && condition.starving)
         {
-            float maturity = 0.5f;
-            SafeAnimalMaturity(character, &maturity);
-            const int meals = MealsToTame(npcLevel, playerLevel, maturity);
-
-            verdict.currency = Currency_Care;
-            verdict.wantsFood = true;
-            verdict.cats = meals;   // meals, not money: the window reads it as the price
-
-            if (meals <= 1)
-            {
-                verdict.reason = (maturity < 0.25f)
-                    ? "cachorro hambriento: una comida y te sigue"
-                    : "d\xc3\xa9" "bil y hambriento: una comida basta";
-            }
-            else
-            {
-                char buf[96] = { 0 };
-                _snprintf_s(buf, sizeof(buf), _TRUNCATE,
-                            "hambriento pero cr\xc3\xa9" "dulo: %d comidas y te seguir\xc3\xa1",
-                            meals);
-                verdict.reason = buf;
-            }
-            break;
+            return EvaluateAnimal(character, traits, condition, npcLevel, playerLevel,
+                                  true);
         }
 
         if (cared)

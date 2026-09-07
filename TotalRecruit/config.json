@@ -5,7 +5,7 @@
   "recruitLabel": "Hablar",
   "maxSpawnedCharacters": 150,
   "panelToggleKey": 37,
-  "probeOnClick": false,
+  "probeOnClick": true,
   "showTalkCursor": true,
   "resolveCageOccupant": true,
   "hailWhenReady": true,

@@ -57,10 +57,11 @@ struct Prices
     // The level at which the curve is steepest -- roughly "a serious fighter".
     float priceCurveMidpoint;
     int catsMinimum;
-    // Optional extra trigger for "starving". The engine's own isReallyHungry
-    // and isHungerKO already decide this, so 0 (off) is the sane default: the
-    // raw hunger field is not a 0..1 fraction -- a healthy NPC reads about 3 --
-    // so any low value here would call everyone starving.
+    // Optional extra trigger for "starving", as a 0..1 fraction of a full
+    // stomach: 0.4 means "starving below 40% full". The engine's own
+    // isReallyHungry and isHungerKO already decide this, so 0 (off) is the sane
+    // default. Note the raw engine field counts fullness and runs 0..3, so it
+    // is normalised before comparison -- never compare against it directly.
     float hungerThreshold;
     // Overall health at or below this counts as "hurt enough to listen".
     float woundedThreshold;
@@ -100,6 +101,55 @@ struct Prices
           factionWeight(0.75f),
           talentWeight(1.0f),
           uniqueMultiplier(2.0f)
+    {
+    }
+};
+
+// Taming, expressed as how full an animal's stomach has to be before it will
+// follow the player. Every number is a 0..1 fraction of a full belly, so what
+// the player types is what the bar has to reach.
+struct Animals
+{
+    // Below this much of its lifespan an animal counts as a cub.
+    float cubMaturity;
+    // At or below this level an animal counts as weak, whatever its age.
+    int weakLevel;
+    // What a cub or a weakling needs. Small on purpose: it has no other option
+    // and no reason to distrust you.
+    float cubFullness;
+    // The floor every grown animal starts from.
+    float baseFullness;
+    // How much being fully grown adds on top of the floor.
+    float maturityWeight;
+    // Above this level an animal is big enough to want more.
+    int strongLevel;
+    // How much that adds.
+    float strongPenalty;
+    // Discounts for out-levelling the animal, which it reads as evidence you
+    // can keep feeding it.
+    float edgeDiscount;     // 10+ levels above it
+    float bigEdgeDiscount;  // 20+ levels above it
+    // An animal owned by a real faction cannot be talked round with food -- it
+    // has to be taken and caged. Off makes any animal tameable in the open.
+    bool ownedNeedCage;
+
+    // Calibrated against measured wildlife, not guessed: a loose bonedog sits
+    // at hunger 1.69 of 3.0, so it starts the negotiation around 56% full. Any
+    // bar below that is one the animal has already cleared, and taming would
+    // cost nothing -- which is exactly the bug these numbers exist to avoid.
+    // A cub still bonds cheaply; everyone else has to be fed to well past where
+    // they were found.
+    Animals()
+        : cubMaturity(0.25f),
+          weakLevel(10),
+          cubFullness(0.70f),
+          baseFullness(0.80f),
+          maturityWeight(0.15f),
+          strongLevel(30),
+          strongPenalty(0.05f),
+          edgeDiscount(0.05f),
+          bigEdgeDiscount(0.10f),
+          ownedNeedCage(true)
     {
     }
 };
@@ -171,6 +221,7 @@ struct Config
     bool animalsEnabled;
 
     Prices prices;
+    Animals animals;
     DialogueIds dialogue;
     Exclusions exclude;
 

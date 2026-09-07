@@ -77,13 +77,6 @@ void OnRecruitClicked(MyGUI::Widget* /*sender*/, int /*left*/, int /*top*/,
         return;
     }
 
-    // Diagnostic dump of everything the rule engine reads, for when something
-    // behaves oddly in a live game.
-    if (GetConfig().probeOnClick)
-    {
-        ProbeCharacter(target);
-    }
-
     AttemptRecruit(target);
 }
 
@@ -329,6 +322,16 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
         HideButton();
         ClearTarget();
         return;
+    }
+
+    // Diagnostic dump of everything the rule engine reads. It runs on the
+    // right-click, before the recruitable filter, because the states worth
+    // measuring are exactly the ones that get filtered out: an unconscious or
+    // excluded character never grows a "Talk" button, so hanging the probe off
+    // that button made the interesting cases unreachable.
+    if (GetConfig().probeOnClick)
+    {
+        ProbeCharacter(character);
     }
 
     std::string excluded;

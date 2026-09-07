@@ -153,6 +153,38 @@ bool SafeFactionName(Faction* faction, const char** out)
     TR_CATCH { return false; }
 }
 
+// Which faction the character themselves belongs to -- distinct from the cage's
+// owner, which is all this probe used to report. Wild fauna and someone's herd
+// animal are both animals; the difference has to live somewhere, and faction is
+// where Kenshi models belonging.
+bool SafeOwnFaction(Character* character, Faction** out)
+{
+    TR_TRY
+    {
+        *out = character->getFaction();
+        return (*out != NULL);
+    }
+    TR_CATCH { return false; }
+}
+
+// isNotARealFaction is the engine's own marker for the bookkeeping factions it
+// uses for things that are not organisations -- which is where loose wildlife
+// is expected to sit. Expected, not proven: this logs it so a click on a wild
+// beast and a click on a tame one can settle it with evidence.
+bool SafeFactionFlags(Faction* faction, int* outNotReal, int* outIsPlayer,
+                      int* outFundamentalType, int* outSize)
+{
+    TR_TRY
+    {
+        *outNotReal          = faction->isNotARealFaction() ? 1 : 0;
+        *outIsPlayer         = faction->isThePlayer() ? 1 : 0;
+        *outFundamentalType  = (int)faction->getFundamentalNPCType();
+        *outSize             = faction->getFactionSize();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
 bool SafePlayerFaction(Faction** out)
 {
     TR_TRY
@@ -347,6 +379,36 @@ std::string ProbeCharacter(Character* character)
              << "  chained=" << YesNo(chained)
              << "  kidnapped=" << YesNo(kidnapped);
         LogInfo(line.str());
+
+        // Own faction, logged so wild-versus-owned can be settled by clicking
+        // one of each rather than by assuming how Kenshi models wildlife.
+        Faction* ownFaction = NULL;
+        if (SafeOwnFaction(character, &ownFaction))
+        {
+            const char* ownName = NULL;
+            int notReal = 0, isPlayerFaction = 0, fundamental = 0, factionSize = 0;
+            const bool haveName  = SafeFactionName(ownFaction, &ownName) && ownName != NULL;
+            const bool haveFlags = SafeFactionFlags(ownFaction, &notReal, &isPlayerFaction,
+                                                    &fundamental, &factionSize);
+            std::ostringstream fline;
+            fline << "  faction='" << (haveName ? ownName : "?") << "'";
+            if (haveFlags)
+            {
+                fline << "  notARealFaction=" << YesNo(notReal)
+                      << "  isPlayerFaction=" << YesNo(isPlayerFaction)
+                      << "  fundamentalType=" << NpcTypeName(fundamental)
+                      << "  factionSize=" << factionSize;
+            }
+            else
+            {
+                fline << "  (faction flags unreadable)";
+            }
+            LogInfo(fline.str());
+        }
+        else
+        {
+            LogInfo("  no faction");
+        }
 
         if (unique)
         {

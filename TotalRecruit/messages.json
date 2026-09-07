@@ -570,7 +570,45 @@
       "*te mira y parpadea lentamente*",
       "*permanece tranquilo mientras te acercas*",
       "*se tumba cerca de ti y deja escapar un suspiro*"
-    ]
+    ],
+    "owned": [
+      "ya tiene dueno: no lo vas a convencer con comida, metelo en una jaula",
+      "pertenece a alguien: la comida no compra lo que ya esta comprado",
+      "no es un animal libre: si lo quieres, tendras que llevartelo",
+      "come de otra mano: enjaulalo si de verdad lo quieres",
+      "tiene amo, y no eres tu: la jaula es el unico camino",
+      "esta amansado por otros: ninguna comida cambia eso",
+      "sigue a su duena manada: robalo o dejalo"
+    ],
+    "tame": {
+      "ready": [
+        "comio de tu mano y te sigue",
+        "ya confia en ti: se queda a tu lado",
+        "levanta la cabeza y te sigue sin dudarlo",
+        "come lo ultimo y decide que tu manada es la suya",
+        "te olfatea una vez mas y camina detras de ti",
+        "sacio el hambre y ya no piensa irse",
+        "acepta el ultimo bocado y no vuelve a alejarse"
+      ],
+      "hungry": [
+        "todavia tiene hambre: le falta {cats}% de barriga",
+        "sigue hambriento: aun le falta un {cats}%",
+        "come, pero no le alcanza: le queda un {cats}% de barriga",
+        "el hambre manda todavia: {cats}% mas y estara satisfecho",
+        "no es suficiente: pide un {cats}% mas",
+        "traga rapido y vuelve a mirarte: le falta {cats}%",
+        "aun no confia: llena ese {cats}% que le falta"
+      ],
+      "wounded": [
+        "esta herido: curalo antes de que confie en ti",
+        "sangra demasiado para pensar en comida: curalo primero",
+        "el dolor puede mas que el hambre: atiende sus heridas",
+        "no come mientras le duele: curalo y vuelve a intentarlo",
+        "primero las heridas, despues la comida",
+        "esta malherido: ninguna comida arregla eso",
+        "curalo: un animal herido no confia en nadie"
+      ]
+    }
   },
   "_unicos": [
     "Los personajes con nombre se dividen por lo que creen:",

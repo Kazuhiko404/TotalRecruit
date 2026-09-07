@@ -212,6 +212,17 @@ void LoadConfig(const std::string& modDirectory)
     ReadInt(text, "catsMinimum", &g_config.prices.catsMinimum);
     ReadFloat(text, "hungerThreshold", &g_config.prices.hungerThreshold);
     ReadFloat(text, "woundedThreshold", &g_config.prices.woundedThreshold);
+
+    ReadFloat(text, "animalCubMaturity", &g_config.animals.cubMaturity);
+    ReadInt(text, "animalWeakLevel", &g_config.animals.weakLevel);
+    ReadFloat(text, "animalCubFullness", &g_config.animals.cubFullness);
+    ReadFloat(text, "animalBaseFullness", &g_config.animals.baseFullness);
+    ReadFloat(text, "animalMaturityWeight", &g_config.animals.maturityWeight);
+    ReadInt(text, "animalStrongLevel", &g_config.animals.strongLevel);
+    ReadFloat(text, "animalStrongPenalty", &g_config.animals.strongPenalty);
+    ReadFloat(text, "animalEdgeDiscount", &g_config.animals.edgeDiscount);
+    ReadFloat(text, "animalBigEdgeDiscount", &g_config.animals.bigEdgeDiscount);
+    ReadBool(text, "animalOwnedNeedCage", &g_config.animals.ownedNeedCage);
     ReadFloat(text, "hoursCagedForProud", &g_config.prices.hoursCagedForProud);
     ReadFloat(text, "fearfulMultiplier", &g_config.prices.fearfulMultiplier);
     ReadFloat(text, "braveMultiplier", &g_config.prices.braveMultiplier);
@@ -291,6 +302,16 @@ bool SaveConfig(const std::string& modDirectory)
     file << "  \"catsMinimum\": " << g_config.prices.catsMinimum << ",\n";
     file << "  \"hungerThreshold\": " << g_config.prices.hungerThreshold << ",\n";
     file << "  \"woundedThreshold\": " << g_config.prices.woundedThreshold << ",\n";
+
+    file << "  \"animalCubMaturity\": " << g_config.animals.cubMaturity << ",\n";
+    file << "  \"animalWeakLevel\": " << g_config.animals.weakLevel << ",\n";
+    file << "  \"animalCubFullness\": " << g_config.animals.cubFullness << ",\n";
+    file << "  \"animalBaseFullness\": " << g_config.animals.baseFullness << ",\n";
+    file << "  \"animalMaturityWeight\": " << g_config.animals.maturityWeight << ",\n";
+    file << "  \"animalStrongLevel\": " << g_config.animals.strongLevel << ",\n";
+    file << "  \"animalStrongPenalty\": " << g_config.animals.strongPenalty << ",\n";
+    file << "  \"animalEdgeDiscount\": " << g_config.animals.edgeDiscount << ",\n";
+    file << "  \"animalBigEdgeDiscount\": " << g_config.animals.bigEdgeDiscount << ",\n";
     file << "  \"hoursCagedForProud\": " << g_config.prices.hoursCagedForProud << ",\n";
     file << "  \"uniqueExtraHours\": " << g_config.prices.uniqueExtraHours << ",\n";
     file << "  \"fearfulMultiplier\": " << g_config.prices.fearfulMultiplier << ",\n";
