@@ -254,9 +254,11 @@ interfaz que la que declaramos. Un desplegable para el preset y agrupadores para
 el resto son alcanzables sin inventar nada.
 
 **R6.4 — Los que no se pueden llevar al panel, documentados.** *(P2)*
-La interfaz del hub no maneja texto libre ni listas, así que los identificadores
-de diálogo y las listas de exclusión seguirán en el archivo. Eso debe estar
-dicho donde el jugador lo lea, no descubrirse.
+
+*Corregido por I6:* el hub **sí** expone `register_text_setting`, así que los
+identificadores de diálogo y las listas de exclusión pueden ir al panel. Lo que
+queda para el archivo es menos de lo que decía este requisito. Falta confirmar
+el layout del struct antes de llamar esas funciones (ver [ESTADO.md](ESTADO.md) §5).
 
 ---
 
@@ -265,14 +267,17 @@ dicho donde el jugador lo lea, no descubrirse.
 Cada una decide el diseño de un requisito. Ninguna lleva mucho, y todas evitan
 construir sobre una suposición.
 
-| # | Qué medir | Bloquea |
-|---|---|---|
-| I1 | Si el motor asigna temperamento a los animales | R5.4 |
-| I2 | Qué valores toma el hambre entre famélico y saciado | R5.1 |
-| I3 | Qué señal sirve de "vida restante" — la obvia devuelve cero en inconscientes | R3.1 |
-| I4 | Si escribir la marca de derrota altera la conducta de la IA | R3.3 |
-| I5 | Si el conteo de intentos de charla sobrevive una recarga | R2.4 |
-| I6 | Qué tipos de control acepta realmente el panel del hub | R6.3 |
+**Cinco de seis están cerradas.** El detalle y la evidencia están en
+[ESTADO.md](ESTADO.md) §1.
+
+| # | Qué medir | Bloquea | Respuesta |
+|---|---|---|---|
+| I1 | Si el motor asigna temperamento a los animales | R5.4 | ✅ **Sí, y varía** entre individuos de la misma especie |
+| I2 | Qué valores toma el hambre entre famélico y saciado | R5.1 | ✅ **0..3, donde 3 es lleno.** Tres fuentes independientes |
+| I3 | Qué señal sirve de "vida restante" | R3.1 | ✅ `blood`/`getMaxBlood()` o `derivedFleshHealthPercent` |
+| I4 | Si escribir la marca de derrota altera la conducta de la IA | R3.3 | ❌ **La única abierta.** Requiere observar conducta en juego |
+| I5 | Si el conteo de intentos de charla sobrevive una recarga | R2.4 | ✅ **No**, y la clave es un puntero crudo — bug latente |
+| I6 | Qué tipos de control acepta realmente el panel del hub | R6.3 | ✅ Secciones, select, texto libre y más |
 
 ---
 

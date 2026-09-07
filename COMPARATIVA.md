@@ -127,6 +127,11 @@ nunca un recluta. Los cuatro mods requieren FCS para cambiar una palabra.
 
 ## 3. Lo que ellos tienen mejor
 
+> **Desactualizado.** Los puntos 3.1 y 3.2 ya se resolvieron: hay curva de
+> precios calibrada contra los valores publicados de *for Cats*, y el precio lee
+> 39 estadísticas reales agrupadas por oficio, sombra y combate. Queda vigente
+> solo 3.3. Ver [ESTADO.md](ESTADO.md) §4.
+
 Acá conviene ser honesto: hay tres cosas donde la guía describe algo superior a
 lo nuestro.
 
