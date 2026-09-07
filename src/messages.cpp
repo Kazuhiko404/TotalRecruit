@@ -6,6 +6,7 @@
 #include <sstream>
 #include <map>
 #include <vector>
+#include <set>
 
 namespace totalrecruit
 {
@@ -15,6 +16,16 @@ namespace
 // at load time keeps every lookup a single map hit, which matters because these
 // run inside the right-click path.
 std::map<std::string, std::vector<std::string> > g_lines;
+
+// Keys the code asked for and the file did not have. A set, and reported once,
+// because Say() runs inside the right-click path and per-call logging there
+// would drown the log it is meant to help.
+std::set<std::string> g_missing;
+
+void NoteMissingKey(const std::string& path)
+{
+    g_missing.insert(path);
+}
 
 std::string Slurp(const std::string& path)
 {
@@ -237,9 +248,35 @@ std::string Say(const std::string& path, const std::string& fallback,
         g_lines.find(path);
     if (found == g_lines.end() || found->second.empty())
     {
+        // The fallback keeps the game playable, which is right for a player and
+        // wrong for us: as more logic lands, a key nobody wrote would just
+        // quietly serve the built-in line forever. Name it once, in the log, so
+        // it can be added to messages.json.
+        NoteMissingKey(path);
         return fallback;
     }
     return found->second[StableIndex(who, found->second.size())];
+}
+
+void ReportMissingKeys()
+{
+    if (g_missing.empty())
+    {
+        return;
+    }
+
+    std::string list;
+    for (std::set<std::string>::const_iterator it = g_missing.begin();
+         it != g_missing.end(); ++it)
+    {
+        if (!list.empty())
+        {
+            list += ", ";
+        }
+        list += *it;
+    }
+    LogInfo("messages.json has no entry for: " + list +
+            " (the built-in text was used instead).");
 }
 
 std::string Fill(const std::string& text, const std::string& name,

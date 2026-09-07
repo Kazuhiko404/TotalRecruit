@@ -191,6 +191,7 @@ __declspec(dllexport) void stopPlugin()
 
     ShutdownHailing();
     ShutdownMercy();
+    ReportMissingKeys();
     ShutdownCursorHint();
     ShutdownOfferPopup();
     ShutdownFrameTick();

@@ -24,6 +24,11 @@ void LoadMessages(const std::string& modDirectory);
 std::string Say(const std::string& path, const std::string& fallback,
                 Character* who);
 
+// Logs every key the code asked for that messages.json did not have, once, as
+// one line. Called on shutdown, after a session's worth of lookups, so an
+// incomplete file names itself instead of hiding behind the fallback.
+void ReportMissingKeys();
+
 // Replaces {name}, {cats} and {hours} in a line that has already been chosen.
 std::string Fill(const std::string& text, const std::string& name,
                  int cats, int hours);

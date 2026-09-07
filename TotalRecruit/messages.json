@@ -6,7 +6,7 @@
     "",
     "Cada clave puede ser un texto o una LISTA de textos. Si es lista, se elige",
     "uno de forma estable por personaje: el mismo NPC siempre te dice lo mismo,",
-    "pero dos NPC distintos no suenan igual.",
+    "pero dos NPC distintos no suenan igual. Con 7-8 variantes ya no se repite.",
     "",
     "{name}  se reemplaza por el nombre del NPC",
     "{cats}  por el precio en cats",
@@ -15,7 +15,17 @@
     "Los tramos de faccion van de -100 a 100:",
     "  aliado    >= 75    amistoso  25..74    cordial   5..24",
     "  neutral   -5..4    receloso  -15..-6   hostil    -30..-16",
-    "  enemigo   < -30"
+    "  enemigo   < -30",
+    "",
+    "SI FALTA UNA CLAVE el mod usa su texto interno y NO se rompe, pero al cerrar",
+    "el juego escribe en RE_Kenshi_log.txt la linea:",
+    "  'messages.json has no entry for: <claves>'",
+    "Cada vez que agreguemos logica nueva, esa linea dice exactamente que texto",
+    "falta escribir aca. Revisala despues de probar.",
+    "",
+    "No todas las combinaciones existen: un aliado no tiene reasonHonourable (no",
+    "hay honor que le impida seguirte) y un enemigo declarado no tiene",
+    "reasonMaybe (no hay 'todavia no'). Esas ausencias son a proposito."
   ],
   "faction": {
     "aliado": {
@@ -287,7 +297,8 @@
         "Acepto, pero no esperes que te perdone.",
         "Ire contigo porque no me queda otra opcion.",
         "Esto termina en cuanto tenga una oportunidad de escapar.",
-        "No eres mi lider. Solo eres mi unica salida por ahora."
+        "No eres mi lider. Solo eres mi unica salida por ahora.",
+        "Que quede claro: acepto por necesidad, no por respeto."
       ],
       "tooStrong": [
         "No. Antes enemigo que sirviente.",
@@ -309,6 +320,12 @@
         "su odio supera cualquier recompensa que puedas ofrecer",
         "ni los gatos consiguen borrar una enemistad asi",
         "el dinero no puede comprar semejante rencor"
+      ],
+      "reasonHonourable": [
+        "su honor jamas le permitiria seguir a un enemigo declarado",
+        "antes moriria que servir a quien combate a los suyos",
+        "sus principios se lo prohiben mientras seais enemigos",
+        "considera que seguirte seria traicionar todo lo que defiende"
       ]
     }
   },
@@ -446,13 +463,35 @@
       "te debe la vida",
       "le salvaste la vida: se une a ti",
       "no olvida quien lo saco de alli: te acompaña",
-      "la deuda es suya, y la paga siguiendote"
+      "la deuda es suya, y la paga siguiendote",
+      "le diste una segunda oportunidad: decide caminar contigo",
+      "recuerda quien lo rescato cuando nadie mas vino: se une a ti",
+      "tu ayuda creo una deuda que piensa pagar a tu lado",
+      "no puede devolver el favor con palabras: te acompaña",
+      "saliste en su ayuda cuando mas lo necesitaba: decide seguirte",
+      "ahora que esta libre, elige quedarse contigo",
+      "tu misericordia se gano su lealtad: se une a ti",
+      "no olvida que fuiste tu quien lo saco de alli: te seguira",
+      "considera que su vida te pertenece por la deuda: te acompaña",
+      "te debe demasiado como para marcharse sin mas",
+      "la deuda no se paga con gracias: decide acompañarte"
     ],
     "repays": [
       "no puede seguirte, pero te deja algo en pago",
       "no esta en condiciones de seguirte: te paga con lo que lleva",
       "no puede acompañarte, asi que te entrega lo que tiene",
-      "su camino no es el tuyo, pero no se va sin pagar la deuda"
+      "su camino no es el tuyo, pero no se va sin pagar la deuda",
+      "todavia esta demasiado debil para viajar: te ofrece lo que puede",
+      "no puede luchar a tu lado, pero al menos puede recompensarte",
+      "su deuda no puede pagarla siguiendote: te entrega sus pertenencias",
+      "necesita quedarse atras para recuperarse: te deja algo por haberlo salvado",
+      "no puede serte util ahora, pero insiste en darte una recompensa",
+      "sus heridas le impiden acompañarte: te ofrece lo poco que tiene",
+      "no puede devolverte el favor con su espada: paga con sus recursos",
+      "debe quedarse aqui, pero no quiere marcharse sin compensarte",
+      "tu ayuda merece algo a cambio: te entrega parte de sus pertenencias",
+      "no puede seguir tu camino: al menos salda su deuda contigo",
+      "su cuerpo no le permite viajar: te recompensa antes de separarse"
     ],
     "honourable": [
       "Estaba muerto y no me abandonaste. Eso es una deuda.",
