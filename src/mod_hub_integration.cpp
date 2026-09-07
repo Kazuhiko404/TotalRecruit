@@ -258,6 +258,7 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "sub_beating_ko_seconds", "Sumision: segundos inconsciente", "Cuanto queda fuera de combate tras la golpiza", 5.0f, 600.0f, 5.0f, 0, &c.submission.beatingKnockoutSeconds);
 
     regFloat(api, mod, "animal_nutrition_per_meal", "Animal: comida por racion", "Cuanto llena el estomago una racion (escala 0..3 del motor)", 0.05f, 3.0f, 0.05f, 2, &c.animals.nutritionPerMeal);
+    regBool(api, mod, "animal_personality_matters", "Animal: cuenta la personalidad", "Un animal desconfiado pide mas comida que uno timido", &c.animals.personalityMatters);
     regBool(api, mod, "animal_owned_need_cage", "Animal: domesticos solo por jaula", "Un animal con dueno no se convence con comida: hay que enjaularlo", &c.animals.ownedNeedCage);
     regFloat(api, mod, "animal_big_edge_discount", "Animal: descuento +20", "Descuento si le sacas 20 niveles o mas", 0.0f, 1.0f, 0.05f, 2, &c.animals.bigEdgeDiscount);
 

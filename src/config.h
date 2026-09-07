@@ -252,6 +252,10 @@ struct Animals
     // 0.40 is what CorpseFeeder grants for a whole fresh body, which makes a
     // piece of meat a generous but not silly mouthful.
     float nutritionPerMeal;
+    // R5.4 -- whether temperament changes how much food it takes. Measured and
+    // confirmed to vary between individuals of the same species, so it is on by
+    // default; off falls back to maturity and level alone.
+    bool personalityMatters;
 
     // Calibrated against measured wildlife, not guessed: a loose bonedog sits
     // at hunger 1.69 of 3.0, so it starts the negotiation around 56% full. Any
@@ -270,7 +274,8 @@ struct Animals
           edgeDiscount(0.05f),
           bigEdgeDiscount(0.10f),
           ownedNeedCage(true),
-          nutritionPerMeal(0.40f)
+          nutritionPerMeal(0.40f),
+          personalityMatters(true)
     {
     }
 };

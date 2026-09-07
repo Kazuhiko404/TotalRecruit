@@ -107,7 +107,7 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 | R5.1 | Domesticar por barra de hambre | ✅ **Jugado** | `HungerToFullness01` + `TamingFullnessNeeded`. Log: *"le falta 13% de barriga"* |
 | R5.2 | Cachorros: poco | ✅ **Compila** | `cubFullness` |
 | R5.3 | Adultos: más | ✅ **Compila** | Escala por madurez y nivel |
-| R5.4 | Personalidad animal | 🟡 **Desbloqueado** | I1 confirmó que existe. Aún no entra al cálculo |
+| R5.4 | Personalidad animal | ✅ **Compila** | Entra vía `ResolveMultiplier`: un animal desconfiado pide más comida. Configurable |
 | R5.5 | Todo configurable | ✅ **Jugado** | 10 valores en config y hub |
 | — | Doméstico vs salvaje (pedido tuyo) | ✅ **Jugado** | `Goat Pet` de Nómadas rechazado. Ver §4 |
 
@@ -218,9 +218,7 @@ y no huye distinto, el tag es seguro y **R3.3 queda confirmado**.
 
 1. **Jugarlo.** Nada de lo nuevo pasó de **compila** a **jugado** todavía.
 2. **I4** — dos clicks y un rato de observación, con el log ya puesto.
-3. **R5.4** — meter la personalidad animal al cálculo. Es el único requisito
-   con código pendiente, y es corto: `ChanceFromPersonality` ya existe.
-4. **R6.3** — confirmar el layout del hub con el volcado de slots, y recién ahí
+3. **R6.3** — confirmar el layout del hub con el volcado de slots, y recién ahí
    llamar a `register_setting_section`.
 
 ### Riesgos conocidos de esta ronda

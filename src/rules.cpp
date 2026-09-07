@@ -985,7 +985,22 @@ Verdict EvaluateAnimal(Character* character, const Traits& traits,
     }
 
     const float fullness = HungerToFullness01(condition.hunger);
-    const float needed = TamingFullnessNeeded(character, npcLevel, playerLevel);
+    float needed = TamingFullnessNeeded(character, npcLevel, playerLevel);
+
+    // R5.4 -- animals have a temperament, and it varies: two bonedogs of the
+    // same breed measured PT_HONORABLE and PT_TRAITOROUS. So it counts here as
+    // it does everywhere else, expressed as how much convincing the creature
+    // takes rather than as a separate rule. A wary animal wants more of the
+    // meal before it decides you are worth following.
+    if (GetConfig().animals.personalityMatters)
+    {
+        const float resolve = ResolveMultiplier(traits.personality);
+        // Around 1.0 nothing moves. A timid animal settles for less, a
+        // stubborn one asks for more, and the bar is still capped at a full
+        // stomach so no temperament makes taming impossible.
+        needed *= (0.85f + resolve * 0.15f);
+        if (needed > 1.0f) needed = 1.0f;
+    }
 
     verdict.wantsFood = (fullness < needed);
 
