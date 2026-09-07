@@ -17,108 +17,480 @@
     "  neutral   -5..4    receloso  -15..-6   hostil    -30..-16",
     "  enemigo   < -30"
   ],
-
   "faction": {
     "aliado": {
       "greeting": [
         "Peleamos del mismo lado. Si me necesitas, cuenta conmigo.",
-        "Tu gente y la mia se cubren las espaldas. Dime que hace falta."
+        "Tu gente y la mia se cubren las espaldas. Dime que hace falta.",
+        "Siempre es bueno verte. Los nuestros no abandonan a los suyos.",
+        "Si has venido a pedir ayuda, no necesitas dar explicaciones.",
+        "Tu bandera es la mia mientras sigamos caminando juntos.",
+        "He oido suficientes cosas buenas de ti como para confiarte la espalda.",
+        "Entre aliados no hacen falta demasiadas palabras. Habla.",
+        "Si hay problemas, dime donde y cuando."
       ],
-      "joins": "Somos aliados. Voy contigo.",
+      "joins": [
+        "Somos aliados. Voy contigo.",
+        "Cuenta conmigo. Si los nuestros marchan, yo marcho.",
+        "No tengo ninguna razon para darte la espalda. Vamos.",
+        "Si necesitas otro par de manos, las tienes.",
+        "Tu camino es el nuestro. Te acompaño.",
+        "He luchado junto a los tuyos antes. No sera diferente ahora.",
+        "No voy a dejar que vayas solo. Vamos."
+      ],
       "tooStrong": [
         "Te aprecio, pero has visto pelear a los mios? Todavia no estas a esa altura.",
-        "Aliados si, pero no sigo a nadie que no aguante mi paso."
+        "Aliados si, pero no sigo a nadie que no aguante mi paso.",
+        "Tenemos buena relacion, pero todavia no has demostrado que puedas mandarme.",
+        "No confundas nuestra amistad con obediencia. Aun tienes que demostrar mucho.",
+        "Te cubrire la espalda, pero no estoy listo para ponerme bajo tus ordenes.",
+        "Respeto lo que has conseguido, pero todavia no me convences para seguirte.",
+        "Los nuestros confian en ti. Yo todavia necesito ver mas."
       ],
-      "reason": "sois aliados: se une a ti",
-      "reasonMaybe": "sois aliados, pero te mide: hazte mas fuerte y aceptara"
+      "reason": [
+        "sois aliados: se une a ti",
+        "confia plenamente en tu faccion: se une a ti",
+        "te considera uno de los suyos: acepta seguirte",
+        "la alianza entre ambas partes es suficiente: se une a ti"
+      ],
+      "reasonMaybe": [
+        "sois aliados, pero te mide: hazte mas fuerte y aceptara",
+        "confia en ti, aunque aun duda de tu capacidad: gana fuerza y aceptara",
+        "la relacion es buena, pero necesita verte crecer: demuestra tu fuerza",
+        "te respeta como aliado, pero no como lider: hazte mas fuerte"
+      ]
     },
     "amistoso": {
       "greeting": [
         "Tu nombre suena bien por aqui. Que quieres?",
-        "Conozco tu bandera, y no me da mala espina. Habla."
+        "Conozco tu bandera, y no me da mala espina. Habla.",
+        "He oido cosas buenas de los tuyos. Que necesitas?",
+        "No me disgustan los de tu faccion. Dime que buscas.",
+        "Parece que nos llevamos mejor que la mayoria. Habla.",
+        "Tu gente se ha ganado cierto respeto por aqui.",
+        "No eres precisamente un desconocido. Que puedo hacer por ti?",
+        "Si vienes en son de paz, podemos hablar."
       ],
-      "joins": "Me han hablado bien de ti. Esta bien, voy contigo.",
-      "tooStrong": "Buena fama tienes, pero no me alcanza para seguirte. Todavia no.",
-      "reason": "te tiene buena fe: se une a ti",
-      "reasonMaybe": "te tiene buena fe, pero no le bastas aun"
+      "joins": [
+        "Me han hablado bien de ti. Esta bien, voy contigo.",
+        "No me caes mal. Te acompañare un rato.",
+        "Supongo que puedo confiar en ti. Vamos.",
+        "Tu reputacion me basta por ahora. Te seguire.",
+        "He visto como tratas a los tuyos. No parece mala idea acompañarte.",
+        "No prometo quedarme para siempre, pero ire contigo.",
+        "Parece que tienes buenas intenciones. Cuenta conmigo."
+      ],
+      "tooStrong": [
+        "Buena fama tienes, pero no me alcanza para seguirte. Todavia no.",
+        "Me caes bien, pero no lo suficiente como para ponerme bajo tus ordenes.",
+        "Te respeto, pero aun no has demostrado que puedas liderarme.",
+        "No tengo nada contra ti, pero necesito ver algo mas antes de seguirte.",
+        "Nuestra relacion es buena, aunque todavia no tanto como para que te siga.",
+        "Puede que algun dia acepte. Hoy todavia no.",
+        "Tu reputacion ayuda, pero necesito algo mas que buenas palabras."
+      ],
+      "reason": [
+        "te tiene buena fe: se une a ti",
+        "tu reputacion le inspira confianza: se une a ti",
+        "le caes bien y acepta acompañarte",
+        "la relacion con tu faccion es positiva: se une a ti"
+      ],
+      "reasonMaybe": [
+        "te tiene buena fe, pero no le bastas aun",
+        "confia en ti, pero necesita mas pruebas",
+        "la relacion es positiva, aunque todavia no suficiente",
+        "te respeta, pero aun no te ve como alguien a quien seguir"
+      ]
     },
     "cordial": {
       "greeting": [
         "Te he visto por ahi. Que necesitas?",
-        "No tengo nada contra ti. Dime."
+        "No tengo nada contra ti. Dime.",
+        "Nos conocemos de vista, no?",
+        "Tu cara me resulta familiar. Que buscas?",
+        "Supongo que podemos hablar. Que quieres?",
+        "No me has dado motivos para desconfiar. Habla.",
+        "He cruzado caminos contigo alguna vez. Que ocurre?",
+        "No somos amigos, pero tampoco enemigos."
       ],
-      "joins": "No tengo mejor sitio donde estar. Vamos.",
-      "tooStrong": "Apenas te conozco, y no me das motivos para seguirte.",
-      "reason": "te conoce de vista y acepta",
-      "reasonMaybe": "te conoce poco: gana mas fama con los suyos"
+      "joins": [
+        "No tengo mejor sitio donde estar. Vamos.",
+        "Supongo que puedo probar. Te acompañare.",
+        "No veo razon para decir que no. Vamos.",
+        "Podria ser peor. Ire contigo.",
+        "No te conozco demasiado, pero aceptare por ahora.",
+        "De acuerdo. Veremos a donde lleva esto.",
+        "Parece que no tienes malas intenciones. Te seguire."
+      ],
+      "tooStrong": [
+        "Apenas te conozco, y no me das motivos para seguirte.",
+        "No somos lo bastante cercanos para eso.",
+        "Te conozco de vista, nada mas. No voy a seguirte todavia.",
+        "Necesito saber algo mas de ti antes de ponerme a tus ordenes.",
+        "No tengo nada contra ti, pero tampoco tengo razones para obedecerte.",
+        "Gana algo de reputacion primero. Luego hablaremos.",
+        "Todavia eres un extraño para mi. No esperes que te siga."
+      ],
+      "reason": [
+        "te conoce de vista y acepta",
+        "la relacion es cordial: acepta acompañarte",
+        "no tiene motivos para rechazarte: se une",
+        "tu faccion le resulta aceptable: decide probar"
+      ],
+      "reasonMaybe": [
+        "te conoce poco: gana mas fama con los suyos",
+        "la relacion apenas empieza: mejora tu reputacion",
+        "todavia no confia lo suficiente: gana influencia",
+        "necesita conocerte mejor antes de seguirte"
+      ]
     },
     "neutral": {
       "greeting": [
         "Quien eres tu? Que quieres de mi?",
-        "No te conozco de nada. Habla rapido."
+        "No te conozco de nada. Habla rapido.",
+        "Nunca te habia visto por aqui. Que buscas?",
+        "No recuerdo haberte visto antes. Que quieres?",
+        "Si vienes a buscar problemas, ahorrate el discurso.",
+        "No se quien eres ni que quieres. Explicate.",
+        "Un desconocido en mi camino. Que sorpresa.",
+        "Habla. Tengo mejores cosas que hacer."
       ],
-      "tooStrong": "No te conozco, y no pienso seguir a un desconocido.",
-      "reason": "no te conoce: gana fama con su faccion"
+      "joins": [
+        "No se si esto es buena idea, pero ire contigo.",
+        "Supongo que puedo darte una oportunidad.",
+        "No tengo motivos para confiar en ti, pero tampoco para rechazarte.",
+        "De acuerdo. Te acompañare y veremos que pasa.",
+        "No prometo lealtad. Solo voy a probar.",
+        "Esta bien. Quiero ver de que eres capaz.",
+        "Puede que tengas razon. Ire contigo por ahora."
+      ],
+      "tooStrong": [
+        "No te conozco, y no pienso seguir a un desconocido.",
+        "Primero demuestra quien eres. Luego hablamos de seguirte.",
+        "No tengo ninguna razon para obedecerte.",
+        "Eres un extraño. No voy a poner mi vida en tus manos.",
+        "Gana reputacion antes de venir a darme ordenes.",
+        "No basta con aparecer y pedir que te siga.",
+        "Demuestra algo primero. Entonces decidire."
+      ],
+      "reason": [
+        "no te conoce: gana fama con su faccion",
+        "eres un desconocido: necesita razones para confiar",
+        "la relacion es neutral: mejora tu reputacion",
+        "todavia no has demostrado quien eres"
+      ]
     },
     "receloso": {
       "greeting": [
         "Se lo que dicen de ti. Mantengamos las distancias.",
-        "Tu gente y la mia no se llevan. No insistas."
+        "Tu gente y la mia no se llevan. No insistas.",
+        "He oido historias sobre los tuyos. No me fio.",
+        "No me gusta tenerte tan cerca.",
+        "No esperes una bienvenida. Ya he escuchado bastante sobre tu faccion.",
+        "Tu reputacion te precede, y no precisamente para bien.",
+        "No tengo razones para confiar en alguien como tu.",
+        "Podemos hablar, pero no esperes que baje la guardia."
       ],
-      "reason": "desconfia de los tuyos: mejora la relacion, o encarcelalo y sometelo",
-      "reasonHonourable": "su honor no le deja tratar con alguien de tu reputacion"
+      "joins": [
+        "No confio en ti, pero quiza sea mejor acompañarte que quedarme aqui.",
+        "No me gustas, pero aceptare por ahora.",
+        "Esto no significa que confie en ti. Solo significa que ire contigo.",
+        "Tal vez pueda juzgarte mejor si viajo contigo.",
+        "No confundas mi decision con amistad. Te estare vigilando.",
+        "Ire contigo, pero cualquier traicion y se acaba.",
+        "No me convences, pero aceptare una oportunidad."
+      ],
+      "tooStrong": [
+        "No confio en ti y encima quieres darme ordenes? Ni hablar.",
+        "Primero arregla lo que piensa mi gente de la tuya.",
+        "No me inspiras confianza. Haz algo para cambiar eso.",
+        "Tu reputacion pesa demasiado para que simplemente te siga.",
+        "Antes de pedirme lealtad, demuestra que puedes ganartela.",
+        "No pienso ponerme bajo las ordenes de alguien que apenas respeto.",
+        "Me has dado mas razones para desconfiar que para seguirte."
+      ],
+      "reason": [
+        "desconfia de los tuyos: mejora la relacion, o encarcelalo y sometelo",
+        "tu faccion le inspira recelo: gana reputacion o imponte por la fuerza",
+        "no confia en tu gente: mejora la relacion antes de pedir lealtad",
+        "la mala reputacion de tu faccion pesa sobre la decision"
+      ],
+      "reasonHonourable": [
+        "su honor no le deja tratar con alguien de tu reputacion",
+        "su codigo de honor le impide seguir a alguien en quien no confia",
+        "considera deshonroso ponerse bajo tus ordenes",
+        "su honor pesa mas que cualquier promesa que puedas hacer"
+      ]
     },
     "hostil": {
       "greeting": [
         "Los tuyos me han dado motivos de sobra para odiarte.",
-        "Aparta. Contigo no hay trato."
+        "Aparta. Contigo no hay trato.",
+        "No quiero escuchar una sola palabra mas de tu faccion.",
+        "Si buscas amistad, te has equivocado de persona.",
+        "No me importa lo que ofrezcas. Vete.",
+        "Tu presencia ya me esta haciendo perder la paciencia.",
+        "No olvidare lo que los tuyos hicieron.",
+        "No hay nada que puedas decir que vaya a cambiar esto."
       ],
-      "reason": "os considera enemigos: solo por la fuerza",
-      "reasonHonourable": "jamas seguiria a alguien como tu: encarcelalo y sometelo",
-      "reasonGreedy": "te odia, pero el dinero sigue siendo dinero: {cats} cats"
+      "joins": [
+        "Odio admitirlo, pero ahora mismo necesito una salida.",
+        "No me agradas, pero aceptare si no tengo otra opcion.",
+        "Esto no es lealtad. Es supervivencia.",
+        "No confundas mi decision con perdon.",
+        "Ire contigo, pero no esperes que olvide nada.",
+        "No confio en ti. Solo estoy escogiendo el mal menor.",
+        "Acepto, pero seguire esperando el momento de marcharme."
+      ],
+      "tooStrong": [
+        "Ni lo sueñes. Prefiero enfrentarme a ti antes que obedecerte.",
+        "No me das ninguna razon para seguirte.",
+        "Antes muerto que bajo tus ordenes.",
+        "Tu reputacion te precede. No pienso caminar a tu lado.",
+        "No hay trato. Ni hoy ni mañana.",
+        "No voy a servir a alguien de tu calaña.",
+        "Puedes amenazarme, pero no ganaras mi lealtad."
+      ],
+      "reason": [
+        "os considera enemigos: solo por la fuerza",
+        "tu faccion le es abiertamente hostil: no acepta voluntariamente",
+        "la relacion es demasiado mala: solo la fuerza puede cambiarla",
+        "te ve como una amenaza: imponte o dejalo ir"
+      ],
+      "reasonHonourable": [
+        "jamas seguiria a alguien como tu: encarcelalo y sometelo",
+        "su honor le impide servir a tu faccion",
+        "considera indigno aceptar tus ordenes",
+        "no aceptara mientras crea que hacerlo seria una traicion a sus principios"
+      ],
+      "reasonGreedy": [
+        "te odia, pero el dinero sigue siendo dinero: {cats} cats",
+        "no soporta a los tuyos, pero una buena bolsa puede hacerle dudar: {cats} cats",
+        "el odio no paga las deudas: {cats} cats podrian convencerlo",
+        "te desprecia, pero tiene un precio: {cats} cats"
+      ]
     },
     "enemigo": {
       "greeting": [
         "Preferiria morir antes que caminar a tu lado.",
-        "Guarda tu dinero. No compras a los mios."
+        "Guarda tu dinero. No compras a los mios.",
+        "Tu presencia aqui es una provocacion.",
+        "No hay nada que hablar entre nosotros.",
+        "Eres enemigo. No esperes misericordia ni amistad.",
+        "No olvidare nunca contra quien estas luchando.",
+        "Ni aunque el mundo se acabara aceptaria seguirte.",
+        "Vete mientras todavia tengas la oportunidad."
       ],
-      "reason": "sois enemigos declarados: solo por la fuerza",
-      "reasonGreedy": "ni por dinero: te odia demasiado"
+      "joins": [
+        "No confundas esto con lealtad. Solo estoy buscando sobrevivir.",
+        "No quiero seguirte. Simplemente no tengo otra salida.",
+        "Acepto, pero no esperes que te perdone.",
+        "Ire contigo porque no me queda otra opcion.",
+        "Esto termina en cuanto tenga una oportunidad de escapar.",
+        "No eres mi lider. Solo eres mi unica salida por ahora."
+      ],
+      "tooStrong": [
+        "No. Antes enemigo que sirviente.",
+        "No existe cantidad de fuerza suficiente para hacerme confiar en ti.",
+        "No voy a seguirte. Haz lo que tengas que hacer.",
+        "Puedes derrotarme, pero no convertir mi odio en lealtad.",
+        "No tendras mi voluntad tan facilmente.",
+        "Tu victoria no significa que hayas ganado mi respeto.",
+        "No caminare voluntariamente al lado de mi enemigo."
+      ],
+      "reason": [
+        "sois enemigos declarados: solo por la fuerza",
+        "la enemistad es demasiado profunda: no aceptara voluntariamente",
+        "te considera un enemigo absoluto: sometelo o dejalo",
+        "no existe confianza entre ambas facciones"
+      ],
+      "reasonGreedy": [
+        "ni por dinero: te odia demasiado",
+        "su odio supera cualquier recompensa que puedas ofrecer",
+        "ni los gatos consiguen borrar una enemistad asi",
+        "el dinero no puede comprar semejante rencor"
+      ]
     }
   },
-
   "refusal": {
-    "grudge": "Se lo que hiciste. Fuera de mi vista.",
-    "insistence": "Me estas hartando! Dejame en paz.",
-    "tooWeak": "Tu pretender darme ordenes? Eres demasiado debil. Largate.",
-    "honour": "El honor no se compra con gatos. No me rebajare a esto.",
-    "loyalty": "Quien eres tu? Que quieres de mi?",
-    "fallback": "Quien eres tu? No tengo nada que hablar contigo."
+    "grudge": [
+      "Se lo que hiciste. Fuera de mi vista.",
+      "No he olvidado lo que hiciste. Largate.",
+      "Puedes pedirlo cien veces. Mi respuesta seguira siendo no.",
+      "Despues de lo que hiciste, no pienso ayudarte.",
+      "No esperes que olvide tus acciones solo porque ahora necesites algo.",
+      "Ya te he juzgado. No hay nada mas que hablar.",
+      "No voy a darte otra oportunidad."
+    ],
+    "insistence": [
+      "Me estas hartando! Dejame en paz.",
+      "Ya te he dicho que no. Cuantas veces tengo que repetirlo?",
+      "Deja de insistir antes de que perdamos la paciencia.",
+      "No significa no. Apartate.",
+      "Sigues hablando y mi respuesta sigue siendo la misma.",
+      "Te estoy avisando por ultima vez. Basta.",
+      "No vas a conseguirlo por repetir la pregunta."
+    ],
+    "tooWeak": [
+      "Tu pretender darme ordenes? Eres demasiado debil. Largate.",
+      "No tienes fuerza suficiente para imponerme nada.",
+      "Vuelve cuando puedas demostrar que mereces ser escuchado.",
+      "No voy a seguir a alguien que no puede protegerme.",
+      "Tu reputacion puede ser buena, pero tus musculos dicen otra cosa.",
+      "No me das ninguna seguridad en combate.",
+      "Primero demuestra que puedes sobrevivir ahi fuera."
+    ],
+    "honour": [
+      "El honor no se compra con gatos. No me rebajare a esto.",
+      "Puedes ofrecerme una fortuna y seguire diciendo que no.",
+      "Hay cosas que no tienen precio. Mi palabra es una de ellas.",
+      "No pienso vender mi lealtad.",
+      "Mis principios no estan en venta.",
+      "Los gatos pueden comprar comida, pero no mi honor.",
+      "Prefiero marcharme con las manos vacias antes que traicionar mis principios."
+    ],
+    "loyalty": [
+      "Quien eres tu? Que quieres de mi?",
+      "No sabes nada de mi y ya quieres mi lealtad?",
+      "No voy a abandonar a los mios por ti.",
+      "Tengo gente a la que debo lealtad. No voy a olvidarla por una promesa.",
+      "Mi lealtad ya pertenece a alguien.",
+      "No puedo simplemente darle la espalda a los que confian en mi.",
+      "No confundas una conversacion con una promesa de lealtad."
+    ],
+    "fallback": [
+      "Quien eres tu? No tengo nada que hablar contigo.",
+      "No tengo nada que decirte.",
+      "Sigue tu camino. Yo seguire el mio.",
+      "No veo razon para continuar esta conversacion.",
+      "Si buscas algo, tendras que buscarlo en otra parte.",
+      "No me interesa lo que tengas que ofrecer.",
+      "No pierdas el tiempo conmigo."
+    ]
   },
-
   "currency": {
-    "freedom": "Quitame estas cadenas y sere tuyo.",
-    "careKind": "No me interesan tus monedas. Solo valoro a quien ayuda de corazon.",
-    "careFearful": "Por favor... dame algo de comer y te seguire.",
-    "care": "No he comido nada. Dame comida y hablamos.",
-    "submissionHonourable": "Me venciste con honor, pero eso no me hace tuyo. Todavia no.",
-    "submissionManiacal": "Adelante! Haz lo peor que puedas, solo me da risa.",
-    "submissionFearful": "No pienso pelear contigo. Solo... no me dejes aqui.",
-    "submission": "Me tienes enjaulado. Eso es todo lo que tienes."
+    "freedom": [
+      "Quitame estas cadenas y sere tuyo.",
+      "Liberame y te seguire hasta donde haga falta.",
+      "Solo quiero volver a ser libre. Ayudame y tendras mi palabra.",
+      "Rompe mis cadenas y hablaremos de lealtad.",
+      "Devuelveme la libertad y tendras un aliado.",
+      "No necesito riquezas. Necesito que me dejes marchar.",
+      "Quitame de aqui y no olvidare quien me libero."
+    ],
+    "careKind": [
+      "No me interesan tus monedas. Solo valoro a quien ayuda de corazon.",
+      "Puedes quedarte tus gatos. La bondad vale mas para mi.",
+      "No quiero que me compres. Quiero saber que realmente te importa.",
+      "El dinero no demuestra que seas una buena persona.",
+      "Prefiero una mano amiga a una bolsa llena de gatos.",
+      "No me vendas promesas. Demuestrame que tienes corazon.",
+      "Tu forma de tratar a los demas dice mas de ti que tu dinero."
+    ],
+    "careFearful": [
+      "Por favor... dame algo de comer y te seguire.",
+      "Tengo hambre. Ayudame y no te dare problemas.",
+      "Por favor, no me dejes aqui. Solo necesito algo de comida.",
+      "Dame algo que comer y hare lo que me pidas.",
+      "No quiero pelear. Solo tengo hambre.",
+      "Por favor... no puedo aguantar mucho mas aqui.",
+      "Una comida. Solo necesito una comida."
+    ],
+    "care": [
+      "No he comido nada. Dame comida y hablamos.",
+      "Tengo el estomago vacio. Si vas a ayudarme, empieza por la comida.",
+      "Llevo demasiado tiempo sin comer.",
+      "No necesito discursos. Necesito comida.",
+      "Dame algo de comer y podremos hablar tranquilamente.",
+      "Una comida decente cambiaria bastante mi opinion sobre ti.",
+      "Tengo hambre. Despues hablamos de todo lo demas."
+    ],
+    "submissionHonourable": [
+      "Me venciste con honor, pero eso no me hace tuyo. Todavia no.",
+      "Acepto que me derrotaste. Mi voluntad, sin embargo, sigue siendo mia.",
+      "Has demostrado tu fuerza sin perder el honor. Eso merece respeto.",
+      "No niego tu victoria, pero tampoco puedo darte mi lealtad todavia.",
+      "Te respeto por como luchaste. Necesito tiempo antes de seguirte.",
+      "Una derrota honorable puede ganarte mi respeto, pero no mi obediencia."
+    ],
+    "submissionManiacal": [
+      "Adelante! Haz lo peor que puedas, solo me da risa.",
+      "Eso es todo? Esperaba algo mucho mas divertido.",
+      "No vas a asustarme tan facilmente.",
+      "Haz lo que quieras. Esto empieza a ser divertido.",
+      "Puedes encerrarme, pero no vas a romperme.",
+      "Vamos! A ver cuanto aguantas tu.",
+      "No sabes con quien te estas metiendo."
+    ],
+    "submissionFearful": [
+      "No pienso pelear contigo. Solo... no me dejes aqui.",
+      "Esta bien, esta bien! No quiero problemas.",
+      "Por favor, ya basta. Hare lo que sea necesario.",
+      "No quiero volver a luchar. Solo quiero salir de aqui.",
+      "No me hagas daño. Puedo serte util.",
+      "Te seguire. Solo prometeme que no me dejaras atras.",
+      "No quiero problemas contigo. Por favor."
+    ],
+    "submission": [
+      "Me tienes enjaulado. Eso es todo lo que tienes.",
+      "Puedes tener mis cadenas, pero no mi respeto.",
+      "Estoy atrapado. No confundas eso con lealtad.",
+      "Has ganado esta batalla. Todavia no has ganado mi voluntad.",
+      "Estoy bajo tu control, pero eso puede cambiar.",
+      "Puedes encerrarme, pero no esperes que te agradezca nada.",
+      "Ahora mismo no tengo salida. Eso es lo unico que has conseguido."
+    ]
   },
-
   "rescue": {
-    "joins": "te debe la vida",
+    "joins": [
+      "te debe la vida",
+      "le salvaste la vida: se une a ti",
+      "no olvida quien lo saco de alli: te acompaña",
+      "la deuda es suya, y la paga siguiendote"
+    ],
     "repays": [
       "no puede seguirte, pero te deja algo en pago",
-      "no esta en condiciones de seguirte; te paga con lo que lleva"
+      "no esta en condiciones de seguirte: te paga con lo que lleva",
+      "no puede acompañarte, asi que te entrega lo que tiene",
+      "su camino no es el tuyo, pero no se va sin pagar la deuda"
     ],
-    "honourable": "Estaba muerto y no me abandonaste. Eso es una deuda.",
-    "cruel": "Me curaste. Que raro. Nadie hace eso por aqui.",
-    "fearful": "Crei que era mi fin. Y te quedaste.",
-    "default": "Pudiste seguir de largo. No lo hiciste."
+    "honourable": [
+      "Estaba muerto y no me abandonaste. Eso es una deuda.",
+      "Pudiste dejarme atras, pero elegiste ayudarme. Lo recordare.",
+      "Has demostrado mas honor del que esperaba.",
+      "No cualquiera se arriesga por un desconocido. Te debo una.",
+      "Me salvaste cuando nadie mas lo hizo. No olvidare esto.",
+      "Una deuda asi no se paga con unas simples palabras.",
+      "Si alguna vez necesitas ayuda, recordare quien me saco de alli."
+    ],
+    "cruel": [
+      "Me curaste. Que raro. Nadie hace eso por aqui.",
+      "No esperaba misericordia de alguien como tu.",
+      "Despues de todo lo que he oido de ti, esto no tiene sentido.",
+      "Pensaba que me dejarias ahi. Me equivocaba.",
+      "No se si agradecerte o preguntarme que quieres a cambio.",
+      "No estoy acostumbrado a que alguien me ayude sin pedir nada.",
+      "Supongo que hasta tu puedes sorprenderme."
+    ],
+    "fearful": [
+      "Crei que era mi fin. Y te quedaste.",
+      "Pensaba que nadie vendria por mi.",
+      "No sabia si saldria de alli. Gracias por encontrarme.",
+      "Cuando apareciste, pense que por fin habia una oportunidad.",
+      "No quiero volver a estar solo ahi dentro.",
+      "Me salvaste cuando ya no sabia que hacer.",
+      "No olvidare que fuiste tu quien me saco de alli."
+    ],
+    "default": [
+      "Pudiste seguir de largo. No lo hiciste.",
+      "No tenias ninguna obligacion de ayudarme.",
+      "Me salvaste cuando podias haberme dejado atras.",
+      "No olvidare que te detuviste por mi.",
+      "Supongo que todavia queda algo de humanidad por aqui.",
+      "Te debo una. No voy a olvidarlo.",
+      "Gracias. No muchos habrian hecho lo mismo."
+    ]
   },
-
   "_animales": [
     "Los animales no hablan: se les dibuja un sonido, no una frase.",
     "Dejalos vacios si preferis que no salga ninguna burbuja."
@@ -126,22 +498,41 @@
   "animal": {
     "rescued": [
       "*gime bajo y no te quita los ojos de encima*",
-      "*se arrastra hacia ti y apoya la cabeza*"
+      "*se arrastra hacia ti y apoya la cabeza*",
+      "*te olfatea con cautela y mueve la cola*",
+      "*se acurruca cerca de ti, todavia agotado*",
+      "*te mira en silencio, como si te reconociera*",
+      "*emite un pequeño gemido y se queda a tu lado*",
+      "*se acerca despacio y te olfatea la mano*"
     ],
     "hungry": [
       "*olfatea tus manos, buscando comida*",
-      "*mira tu mochila y gimotea*"
+      "*mira tu mochila y gimotea*",
+      "*husmea el suelo en busca de algo que comer*",
+      "*te sigue con la mirada cada vez que sacas comida*",
+      "*da un pequeño gemido al ver que tienes provisiones*",
+      "*olfatea el aire desesperadamente*",
+      "*mira la comida y luego te mira a ti*"
     ],
     "refused": [
       "*grune y retrocede*",
-      "*ensena los dientes*"
+      "*ensena los dientes*",
+      "*eriza el pelo y mantiene la distancia*",
+      "*gruñe bajo sin apartar la mirada*",
+      "*retrocede con las orejas hacia atras*",
+      "*lanza un gruñido de advertencia*",
+      "*te observa con desconfianza y se aleja*"
     ],
     "calm": [
       "*te observa, quieto*",
-      "*ladea la cabeza sin apartarse*"
+      "*ladea la cabeza sin apartarse*",
+      "*se sienta tranquilamente a tu lado*",
+      "*mueve las orejas al escuchar tu voz*",
+      "*te mira y parpadea lentamente*",
+      "*permanece tranquilo mientras te acercas*",
+      "*se tumba cerca de ti y deja escapar un suspiro*"
     ]
   },
-
   "_unicos": [
     "Los personajes con nombre se dividen por lo que creen:",
     "los venales tienen precio, los fanaticos solo ceden en la jaula."
@@ -149,18 +540,61 @@
   "unique": {
     "zealot": [
       "No hay dinero que compre lo que cree: el hambre y las heridas haran el trabajo.",
-      "Antes muerto que comprado. Pero el cuerpo tiene sus propios argumentos."
+      "Antes muerto que comprado. Pero el cuerpo tiene sus propios argumentos.",
+      "Mi fe no esta en venta.",
+      "Puedes quitarme todo menos aquello en lo que creo.",
+      "Los gatos no compran convicciones.",
+      "Prefiero sufrir las consecuencias antes que traicionar mis principios.",
+      "No me importa cuanto ofrezcas. Mi causa no tiene precio.",
+      "Puedes derrotarme, pero no comprarme."
     ],
     "venal": [
       "Todo el mundo tiene un precio. El suyo solo es mas alto.",
-      "No le interesa tu causa, le interesa tu bolsa."
+      "No le interesa tu causa, le interesa tu bolsa.",
+      "Las convicciones estan bien, pero los gatos son mejores.",
+      "No necesito creer en ti. Solo necesito saber cuanto pagas.",
+      "Todo tiene un precio si sabes negociar.",
+      "No me hables de honor. Dime cuantos gatos ofreces.",
+      "Tu causa me da igual. Tu dinero no.",
+      "Puede que no me gustes, pero tu bolsa empieza a convencerme."
     ]
   },
-
   "mercy": {
-    "plea": "Piedad. Ya no puedo pelear. Hare lo que me pidas.",
-    "spared": "Gracias... no lo olvidare.",
-    "sparedNotice": "{name}: lo dejaste marchar.",
-    "ignoredNotice": "{name}: ignoraste su suplica."
+    "plea": [
+      "Piedad. Ya no puedo pelear. Hare lo que me pidas.",
+      "Por favor, basta. No quiero seguir luchando.",
+      "Te lo suplico. Dejame vivir y te servire.",
+      "No quiero morir aqui. Puedo serte util.",
+      "Ya has ganado. No necesitas seguir.",
+      "Por favor... perdoname. Hare lo que sea necesario.",
+      "No tengo fuerzas para continuar. Ten piedad.",
+      "Puedes dejarme marchar y no volvere a molestarte."
+    ],
+    "spared": [
+      "Gracias... no lo olvidare.",
+      "Me has perdonado la vida. Te debo una.",
+      "No esperaba misericordia. Gracias.",
+      "Recordare este momento.",
+      "Podias haber terminado conmigo y no lo hiciste.",
+      "No se que decir. Gracias.",
+      "Te debo la vida. No olvidare esa deuda.",
+      "Despues de esto, mi opinion sobre ti ha cambiado."
+    ],
+    "sparedNotice": [
+      "{name}: lo dejaste marchar.",
+      "{name}: perdonaste su vida.",
+      "{name}: recordara que tuviste piedad.",
+      "{name}: sobrevivio gracias a tu misericordia.",
+      "{name}: se marcha con vida por tu decision.",
+      "{name}: no olvidara que lo perdonaste."
+    ],
+    "ignoredNotice": [
+      "{name}: ignoraste su suplica.",
+      "{name}: no mostraste misericordia.",
+      "{name}: su suplica no cambio tu decision.",
+      "{name}: pedio clemencia, pero lo ignoraste.",
+      "{name}: recordara que no tuviste piedad.",
+      "{name}: no respondiste a su suplica."
+    ]
   }
 }
