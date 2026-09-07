@@ -478,20 +478,12 @@
     ],
     "repays": [
       "no puede seguirte, pero te deja algo en pago",
-      "no esta en condiciones de seguirte: te paga con lo que lleva",
-      "no puede acompañarte, asi que te entrega lo que tiene",
-      "su camino no es el tuyo, pero no se va sin pagar la deuda",
-      "todavia esta demasiado debil para viajar: te ofrece lo que puede",
-      "no puede luchar a tu lado, pero al menos puede recompensarte",
-      "su deuda no puede pagarla siguiendote: te entrega sus pertenencias",
-      "necesita quedarse atras para recuperarse: te deja algo por haberlo salvado",
-      "no puede serte util ahora, pero insiste en darte una recompensa",
-      "sus heridas le impiden acompañarte: te ofrece lo poco que tiene",
-      "no puede devolverte el favor con su espada: paga con sus recursos",
-      "debe quedarse aqui, pero no quiere marcharse sin compensarte",
-      "tu ayuda merece algo a cambio: te entrega parte de sus pertenencias",
-      "no puede seguir tu camino: al menos salda su deuda contigo",
-      "su cuerpo no le permite viajar: te recompensa antes de separarse"
+      "su camino no es el tuyo: te deja lo que lleva encima",
+      "no puede acompanarte, y no se va sin pagar la deuda",
+      "te debe la vida y no puede darte su tiempo: te da lo que tiene",
+      "no sirve para tu escuadron, pero no es un desagradecido",
+      "rechaza seguirte y aun asi vacia sus bolsillos por ti",
+      "no puede ir contigo, pero la deuda no se le olvida"
     ],
     "honourable": [
       "Estaba muerto y no me abandonaste. Eso es una deuda.",
@@ -528,6 +520,13 @@
       "Supongo que todavia queda algo de humanidad por aqui.",
       "Te debo una. No voy a olvidarlo.",
       "Gracias. No muchos habrian hecho lo mismo."
+    ],
+    "gift": [
+      "{name}: te deja {cats} cats",
+      "{name}: te pone {cats} cats en la mano",
+      "{name}: paga su deuda con {cats} cats",
+      "{name}: te entrega {cats} cats antes de irse",
+      "{name}: vacia su bolsa: {cats} cats para ti"
     ]
   },
   "_animales": [

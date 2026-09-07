@@ -523,7 +523,45 @@ bool SafePlayerMoney(Character* leader, int* out)
 // saw them, which errs towards making the player wait -- the safe direction.
 // It lives only in memory: a reload restarts the clock rather than freeing
 // someone the player never actually held.
-std::map<Character*, double> g_heldSince;
+// Keyed by the engine's handle rather than by the pointer. A Character* is only
+// an address: once that NPC is freed the allocator can hand the same address to
+// somebody else, who then inherits a dead man's cooldown and is told the player
+// has been pestering them.
+//
+// hand carries index AND serial, and the serial is what tells a reused slot
+// apart from the original occupant -- which is exactly the distinction the raw
+// pointer could not make.
+struct CharKey
+{
+    unsigned int index;
+    unsigned int serial;
+
+    CharKey() : index(0), serial(0) {}
+    CharKey(unsigned int i, unsigned int s) : index(i), serial(s) {}
+
+    bool operator<(const CharKey& other) const
+    {
+        if (index != other.index) return index < other.index;
+        return serial < other.serial;
+    }
+};
+
+// Returns false when the handle cannot be read, and every caller treats that as
+// "no record" -- forgetting a cooldown is a smaller failure than applying one
+// to the wrong character.
+bool SafeCharKey(Character* character, CharKey* out)
+{
+    TR_TRY
+    {
+        const hand& self = character->getHandle();
+        out->index  = self.index;
+        out->serial = self.serial;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+std::map<CharKey, double> g_heldSince;
 
 struct TalkState
 {
@@ -534,7 +572,8 @@ struct TalkState
     TalkState() : attempts(0), lastHour(0.0), ignoredUntilHour(0.0) {}
 };
 
-std::map<Character*, TalkState> g_talkStates;
+std::map<CharKey, TalkState> g_talkStates;
+
 
 bool SafeGameHours(double* out)
 {
@@ -558,10 +597,16 @@ float HoursHeld(Character* character)
         return 0.0f;
     }
 
-    std::map<Character*, double>::iterator found = g_heldSince.find(character);
+    CharKey key;
+    if (!SafeCharKey(character, &key))
+    {
+        return 0.0f;
+    }
+
+    std::map<CharKey, double>::iterator found = g_heldSince.find(key);
     if (found == g_heldSince.end())
     {
-        g_heldSince[character] = now;
+        g_heldSince[key] = now;
         return 0.0f;
     }
 
@@ -1233,6 +1278,119 @@ void MarkRescuedBy(Character* character, Character* saviour)
     }
 }
 
+// The other direction from the price paths: the NPC paying the player.
+// Ownerships::addMoney is the counterpart KEP uses beside takeMoney, and it is
+// non-virtual and exported, so no sign games with a deduction.
+bool SafeTheirMoney(Character* character, int* out)
+{
+    TR_TRY
+    {
+        Ownerships* owned = character->getOwnerships();
+        if (owned == NULL)
+        {
+            return false;
+        }
+        *out = owned->getMoney();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// Moves cats from the NPC to the player's leader. takeMoney is virtual and a
+// plugin cannot call it, so the debit goes through addMoney with a negative
+// amount -- the same function, which keeps both halves on one code path.
+bool SafeGiveToPlayer(Character* from, int amount, bool* moved)
+{
+    *moved = false;
+    TR_TRY
+    {
+        if (amount <= 0 || ou == NULL || ou->player == NULL)
+        {
+            return false;
+        }
+        Ownerships* theirs = from->getOwnerships();
+        if (theirs == NULL)
+        {
+            return false;
+        }
+        Platoon* platoon = ou->player->currentPlatoon;
+        if (platoon == NULL)
+        {
+            return false;
+        }
+        Character* leader = platoon->getSquadLeader();
+        if (leader == NULL)
+        {
+            return false;
+        }
+        Ownerships* mine = leader->getOwnerships();
+        if (mine == NULL)
+        {
+            return false;
+        }
+        theirs->addMoney(-amount);
+        mine->addMoney(amount);
+        *moved = true;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// Whether this NPC has already handed over their parting gift. Stored in the
+// engine's own per-character memory, so it survives a reload: without it the
+// player could reopen the window and be paid again by the same rescued NPC
+// every time.
+//
+// LT_I_SCREWED_THIS_GUY is the closest thing the engine offers to "we have
+// already settled up". Nothing else in the mod reads it.
+bool AlreadyPaidTheirDebt(Character* character)
+{
+    Character* leader = NULL;
+    if (character == NULL || !SafePlayerLeader(&leader))
+    {
+        return false;
+    }
+    bool paid = false;
+    return SafeMemoryTag(character, leader, LT_I_SCREWED_THIS_GUY, &paid) && paid;
+}
+
+int PayPartingGift(Character* character)
+{
+    Character* leader = NULL;
+    if (character == NULL || !SafePlayerLeader(&leader))
+    {
+        return 0;
+    }
+
+    if (AlreadyPaidTheirDebt(character))
+    {
+        return 0;
+    }
+
+    // They give what they are carrying, never a figure the mod invents. An NPC
+    // with empty pockets owes the same debt and simply cannot pay it -- which
+    // is the honest outcome, not a bug.
+    int purse = 0;
+    if (!SafeTheirMoney(character, &purse) || purse <= 0)
+    {
+        return 0;
+    }
+
+    const int gift = purse;
+    bool moved = false;
+    if (!SafeGiveToPlayer(character, gift, &moved) || !moved)
+    {
+        return 0;
+    }
+
+    SafeRememberTag(character, leader, LT_I_SCREWED_THIS_GUY);
+    std::ostringstream note;
+    note << CharacterName(character) << " paid the player " << gift
+         << " cats for the rescue.";
+    LogInfo(note.str());
+    return gift;
+}
+
 bool RemembersPlayerAsSaviour(Character* character)
 {
     if (character == NULL)
@@ -1807,7 +1965,13 @@ bool IsIgnoringPlayer(Character* character, double* outRemainingHours)
         return false;
     }
 
-    std::map<Character*, TalkState>::iterator it = g_talkStates.find(character);
+    CharKey key;
+    if (!SafeCharKey(character, &key))
+    {
+        return false;
+    }
+
+    std::map<CharKey, TalkState>::iterator it = g_talkStates.find(key);
     if (it == g_talkStates.end())
     {
         return false;
@@ -1832,7 +1996,13 @@ bool RecordInteraction(Character* character, double nowHours)
         return false;
     }
 
-    TalkState& state = g_talkStates[character];
+    CharKey key;
+    if (!SafeCharKey(character, &key))
+    {
+        return false;
+    }
+
+    TalkState& state = g_talkStates[key];
     if (state.ignoredUntilHour > nowHours)
     {
         return true;

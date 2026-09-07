@@ -36,7 +36,7 @@ inconsciente; `hunger` no es 0..1. Los headers dan el **tipo**, nunca el
 | **I2** | Rango real de `hunger` | ✅ **Jugado** | **0..3, donde 3 es lleno.** Confirmado por tres fuentes independientes |
 | **I3** | Qué señal sirve de "vida restante" | ✅ **Leído** | `blood`/`getMaxBlood()` y `derivedFleshHealthPercent`. Nunca `getOverallHealthRating` |
 | **I4** | ¿Escribir la marca de derrota altera la IA? | ❌ **Pendiente** | **La única sin resolver.** Requiere jugar y observar conducta |
-| **I5** | ¿El conteo de intentos sobrevive la recarga? | ✅ **Leído** | **No.** Y hay un bug latente: la clave es un `Character*` crudo |
+| **I5** | ¿El conteo de intentos sobrevive la recarga? | ✅ **Leído** | **No** — sigue en memoria. El bug de identidad que destapó ya está arreglado (§3) |
 | **I6** | Qué controles acepta el hub | ✅ **Leído** | Mucho más de lo que usamos. Ver §5 |
 
 ### Cómo se resolvió I2, que es el caso ejemplar
@@ -75,7 +75,7 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 | R2.1 | Nivel da chance, no permiso | 🟡 **Parcial** | `JoinChance` existe y corre en aliados y rescate. Pero quedan puertas duras: `>15` no escucha (`1583`), `>=40` se somete (`1667`) |
 | R2.2 | Gap configurable | ❌ **Idea** | El **15** sigue fijo |
 | R2.3 | Castigo en jaula | ❌ **Idea** | Sin implementar |
-| R2.4 | Cooldown acumulativo y configurable | ❌ **Idea** | **3 intentos** y **4 horas** fijos (`1851-1853`). Además I5: no sobrevive recarga |
+| R2.4 | Cooldown acumulativo y configurable | ❌ **Idea** | **3 intentos** y **4 horas** fijos. Sigue sin sobrevivir la recarga (I5), pero ya no confunde identidades |
 
 ### BALANCED — sumisión (§3)
 
@@ -95,7 +95,7 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
 | R4.1 | La deuda no obliga | ✅ **Compila** | Usa `JoinChance` con `situation=45` (`rules.cpp:1409`) |
-| R4.2 | Si no se une, te paga | ⚠️ **Roto** | `owesGift = true` se marca y **nadie lo lee**. El NPC dice que te deja algo y no te da nada |
+| R4.2 | Si no se une, te paga | ✅ **Compila** | `PayPartingGift` transfiere lo que lleva. Se cobra **una sola vez**, marcado con `LT_I_SCREWED_THIS_GUY` (persiste en la partida) |
 | R4.3 | La deuda no vence | ✅ **Compila** | `LT_MY_LIFESAVER` persiste en la partida |
 | R4.4 | Cuánto curaste importa | ❌ **Idea** | |
 | R4.5 | Animales solo piden comida | ✅ **Jugado** | |
@@ -132,6 +132,8 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 | Diez comidas, hambre clavado | *"Fed Bog Dog"* ×10 y seguía pidiendo 13% | **`eatItem` no alimenta animales.** `CharacterAnimal` sobreescribe `foodUpdate` y usa `eatItemInMouth` |
 | Probe inalcanzable | 3 sesiones sin conseguir una medición | El probe colgaba del botón "Hablar", que no aparece en inconscientes ni excluidos |
 | Lógica duplicada | — | Los animales en jaula tenían su propia copia de la aritmética de comidas |
+| **Regalo prometido y no entregado** | El rescatado decía *"te deja algo en pago"* y no daba nada | `owesGift` se marcaba y **nadie lo leía**. Ahora `PayPartingGift` transfiere con `Ownerships::addMoney` |
+| **Cooldown heredado de un muerto** | Invisible hasta que pasa | Los mapas usaban `Character*` crudo como clave. Ahora usan `CharKey{index, serial}` del `hand` |
 
 ---
 
@@ -193,26 +195,23 @@ se lleva el proceso — hay que confirmar el layout antes de usar los nuevos.
 
 ### Bloquea o rompe
 
-1. **R4.2 — `owesGift` no hace nada.** El NPC promete pago y no entrega. Es la
-   ruta de la que el mod está más orgulloso, prometiendo algo que no cumple.
-2. **I5 — clave de puntero crudo.** Un NPC que muere deja la dirección colgada;
-   una dirección reusada hereda el cooldown de un muerto. Ya existe hoy.
+*Los dos que había están arreglados.* Ver §3.
 
 ### El orden de REQUISITOS §8
 
-3. **R2.1 completo** — quedan dos puertas duras (`>15`, `>=40`) que deberían ser
+1. **R2.1 completo** — quedan dos puertas duras (`>15`, `>=40`) que deberían ser
    chance.
-4. **Umbrales sueltos configurables** — R1.4 (25→20), R2.2 (15), R2.4 (3 y 4h).
+2. **Umbrales sueltos configurables** — R1.4 (25→20), R2.2 (15), R2.4 (3 y 4h).
    Cambios chicos, efecto inmediato.
-5. **Cheat con jaula** — R1.1 a R1.3. Autocontenido.
-6. **Sumisión** — R3.1 (I3 ya dio la señal), R3.2, R3.5. R3.3 espera a I4.
-7. **R5.4** — meter la personalidad animal al cálculo.
-8. **R6.3** — agrupar el panel, ahora que I6 confirmó que se puede.
+3. **Cheat con jaula** — R1.1 a R1.3. Autocontenido.
+4. **Sumisión** — R3.1 (I3 ya dio la señal), R3.2, R3.5. R3.3 espera a I4.
+5. **R5.4** — meter la personalidad animal al cálculo.
+6. **R6.3** — agrupar el panel, ahora que I6 confirmó que se puede.
 
 ### Cuando lo demás esté asentado
 
-9. R2.3 (castigo en jaula), R3.4 (curar y repegar), R3.8, R4.4.
-10. **I4** — la única investigación abierta. Solo bloquea R3.3.
+7. R2.3 (castigo en jaula), R3.4 (curar y repegar), R3.8, R4.4.
+8. **I4** — la única investigación abierta. Solo bloquea R3.3.
 
 ---
 
@@ -224,4 +223,4 @@ se lleva el proceso — hay que confirmar el layout antes de usar los nuevos.
 | `REQUISITOS.md` R6.4 | I6 lo desmiente: el hub sí acepta texto libre |
 | `REQUISITOS.md` §7 | Cinco de seis investigaciones cerradas |
 | `PLAN.md` §8 | No incluye lo de esta ronda |
-| `KENSHI-MODDING-NOTES.md` §11 | **Falta `eatItem` no alimenta animales** — es una trampa nueva del SDK, del mismo tipo que las que ya están |
+| `KENSHI-MODDING-NOTES.md` §11 | ✅ Corregido: se agregó `eatItem` no alimenta animales, y que los `.ini` de mods sin fuentes pueden ser documentación |

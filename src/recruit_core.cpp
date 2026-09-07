@@ -7,6 +7,7 @@
 #include "dialogue_authoring.h"
 #include "offer_popup.h"
 #include "feeding.h"
+#include "messages.h"
 
 #include <algorithm>
 
@@ -556,6 +557,21 @@ void AttemptRecruit(Character* character)
     {
         LogInfo("Refused " + name + " (" + CurrencyName(verdict.currency) + "): " +
                 verdict.reason);
+    }
+
+    // A rescued NPC who cannot follow pays what they carry. The verdict only
+    // said so in words until now: owesGift was set and nothing ever read it,
+    // so the mod promised a gift and handed over nothing. Settled once and
+    // remembered in the save, so reopening the window is not a second payday.
+    if (verdict.owesGift)
+    {
+        const int gift = PayPartingGift(character);
+        if (gift > 0)
+        {
+            TellPlayer(Fill(Say("rescue.gift", "{name}: te deja {cats} cats", character),
+                            name, gift, 0),
+                       false);
+        }
     }
 
     // The NPC states their terms out loud, where they stand. The window that

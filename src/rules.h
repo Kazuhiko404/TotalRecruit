@@ -79,6 +79,12 @@ void MarkRescuedBy(Character* character, Character* saviour);
 // True when the character remembers the player as their lifesaver.
 bool RemembersPlayerAsSaviour(Character* character);
 
+// Hands over what a rescued NPC is carrying when they cannot follow the player,
+// and returns how many cats changed hands (0 if they had nothing, or if they
+// have already paid). The debt is settled once and the fact is stored in the
+// engine's own per-character memory, so it survives a reload.
+int PayPartingGift(Character* character);
+
 // Human-readable currency name, for logs and status lines.
 const char* CurrencyName(Currency currency);
 
