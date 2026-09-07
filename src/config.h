@@ -132,6 +132,11 @@ struct Animals
     // An animal owned by a real faction cannot be talked round with food -- it
     // has to be taken and caged. Off makes any animal tameable in the open.
     bool ownedNeedCage;
+    // How much one meal fills the stomach, on the engine's own 0..3 scale.
+    // eatItem does not move the value for animals, so the plugin credits it.
+    // 0.40 is what CorpseFeeder grants for a whole fresh body, which makes a
+    // piece of meat a generous but not silly mouthful.
+    float nutritionPerMeal;
 
     // Calibrated against measured wildlife, not guessed: a loose bonedog sits
     // at hunger 1.69 of 3.0, so it starts the negotiation around 56% full. Any
@@ -149,7 +154,8 @@ struct Animals
           strongPenalty(0.05f),
           edgeDiscount(0.05f),
           bigEdgeDiscount(0.10f),
-          ownedNeedCage(true)
+          ownedNeedCage(true),
+          nutritionPerMeal(0.40f)
     {
     }
 };

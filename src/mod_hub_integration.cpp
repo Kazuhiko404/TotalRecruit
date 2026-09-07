@@ -200,6 +200,7 @@ static bool DoRegisterModHub()
     regInt(api, mod, "animal_strong_level", "Animal: nivel fuerte", "Por encima de este nivel pide mas comida", 0, 100, 5, &c.animals.strongLevel);
     regFloat(api, mod, "animal_strong_penalty", "Animal: recargo fuerte", "Cuanta comida extra pide un animal de nivel alto", 0.0f, 1.0f, 0.05f, 2, &c.animals.strongPenalty);
     regFloat(api, mod, "animal_edge_discount", "Animal: descuento +10", "Descuento si le sacas 10 niveles o mas", 0.0f, 1.0f, 0.05f, 2, &c.animals.edgeDiscount);
+    regFloat(api, mod, "animal_nutrition_per_meal", "Animal: comida por racion", "Cuanto llena el estomago una racion (escala 0..3 del motor)", 0.05f, 3.0f, 0.05f, 2, &c.animals.nutritionPerMeal);
     regBool(api, mod, "animal_owned_need_cage", "Animal: domesticos solo por jaula", "Un animal con dueno no se convence con comida: hay que enjaularlo", &c.animals.ownedNeedCage);
     regFloat(api, mod, "animal_big_edge_discount", "Animal: descuento +20", "Descuento si le sacas 20 niveles o mas", 0.0f, 1.0f, 0.05f, 2, &c.animals.bigEdgeDiscount);
 

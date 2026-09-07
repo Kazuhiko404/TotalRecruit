@@ -1,5 +1,6 @@
 #include "common.h"
 #include "feeding.h"
+#include "config.h"
 #include "recruit_core.h"
 #include "log.h"
 
@@ -94,13 +95,57 @@ bool SafeFindFoodInSquad(Character** outHolder, Item** outItem, Inventory** outI
     TR_CATCH { return false; }
 }
 
-// eatItem takes the item and the inventory it came from, so the engine removes
-// it and applies the nourishment itself.
+// eatItem consumes the item and reports success, but it does NOT move the
+// hunger value for an animal: ten pieces of meat left a bog dog at exactly the
+// fullness it started with. CharacterAnimal overrides foodUpdate and has its
+// own eatItemInMouth, so beasts are fed through a path this call never reaches.
+//
+// So the nourishment is applied here. CorpseFeeder, which feeds animals for a
+// living, does the same thing -- its config sets nutrition per body and a feed
+// rate outright rather than trusting the engine to credit it.
 bool SafeEat(Character* captive, Item* food, Inventory* from, bool* outAte)
 {
     TR_TRY
     {
         *outAte = captive->eatItem(food, from);
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// Read separately before and after the meal so the credit can be skipped when
+// the engine did move the value on its own -- which it does for people.
+bool SafeReadHunger(Character* character, float* out)
+{
+    TR_TRY
+    {
+        MedicalSystem* medical = character->getMedical();
+        if (medical == NULL)
+        {
+            return false;
+        }
+        *out = medical->hunger;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// Never past a full stomach: 3.0 is the ceiling, confirmed by KEP writing that
+// value to repair a broken medical state and by CorpseFeeder documenting the
+// same scale (3.00 ~= 300 UI hunger).
+bool SafeAddHunger(Character* character, float amount)
+{
+    TR_TRY
+    {
+        MedicalSystem* medical = character->getMedical();
+        if (medical == NULL)
+        {
+            return false;
+        }
+        float value = medical->hunger + amount;
+        if (value > 3.0f) value = 3.0f;
+        if (value < 0.0f) value = 0.0f;
+        medical->hunger = value;
         return true;
     }
     TR_CATCH { return false; }
@@ -152,6 +197,9 @@ bool FeedCaptive(Character* captive, std::string* outMessage)
     char itemName[128] = { 0 };
     SafeItemName(food, itemName, sizeof(itemName));
 
+    float before = 0.0f;
+    const bool haveBefore = SafeReadHunger(captive, &before);
+
     bool ate = false;
     if (!SafeEat(captive, food, inventory, &ate) || !ate)
     {
@@ -159,8 +207,28 @@ bool FeedCaptive(Character* captive, std::string* outMessage)
         return false;
     }
 
+    // Credit the meal only if the engine did not. A person eating through
+    // eatItem is fed by the engine already; doubling it would empty the
+    // player's pack for half the meals.
+    float after = before;
+    const bool haveAfter = SafeReadHunger(captive, &after);
+    const bool engineFed = haveBefore && haveAfter && (after > before + 0.001f);
+
+    if (haveBefore && haveAfter && !engineFed)
+    {
+        SafeAddHunger(captive, GetConfig().animals.nutritionPerMeal);
+        SafeReadHunger(captive, &after);
+    }
+
     const std::string name = CharacterName(captive);
-    LogInfo("Fed " + name + " with " + itemName + ".");
+    {
+        char buf[160] = { 0 };
+        _snprintf_s(buf, sizeof(buf), _TRUNCATE,
+                    " with %s. hunger %.2f -> %.2f (%s)",
+                    itemName, before, after,
+                    engineFed ? "engine" : "credited by plugin");
+        LogInfo("Fed " + name + buf);
+    }
     if (outMessage)
     {
         *outMessage = "fed them " + std::string(itemName);

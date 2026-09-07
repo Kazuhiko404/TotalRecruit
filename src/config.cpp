@@ -223,6 +223,7 @@ void LoadConfig(const std::string& modDirectory)
     ReadFloat(text, "animalEdgeDiscount", &g_config.animals.edgeDiscount);
     ReadFloat(text, "animalBigEdgeDiscount", &g_config.animals.bigEdgeDiscount);
     ReadBool(text, "animalOwnedNeedCage", &g_config.animals.ownedNeedCage);
+    ReadFloat(text, "animalNutritionPerMeal", &g_config.animals.nutritionPerMeal);
     ReadFloat(text, "hoursCagedForProud", &g_config.prices.hoursCagedForProud);
     ReadFloat(text, "fearfulMultiplier", &g_config.prices.fearfulMultiplier);
     ReadFloat(text, "braveMultiplier", &g_config.prices.braveMultiplier);
