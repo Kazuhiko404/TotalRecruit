@@ -22,6 +22,7 @@
 #include "recruit_overlay.h"
 #include "dialogue_bridge.h"
 #include "rescue.h"
+#include "defeats.h"
 #include "frame_tick.h"
 #include "mod_hub_integration.h"
 #include "offer_popup.h"
@@ -168,6 +169,7 @@ __declspec(dllexport) void startPlugin()
     // Route A. Also installs the per-frame tick that completes recruits the
     // player accepted in dialogue, which cannot happen inside the hook itself.
     const bool rescueOk = InstallRescueHooks();
+    InstallDefeatTracking();
     const bool tickOk = InstallFrameTick();
 
     // Makes the mod visible: the cursor tells the player who can be talked to.

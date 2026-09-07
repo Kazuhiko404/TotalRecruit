@@ -24,6 +24,51 @@ bool SafeStateBroadcast(Character* character, StateBroadcastData** out)
     TR_CATCH { return false; }
 }
 
+// What the AI currently intends, and the long-term marks it remembers about the
+// player. Read together because the open question (I4) is whether writing one
+// of those marks changes any of these -- the engine reads the same memory the
+// mod would be writing to, and nothing in the headers says what it does with it.
+//
+// Logged on every probe so a before-and-after comparison needs no special mode:
+// click an NPC, apply the mark, click again, diff the two lines.
+bool SafeReadAggression(StateBroadcastData* broadcast, float* outIntended,
+                        float* outTowardsTarget, float* outDistress,
+                        int* outIntendsToAttack, int* outTempNeutral)
+{
+    TR_TRY
+    {
+        *outIntended         = broadcast->intendedAggression;
+        *outTowardsTarget    = broadcast->aggressionTowardsTarget;
+        *outDistress         = broadcast->distress;
+        *outIntendsToAttack  = (broadcast->intendsToAttack.getCharacter() != NULL) ? 1 : 0;
+        *outTempNeutral      = broadcast->isTemporaryNeutral ? 1 : 0;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// The engine's own per-character memory about the player. These persist in the
+// save, and the AI consults them: LT_MY_CAPTOR and LT_KILLED_MY_FRIEND plainly
+// mean something to it, which is exactly why writing LT_DEFEATED_MY_SQUAD_ONCE
+// for the mod's own bookkeeping needs proving before it is trusted.
+bool SafeReadMemoryTags(Character* character, Character* player, int* out, int count)
+{
+    TR_TRY
+    {
+        static const CharacterPerceptionTags_LongTerm kTags[] = {
+            LT_MY_LIFESAVER, LT_MY_CAPTOR, LT_FREED_ME,
+            LT_DEFEATED_MY_SQUAD_ONCE, LT_SQUAD_LOST_TO_ME_ONCE,
+            LT_KILLED_MY_FRIEND, LT_I_SCREWED_THIS_GUY, LT_STOLE_FROM_ME
+        };
+        for (int i = 0; i < count; ++i)
+        {
+            out[i] = character->getCharacterMemoryTag(player, kTags[i]) ? 1 : 0;
+        }
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
 bool SafeReadBroadcastFields(StateBroadcastData* broadcast, int* outNpcType,
                              int* outPersonality, int* outLooksLike,
                              int* outSlaveState, int* outEscaped, int* outKidnapped)
@@ -139,6 +184,25 @@ bool SafeHasDialogue(Character* character, int* outHasDialogue, int* outTalkToMe
         *outGetUpPeace      = character->dialogue->hasDialogueEvent(EV_GET_UP_PEACE) ? 1 : 0;
         *outHealedFinished  = character->dialogue->hasDialogueEvent(EV_BEING_HEALED_FINISHED) ? 1 : 0;
         return true;
+    }
+    TR_CATCH { return false; }
+}
+
+bool SafePlayerLeaderPtr(Character** out)
+{
+    TR_TRY
+    {
+        if (ou == NULL || ou->player == NULL)
+        {
+            return false;
+        }
+        Platoon* platoon = ou->player->currentPlatoon;
+        if (platoon == NULL)
+        {
+            return false;
+        }
+        *out = platoon->getSquadLeader();
+        return (*out != NULL);
     }
     TR_CATCH { return false; }
 }
@@ -408,6 +472,57 @@ std::string ProbeCharacter(Character* character)
         else
         {
             LogInfo("  no faction");
+        }
+
+        // I4 -- the open investigation. These two lines are what a
+        // before-and-after comparison needs: click an NPC, write the mark,
+        // click again, and see whether the AI's intent moved.
+        if (broadcast != NULL)
+        {
+            float intended = 0.0f, towards = 0.0f, distress = 0.0f;
+            int intendsAttack = 0, tempNeutral = 0;
+            if (SafeReadAggression(broadcast, &intended, &towards, &distress,
+                                   &intendsAttack, &tempNeutral))
+            {
+                std::ostringstream aline;
+                aline << "  intendedAggression=" << intended
+                      << "  aggroTowardsTarget=" << towards
+                      << "  distress=" << distress
+                      << "  intendsToAttack=" << YesNo(intendsAttack)
+                      << "  temporaryNeutral=" << YesNo(tempNeutral);
+                LogInfo(aline.str());
+            }
+        }
+
+        Character* playerLeader = NULL;
+        if (SafePlayerLeaderPtr(&playerLeader) && playerLeader != NULL)
+        {
+            static const char* kTagNames[] = {
+                "LIFESAVER", "MY_CAPTOR", "FREED_ME",
+                "DEFEATED_MY_SQUAD", "SQUAD_LOST_TO_ME",
+                "KILLED_MY_FRIEND", "I_SCREWED_HIM", "STOLE_FROM_ME"
+            };
+            const int tagCount = (int)(sizeof(kTagNames) / sizeof(kTagNames[0]));
+            int tags[8] = { 0 };
+            if (SafeReadMemoryTags(character, playerLeader, tags, tagCount))
+            {
+                std::ostringstream tline;
+                tline << "  memoryTags:";
+                bool any = false;
+                for (int i = 0; i < tagCount; ++i)
+                {
+                    if (tags[i])
+                    {
+                        tline << " " << kTagNames[i];
+                        any = true;
+                    }
+                }
+                if (!any)
+                {
+                    tline << " (none)";
+                }
+                LogInfo(tline.str());
+            }
         }
 
         if (unique)

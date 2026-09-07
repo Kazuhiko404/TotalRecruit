@@ -197,6 +197,16 @@ void LoadConfig(const std::string& modDirectory)
     ReadFloat(text, "hailRepeatHours", &g_config.hailRepeatHours);
     ReadInt(text, "hailRepeats", &g_config.hailRepeats);
 
+    ReadFloat(text, "friendlyRelation", &g_config.friendlyRelation);
+    ReadBool(text, "cheatNeedsCage", &g_config.cheatNeedsCage);
+    ReadFloat(text, "cheatHoursCaged", &g_config.cheatHoursCaged);
+    ReadFloat(text, "rescueHealWeight", &g_config.rescueHealWeight);
+
+    ReadInt(text, "insistenceAttempts", &g_config.insistence.attemptsBeforeIgnored);
+    ReadFloat(text, "insistenceBaseHours", &g_config.insistence.baseHours);
+    ReadFloat(text, "insistenceMaxHours", &g_config.insistence.maxHours);
+    ReadFloat(text, "insistenceForgetHours", &g_config.insistence.forgetAfterHours);
+
     ReadInt(text, "preset", &g_config.preset);
     ReadBool(text, "rescueEnabled", &g_config.rescueEnabled);
     ReadBool(text, "rescuePlayerOnly", &g_config.rescuePlayerOnly);
@@ -212,6 +222,28 @@ void LoadConfig(const std::string& modDirectory)
     ReadInt(text, "catsMinimum", &g_config.prices.catsMinimum);
     ReadFloat(text, "hungerThreshold", &g_config.prices.hungerThreshold);
     ReadFloat(text, "woundedThreshold", &g_config.prices.woundedThreshold);
+
+    ReadFloat(text, "chanceLevelGapPenalty", &g_config.chance.levelGapPenalty);
+    ReadInt(text, "chanceLevelGapFloor", &g_config.chance.levelGapFloor);
+    ReadFloat(text, "chanceLevelEdgeBonus", &g_config.chance.levelEdgeBonus);
+    ReadInt(text, "chanceLevelEdgeCap", &g_config.chance.levelEdgeCap);
+    ReadInt(text, "chanceFloor", &g_config.chance.floor);
+    ReadInt(text, "chanceCeiling", &g_config.chance.ceiling);
+    ReadInt(text, "chanceIntimidationBonus", &g_config.chance.intimidationBonus);
+
+    ReadBool(text, "submissionCountDefeats", &g_config.submission.countDefeats);
+    ReadFloat(text, "submissionDefeatDebounceHours", &g_config.submission.defeatDebounceHours);
+    ReadInt(text, "submissionPersistedFloorCount", &g_config.submission.persistedFloorCount);
+    ReadInt(text, "submissionChancePerDefeat", &g_config.submission.chancePerDefeat);
+    ReadInt(text, "submissionMaxDefeatChance", &g_config.submission.maxDefeatChance);
+    ReadBool(text, "submissionBegWhenNearDeath", &g_config.submission.begWhenNearDeath);
+    ReadFloat(text, "submissionNearDeathBlood", &g_config.submission.nearDeathBlood);
+    ReadFloat(text, "submissionFearfulResolve", &g_config.submission.fearfulResolve);
+    ReadFloat(text, "submissionBraveResolve", &g_config.submission.braveResolve);
+    ReadFloat(text, "submissionHonourableResolve", &g_config.submission.honourableResolve);
+    ReadBool(text, "submissionAllowBeating", &g_config.submission.allowBeating);
+    ReadFloat(text, "submissionBeatingCooldownHours", &g_config.submission.beatingCooldownHours);
+    ReadFloat(text, "submissionBeatingKnockoutSeconds", &g_config.submission.beatingKnockoutSeconds);
 
     ReadFloat(text, "animalCubMaturity", &g_config.animals.cubMaturity);
     ReadInt(text, "animalWeakLevel", &g_config.animals.weakLevel);
@@ -303,6 +335,36 @@ bool SaveConfig(const std::string& modDirectory)
     file << "  \"catsMinimum\": " << g_config.prices.catsMinimum << ",\n";
     file << "  \"hungerThreshold\": " << g_config.prices.hungerThreshold << ",\n";
     file << "  \"woundedThreshold\": " << g_config.prices.woundedThreshold << ",\n";
+
+    file << "  \"friendlyRelation\": " << g_config.friendlyRelation << ",\n";
+    file << "  \"cheatNeedsCage\": " << (g_config.cheatNeedsCage ? "true" : "false") << ",\n";
+    file << "  \"cheatHoursCaged\": " << g_config.cheatHoursCaged << ",\n";
+    file << "  \"rescueHealWeight\": " << g_config.rescueHealWeight << ",\n";
+    file << "  \"insistenceAttempts\": " << g_config.insistence.attemptsBeforeIgnored << ",\n";
+    file << "  \"insistenceBaseHours\": " << g_config.insistence.baseHours << ",\n";
+    file << "  \"insistenceMaxHours\": " << g_config.insistence.maxHours << ",\n";
+    file << "  \"insistenceForgetHours\": " << g_config.insistence.forgetAfterHours << ",\n";
+
+    file << "  \"chanceLevelGapPenalty\": " << g_config.chance.levelGapPenalty << ",\n";
+    file << "  \"chanceLevelGapFloor\": " << g_config.chance.levelGapFloor << ",\n";
+    file << "  \"chanceLevelEdgeBonus\": " << g_config.chance.levelEdgeBonus << ",\n";
+    file << "  \"chanceLevelEdgeCap\": " << g_config.chance.levelEdgeCap << ",\n";
+    file << "  \"chanceFloor\": " << g_config.chance.floor << ",\n";
+    file << "  \"chanceCeiling\": " << g_config.chance.ceiling << ",\n";
+
+    file << "  \"submissionCountDefeats\": " << (g_config.submission.countDefeats ? "true" : "false") << ",\n";
+    file << "  \"submissionDefeatDebounceHours\": " << g_config.submission.defeatDebounceHours << ",\n";
+    file << "  \"submissionPersistedFloorCount\": " << g_config.submission.persistedFloorCount << ",\n";
+    file << "  \"submissionChancePerDefeat\": " << g_config.submission.chancePerDefeat << ",\n";
+    file << "  \"submissionMaxDefeatChance\": " << g_config.submission.maxDefeatChance << ",\n";
+    file << "  \"submissionBegWhenNearDeath\": " << (g_config.submission.begWhenNearDeath ? "true" : "false") << ",\n";
+    file << "  \"submissionNearDeathBlood\": " << g_config.submission.nearDeathBlood << ",\n";
+    file << "  \"submissionFearfulResolve\": " << g_config.submission.fearfulResolve << ",\n";
+    file << "  \"submissionBraveResolve\": " << g_config.submission.braveResolve << ",\n";
+    file << "  \"submissionHonourableResolve\": " << g_config.submission.honourableResolve << ",\n";
+    file << "  \"submissionAllowBeating\": " << (g_config.submission.allowBeating ? "true" : "false") << ",\n";
+    file << "  \"submissionBeatingCooldownHours\": " << g_config.submission.beatingCooldownHours << ",\n";
+    file << "  \"submissionBeatingKnockoutSeconds\": " << g_config.submission.beatingKnockoutSeconds << ",\n";
 
     file << "  \"animalCubMaturity\": " << g_config.animals.cubMaturity << ",\n";
     file << "  \"animalWeakLevel\": " << g_config.animals.weakLevel << ",\n";

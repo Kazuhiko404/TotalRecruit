@@ -672,5 +672,37 @@
       "{name}: recordara que no tuviste piedad.",
       "{name}: no respondiste a su suplica."
     ]
+  },
+  "cheat": {
+    "joins": [
+      "quiere hablar contigo: se une",
+      "te llama desde la jaula y acepta seguirte",
+      "ya no discute: se une a ti",
+      "levanta la vista y decide acompanarte",
+      "no hace falta convencerlo mas: se une"
+    ],
+    "needsCage": [
+      "metelo en una de tus jaulas y hablara enseguida",
+      "primero encierralo: despues hablamos",
+      "en una jaula tuya estara listo en un momento",
+      "no aqui, no asi: llevalo a una de tus jaulas",
+      "una jaula tuya y un instante, nada mas"
+    ],
+    "waiting": [
+      "esta dentro: dale un momento y te llamara",
+      "todavia se esta haciendo a la idea: espera un poco",
+      "acaba de entrar: dale un minuto",
+      "aun no: vuelve en un momento",
+      "esperalo, no va a tardar"
+    ]
+  },
+  "captive": {
+    "intimidated": [
+      "intimidado por tu poder, se somete",
+      "no quiere averiguar de que eres capaz: cede",
+      "te ha visto pelear, y prefiere no repetirlo",
+      "mide la diferencia entre ustedes y baja la cabeza",
+      "no ve como salir de esta: acepta seguirte"
+    ]
   }
 }

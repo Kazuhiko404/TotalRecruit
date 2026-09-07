@@ -8,6 +8,7 @@
 #include "offer_popup.h"
 #include "feeding.h"
 #include "messages.h"
+#include "defeats.h"
 
 #include <algorithm>
 
@@ -302,10 +303,19 @@ Character* OccupantOf(RootObject* target, itemType type)
 bool PresentOffer(Character* character, const Verdict& verdict, const std::string& spoken)
 {
     // The remedy button appears only when the plugin can actually deliver it.
+    // Only one remedy fits on the window, so it offers the one that applies:
+    // food when they are hungry and you are carrying some, and otherwise the
+    // beating -- which is the lever R2.3 exists to give the player against
+    // someone whose price is submission and who would otherwise only be waited
+    // out.
     std::string extraLabel;
     if (!verdict.willJoin && verdict.currency == Currency_Care && verdict.wantsFood && PlayerHasFood())
     {
         extraLabel = "DARLE COMIDA";
+    }
+    else if (!verdict.willJoin && CanBeatPrisoner(character, NULL))
+    {
+        extraLabel = "GOLPEARLO";
     }
 
     // A window only earns its place when there is a choice inside it. If they
@@ -625,14 +635,33 @@ void HelpCaptive(Character* character)
 
     const std::string name = CharacterName(character);
 
+    // The same button carries whichever remedy the window offered, so the
+    // dispatch has to agree with the label PresentOffer chose.
+    const Verdict before = Evaluate(character);
+    const bool feeding = (before.currency == Currency_Care && before.wantsFood &&
+                          PlayerHasFood());
+
     std::string message;
-    if (!FeedCaptive(character, &message))
+    if (feeding)
     {
-        TellPlayer(name + ": " + message, true);
+        if (!FeedCaptive(character, &message))
+        {
+            TellPlayer(name + ": " + message, true);
+            return;
+        }
+        TellPlayer(name + ": " + message, false);
+    }
+    else
+    {
+        if (!BeatPrisoner(character, &message))
+        {
+            TellPlayer(message, true);
+            return;
+        }
+        TellPlayer(message, false);
+        // They are unconscious now, so there is no conversation to reopen.
         return;
     }
-
-    TellPlayer(name + ": " + message, false);
 
     // Show where that leaves them, so the player learns whether one meal was
     // enough or there is more to do.
@@ -647,6 +676,10 @@ void HelpCaptive(Character* character)
     if (!after.willJoin && after.currency == Currency_Care && after.wantsFood && PlayerHasFood())
     {
         extraLabel = "Darle mas comida";
+    }
+    else if (!after.willJoin && CanBeatPrisoner(character, NULL))
+    {
+        extraLabel = "GOLPEARLO";
     }
 
     ShowOffer(character, spoken, SpeakAcceptLine(after), "Ahora no.", extraLabel);

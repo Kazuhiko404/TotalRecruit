@@ -123,6 +123,28 @@ static bool DoRegisterModHub()
         LogInfo(std::string(buf));
     }
 
+    // R6.3 is blocked on this: the hub hands back 160 bytes where our header
+    // declares 72, so roughly a dozen function pointers sit past the end of
+    // what we know how to name -- register_setting_section among them, going by
+    // the strings in the DLL.
+    //
+    // Calling one at a guessed offset is the trap that takes the process down
+    // (see notes S11), so nothing is called. The slots are dumped instead, and
+    // whether an address looks like code is the evidence that settles which
+    // ones are real function pointers.
+    if (apiSize > EMC_HUB_API_V1_MIN_SIZE)
+    {
+        const void* const* slots = (const void* const*)api;
+        const unsigned slotCount = (unsigned)(apiSize / sizeof(void*));
+        std::ostringstream dump;
+        dump << "Mod Hub slots (" << slotCount << " of " << apiSize << " bytes):";
+        for (unsigned i = 0; i < slotCount && i < 32; ++i)
+        {
+            dump << " [" << i << "]=" << (slots[i] ? "fn" : "null");
+        }
+        LogInfo(dump.str());
+    }
+
     EMC_ModDescriptorV1 desc = {0};
     desc.namespace_id = "totalrecruit";
     desc.namespace_display_name = "TotalRecruit";
@@ -200,6 +222,41 @@ static bool DoRegisterModHub()
     regInt(api, mod, "animal_strong_level", "Animal: nivel fuerte", "Por encima de este nivel pide mas comida", 0, 100, 5, &c.animals.strongLevel);
     regFloat(api, mod, "animal_strong_penalty", "Animal: recargo fuerte", "Cuanta comida extra pide un animal de nivel alto", 0.0f, 1.0f, 0.05f, 2, &c.animals.strongPenalty);
     regFloat(api, mod, "animal_edge_discount", "Animal: descuento +10", "Descuento si le sacas 10 niveles o mas", 0.0f, 1.0f, 0.05f, 2, &c.animals.edgeDiscount);
+    regFloat(api, mod, "friendly_relation", "Relacion amistosa", "Reputacion a partir de la cual te consideran amigo", -100.0f, 100.0f, 5.0f, 0, &c.friendlyRelation);
+    regBool(api, mod, "cheat_needs_cage", "Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
+    regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame (0.02 = un minuto)", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
+    regFloat(api, mod, "rescue_heal_weight", "Rescate: peso de la cura", "Cuanta chance suma haberlo curado del todo", 0.0f, 90.0f, 5.0f, 0, &c.rescueHealWeight);
+
+    regInt(api, mod, "insist_attempts", "Insistencia: intentos", "Cuantas veces podes preguntar antes de que te ignore", 1, 20, 1, &c.insistence.attemptsBeforeIgnored);
+    regFloat(api, mod, "insist_base_hours", "Insistencia: horas base", "Horas de castigo por cada intento de mas (se acumula)", 0.0f, 48.0f, 1.0f, 1, &c.insistence.baseHours);
+    regFloat(api, mod, "insist_max_hours", "Insistencia: techo", "Castigo maximo por insistir", 1.0f, 240.0f, 6.0f, 0, &c.insistence.maxHours);
+    regFloat(api, mod, "insist_forget_hours", "Insistencia: olvido", "Horas de silencio tras las que vuelve a empezar de cero", 0.0f, 48.0f, 1.0f, 1, &c.insistence.forgetAfterHours);
+
+    // Motor de chance: el nivel pesa, nunca decide solo.
+    regFloat(api, mod, "chance_level_gap_penalty", "Chance: castigo por nivel", "Chance que pierde por cada nivel que el NPC te saca", 0.0f, 20.0f, 0.5f, 1, &c.chance.levelGapPenalty);
+    regInt(api, mod, "chance_level_gap_floor", "Chance: piso por nivel", "Chance minima cuando te saca niveles (0 = imposible)", 0, 50, 1, &c.chance.levelGapFloor);
+    regFloat(api, mod, "chance_level_edge_bonus", "Chance: bono por ventaja", "Chance que ganas por cada nivel que le sacas", 0.0f, 10.0f, 0.5f, 1, &c.chance.levelEdgeBonus);
+    regInt(api, mod, "chance_level_edge_cap", "Chance: techo del bono", "Cuanto puede ayudarte como maximo sacarle niveles", 0, 100, 5, &c.chance.levelEdgeCap);
+    regInt(api, mod, "chance_floor", "Chance: piso global", "Nunca menos que esto (0 = permitir imposibles)", 0, 50, 1, &c.chance.floor);
+    regInt(api, mod, "chance_intimidation", "Chance: peso de intimidar", "Cuanto ayuda tenerlo enjaulado y superarlo en nivel", 0, 60, 5, &c.chance.intimidationBonus);
+    regInt(api, mod, "chance_ceiling", "Chance: techo global", "Nunca mas que esto (100 = permitir garantias)", 50, 100, 1, &c.chance.ceiling);
+
+    // Sumision: cuanto aguanta antes de ceder.
+    regBool(api, mod, "sub_count_defeats", "Sumision: contar derrotas", "Cuenta cuantas veces lo dejaste inconsciente", &c.submission.countDefeats);
+    regFloat(api, mod, "sub_debounce_hours", "Sumision: horas entre derrotas", "Horas de juego antes de que otra caida cuente de nuevo", 0.0f, 12.0f, 0.25f, 2, &c.submission.defeatDebounceHours);
+    regInt(api, mod, "sub_persist_floor", "Sumision: piso tras recarga", "Cuantas derrotas recuerda la partida (pierde precision, no progreso)", 0, 10, 1, &c.submission.persistedFloorCount);
+    regInt(api, mod, "sub_chance_per_defeat", "Sumision: chance por derrota", "Cuanta chance suma cada derrota", 0, 50, 1, &c.submission.chancePerDefeat);
+    regInt(api, mod, "sub_max_defeat_chance", "Sumision: techo por derrotas", "Cuanto pueden sumar las derrotas como maximo", 0, 95, 5, &c.submission.maxDefeatChance);
+    regBool(api, mod, "sub_beg_near_death", "Sumision: rogar al morir", "Ruega por su vida cuando le queda poca sangre", &c.submission.begWhenNearDeath);
+    regFloat(api, mod, "sub_near_death_blood", "Sumision: umbral de sangre", "Fraccion de sangre restante que cuenta como estar por morir", 0.05f, 0.9f, 0.05f, 2, &c.submission.nearDeathBlood);
+    regFloat(api, mod, "sub_fearful_resolve", "Sumision: aguante miedoso", "Multiplica lo que aguanta un cobarde (menos = cede antes)", 0.1f, 3.0f, 0.1f, 1, &c.submission.fearfulResolve);
+    regFloat(api, mod, "sub_brave_resolve", "Sumision: aguante valiente", "Multiplica lo que aguanta un valiente", 0.1f, 4.0f, 0.1f, 1, &c.submission.braveResolve);
+    regFloat(api, mod, "sub_honourable_resolve", "Sumision: aguante honorable", "Multiplica lo que aguanta un honorable", 0.1f, 4.0f, 0.1f, 1, &c.submission.honourableResolve);
+
+    regBool(api, mod, "sub_allow_beating", "Sumision: permitir golpear", "Deja castigar al prisionero en tu jaula", &c.submission.allowBeating);
+    regFloat(api, mod, "sub_beating_cooldown", "Sumision: horas entre golpizas", "Horas de juego antes de poder volver a golpearlo", 0.5f, 48.0f, 0.5f, 1, &c.submission.beatingCooldownHours);
+    regFloat(api, mod, "sub_beating_ko_seconds", "Sumision: segundos inconsciente", "Cuanto queda fuera de combate tras la golpiza", 5.0f, 600.0f, 5.0f, 0, &c.submission.beatingKnockoutSeconds);
+
     regFloat(api, mod, "animal_nutrition_per_meal", "Animal: comida por racion", "Cuanto llena el estomago una racion (escala 0..3 del motor)", 0.05f, 3.0f, 0.05f, 2, &c.animals.nutritionPerMeal);
     regBool(api, mod, "animal_owned_need_cage", "Animal: domesticos solo por jaula", "Un animal con dueno no se convence con comida: hay que enjaularlo", &c.animals.ownedNeedCage);
     regFloat(api, mod, "animal_big_edge_discount", "Animal: descuento +20", "Descuento si le sacas 20 niveles o mas", 0.0f, 1.0f, 0.05f, 2, &c.animals.bigEdgeDiscount);

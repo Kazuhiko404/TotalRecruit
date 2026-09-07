@@ -61,6 +61,7 @@
     <ClCompile Include="src\TotalRecruit.cpp" />
     <ClCompile Include="src\recruit_overlay.cpp" />
     <ClCompile Include="src\recruit_core.cpp" />
+    <ClCompile Include="src\defeats.cpp" />
     <ClCompile Include="src\spawn_panel.cpp" />
     <ClCompile Include="src\spawn_core.cpp" />
     <ClCompile Include="src\game_data.cpp" />

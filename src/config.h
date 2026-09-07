@@ -105,6 +105,121 @@ struct Prices
     }
 };
 
+// The shared chance engine. Level, relation and personality each contribute a
+// number here, and no single one of them can decide the answer alone -- which
+// is the point: a refusal the player cannot act on is not a rule, it is a wall.
+struct Chance
+{
+    // Chance lost per level the NPC has over the player.
+    float levelGapPenalty;
+    // How low the level term can push it. Above zero on purpose: a hopeless
+    // gap should be unlikely, not impossible, so relation and personality
+    // still have something to work with.
+    int levelGapFloor;
+    // Chance gained per level the player has over the NPC.
+    float levelEdgeBonus;
+    // Cap on that bonus, so out-levelling someone is an argument and not an
+    // automatic yes.
+    int levelEdgeCap;
+    // Final clamps on the whole calculation. Never 0 and never 100: certainty
+    // in either direction is what turns a negotiation back into a gate.
+    int floor;
+    int ceiling;
+    // Extra weight a caged prisoner gives to being plainly outmatched. This is
+    // what replaced the old automatic submission below a gap of -40.
+    int intimidationBonus;
+
+    Chance()
+        : levelGapPenalty(6.0f),
+          levelGapFloor(4),
+          levelEdgeBonus(1.5f),
+          levelEdgeCap(40),
+          floor(5),
+          ceiling(95),
+          intimidationBonus(15)
+    {
+    }
+};
+
+// Submission: being beaten, and how much of a beating it takes. Everything here
+// is a number the player can move, because how far a mod should let you push a
+// prisoner is a taste question, not a design one.
+struct Submission
+{
+    // Count knockouts the player inflicted. Off makes submission depend on
+    // present condition alone, as it did before.
+    bool countDefeats;
+    // Game hours before another knockout of the same character counts again.
+    // One beating raises several engine calls as the body settles, and a
+    // character left down keeps registering while they lie there.
+    float defeatDebounceHours;
+    // What a reload leaves behind. The engine's memory can only say "this
+    // happened", not how often, so a save restores this much and no more --
+    // precision is lost, progress is not.
+    int persistedFloorCount;
+    // Chance added per recorded defeat.
+    int chancePerDefeat;
+    // Ceiling on that, so an endless beating is not an endless argument.
+    int maxDefeatChance;
+    // R3.1: how close to death counts as begging distance, as a 0..1 fraction
+    // of blood remaining. getOverallHealthRating cannot be used -- it reads 0
+    // for anyone unconscious, however intact -- so blood over max blood is the
+    // honest measure, and it keeps working while they are down.
+    bool begWhenNearDeath;
+    float nearDeathBlood;
+    // R3.5: how much the temperament moves the number of beatings needed. A
+    // coward yields early; the brave and the honourable make you work.
+    float fearfulResolve;
+    float braveResolve;
+    float honourableResolve;
+    // R2.3 -- roughing up a prisoner in your own cage. A deliberate act with a
+    // cooldown, which is what makes it a choice rather than a grind, and it
+    // knocks out rather than wounding: an accidental corpse is not a mechanic.
+    bool allowBeating;
+    float beatingCooldownHours;
+    float beatingKnockoutSeconds;
+
+    Submission()
+        : countDefeats(true),
+          defeatDebounceHours(0.5f),
+          persistedFloorCount(1),
+          chancePerDefeat(12),
+          maxDefeatChance(45),
+          begWhenNearDeath(true),
+          nearDeathBlood(0.25f),
+          fearfulResolve(0.6f),
+          braveResolve(1.6f),
+          honourableResolve(1.8f),
+          allowBeating(true),
+          beatingCooldownHours(6.0f),
+          beatingKnockoutSeconds(60.0f)
+    {
+    }
+};
+
+// Insistence: what happens when the player keeps asking. Pestering should cost
+// something, and the cost should grow -- a flat penalty makes the fourth ask
+// free once the third has already landed.
+struct Insistence
+{
+    int attemptsBeforeIgnored;
+    // Hours per attempt over the limit, so five asks running cost five times
+    // what one over costs.
+    float baseHours;
+    // Ceiling, so a determined player cannot lock an NPC away for a season.
+    float maxHours;
+    // Quiet for this long and it counts as a new conversation.
+    float forgetAfterHours;
+
+    Insistence()
+        : attemptsBeforeIgnored(3),
+          baseHours(4.0f),
+          maxHours(48.0f),
+          forgetAfterHours(2.0f)
+    {
+    }
+};
+
 // Taming, expressed as how full an animal's stomach has to be before it will
 // follow the player. Every number is a 0..1 fraction of a full belly, so what
 // the player types is what the bar has to reach.
@@ -226,7 +341,24 @@ struct Config
     // Animals use the same engine with faction weight switched off.
     bool animalsEnabled;
 
+    // R1.4 -- faction standing at or above this counts as friendly. Was a
+    // hardcoded 25; the spec asks for 20 and for the player to be able to move it.
+    float friendlyRelation;
+    // R1.1 / R1.2 -- Cheat keeps the ritual (a cage and a moment) and drops
+    // every condition. Turn the cage off to get the old instant behaviour.
+    bool cheatNeedsCage;
+    // Game hours in the cage before a Cheat prisoner calls out. A minute of
+    // game time by default: in Cheat the wait is a gesture, not a price.
+    float cheatHoursCaged;
+    // R4.4 -- how much of the healing the player did counts towards the debt,
+    // as a 0..1 fraction of health restored. Same shape as feeding an animal:
+    // patch someone halfway and it is worth half.
+    float rescueHealWeight;
+
     Prices prices;
+    Chance chance;
+    Insistence insistence;
+    Submission submission;
     Animals animals;
     DialogueIds dialogue;
     Exclusions exclude;
@@ -245,6 +377,10 @@ struct Config
           hailFirstHours(24.0f),
           hailRepeatHours(6.0f),
           hailRepeats(5),
+          friendlyRelation(20.0f),
+          cheatNeedsCage(true),
+          cheatHoursCaged(0.02f),
+          rescueHealWeight(25.0f),
           preset(Preset_Balanced),
           rescueEnabled(true),
           rescuePlayerOnly(true),

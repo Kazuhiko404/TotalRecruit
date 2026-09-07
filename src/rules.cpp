@@ -5,6 +5,7 @@
 #include "surrender.h"
 #include "log.h"
 #include "messages.h"
+#include "defeats.h"
 
 #include <kenshi/CharacterAnimal.h>
 #include <kenshi/CharStats.h>
@@ -94,6 +95,8 @@ struct Condition
     float hunger;
     float health;
     float blood;
+    // Blood as a 0..1 fraction of this character's own maximum. See I3.
+    float bloodFraction;
     // Diagnostics only. These are what the engine reports piecemeal; the
     // verdict never reads them, but the log does when a call looks wrong.
     bool rawUnconscious;
@@ -103,7 +106,7 @@ struct Condition
 
     Condition()
         : dying(false), unconscious(false), starving(false), wounded(false),
-          hunger(0.0f), health(1.0f), blood(1.0f),
+          hunger(0.0f), health(1.0f), blood(1.0f), bloodFraction(1.0f),
           rawUnconscious(false), rawTrauma(false), rawSub50KO(false),
           rawKOTimer(0.0f)
     {
@@ -135,6 +138,18 @@ bool SafeReadCondition(Character* character, Condition* out)
         out->hunger      = medical->hunger;
         out->health      = medical->getOverallHealthRating();
         out->blood       = medical->blood;
+        // I3: the honest measure of how close to death someone is.
+        // getOverallHealthRating reads 0 for anyone unconscious however intact,
+        // so it cannot answer this -- blood over max blood can, and it keeps
+        // working while they are down, which is exactly when it is asked.
+        {
+            const float maxBlood = medical->getMaxBlood();
+            out->bloodFraction = (maxBlood > 0.0f)
+                                     ? (medical->blood / maxBlood)
+                                     : 1.0f;
+            if (out->bloodFraction < 0.0f) out->bloodFraction = 0.0f;
+            if (out->bloodFraction > 1.0f) out->bloodFraction = 1.0f;
+        }
         out->starving    = medical->isReallyHungry() || medical->isHungerKO();
         return true;
     }
@@ -415,14 +430,68 @@ const char* RelationBand(float relation)
 // has no dice, and the reason was save-scumming: a percentage rolled per click
 // is really "click until it works". Seeding from the character means they see a
 // real chance that stays decided once it is decided.
+// Keyed by the engine's handle rather than by the pointer. A Character* is only
+// an address: once that NPC is freed the allocator can hand the same address to
+// somebody else, who then inherits a dead man's cooldown and is told the player
+// has been pestering them.
+//
+// hand carries index AND serial, and the serial is what tells a reused slot
+// apart from the original occupant -- which is exactly the distinction the raw
+// pointer could not make.
+struct CharKey
+{
+    unsigned int index;
+    unsigned int serial;
+
+    CharKey() : index(0), serial(0) {}
+    CharKey(unsigned int i, unsigned int s) : index(i), serial(s) {}
+
+    bool operator<(const CharKey& other) const
+    {
+        if (index != other.index) return index < other.index;
+        return serial < other.serial;
+    }
+};
+
+// Returns false when the handle cannot be read, and every caller treats that as
+// "no record" -- forgetting a cooldown is a smaller failure than applying one
+// to the wrong character.
+bool SafeCharKey(Character* character, CharKey* out)
+{
+    TR_TRY
+    {
+        const hand& self = character->getHandle();
+        out->index  = self.index;
+        out->serial = self.serial;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// The roll has to be the same every time it is asked, or a refusal is just an
+// invitation to ask again -- and once level is a probability rather than a
+// gate, re-rolling would turn a 4% NPC into a matter of patience.
+//
+// The seed used to be the pointer, which is not an identity: it changes when
+// the game is reloaded, so the dice were quietly recast on every load. The
+// handle's index and serial travel with the save, so the same NPC keeps the
+// same answer across sessions.
 bool StableChance(Character* character, int percent)
 {
     if (percent >= 100) return true;
     if (percent <= 0)   return false;
 
-    const unsigned int seed = (unsigned int)((uintptr_t)character >> 4);
-    // Knuth's multiplicative hash, so neighbouring pointers do not land in
-    // neighbouring buckets.
+    CharKey key;
+    if (!SafeCharKey(character, &key))
+    {
+        // Without an identity there is no stable answer to give, and inventing
+        // one that changes per call is worse than refusing.
+        return false;
+    }
+
+    // Knuth's multiplicative hash on both halves, so neighbouring slots do not
+    // land in neighbouring buckets.
+    const unsigned int seed = (key.index * 2654435761u) ^ (key.serial * 40503u);
     return (int)((seed * 2654435761u) % 100u) < percent;
 }
 
@@ -436,15 +505,31 @@ bool StableChance(Character* character, int percent)
 
 // Level gap. Being their equal or better is the strongest single argument the
 // player can make without saying anything.
+// Level is a weight, never a gate. The old shape returned a flat 100 for any
+// player who was level-equal or better, and bottomed out at 10 -- but neither
+// end was ever reached, because two hard doors elsewhere refused outright above
+// a gap of 15 and granted submission outright below -40.
+//
+// Those doors were the only refusals in the mod with no way out: relation,
+// personality and a saved life all counted for nothing against them, and the
+// player's only answer was to go and level up. Now the gap moves the odds and
+// everything else still gets a say.
+//
+// Above the player it costs, below the player it pays, and the bonus is capped
+// so that out-levelling someone is an argument rather than a guarantee.
 int ChanceFromLevelGap(int npcLevel, int playerLevel)
 {
+    const Chance& c = GetConfig().chance;
     const int gap = npcLevel - playerLevel;
-    if (gap <= 0)
+
+    if (gap > 0)
     {
-        return 100;
+        const int chance = 100 - (int)(gap * c.levelGapPenalty);
+        return chance < c.levelGapFloor ? c.levelGapFloor : chance;
     }
-    const int chance = 100 - (gap * 6);
-    return chance < 10 ? 10 : chance;
+
+    const int bonus = (int)((-gap) * c.levelEdgeBonus);
+    return 100 + (bonus > c.levelEdgeCap ? c.levelEdgeCap : bonus);
 }
 
 // Faction standing, as a percentage shift rather than a gate. Relation runs
@@ -487,9 +572,13 @@ struct ChanceInputs
     // Route bonus: how much this particular situation argues for them coming.
     // A saved life is worth more than a conversation.
     int situation;
+    // How many times the player has put them down. Weighted by temperament,
+    // because the same beating does not mean the same thing to a coward and to
+    // someone who intends to die on their feet.
+    int defeats;
 
     ChanceInputs()
-        : npcLevel(1), playerLevel(1), relation(0.0f), haveRelation(false),
+        : npcLevel(1), playerLevel(1), relation(0.0f), haveRelation(false), defeats(0),
           personality(PT_NORMAL), situation(0)
     {
     }
@@ -497,15 +586,82 @@ struct ChanceInputs
 
 // The four terms, clamped. Never 0 and never 100: a floor keeps every route a
 // "not yet" rather than a wall, and a ceiling keeps the roll meaningful.
+// R3.5 -- temperament decides how much a beating is worth. The same three
+// knockouts break a coward and barely register on someone who has already
+// decided to die on their feet, so the count is scaled before it is spent.
+float ResolveMultiplier(int personality)
+{
+    const Submission& sub = GetConfig().submission;
+    switch (personality)
+    {
+    case PT_FEARFUL:
+    case PT_DUMB:
+        return sub.fearfulResolve;
+    case PT_BRAVE:
+        return sub.braveResolve;
+    case PT_HONORABLE:
+        return sub.honourableResolve;
+    default:
+        return 1.0f;
+    }
+}
+
+// R3.2 -- how much having been beaten argues for yielding. Divided by resolve
+// rather than multiplied: a high resolve means each defeat counts for less.
+int ChanceFromDefeats(int defeats, int personality)
+{
+    const Submission& sub = GetConfig().submission;
+    if (defeats <= 0 || !sub.countDefeats)
+    {
+        return 0;
+    }
+
+    const float resolve = ResolveMultiplier(personality);
+    const float raw = (float)(defeats * sub.chancePerDefeat) /
+                      (resolve > 0.01f ? resolve : 1.0f);
+
+    const int value = (int)raw;
+    return value > sub.maxDefeatChance ? sub.maxDefeatChance : value;
+}
+
+// Every term, printed. A single percentage tells you the answer and nothing
+// about why, so when a verdict looks wrong the log has to say which of the four
+// contributions produced it -- that is the whole point of keeping them apart.
+void LogChanceBreakdown(Character* character, const ChanceInputs& in, int total)
+{
+    if (!GetConfig().probeOnClick)
+    {
+        return;
+    }
+
+    char buf[256] = { 0 };
+    _snprintf_s(buf, sizeof(buf), _TRUNCATE,
+                "[chance] level=%d relation=%d personality=%d defeats=%d(x%d) "
+                "situation=%d -> %d%%  (npc %d vs player %d, rel %.0f)",
+                ChanceFromLevelGap(in.npcLevel, in.playerLevel),
+                ChanceFromRelation(in.relation, in.haveRelation),
+                ChanceFromPersonality(in.personality),
+                ChanceFromDefeats(in.defeats, in.personality), in.defeats,
+                in.situation, total, in.npcLevel, in.playerLevel,
+                in.haveRelation ? in.relation : 0.0f);
+    LogInfo(CharacterName(character) + " " + buf);
+}
+
 int JoinChance(const ChanceInputs& in)
 {
     int chance = ChanceFromLevelGap(in.npcLevel, in.playerLevel)
                + ChanceFromRelation(in.relation, in.haveRelation)
                + ChanceFromPersonality(in.personality)
+               + ChanceFromDefeats(in.defeats, in.personality)
                + in.situation;
 
-    if (chance < 5)  chance = 5;
-    if (chance > 95) chance = 95;
+    // Neither end is ever certain. A floor above zero keeps a hopeless case
+    // merely unlikely -- which is what makes relation and personality worth
+    // improving -- and a ceiling below 100 keeps the strongest player from
+    // collecting anyone they point at.
+    const Chance& c = GetConfig().chance;
+    if (chance < c.floor)   chance = c.floor;
+    if (chance > c.ceiling) chance = c.ceiling;
     return chance;
 }
 
@@ -523,44 +679,6 @@ bool SafePlayerMoney(Character* leader, int* out)
 // saw them, which errs towards making the player wait -- the safe direction.
 // It lives only in memory: a reload restarts the clock rather than freeing
 // someone the player never actually held.
-// Keyed by the engine's handle rather than by the pointer. A Character* is only
-// an address: once that NPC is freed the allocator can hand the same address to
-// somebody else, who then inherits a dead man's cooldown and is told the player
-// has been pestering them.
-//
-// hand carries index AND serial, and the serial is what tells a reused slot
-// apart from the original occupant -- which is exactly the distinction the raw
-// pointer could not make.
-struct CharKey
-{
-    unsigned int index;
-    unsigned int serial;
-
-    CharKey() : index(0), serial(0) {}
-    CharKey(unsigned int i, unsigned int s) : index(i), serial(s) {}
-
-    bool operator<(const CharKey& other) const
-    {
-        if (index != other.index) return index < other.index;
-        return serial < other.serial;
-    }
-};
-
-// Returns false when the handle cannot be read, and every caller treats that as
-// "no record" -- forgetting a cooldown is a smaller failure than applying one
-// to the wrong character.
-bool SafeCharKey(Character* character, CharKey* out)
-{
-    TR_TRY
-    {
-        const hand& self = character->getHandle();
-        out->index  = self.index;
-        out->serial = self.serial;
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
 std::map<CharKey, double> g_heldSince;
 
 struct TalkState
@@ -980,7 +1098,7 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
         }
         if (verdict.currency == Currency_Refused)
         {
-            return Say("animal.refused", "*gruÃ±e y retrocede*", character);
+            return Say("animal.refused", "*gruñe y retrocede*", character);
         }
         return Say("animal.calm", "*te observa, quieto*", character);
     }
@@ -1424,11 +1542,44 @@ Verdict Evaluate(Character* character)
 
     const Config& config = GetConfig();
 
-    // Cheat preset keeps the original behaviour: no rules at all.
+    // R1.1 / R1.2 -- Cheat keeps the gesture and drops the price.
+    //
+    // It used to return here for anyone, anywhere, which left nothing of the
+    // ritual: no cage, no wait, no moment where the prisoner decides. The cage
+    // is required now and the wait is a minute of game time, because in Cheat
+    // time is a gesture rather than a cost. Nothing else is asked -- no cats,
+    // no food, no submission, no level, no standing.
     if (config.preset == Preset_Cheat)
     {
+        if (!config.cheatNeedsCage)
+        {
+            verdict.willJoin = true;
+            verdict.reason = Say("cheat.joins", "se une a ti", character);
+            return verdict;
+        }
+
+        if (!IsInPlayerCage(character))
+        {
+            verdict.currency = Currency_Refused;
+            verdict.reason = Say("cheat.needsCage",
+                                 "metelo en una de tus jaulas y hablara enseguida",
+                                 character);
+            return verdict;
+        }
+
+        const float held = HoursHeld(character);
+        if (held < config.cheatHoursCaged)
+        {
+            verdict.currency = Currency_Refused;
+            verdict.reason = Say("cheat.waiting",
+                                 "esta dentro: dale un momento y te llamara",
+                                 character);
+            return verdict;
+        }
+
         verdict.willJoin = true;
-        verdict.reason = "se une a ti";
+        verdict.currency = Currency_None;
+        verdict.reason = Say("cheat.joins", "quiere hablar contigo: se une", character);
         return verdict;
     }
 
@@ -1562,9 +1713,25 @@ Verdict Evaluate(Character* character)
         in.relation     = rescueRelation;
         in.haveRelation = rescueHaveRelation;
         in.personality  = traits.personality;
-        in.situation    = 45;
+        in.defeats      = DefeatCount(character);
+        // R4.4 -- how much of them the player actually put back together.
+        // Bandaging someone and walking off is not the same favour as leaving
+        // them whole, and this is the same shape as feeding an animal: the
+        // fraction restored is the fraction of the argument earned.
+        //
+        // Health is only readable while they are conscious (it reads 0 for
+        // anyone down, whatever their state), so someone still out cold is
+        // credited by blood instead, which stays honest either way.
+        {
+            const float restored = condition.unconscious
+                                       ? condition.bloodFraction
+                                       : (condition.health > 1.0f ? 1.0f : condition.health);
+            in.situation = 45 + (int)(restored * config.rescueHealWeight);
+        }
 
-        if (StableChance(character, JoinChance(in)))
+        const int chance = JoinChance(in);
+        LogChanceBreakdown(character, in, chance);
+        if (StableChance(character, chance))
         {
             verdict.willJoin = true;
             verdict.currency = Currency_None;
@@ -1675,7 +1842,7 @@ Verdict Evaluate(Character* character)
 
         // Allies. The player already knows they are allies -- the cursor goes
         // yellow -- so refusing outright reads as a bug, not as a rule.
-        if (haveRelation && relation >= 25.0f)
+        if (haveRelation && relation >= config.friendlyRelation)
         {
             // Cheat and Balanced-with-easy-mode: being on the same side is
             // enough on its own.
@@ -1697,6 +1864,7 @@ Verdict Evaluate(Character* character)
             // Standing this good is itself an argument.
             in.situation    = 10;
             const int chance = JoinChance(in);
+            LogChanceBreakdown(character, in, chance);
             if (StableChance(character, chance))
             {
                 verdict.willJoin = true;
@@ -1738,12 +1906,11 @@ Verdict Evaluate(Character* character)
 
         // NPC libre: Flujo normal de soborno y negociacion
         // 1. Si el nivel del NPC es muy superior (+15 niveles), ni te escucha (desprecio por debilidad)
-        if (npcLevel - playerLevel > 15)
-        {
-            verdict.currency = Currency_Refused;
-            verdict.reason = "eres demasiado debil comparado con el: ni se molesta en escucharte";
-            return verdict;
-        }
+        // The level gap used to end the conversation here, above a fixed 15.
+        // It was the one refusal in the mod that named no way out: being liked,
+        // being feared, having saved their life -- none of it could answer
+        // "you are too weak". The gap now feeds JoinChance like everything
+        // else, so a stronger NPC is harder to win over rather than sealed off.
 
         // 2. Personalidades honorables o buenas nunca aceptan Cats
         if (traits.personality == PT_HONORABLE || traits.personality == PT_WARM_KIND)
@@ -1774,7 +1941,7 @@ Verdict Evaluate(Character* character)
             return verdict;
         }
 
-        // 4. Acepta soborno dinÃ¡mico
+        // 4. Acepta soborno dinámico
         verdict.currency = Currency_Cats;
         verdict.cats = PriceInCats(character, traits, playerFaction);
 
@@ -1822,12 +1989,31 @@ Verdict Evaluate(Character* character)
         }
     }
 
-    if (playerLevel - npcLevel >= 40)
+    // Overwhelming strength used to be an automatic yes below a gap of -40,
+    // which handed the player anyone they had outgrown -- including the
+    // honourable characters the mod goes out of its way to make expensive.
+    // It is a strong argument now, not a verdict: the edge bonus is already in
+    // JoinChance, and this only adds the weight of being caged and outmatched.
     {
-        verdict.willJoin = true;
-        verdict.currency = Currency_Submission;
-        verdict.reason = "intimidado por tu inmenso poder, se somete sin dudarlo";
-        return verdict;
+        ChanceInputs in;
+        in.npcLevel     = npcLevel;
+        in.playerLevel  = playerLevel;
+        in.relation     = 0.0f;
+        in.haveRelation = false;
+        in.personality  = traits.personality;
+        in.defeats      = DefeatCount(character);
+        in.situation    = config.chance.intimidationBonus;
+
+        const int chance = JoinChance(in);
+        LogChanceBreakdown(character, in, chance);
+        if (StableChance(character, chance))
+        {
+            verdict.willJoin = true;
+            verdict.currency = Currency_Submission;
+            verdict.reason = Say("captive.intimidated",
+                                 "intimidado por tu poder, se somete", character);
+            return verdict;
+        }
     }
 
     verdict.currency = ChooseCurrency(traits, condition, animal);
@@ -1915,7 +2101,7 @@ Verdict Evaluate(Character* character)
             // in a cage and the body's own arguments.
             verdict.reason = Say("unique.zealot",
                                  "no hay dinero que compre lo que cree: "
-                                 "el hambre y las heridas harÃ¡n el trabajo",
+                                 "el hambre y las heridas harán el trabajo",
                                  character);
         }
         else
@@ -2008,8 +2194,11 @@ bool RecordInteraction(Character* character, double nowHours)
         return true;
     }
 
-    // Si pasaron mas de 2 horas de juego desde el ultimo intento, resetea el contador
-    if (nowHours - state.lastHour > 2.0)
+    const Config& config = GetConfig();
+
+    // Long enough between attempts and it is a new conversation, not the same
+    // one continued.
+    if (nowHours - state.lastHour > config.insistence.forgetAfterHours)
     {
         state.attempts = 0;
     }
@@ -2017,10 +2206,18 @@ bool RecordInteraction(Character* character, double nowHours)
     state.lastHour = nowHours;
     state.attempts++;
 
-    // 3 intentos seguidos sin exito provocan que ignore al jugador por 4 horas
-    if (state.attempts >= 3)
+    if (state.attempts >= config.insistence.attemptsBeforeIgnored)
     {
-        state.ignoredUntilHour = nowHours + 4.0;
+        // R2.4 -- the punishment accumulates. Asking five times running is not
+        // the same as asking three, and a flat penalty made pestering free
+        // after the first one landed.
+        const int over = state.attempts - config.insistence.attemptsBeforeIgnored + 1;
+        double hours = config.insistence.baseHours * over;
+        if (hours > config.insistence.maxHours)
+        {
+            hours = config.insistence.maxHours;
+        }
+        state.ignoredUntilHour = nowHours + hours;
         return true;
     }
 

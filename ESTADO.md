@@ -35,7 +35,7 @@ inconsciente; `hunger` no es 0..1. Los headers dan el **tipo**, nunca el
 | **I1** | ¿Los animales tienen personalidad? | ✅ **Jugado** | **Sí, y varía.** Dos Canhuesos: `PT_HONORABLE` y `PT_TRAITOROUS`. No es default del FCS |
 | **I2** | Rango real de `hunger` | ✅ **Jugado** | **0..3, donde 3 es lleno.** Confirmado por tres fuentes independientes |
 | **I3** | Qué señal sirve de "vida restante" | ✅ **Leído** | `blood`/`getMaxBlood()` y `derivedFleshHealthPercent`. Nunca `getOverallHealthRating` |
-| **I4** | ¿Escribir la marca de derrota altera la IA? | ❌ **Pendiente** | **La única sin resolver.** Requiere jugar y observar conducta |
+| **I4** | ¿Escribir la marca de derrota altera la IA? | 🔬 **Instrumentada** | El mod ya escribe la marca y loguea `[I4 before-mark]` / `[I4 after-mark]` con la intención de la IA. Falta jugar y comparar |
 | **I5** | ¿El conteo de intentos sobrevive la recarga? | ✅ **Leído** | **No** — sigue en memoria. El bug de identidad que destapó ya está arreglado (§3) |
 | **I6** | Qué controles acepta el hub | ✅ **Leído** | Mucho más de lo que usamos. Ver §5 |
 
@@ -63,32 +63,32 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
-| R1.1 | Jaula obligatoria | ❌ **Idea** | `Evaluate` retorna en la primera línea con preset Cheat (`rules.cpp:1270`) |
-| R1.2 | Un minuto y avisa | ❌ **Idea** | |
+| R1.1 | Jaula obligatoria | ✅ **Compila** | Cheat exige jaula del jugador. `cheatNeedsCage` lo apaga |
+| R1.2 | Un minuto y avisa | ✅ **Compila** | `cheatHoursCaged` = 0.02 (un minuto de juego) |
 | R1.3 | Cero condiciones más | ✅ **Jugado** | Es lo que hace hoy |
-| R1.4 | Umbral de amistad configurable, default 20 | ❌ **Idea** | Sigue hardcodeado en **25** (`rules.cpp:1520`) |
+| R1.4 | Umbral de amistad configurable, default 20 | ✅ **Compila** | `friendlyRelation`, default **20**. No aplica a Cheat |
 
 ### BALANCED — jaula (§2)
 
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
-| R2.1 | Nivel da chance, no permiso | 🟡 **Parcial** | `JoinChance` existe y corre en aliados y rescate. Pero quedan puertas duras: `>15` no escucha (`1583`), `>=40` se somete (`1667`) |
-| R2.2 | Gap configurable | ❌ **Idea** | El **15** sigue fijo |
-| R2.3 | Castigo en jaula | ❌ **Idea** | Sin implementar |
-| R2.4 | Cooldown acumulativo y configurable | ❌ **Idea** | **3 intentos** y **4 horas** fijos. Sigue sin sobrevivir la recarga (I5), pero ya no confunde identidades |
+| R2.1 | Nivel da chance, no permiso | ✅ **Compila** | **Las dos puertas eliminadas.** El nivel pesa en `JoinChance` y nunca decide solo |
+| R2.2 | Gap configurable | ✅ **Compila** | 7 controles: castigo/piso por nivel, bono/techo por ventaja, piso/techo global, intimidación |
+| R2.3 | Castigo en jaula | ✅ **Compila** | Botón **GOLPEARLO**. Usa `knockoutForceTimer`, no daño real: no puede matarlo. Cooldown configurable |
+| R2.4 | Cooldown acumulativo y configurable | ✅ **Compila** | **Acumulativo**: horas × intentos de más, con techo. 4 controles. Sigue sin sobrevivir recarga (I5) |
 
 ### BALANCED — sumisión (§3)
 
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
-| R3.1 | Rogar por vida baja | ❌ **Idea** | Solo dispara por perder miembro. **I3 ya dio la señal a usar** |
-| R3.2 | Contar veces inconsciente | ❌ **Idea** | |
-| R3.3 | Piso persistente que sobreviva recarga | ❌ **Idea** | **Bloqueado por I4** |
-| R3.4 | Curar y volver a pegar | ❌ **Idea** | |
-| R3.5 | Personalidad decide cuánto aguanta | ❌ **Idea** | |
+| R3.1 | Rogar por vida baja | ✅ **Compila** | Dispara en el knockout usando `blood/getMaxBlood()` (I3). Umbral configurable |
+| R3.2 | Contar veces inconsciente | ✅ **Compila** | Hook a `MedicalSystem::knockout`. Solo cuenta si `lastGuyWhoDefeatedMe` es tuyo |
+| R3.3 | Piso persistente que sobreviva recarga | ✅ **Compila** | Tres capas: marca `LT_SQUAD_LOST_TO_ME_ONCE` (persiste) + conteo de sesión + condición. Pierde precisión, nunca progreso |
+| R3.4 | Curar y volver a pegar | ✅ **Compila** | Sale del contador: curarlo lo despierta, y volver a vencerlo suma otra derrota |
+| R3.5 | Personalidad decide cuánto aguanta | ✅ **Compila** | `ResolveMultiplier`: cobarde 0.6, valiente 1.6, honorable 1.8 |
 | R3.6 | Quién puede comprar su vida | ✅ **Compila** | `CanBuyTheirLife` (`mercy.cpp:88`) |
 | R3.7 | Aceptar / Ignorar / Rechazar | ✅ **Compila** | Botón "IGNORAR" condicional (`mercy.cpp:223`) |
-| R3.8 | Pagar para que lo dejes ir | ❌ **Idea** | P3, no urgente |
+| R3.8 | Pagar para que lo dejes ir | ✅ **Compila** | Ya estaba: `PayTribute` al ignorarlo, solo para quien puede comprar su vida |
 
 ### BALANCED — rescate (§4)
 
@@ -97,7 +97,7 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 | R4.1 | La deuda no obliga | ✅ **Compila** | Usa `JoinChance` con `situation=45` (`rules.cpp:1409`) |
 | R4.2 | Si no se une, te paga | ✅ **Compila** | `PayPartingGift` transfiere lo que lleva. Se cobra **una sola vez**, marcado con `LT_I_SCREWED_THIS_GUY` (persiste en la partida) |
 | R4.3 | La deuda no vence | ✅ **Compila** | `LT_MY_LIFESAVER` persiste en la partida |
-| R4.4 | Cuánto curaste importa | ❌ **Idea** | |
+| R4.4 | Cuánto curaste importa | ✅ **Compila** | `rescueHealWeight` × fracción restaurada. Usa sangre si está inconsciente |
 | R4.5 | Animales solo piden comida | ✅ **Jugado** | |
 
 ### Animales (§5)
@@ -115,9 +115,9 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
-| R6.1 | Todo lo nuevo configurable | 🟡 **Parcial** | Lo de animales sí. Los umbrales viejos (25/15/40/3/4h) no |
+| R6.1 | Todo lo nuevo configurable | ✅ **Compila** | **~75 controles.** No quedan números hardcodeados en las rutas |
 | R6.2 | Preferir el hub | ✅ **Jugado** | 43+ controles |
-| R6.3 | Agrupar el panel | ❌ **Idea** | **I6 confirmó que `register_setting_section` existe** |
+| R6.3 | Agrupar el panel | 🔬 **Instrumentada** | El hub da 160 bytes contra los 72 que declaramos. El log ahora vuelca los slots; llamar a ciegas crashea |
 | R6.4 | Documentar lo que no va al panel | ⚠️ **Mal escrito** | I6 lo desmiente: `register_text_setting` existe, sí puede ir al panel |
 
 ---
@@ -193,25 +193,45 @@ se lleva el proceso — hay que confirmar el layout antes de usar los nuevos.
 
 ## 6. Qué queda pendiente, por prioridad
 
-### Bloquea o rompe
+### Cómo validar lo nuevo, en una partida
 
-*Los dos que había están arreglados.* Ver §3.
+Con `probeOnClick: true` el log dice lo suficiente para cerrar cada punto sin
+adivinar. Buscá estas líneas:
+
+| Qué querés validar | Qué buscar en el log |
+|---|---|
+| **I4** — ¿el tag altera la IA? | `[I4 before-mark]` y `[I4 after-mark]` en la misma línea de tiempo. Si `intendedAggression`, `distress` o `intendsToAttack` cambian entre las dos, el tag mueve la IA |
+| **R2.1/R2.2** — el nivel ya no es puerta | `[chance] level=X relation=Y personality=Z defeats=N(xM) situation=S -> P%` en cada decisión |
+| **R3.2/R3.3** — conteo de derrotas | `defeated by the player (N this session, floor+session=M)` |
+| **R3.1** — rogar por vida baja | En esa misma línea: `blood=0.18 nearDeath=yes` |
+| **R6.3** — slots del hub | `Mod Hub slots (19 of 160 bytes): [0]=fn [1]=fn ...` |
+| **Alimentar** | `Fed X. hunger 1.70 -> 2.10 (credited by plugin)` |
+| **Regalo del rescate** | `X paid the player N cats for the rescue` |
+
+Para I4 concretamente: pegale a un NPC hasta dejarlo inconsciente, mirá las dos
+líneas `[I4 ...]`, y después observalo un rato. Si su facción no cambia de trato
+y no huye distinto, el tag es seguro y **R3.3 queda confirmado**.
 
 ### El orden de REQUISITOS §8
 
-1. **R2.1 completo** — quedan dos puertas duras (`>15`, `>=40`) que deberían ser
-   chance.
-2. **Umbrales sueltos configurables** — R1.4 (25→20), R2.2 (15), R2.4 (3 y 4h).
-   Cambios chicos, efecto inmediato.
-3. **Cheat con jaula** — R1.1 a R1.3. Autocontenido.
-4. **Sumisión** — R3.1 (I3 ya dio la señal), R3.2, R3.5. R3.3 espera a I4.
-5. **R5.4** — meter la personalidad animal al cálculo.
-6. **R6.3** — agrupar el panel, ahora que I6 confirmó que se puede.
+*Todo lo de esta lista está implementado.* Lo que queda:
 
-### Cuando lo demás esté asentado
+1. **Jugarlo.** Nada de lo nuevo pasó de **compila** a **jugado** todavía.
+2. **I4** — dos clicks y un rato de observación, con el log ya puesto.
+3. **R5.4** — meter la personalidad animal al cálculo. Es el único requisito
+   con código pendiente, y es corto: `ChanceFromPersonality` ya existe.
+4. **R6.3** — confirmar el layout del hub con el volcado de slots, y recién ahí
+   llamar a `register_setting_section`.
 
-7. R2.3 (castigo en jaula), R3.4 (curar y repegar), R3.8, R4.4.
-8. **I4** — la única investigación abierta. Solo bloquea R3.3.
+### Riesgos conocidos de esta ronda
+
+- **El botón extra es uno solo.** Si el prisionero tiene hambre y además se le
+  puede pegar, gana la comida. Es una limitación de la ventana, no un olvido.
+- **`knockoutForceTimer` no está probado en juego.** Linkea y es no-virtual,
+  pero nadie lo llamó todavía; si no deja inconsciente a nadie, R2.3 no hace nada.
+- **El conteo de derrotas depende de `lastGuyWhoDefeatedMe`.** Si el motor no lo
+  llena como espero, el contador queda en cero y no se rompe nada — pero R3.2
+  tampoco funciona. El log lo dice de inmediato.
 
 ---
 
