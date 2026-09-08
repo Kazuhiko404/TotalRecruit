@@ -225,6 +225,7 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "friendly_relation", "Relacion amistosa", "Reputacion a partir de la cual te consideran amigo", -100.0f, 100.0f, 5.0f, 0, &c.friendlyRelation);
     regBool(api, mod, "cheat_needs_cage", "Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
     regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame (0.02 = un minuto)", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
+    regInt(api, mod, "rescue_base_bonus", "Rescate: peso de la deuda", "Cuanto pesa haberle salvado la vida, antes de contar la cura", 0, 90, 5, &c.rescueBaseBonus);
     regFloat(api, mod, "rescue_heal_weight", "Rescate: peso de la cura", "Cuanta chance suma haberlo curado del todo", 0.0f, 90.0f, 5.0f, 0, &c.rescueHealWeight);
 
     regInt(api, mod, "insist_attempts", "Insistencia: intentos", "Cuantas veces podes preguntar antes de que te ignore", 1, 20, 1, &c.insistence.attemptsBeforeIgnored);
@@ -233,6 +234,7 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "insist_forget_hours", "Insistencia: olvido", "Horas de silencio tras las que vuelve a empezar de cero", 0.0f, 48.0f, 1.0f, 1, &c.insistence.forgetAfterHours);
 
     // Motor de chance: el nivel pesa, nunca decide solo.
+    regInt(api, mod, "chance_level_base", "Chance: base a nivel parejo", "De cuanto parte la negociacion entre iguales", 0, 100, 5, &c.chance.levelBase);
     regFloat(api, mod, "chance_level_gap_penalty", "Chance: castigo por nivel", "Chance que pierde por cada nivel que el NPC te saca", 0.0f, 20.0f, 0.5f, 1, &c.chance.levelGapPenalty);
     regInt(api, mod, "chance_level_gap_floor", "Chance: piso por nivel", "Chance minima cuando te saca niveles (0 = imposible)", 0, 50, 1, &c.chance.levelGapFloor);
     regFloat(api, mod, "chance_level_edge_bonus", "Chance: bono por ventaja", "Chance que ganas por cada nivel que le sacas", 0.0f, 10.0f, 0.5f, 1, &c.chance.levelEdgeBonus);

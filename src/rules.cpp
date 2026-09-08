@@ -522,14 +522,20 @@ int ChanceFromLevelGap(int npcLevel, int playerLevel)
     const Chance& c = GetConfig().chance;
     const int gap = npcLevel - playerLevel;
 
+    // The base is deliberately well below the ceiling. An earlier version
+    // started at 100 for anyone level-equal, which meant every other term --
+    // personality, relation, defeats -- landed on an already-full number and
+    // vanished into the clamp: a coward and a maniac both came out at 95%.
+    // Starting at a middling number is what gives the rest of the engine room
+    // to matter, which was the whole point of having four terms.
     if (gap > 0)
     {
-        const int chance = 100 - (int)(gap * c.levelGapPenalty);
+        const int chance = c.levelBase - (int)(gap * c.levelGapPenalty);
         return chance < c.levelGapFloor ? c.levelGapFloor : chance;
     }
 
     const int bonus = (int)((-gap) * c.levelEdgeBonus);
-    return 100 + (bonus > c.levelEdgeCap ? c.levelEdgeCap : bonus);
+    return c.levelBase + (bonus > c.levelEdgeCap ? c.levelEdgeCap : bonus);
 }
 
 // Faction standing, as a percentage shift rather than a gate. Relation runs
@@ -1741,7 +1747,7 @@ Verdict Evaluate(Character* character)
             const float restored = condition.unconscious
                                        ? condition.bloodFraction
                                        : (condition.health > 1.0f ? 1.0f : condition.health);
-            in.situation = 45 + (int)(restored * config.rescueHealWeight);
+            in.situation = config.rescueBaseBonus + (int)(restored * config.rescueHealWeight);
         }
 
         const int chance = JoinChance(in);

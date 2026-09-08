@@ -110,6 +110,10 @@ struct Prices
 // is the point: a refusal the player cannot act on is not a rule, it is a wall.
 struct Chance
 {
+    // What an evenly-matched pair starts from, before anything else is said.
+    // Kept well under the ceiling on purpose: start it at 100 and every other
+    // term lands on a full number and disappears into the clamp.
+    int levelBase;
     // Chance lost per level the NPC has over the player.
     float levelGapPenalty;
     // How low the level term can push it. Above zero on purpose: a hopeless
@@ -130,8 +134,9 @@ struct Chance
     int intimidationBonus;
 
     Chance()
-        : levelGapPenalty(6.0f),
-          levelGapFloor(4),
+        : levelBase(45),
+          levelGapPenalty(1.5f),
+          levelGapFloor(2),
           levelEdgeBonus(1.5f),
           levelEdgeCap(40),
           floor(5),
@@ -358,6 +363,9 @@ struct Config
     // R4.4 -- how much of the healing the player did counts towards the debt,
     // as a 0..1 fraction of health restored. Same shape as feeding an animal:
     // patch someone halfway and it is worth half.
+    // How much a saved life argues on its own, before counting how much of
+    // the healing the player actually did.
+    int rescueBaseBonus;
     float rescueHealWeight;
 
     Prices prices;
@@ -385,7 +393,8 @@ struct Config
           friendlyRelation(20.0f),
           cheatNeedsCage(true),
           cheatHoursCaged(0.02f),
-          rescueHealWeight(25.0f),
+          rescueBaseBonus(25),
+          rescueHealWeight(30.0f),
           preset(Preset_Balanced),
           rescueEnabled(true),
           rescuePlayerOnly(true),

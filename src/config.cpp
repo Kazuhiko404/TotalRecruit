@@ -200,6 +200,7 @@ void LoadConfig(const std::string& modDirectory)
     ReadFloat(text, "friendlyRelation", &g_config.friendlyRelation);
     ReadBool(text, "cheatNeedsCage", &g_config.cheatNeedsCage);
     ReadFloat(text, "cheatHoursCaged", &g_config.cheatHoursCaged);
+    ReadInt(text, "rescueBaseBonus", &g_config.rescueBaseBonus);
     ReadFloat(text, "rescueHealWeight", &g_config.rescueHealWeight);
 
     ReadInt(text, "insistenceAttempts", &g_config.insistence.attemptsBeforeIgnored);
@@ -223,6 +224,7 @@ void LoadConfig(const std::string& modDirectory)
     ReadFloat(text, "hungerThreshold", &g_config.prices.hungerThreshold);
     ReadFloat(text, "woundedThreshold", &g_config.prices.woundedThreshold);
 
+    ReadInt(text, "chanceLevelBase", &g_config.chance.levelBase);
     ReadFloat(text, "chanceLevelGapPenalty", &g_config.chance.levelGapPenalty);
     ReadInt(text, "chanceLevelGapFloor", &g_config.chance.levelGapFloor);
     ReadFloat(text, "chanceLevelEdgeBonus", &g_config.chance.levelEdgeBonus);
@@ -340,12 +342,14 @@ bool SaveConfig(const std::string& modDirectory)
     file << "  \"friendlyRelation\": " << g_config.friendlyRelation << ",\n";
     file << "  \"cheatNeedsCage\": " << (g_config.cheatNeedsCage ? "true" : "false") << ",\n";
     file << "  \"cheatHoursCaged\": " << g_config.cheatHoursCaged << ",\n";
+    file << "  \"rescueBaseBonus\": " << g_config.rescueBaseBonus << ",\n";
     file << "  \"rescueHealWeight\": " << g_config.rescueHealWeight << ",\n";
     file << "  \"insistenceAttempts\": " << g_config.insistence.attemptsBeforeIgnored << ",\n";
     file << "  \"insistenceBaseHours\": " << g_config.insistence.baseHours << ",\n";
     file << "  \"insistenceMaxHours\": " << g_config.insistence.maxHours << ",\n";
     file << "  \"insistenceForgetHours\": " << g_config.insistence.forgetAfterHours << ",\n";
 
+    file << "  \"chanceLevelBase\": " << g_config.chance.levelBase << ",\n";
     file << "  \"chanceLevelGapPenalty\": " << g_config.chance.levelGapPenalty << ",\n";
     file << "  \"chanceLevelGapFloor\": " << g_config.chance.levelGapFloor << ",\n";
     file << "  \"chanceLevelEdgeBonus\": " << g_config.chance.levelEdgeBonus << ",\n";
