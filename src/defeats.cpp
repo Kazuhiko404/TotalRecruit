@@ -208,6 +208,14 @@ bool SafeBeatenByPlayer(Character* character, bool* out)
     TR_CATCH { return false; }
 }
 
+// Its own POD-only frame: C2712 counts the std::string the logging below
+// builds, even though it never enters the guard.
+Character* ReadVictim(MedicalSystem* medical)
+{
+    TR_TRY { return medical->me; }
+    TR_CATCH { return NULL; }
+}
+
 void Knockout_hook(MedicalSystem* thisptr, float skill)
 {
     if (g_knockout_orig != NULL)
@@ -220,12 +228,16 @@ void Knockout_hook(MedicalSystem* thisptr, float skill)
         return;
     }
 
-    Character* victim = NULL;
-    TR_TRY { victim = thisptr->me; }
-    TR_CATCH { return; }
-
+    Character* victim = ReadVictim(thisptr);
     if (victim != NULL)
     {
+        // Logged before any filtering, because "the count stayed at zero" has
+        // two very different causes -- the hook never firing, or firing and
+        // being discarded -- and they need opposite fixes.
+        if (GetConfig().probeOnClick)
+        {
+            LogInfo("[defeat-hook] knockout fired for " + CharacterName(victim));
+        }
         NoteDefeat(victim);
     }
 }
@@ -238,16 +250,26 @@ void NoteDefeat(Character* character)
         return;
     }
 
+    const bool trace = GetConfig().probeOnClick;
+
     // The player's own people going down is not a defeat the player inflicted.
     bool mine = false;
     if (SafeIsPlayerCharacter(character, &mine) && mine)
     {
+        if (trace) LogInfo("[defeat-skip] " + CharacterName(character) + ": is yours");
         return;
     }
 
     bool beatenByPlayer = false;
-    if (!SafeBeatenByPlayer(character, &beatenByPlayer) || !beatenByPlayer)
+    const bool readWinner = SafeBeatenByPlayer(character, &beatenByPlayer);
+    if (!readWinner || !beatenByPlayer)
     {
+        if (trace)
+        {
+            LogInfo("[defeat-skip] " + CharacterName(character) + ": " +
+                    (readWinner ? "lastGuyWhoDefeatedMe is not yours"
+                                : "lastGuyWhoDefeatedMe unreadable/empty"));
+        }
         return;
     }
 
@@ -270,6 +292,7 @@ void NoteDefeat(Character* character)
     Record& record = g_defeats[key];
     if (now - record.lastHour < GetConfig().submission.defeatDebounceHours)
     {
+        if (trace) LogInfo("[defeat-skip] " + CharacterName(character) + ": debounced");
         return;
     }
     record.lastHour = now;
@@ -378,6 +401,18 @@ bool SafeIsDown(Character* character, bool* out)
     TR_CATCH { return false; }
 }
 
+// The engine's own predicate. isDown alone is true for anyone who cannot stand,
+// including someone wide awake with a crippled leg.
+bool SafeIsLiterallyOut(Character* character, bool* out)
+{
+    TR_TRY
+    {
+        *out = character->_NV_isLiterallyUnconciousNotPretending();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
 bool CanBeatPrisoner(Character* character, double* outHoursLeft)
 {
     if (outHoursLeft) *outHoursLeft = 0.0;
@@ -447,6 +482,29 @@ bool BeatPrisoner(Character* character, std::string* outMessage)
 
     if (outMessage) *outMessage = CharacterName(character) + ": lo dejaste sin sentido";
     return true;
+}
+
+// A second way in, because MedicalSystem::knockout may not be the call that
+// runs when someone drops: bleeding out, hunger and a leg giving way all end
+// with a body on the floor, and only some of those go through a knockout.
+//
+// So a character seen unconscious is counted too, once per time they go down.
+// The debounce that stops one beating counting twice does the same job here,
+// and NoteDefeat still applies every filter -- this only adds a trigger.
+void NoteIfDown(Character* character)
+{
+    if (character == NULL || !GetConfig().submission.countDefeats)
+    {
+        return;
+    }
+
+    bool down = false;
+    if (!SafeIsLiterallyOut(character, &down) || !down)
+    {
+        return;
+    }
+
+    NoteDefeat(character);
 }
 
 bool InstallDefeatTracking()

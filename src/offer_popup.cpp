@@ -37,6 +37,7 @@ int g_windowWidth = kBaseWidth;
 int g_windowHeight = kBaseHeightNoExtra;
 
 MyGUI::Window* g_root = NULL;
+MyGUI::delegates::IDelegate2<MyGUI::Window*, const std::string&>* g_closeDelegate = NULL;
 MyGUI::Widget* g_client = NULL;
 MyGUI::EditBox* g_text = NULL;
 MyGUI::ImageBox* g_portrait = NULL;
@@ -373,6 +374,35 @@ void SafeLayoutComponents(bool haveAccept, bool haveExtra)
     TR_CATCH { }
 }
 
+// How tall the wrapped text actually is, asked of MyGUI instead of estimated.
+//
+// The estimate it replaces assumed a character width and counted 48 to a line.
+// That is a guess about a font this code never sees, and it was wrong in the
+// generous direction: "Guard Fremp te debe la comida y las curas, y desea
+// unirse a tu grupo." came out as two lines and was drawn as one and a bit,
+// with the rest below the box. Measuring costs one call and cannot be wrong
+// about the font, because it is the font doing the measuring.
+// setCaption builds a UString, so the work sits in a plain function and only
+// the call crosses the guard -- C2712 counts every object in the frame.
+int MeasureText(MyGUI::EditBox* box, const char* text, int width)
+{
+    // Width first: wrapping depends on it, so the size is only meaningful once
+    // the box is as wide as it will be on screen.
+    box->setSize(width, box->getHeight());
+    box->setCaption(text);
+    return box->getTextSize().height;
+}
+
+bool SafeMeasureText(MyGUI::EditBox* box, const char* text, int width, int* outHeight)
+{
+    TR_TRY
+    {
+        *outHeight = MeasureText(box, text, width);
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
 // Word-wrapped, read-only, and never taking focus: a label that happens to be
 // an EditBox because that is the only widget here that wraps.
 bool ConfigureText()
@@ -398,6 +428,7 @@ bool ConfigureText()
 
 void OnAccept(MyGUI::Widget* sender);
 void OnDecline(MyGUI::Widget* sender);
+void OnWindowButton(MyGUI::Window* sender, const std::string& button);
 void OnExtra(MyGUI::Widget* sender);
 
 bool BindButtons()
@@ -405,6 +436,13 @@ bool BindButtons()
     TR_TRY
     {
         g_acceptDelegate = MyGUI::newDelegate(&OnAccept);
+        // Kenshi_WindowCX draws a close cross in its title bar, and nothing was
+        // listening to it: clicking the X did nothing at all, leaving a window
+        // that could only be dismissed by answering it. The cross means the
+        // same as declining -- the player walked away without deciding.
+        g_closeDelegate = MyGUI::newDelegate(&OnWindowButton);
+        g_root->eventWindowButtonPressed += g_closeDelegate;
+
         g_declineDelegate = MyGUI::newDelegate(&OnDecline);
         g_accept->eventMouseButtonClick += g_acceptDelegate;
         g_decline->eventMouseButtonClick += g_declineDelegate;
@@ -431,6 +469,10 @@ void Unbind()
     if (g_extra != NULL && g_extraDelegate != NULL)
     {
         g_extra->eventMouseButtonClick -= g_extraDelegate;
+    }
+    if (g_root != NULL && g_closeDelegate != NULL)
+    {
+        g_root->eventWindowButtonPressed -= g_closeDelegate;
     }
 }
 
@@ -586,6 +628,15 @@ void OnAccept(MyGUI::Widget* /*sender*/)
     if (npc != NULL)
     {
         CompleteOffer(npc, true);
+    }
+}
+
+// MyGUI names the title-bar buttons by their skin; "close" is the cross.
+void OnWindowButton(MyGUI::Window* /*sender*/, const std::string& button)
+{
+    if (button == "close")
+    {
+        OnDecline(NULL);
     }
 }
 
@@ -763,5 +814,6 @@ void ShutdownOfferPopup()
     g_acceptDelegate = NULL;
     g_declineDelegate = NULL;
     g_extraDelegate = NULL;
+    g_closeDelegate = NULL;
 }
 } // namespace totalrecruit

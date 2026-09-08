@@ -1,6 +1,7 @@
 #include "common.h"
 #include "recruit_overlay.h"
 #include "recruit_core.h"
+#include "defeats.h"
 #include "config.h"
 #include "log.h"
 #include "probe.h"
@@ -333,6 +334,11 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
     {
         ProbeCharacter(character);
     }
+
+    // Someone the player finds unconscious was put down by somebody, and the
+    // knockout hook does not fire for every way that happens. Checked here
+    // because this is the moment the player is actually looking at them.
+    NoteIfDown(character);
 
     std::string excluded;
     if (!IsRecruitable(character, &excluded))

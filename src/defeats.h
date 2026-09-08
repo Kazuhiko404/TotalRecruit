@@ -30,6 +30,10 @@ void NoteDefeat(Character* character);
 // How many times, as best we can tell. Never below the persistent floor.
 int DefeatCount(Character* character);
 
+// Counts a defeat if this character is currently out cold. A fallback for the
+// knockouts MedicalSystem::knockout does not cover -- bleeding out among them.
+void NoteIfDown(Character* character);
+
 // R2.3 -- rough up a prisoner in the player's own cage. Returns false with a
 // reason when it is not allowed: too soon, not caged, or already down.
 bool BeatPrisoner(Character* character, std::string* outMessage);
