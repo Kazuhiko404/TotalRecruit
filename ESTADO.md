@@ -72,7 +72,7 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
-| R2.1 | Nivel da chance, no permiso | ✅ **Compila** | **Las dos puertas eliminadas.** El nivel pesa en `JoinChance` y nunca decide solo |
+| R2.1 | Nivel da chance, no permiso | ✅ **Jugado** | Las dos puertas eliminadas. El log muestra el desglose por término |
 | R2.2 | Gap configurable | ✅ **Compila** | 7 controles: castigo/piso por nivel, bono/techo por ventaja, piso/techo global, intimidación |
 | R2.3 | Castigo en jaula | ✅ **Compila** | Botón **GOLPEARLO**. Usa `knockoutForceTimer`, no daño real: no puede matarlo. Cooldown configurable |
 | R2.4 | Cooldown acumulativo y configurable | ✅ **Compila** | **Acumulativo**: horas × intentos de más, con techo. 4 controles. Sigue sin sobrevivir recarga (I5) |
@@ -81,10 +81,10 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
-| R3.1 | Rogar por vida baja | ✅ **Compila** | Dispara en el knockout usando `blood/getMaxBlood()` (I3). Umbral configurable |
-| R3.2 | Contar veces inconsciente | ✅ **Compila** | Hook a `MedicalSystem::knockout`. Solo cuenta si `lastGuyWhoDefeatedMe` es tuyo |
-| R3.3 | Piso persistente que sobreviva recarga | ✅ **Compila** | Tres capas: marca `LT_SQUAD_LOST_TO_ME_ONCE` (persiste) + conteo de sesión + condición. Pierde precisión, nunca progreso |
-| R3.4 | Curar y volver a pegar | ✅ **Compila** | Sale del contador: curarlo lo despierta, y volver a vencerlo suma otra derrota |
+| R3.1 | Rogar por vida baja | ✅ **Jugado** | `blood/getMaxBlood()` (I3). Ahora con guarda de muerte: un cadáver no ruega |
+| R3.2 | Contar veces inconsciente | ✅ **Jugado** | Hook a `knockout` + respaldo por estado. Confirmado: `Grunt Mason (2 this session)` |
+| R3.3 | Piso persistente que sobreviva recarga | ✅ **Compila** | Tres capas. Falta confirmar que sobrevive una recarga real |
+| R3.4 | Curar y volver a pegar | ✅ **Jugado** | `Grunt Mason` llegó a 2 derrotas |
 | R3.5 | Personalidad decide cuánto aguanta | ✅ **Compila** | `ResolveMultiplier`: cobarde 0.6, valiente 1.6, honorable 1.8 |
 | R3.6 | Quién puede comprar su vida | ✅ **Compila** | `CanBuyTheirLife` (`mercy.cpp:88`) |
 | R3.7 | Aceptar / Ignorar / Rechazar | ✅ **Compila** | Botón "IGNORAR" condicional (`mercy.cpp:223`) |
@@ -139,6 +139,10 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 | **Piedad sobre inconscientes** | El veredicto decía "espera a que despierte" y la ventana salía igual | `Evaluate` y `OfferMercy` son dos caminos y solo uno chequeaba |
 | **Precio a alguien tirado en el suelo** | Cotizó 347k a un KO | `proneState=PS_KO` con `isLiterallyUnconcious=no`. El predicado del motor no cubre PS_KO |
 | **El plea sin nombre ni variantes** | *"Piedad. Ya no puedo pelear."* siempre igual | Era una constante hardcodeada, fuera de messages.json |
+| **El botón X no cerraba** | La cruz del título no hacía nada | Nadie escuchaba `eventWindowButtonPressed` |
+| **Texto del popup cortado** | La frase terminaba a media línea | El alto se **estimaba** (48 chars/línea). Ahora MyGUI mide con `getTextSize()` |
+| **La sumisión era inalcanzable** | *"esperá que despierte"*, siempre | Todo el código de sumisión vivía dentro de la rama de jaula |
+| **Testigos de I4 inútiles** | 5 campos idénticos antes y después | Esos campos leen `0` en **42 de 42** muestras. Un testigo que nunca varía no prueba nada |
 
 ---
 
@@ -225,6 +229,43 @@ y no huye distinto, el tag es seguro y **R3.3 queda confirmado**.
 2. **I4** — dos clicks y un rato de observación, con el log ya puesto.
 3. **R6.3** — confirmar el layout del hub con el volcado de slots, y recién ahí
    llamar a `register_setting_section`.
+
+### Lo grande de esta ronda: la sumisión sin jaula
+
+El log lo destapó sin ambigüedad: **19 personajes, todos con
+`inSomething=IN_NOTHING`, y cero líneas de `[chance]`**. El jugador venció al
+mismo hombre cuatro veces y recibió *"inconsciente: espera a que despierte"*
+todas las veces.
+
+La causa era de ubicación, no de números: **todo lo de sumisión estaba cableado
+dentro de la rama de jaula**, y el chequeo de inconsciente cortaba 150 líneas
+antes. La única ruta que la spec describe *sin* jaula era la única que no podía
+ejecutarse.
+
+Ahora la sumisión tiene camino propio, **antes** de ese chequeo. Y el cambio
+conceptual: estar noqueado **no descalifica** una rendición, **es la prueba** de
+que la hubo.
+
+| Sin jaula, herido, mismo nivel | 2 derrotas | 3 | 4 |
+|---|---|---|---|
+| Cobarde / Normal | 95% | 95% | 95% |
+| Valiente | 66% | 73% | 81% |
+| Honorable | 58% | 65% | 71% |
+
+### La barra de estrés
+
+Idea del usuario, y arregla un problema de fondo: **un contador no tiene reloj**
+— vencer a alguien hace un mes argumenta igual que hace una hora, y nada de lo
+que el jugador *deja de hacer* se desgasta.
+
+Los tags del motor son **booleanos**: no se puede guardar "estrés = 47" en un
+personaje. Pero no hace falta — el estrés **ya existe repartido** en `hunger`,
+`worstDamage` y `restedState`, que ya persisten en la partida y ya se recuperan
+solos.
+
+Así que se **deriva**, no se almacena. Le das de comer y baja. Lo curás y baja.
+Lo dejás y sube sola. Mantener a alguien con hambre pasa a ser una decisión que
+hay que sostener, no una casilla que queda marcada.
 
 ### Riesgos conocidos de esta ronda
 
