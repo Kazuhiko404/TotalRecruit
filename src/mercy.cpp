@@ -64,6 +64,22 @@ bool SafeReadPersonality(Character* npc, int* out)
 // What they say while the window is open. Deliberately not branched on
 // personality: the whole point of this route is that the wound outranks the
 // temperament, so a maniac and a coward beg with the same words.
+bool SafeIsBeast(Character* npc, bool* out)
+{
+    TR_TRY { *out = (npc->isAnimal() != NULL); return true; }
+    TR_CATCH { return false; }
+}
+
+bool SafeIsOut(Character* npc, bool* out)
+{
+    TR_TRY
+    {
+        *out = npc->_NV_isLiterallyUnconciousNotPretending();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
 // Dead, bled out, or past saving. blood below zero only happens to a body that
 // has bled out, which is the honest death signal -- isDead alone missed these.
 bool IsBeyondPleading(Character* npc)
@@ -233,6 +249,26 @@ void OfferMercy(Character* npc)
         return;
     }
     if (g_begged.find(npc) != g_begged.end())
+    {
+        return;
+    }
+
+    // An animal has no words to beg with. The plea is written for someone who
+    // can speak, and a pack beast asking for mercy in Spanish is the kind of
+    // thing that breaks the fiction the rest of the mod works to keep. Beasts
+    // are tamed with food, and that path is elsewhere.
+    bool beast = false;
+    if (SafeIsBeast(npc, &beast) && beast)
+    {
+        return;
+    }
+
+    // Nobody negotiates while out cold. The window was opening over
+    // unconscious bodies -- the verdict said "wait until they wake up" and the
+    // plea appeared anyway, because these are two different code paths and
+    // only one of them was checking.
+    bool out = false;
+    if (SafeIsOut(npc, &out) && out)
     {
         return;
     }
