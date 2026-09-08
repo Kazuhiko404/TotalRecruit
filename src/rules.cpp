@@ -599,9 +599,13 @@ struct ChanceInputs
     // because the same beating does not mean the same thing to a coward and to
     // someone who intends to die on their feet.
     int defeats;
+    // They remember the player killing one of theirs. Only reaches here for
+    // temperaments that can be talked round at all -- the rest never get this
+    // far.
+    bool grudge;
 
     ChanceInputs()
-        : npcLevel(1), playerLevel(1), relation(0.0f), haveRelation(false), defeats(0),
+        : npcLevel(1), playerLevel(1), relation(0.0f), haveRelation(false), defeats(0), grudge(false),
           personality(PT_NORMAL), situation(0)
     {
     }
@@ -609,6 +613,24 @@ struct ChanceInputs
 
 // The four terms, clamped. Never 0 and never 100: a floor keeps every route a
 // "not yet" rather than a wall, and a ceiling keeps the roll meaningful.
+// Who cannot be bought off after the player killed one of theirs.
+//
+// Loyalty is the whole of what an honourable or a brave NPC is; forgiving this
+// for cats or for a beating would cost them the only thing the mod says about
+// them. Everyone else remembers it as a grievance, which is a weight rather
+// than a wall -- a traitor never had comrades to avenge, and a cold-blooded one
+// counts the dead as a business loss.
+bool GrudgeIsUnforgivable(int personality)
+{
+    if (!GetConfig().chance.grudgeIsAbsolute)
+    {
+        return false;
+    }
+    return personality == PT_HONORABLE ||
+           personality == PT_BRAVE ||
+           personality == PT_WARM_KIND;
+}
+
 // R3.5 -- temperament decides how much a beating is worth. The same three
 // knockouts break a coward and barely register on someone who has already
 // decided to die on their feet, so the count is scaled before it is spent.
@@ -660,12 +682,13 @@ void LogChanceBreakdown(Character* character, const ChanceInputs& in, int total)
     char buf[256] = { 0 };
     _snprintf_s(buf, sizeof(buf), _TRUNCATE,
                 "[chance] level=%d relation=%d personality=%d defeats=%d(x%d) "
-                "situation=%d -> %d%%  (npc %d vs player %d, rel %.0f)",
+                "situation=%d grudge=-%d -> %d%%  (npc %d vs player %d, rel %.0f)",
                 ChanceFromLevelGap(in.npcLevel, in.playerLevel),
                 ChanceFromRelation(in.relation, in.haveRelation),
                 ChanceFromPersonality(in.personality),
                 ChanceFromDefeats(in.defeats, in.personality), in.defeats,
-                in.situation, total, in.npcLevel, in.playerLevel,
+                in.situation, in.grudge ? GetConfig().chance.grudgePenalty : 0,
+                total, in.npcLevel, in.playerLevel,
                 in.haveRelation ? in.relation : 0.0f);
     LogInfo(CharacterName(character) + " " + buf);
 }
@@ -676,7 +699,8 @@ int JoinChance(const ChanceInputs& in)
                + ChanceFromRelation(in.relation, in.haveRelation)
                + ChanceFromPersonality(in.personality)
                + ChanceFromDefeats(in.defeats, in.personality)
-               + in.situation;
+               + in.situation
+               - (in.grudge ? GetConfig().chance.grudgePenalty : 0);
 
     // Neither end is ever certain. A floor above zero keeps a hopeless case
     // merely unlikely -- which is what makes relation and personality worth
@@ -1710,17 +1734,32 @@ Verdict Evaluate(Character* character)
         return verdict;
     }
 
-    // The one honest no. Unlike faction hatred, this is a reason the player
-    // understands and could have avoided.
+    // The one honest no -- but only for those who have something to keep faith
+    // with. It used to end the conversation for everyone, three hundred lines
+    // before the cage and submission logic ran, so a prisoner beaten twice in
+    // his own cage still answered "you killed one of mine" and nothing could
+    // move him.
+    //
+    // Who holds a grudge is a question about character, not arithmetic. To an
+    // honourable or brave NPC, refusing the person who killed a comrade IS the
+    // thing that defines them, and no amount of beating should buy it off --
+    // for them this stays an absolute no, and the reason names no way out
+    // because there honestly is none. A turncoat or a cold-blooded one never
+    // had comrades, only colleagues: they remember, it costs the player, and it
+    // can still be outweighed.
+    bool grudge = false;
     if (leader != NULL)
     {
-        bool grudge = false;
-        if (SafeMemoryTag(character, leader, LT_KILLED_MY_FRIEND, &grudge) && grudge)
-        {
-            verdict.currency = Currency_Refused;
-            verdict.reason = "se niega: mataste a alguien suyo";
-            return verdict;
-        }
+        SafeMemoryTag(character, leader, LT_KILLED_MY_FRIEND, &grudge);
+    }
+
+    if (grudge && GrudgeIsUnforgivable(traits.personality))
+    {
+        verdict.currency = Currency_Refused;
+        verdict.reason = Say("grudge.never",
+                             "mataste a alguien suyo, y eso no se compra",
+                             character);
+        return verdict;
     }
 
     // Route A -- rescue. Someone you pulled out of the dirt owes you nothing
@@ -2040,6 +2079,7 @@ Verdict Evaluate(Character* character)
         in.haveRelation = false;
         in.personality  = traits.personality;
         in.defeats      = DefeatCount(character);
+        in.grudge       = grudge;
         in.situation    = config.chance.intimidationBonus;
 
         const int chance = JoinChance(in);

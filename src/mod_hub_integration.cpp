@@ -240,6 +240,8 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "chance_level_edge_bonus", "Chance: bono por ventaja", "Chance que ganas por cada nivel que le sacas", 0.0f, 10.0f, 0.5f, 1, &c.chance.levelEdgeBonus);
     regInt(api, mod, "chance_level_edge_cap", "Chance: techo del bono", "Cuanto puede ayudarte como maximo sacarle niveles", 0, 100, 5, &c.chance.levelEdgeCap);
     regInt(api, mod, "chance_floor", "Chance: piso global", "Nunca menos que esto (0 = permitir imposibles)", 0, 50, 1, &c.chance.floor);
+    regInt(api, mod, "chance_grudge_penalty", "Chance: rencor", "Cuanta chance pierde si mataste a alguien suyo", 0, 95, 5, &c.chance.grudgePenalty);
+    regBool(api, mod, "chance_grudge_absolute", "Rencor: honorables no perdonan", "Honorables, valientes y bondadosos rechazan sin importar nada mas", &c.chance.grudgeIsAbsolute);
     regInt(api, mod, "chance_intimidation", "Chance: peso de intimidar", "Cuanto ayuda tenerlo enjaulado y superarlo en nivel", 0, 60, 5, &c.chance.intimidationBonus);
     regInt(api, mod, "chance_ceiling", "Chance: techo global", "Nunca mas que esto (100 = permitir garantias)", 50, 100, 1, &c.chance.ceiling);
 

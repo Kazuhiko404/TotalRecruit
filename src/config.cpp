@@ -232,6 +232,8 @@ void LoadConfig(const std::string& modDirectory)
     ReadInt(text, "chanceFloor", &g_config.chance.floor);
     ReadInt(text, "chanceCeiling", &g_config.chance.ceiling);
     ReadInt(text, "chanceIntimidationBonus", &g_config.chance.intimidationBonus);
+    ReadInt(text, "chanceGrudgePenalty", &g_config.chance.grudgePenalty);
+    ReadBool(text, "chanceGrudgeIsAbsolute", &g_config.chance.grudgeIsAbsolute);
 
     ReadBool(text, "submissionCountDefeats", &g_config.submission.countDefeats);
     ReadFloat(text, "submissionDefeatDebounceHours", &g_config.submission.defeatDebounceHours);

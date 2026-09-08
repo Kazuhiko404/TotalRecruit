@@ -132,6 +132,13 @@ struct Chance
     // Extra weight a caged prisoner gives to being plainly outmatched. This is
     // what replaced the old automatic submission below a gap of -40.
     int intimidationBonus;
+    // Killing one of theirs. For temperaments that can forgive it at all this
+    // is a weight -- the heaviest in the engine -- rather than a closed door.
+    int grudgePenalty;
+    // Whether the honourable, the brave and the kind refuse outright instead.
+    // Loyalty is what defines them; buying it off with cats would cost them the
+    // only thing the mod says about who they are.
+    bool grudgeIsAbsolute;
 
     Chance()
         : levelBase(45),
@@ -141,7 +148,9 @@ struct Chance
           levelEdgeCap(40),
           floor(5),
           ceiling(95),
-          intimidationBonus(15)
+          intimidationBonus(15),
+          grudgePenalty(35),
+          grudgeIsAbsolute(true)
     {
     }
 };

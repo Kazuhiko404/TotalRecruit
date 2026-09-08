@@ -703,5 +703,16 @@
       "mide la diferencia entre ustedes y baja la cabeza",
       "no ve como salir de esta: acepta seguirte"
     ]
+  },
+  "grudge": {
+    "never": [
+      "mataste a alguien suyo, y eso no se compra",
+      "no olvida a los que perdio por tu mano: antes muerto",
+      "le quitaste a alguien: no hay jaula ni oro que lo arregle",
+      "su lealtad va con los muertos que dejaste atras",
+      "puedes vencerlo mil veces: no seguira a quien mato a los suyos",
+      "hay deudas que no se pagan, y esta es una",
+      "mataste a los suyos. Ahi termina la conversacion"
+    ]
   }
 }
