@@ -1753,7 +1753,14 @@ Verdict Evaluate(Character* character)
         SafeMemoryTag(character, leader, LT_KILLED_MY_FRIEND, &grudge);
     }
 
-    if (grudge && GrudgeIsUnforgivable(traits.personality))
+    // Except in the player's own cage. Out in the world the refusal is a free
+    // one -- they walk away, and their honour costs them nothing. Behind bars
+    // it costs them everything, and that is the whole argument the cage makes:
+    // hunger, time and being beaten do not care what someone believes about
+    // themselves. Refusing there would make the honourable the one archetype
+    // the mod's central mechanic cannot touch.
+    if (grudge && GrudgeIsUnforgivable(traits.personality) &&
+        !IsInPlayerCage(character))
     {
         verdict.currency = Currency_Refused;
         verdict.reason = Say("grudge.never",
