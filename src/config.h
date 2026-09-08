@@ -195,6 +195,14 @@ struct Submission
     // R2.3 -- roughing up a prisoner in your own cage. A deliberate act with a
     // cooldown, which is what makes it a choice rather than a grind, and it
     // knocks out rather than wounding: an accidental corpse is not a mechanic.
+    // Route C -- yielding in the field, with no cage involved. How many times
+    // the player has to beat the same person before they will consider giving
+    // in. This is the route the spec asks for and it had become unreachable:
+    // everything that read the defeat count lived behind the cage.
+    int defeatsToBreak;
+    // What a field yield argues on its own. Lower than the cage, because a cage
+    // is a sustained condition and a beating in the open is a single moment.
+    int fieldYieldBonus;
     // The stress bar: how much each kind of hardship contributes, and how much
     // the whole bar can argue for. Derived from present state, so it falls
     // again when the player feeds or treats them -- keeping someone hungry is
@@ -218,6 +226,8 @@ struct Submission
           fearfulResolve(0.6f),
           braveResolve(1.6f),
           honourableResolve(1.8f),
+          defeatsToBreak(2),
+          fieldYieldBonus(10),
           stressFromHunger(0.5f),
           stressFromWounds(0.35f),
           stressFromExhaustion(0.15f),

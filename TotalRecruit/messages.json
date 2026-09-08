@@ -714,5 +714,25 @@
       "hay deudas que no se pagan, y esta es una",
       "mataste a los suyos. Ahi termina la conversacion"
     ]
+  },
+  "submission": {
+    "broken": [
+      "le ganaste demasiadas veces: se rinde y te sigue",
+      "ya no quiere volver a pelear contigo: acepta seguirte",
+      "perdio suficientes veces como para dejar de intentarlo",
+      "se rinde: prefiere caminar a tu lado que enfrentarte otra vez",
+      "aprendio la leccion por las malas y acepta",
+      "no le queda orgullo que defender: se une",
+      "te reconoce como el mas fuerte y baja las armas"
+    ],
+    "notYet": [
+      "todavia no se quiebra: vencelo otra vez, o dejalo sin comer",
+      "aun le queda pelea: gana de nuevo o dejalo pasar hambre",
+      "no es suficiente todavia: insiste o esperalo debilitado",
+      "sigue teniendo agallas: derrotalo una vez mas",
+      "casi, pero no: otra derrota o unos dias sin comer",
+      "no cede aun: vencelo de nuevo o dejalo sin curar",
+      "todavia cree que puede contigo: demostrale que no"
+    ]
   }
 }

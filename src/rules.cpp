@@ -1802,6 +1802,66 @@ Verdict Evaluate(Character* character)
         return verdict;
     }
 
+    // Route C -- submission, and it does not go through a cage.
+    //
+    // This is what beating someone repeatedly is supposed to buy, and it was
+    // unreachable: every route that reads the defeat count lived inside the
+    // cage branch, while the unconscious check below returned first. A player
+    // who beat the same man senseless four times in the field got "wait until
+    // he wakes up", every time, forever.
+    //
+    // Being knocked out is not a bar here -- it is the evidence. They lost to
+    // you, repeatedly, and the wounds are still on them. The offer is made when
+    // they come round, which is exactly how surrender reads in fiction.
+    if (!animal && config.surrenderEnabled &&
+        config.submission.countDefeats &&
+        DefeatCount(character) >= config.submission.defeatsToBreak)
+    {
+        MedicalSnapshot body;
+        SafeReadBody(character, &body);
+
+        // Read locally: this branch runs before the cage path gathers them,
+        // and a beating can happen anywhere.
+        int yieldNpcLevel = 1, yieldPlayerLevel = 1;
+        SafeRoughLevel(character, &yieldNpcLevel);
+        if (leader != NULL)
+        {
+            SafeRoughLevel(leader, &yieldPlayerLevel);
+        }
+        bool yieldUnique = false;
+        SafeIsUnique(character, &yieldUnique);
+
+        ChanceInputs in;
+        in.npcLevel     = yieldNpcLevel;
+        in.playerLevel  = yieldPlayerLevel;
+        in.relation     = 0.0f;
+        in.haveRelation = false;
+        in.personality  = traits.personality;
+        in.defeats      = DefeatCount(character);
+        in.stress       = PrisonerStress(condition, body);
+        in.unique       = yieldUnique;
+        in.situation    = config.submission.fieldYieldBonus;
+
+        const int chance = JoinChance(in);
+        LogChanceBreakdown(character, in, chance);
+        if (StableChance(character, chance))
+        {
+            verdict.willJoin = true;
+            verdict.currency = Currency_Submission;
+            verdict.reason = Say("submission.broken",
+                                 "le ganaste demasiadas veces: se rinde y te sigue",
+                                 character);
+            return verdict;
+        }
+
+        // Not yet, and the reason names what would change it.
+        verdict.currency = Currency_Submission;
+        verdict.reason = Say("submission.notYet",
+                             "todavia no se quiebra: vencelo otra vez, o dejalo sin comer",
+                             character);
+        return verdict;
+    }
+
     // Nobody agrees to anything while they are out cold. A deal struck with an
     // unconscious body is not a deal, and it undercuts the rescue route, whose
     // whole point is that the offer arrives when they wake and find out who

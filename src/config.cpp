@@ -246,6 +246,8 @@ void LoadConfig(const std::string& modDirectory)
     ReadFloat(text, "submissionFearfulResolve", &g_config.submission.fearfulResolve);
     ReadFloat(text, "submissionBraveResolve", &g_config.submission.braveResolve);
     ReadFloat(text, "submissionHonourableResolve", &g_config.submission.honourableResolve);
+    ReadInt(text, "submissionDefeatsToBreak", &g_config.submission.defeatsToBreak);
+    ReadInt(text, "submissionFieldYieldBonus", &g_config.submission.fieldYieldBonus);
     ReadFloat(text, "submissionStressFromHunger", &g_config.submission.stressFromHunger);
     ReadFloat(text, "submissionStressFromWounds", &g_config.submission.stressFromWounds);
     ReadFloat(text, "submissionStressFromExhaustion", &g_config.submission.stressFromExhaustion);
@@ -374,6 +376,8 @@ bool SaveConfig(const std::string& modDirectory)
     file << "  \"submissionFearfulResolve\": " << g_config.submission.fearfulResolve << ",\n";
     file << "  \"submissionBraveResolve\": " << g_config.submission.braveResolve << ",\n";
     file << "  \"submissionHonourableResolve\": " << g_config.submission.honourableResolve << ",\n";
+    file << "  \"submissionDefeatsToBreak\": " << g_config.submission.defeatsToBreak << ",\n";
+    file << "  \"submissionFieldYieldBonus\": " << g_config.submission.fieldYieldBonus << ",\n";
     file << "  \"submissionStressFromHunger\": " << g_config.submission.stressFromHunger << ",\n";
     file << "  \"submissionStressFromWounds\": " << g_config.submission.stressFromWounds << ",\n";
     file << "  \"submissionStressFromExhaustion\": " << g_config.submission.stressFromExhaustion << ",\n";
