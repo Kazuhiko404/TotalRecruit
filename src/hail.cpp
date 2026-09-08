@@ -32,7 +32,12 @@ struct HailState
     HailState() : dueAt(0.0), spoken(0) {}
 };
 
-std::map<Character*, HailState> g_hailed;
+// Keyed by CharKey (rules.h), never by the pointer. This map is swept several
+// times a minute and never pruned, so a raw address would keep a dead
+// character's entry alive and hand it to whoever the allocator puts at that
+// address next -- a stranger inheriting a dead man's hail clock, and a call
+// into a Character that no longer exists.
+std::map<CharKey, HailState> g_hailed;
 
 unsigned int g_nextSweep = 0;
 
@@ -119,18 +124,19 @@ bool SafeIsCharacterType(RootObject* object, Character** out)
 
 // Only captives call out. A free NPC shouting "let us talk" as the player walks
 // past a town would be noise, and the mod has nothing to offer them anyway.
-bool WorthHailing(Character* npc)
+//
+// Cheap: address identity only, no engine traversal. Everything expensive is
+// gated behind this and behind the clock.
+bool CouldEverHail(Character* npc)
 {
-    if (npc == NULL || !IsInPlayerCage(npc))
-    {
-        return false;
-    }
+    return npc != NULL && IsInPlayerCage(npc) && IsRecruitable(npc, NULL);
+}
 
-    if (!IsRecruitable(npc, NULL))
-    {
-        return false;
-    }
-
+// Expensive: the full decision engine -- medical state, faction, personality,
+// talent across 39 stats, price. Asked once per due call rather than once per
+// sweep, because the answer cannot change the outcome until the clock says so.
+bool IsReadyToHail(Character* npc)
+{
     const Verdict verdict = Evaluate(npc);
     return verdict.willJoin;
 }
@@ -163,25 +169,41 @@ void SweepForHails()
             continue;
         }
 
-        if (!WorthHailing(npc))
+        // Cheapest first: most characters in range are not captives at all.
+        if (!CouldEverHail(npc))
+        {
+            continue;
+        }
+
+        CharKey key;
+        if (!SafeCharKey(npc, &key))
         {
             continue;
         }
 
         const Config& config = GetConfig();
-        std::map<Character*, HailState>::iterator found = g_hailed.find(npc);
+        std::map<CharKey, HailState>::iterator found = g_hailed.find(key);
         if (found == g_hailed.end())
         {
             // First sighting only starts the clock. They have just been caged;
             // shouting immediately would make the wait meaningless.
             HailState fresh;
             fresh.dueAt = now + config.hailFirstHours;
-            g_hailed[npc] = fresh;
+            g_hailed[key] = fresh;
             continue;
         }
 
         HailState& state = found->second;
         if (state.spoken >= config.hailRepeats || now < state.dueAt)
+        {
+            continue;
+        }
+
+        // Only now, with the clock already due, is the full verdict worth
+        // computing. Asking it every sweep ran the whole decision engine on
+        // every caged NPC several times a minute for an answer nobody could
+        // act on yet.
+        if (!IsReadyToHail(npc))
         {
             continue;
         }

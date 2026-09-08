@@ -8,7 +8,7 @@
 #include "dialogue_authoring.h"
 #include "log.h"
 
-#include <map>
+#include <set>
 
 namespace totalrecruit
 {
@@ -20,7 +20,11 @@ Character* g_pleading = NULL;
 
 // Everyone who has already begged. A second lost limb is not a second plea --
 // the player already gave their answer.
-std::map<Character*, bool> g_begged;
+//
+// Keyed by CharKey (rules.h) rather than by the pointer: an address is not an
+// identity, and a fresh character at a dead one's address would be marked as
+// having already pleaded and could never open the window.
+std::set<CharKey> g_begged;
 
 bool SafeIsPlayers(Character* npc, bool* out)
 {
@@ -248,7 +252,8 @@ void OfferMercy(Character* npc)
     {
         return;
     }
-    if (g_begged.find(npc) != g_begged.end())
+    CharKey key;
+    if (!SafeCharKey(npc, &key) || g_begged.find(key) != g_begged.end())
     {
         return;
     }
@@ -289,7 +294,7 @@ void OfferMercy(Character* npc)
         return;
     }
 
-    g_begged[npc] = true;
+    g_begged.insert(key);
     g_pleading = npc;
 
     const std::string line = PleaLine(npc);

@@ -469,36 +469,10 @@ const char* RelationBand(float relation)
     return "enemigo";
 }
 
-// A chance the player cannot re-roll by clicking. PLAN.md settled that this mod
-// has no dice, and the reason was save-scumming: a percentage rolled per click
-// is really "click until it works". Seeding from the character means they see a
-// real chance that stays decided once it is decided.
-// Keyed by the engine's handle rather than by the pointer. A Character* is only
-// an address: once that NPC is freed the allocator can hand the same address to
-// somebody else, who then inherits a dead man's cooldown and is told the player
-// has been pestering them.
-//
-// hand carries index AND serial, and the serial is what tells a reused slot
-// apart from the original occupant -- which is exactly the distinction the raw
-// pointer could not make.
-struct CharKey
-{
-    unsigned int index;
-    unsigned int serial;
+} // namespace
 
-    CharKey() : index(0), serial(0) {}
-    CharKey(unsigned int i, unsigned int s) : index(i), serial(s) {}
-
-    bool operator<(const CharKey& other) const
-    {
-        if (index != other.index) return index < other.index;
-        return serial < other.serial;
-    }
-};
-
-// Returns false when the handle cannot be read, and every caller treats that as
-// "no record" -- forgetting a cooldown is a smaller failure than applying one
-// to the wrong character.
+// Declared in rules.h so every per-character map in the mod shares one identity
+// type instead of each file declaring its own.
 bool SafeCharKey(Character* character, CharKey* out)
 {
     TR_TRY
@@ -510,6 +484,13 @@ bool SafeCharKey(Character* character, CharKey* out)
     }
     TR_CATCH { return false; }
 }
+
+namespace
+{
+// A chance the player cannot re-roll by clicking. PLAN.md settled that this mod
+// has no dice, and the reason was save-scumming: a percentage rolled per click
+// is really "click until it works". Seeding from the character means they see a
+// real chance that stays decided once it is decided.
 
 // The roll has to be the same every time it is asked, or a refusal is just an
 // invitation to ask again -- and once level is a probability rather than a

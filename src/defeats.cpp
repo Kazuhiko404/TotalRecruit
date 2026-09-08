@@ -20,23 +20,6 @@ namespace
 
 void (*g_knockout_orig)(MedicalSystem*, float) = NULL;
 
-// Keyed by the handle's index and serial, never by the pointer. An address is
-// not an identity: once a character is freed the allocator can hand the same
-// address to somebody else, who would then inherit a stranger's defeats.
-struct Key
-{
-    unsigned int index;
-    unsigned int serial;
-
-    Key() : index(0), serial(0) {}
-
-    bool operator<(const Key& other) const
-    {
-        if (index != other.index) return index < other.index;
-        return serial < other.serial;
-    }
-};
-
 struct Record
 {
     int count;
@@ -45,19 +28,9 @@ struct Record
     Record() : count(0), lastHour(-1000.0) {}
 };
 
-std::map<Key, Record> g_defeats;
-
-bool SafeKey(Character* character, Key* out)
-{
-    TR_TRY
-    {
-        const hand& self = character->getHandle();
-        out->index  = self.index;
-        out->serial = self.serial;
-        return true;
-    }
-    TR_CATCH { return false; }
-}
+// Keyed by CharKey (rules.h), never by the pointer: an address is not an
+// identity, and a freed character's address is handed to the next one.
+std::map<CharKey, Record> g_defeats;
 
 bool SafeGameHours(double* out)
 {
@@ -283,8 +256,8 @@ void NoteDefeat(Character* character)
         return;
     }
 
-    Key key;
-    if (!SafeKey(character, &key))
+    CharKey key;
+    if (!SafeCharKey(character, &key))
     {
         return;
     }
@@ -354,10 +327,10 @@ int DefeatCount(Character* character)
     }
 
     int session = 0;
-    Key key;
-    if (SafeKey(character, &key))
+    CharKey key;
+    if (SafeCharKey(character, &key))
     {
-        std::map<Key, Record>::const_iterator it = g_defeats.find(key);
+        std::map<CharKey, Record>::const_iterator it = g_defeats.find(key);
         if (it != g_defeats.end())
         {
             session = it->second.count;
@@ -448,14 +421,14 @@ bool CanBeatPrisoner(Character* character, double* outHoursLeft)
         return false;
     }
 
-    Key key;
+    CharKey key;
     double now = 0.0;
-    if (!SafeKey(character, &key) || !SafeGameHours(&now))
+    if (!SafeCharKey(character, &key) || !SafeGameHours(&now))
     {
         return false;
     }
 
-    std::map<Key, Record>::const_iterator it = g_defeats.find(key);
+    std::map<CharKey, Record>::const_iterator it = g_defeats.find(key);
     if (it != g_defeats.end())
     {
         const double since = now - it->second.lastHour;
