@@ -1,6 +1,7 @@
 #include "common.h"
 #include "mercy.h"
 #include "rules.h"
+#include "messages.h"
 #include "config.h"
 #include "recruit_core.h"
 #include "offer_popup.h"
@@ -63,9 +64,40 @@ bool SafeReadPersonality(Character* npc, int* out)
 // What they say while the window is open. Deliberately not branched on
 // personality: the whole point of this route is that the wound outranks the
 // temperament, so a maniac and a coward beg with the same words.
-std::string PleaLine()
+// Dead, bled out, or past saving. blood below zero only happens to a body that
+// has bled out, which is the honest death signal -- isDead alone missed these.
+bool IsBeyondPleading(Character* npc)
 {
-    return "Piedad. Ya no puedo pelear. Hare lo que me pidas.";
+    TR_TRY
+    {
+        if (npc->isDead())
+        {
+            return true;
+        }
+        MedicalSystem* medical = npc->getMedical();
+        if (medical == NULL)
+        {
+            return false;
+        }
+        if (medical->isDead() || medical->isProbablyDying())
+        {
+            return true;
+        }
+        return (medical->blood < 0.0f);
+    }
+    TR_CATCH { return true; }
+}
+
+// The plea, in their own voice. It used to be one hardcoded sentence for
+// everyone, which meant the mod's most dramatic moment was also its most
+// repetitive -- and it never said who was speaking, so a window full of
+// strangers all begged in identical words.
+std::string PleaLine(Character* npc)
+{
+    return Fill(Say("mercy.plea",
+                    "{name}: Piedad. Ya no puedo pelear. Hare lo que me pidas.",
+                    npc),
+                CharacterName(npc), 0, 0);
 }
 
 // Who can buy their way out of this, and who cannot.
@@ -205,6 +237,15 @@ void OfferMercy(Character* npc)
         return;
     }
 
+    // A corpse does not negotiate. Checked here rather than trusting the
+    // exclusion list, because exclude.dead defaults to off and this is not a
+    // preference: two bodies with blood at -0.42 and -0.95 both begged for
+    // mercy, which reads as a bug however the player has configured things.
+    if (IsBeyondPleading(npc))
+    {
+        return;
+    }
+
     // The exclusion list still rules: someone the player has told the mod to
     // leave alone does not get to beg their way in.
     if (!IsRecruitable(npc, NULL))
@@ -215,7 +256,7 @@ void OfferMercy(Character* npc)
     g_begged[npc] = true;
     g_pleading = npc;
 
-    const std::string line = PleaLine();
+    const std::string line = PleaLine(npc);
     SpeakAloud(npc, line);
 
     // Ignoring is only a third option when there is something to ignore. An

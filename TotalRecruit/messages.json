@@ -637,14 +637,13 @@
   },
   "mercy": {
     "plea": [
-      "Piedad. Ya no puedo pelear. Hare lo que me pidas.",
-      "Por favor, basta. No quiero seguir luchando.",
-      "Te lo suplico. Dejame vivir y te servire.",
-      "No quiero morir aqui. Puedo serte util.",
-      "Ya has ganado. No necesitas seguir.",
-      "Por favor... perdoname. Hare lo que sea necesario.",
-      "No tengo fuerzas para continuar. Ten piedad.",
-      "Puedes dejarme marchar y no volvere a molestarte."
+      "{name}: Piedad. Ya no puedo pelear. Hare lo que me pidas.",
+      "{name}: Basta... me rindo. No me mates.",
+      "{name}: Se acabo. Hare lo que quieras, pero dejame vivir.",
+      "{name}: No puedo seguir. Te lo suplico.",
+      "{name}: Ya no me queda nada. Ten piedad.",
+      "{name}: Para... por favor. Me tienes.",
+      "{name}: No vale la pena morir por esto. Me rindo."
     ],
     "spared": [
       "Gracias... no lo olvidare.",

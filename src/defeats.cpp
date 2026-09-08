@@ -164,11 +164,12 @@ bool SafeIsPlayerCharacter(Character* character, bool* out)
 // so the knockout is the moment to ask. Blood over max blood is the measure:
 // getOverallHealthRating returns 0 for anyone unconscious however intact, and
 // this is asked precisely about characters who are down.
-bool SafeNearDeath(Character* character, bool* out, float* outFraction)
+bool SafeNearDeath(Character* character, bool* out, float* outFraction, bool* outDead)
 {
     TR_TRY
     {
         *out = false;
+        *outDead = false;
         *outFraction = 1.0f;
         MedicalSystem* medical = character->getMedical();
         if (medical == NULL)
@@ -182,7 +183,16 @@ bool SafeNearDeath(Character* character, bool* out, float* outFraction)
         }
         const float fraction = medical->blood / maxBlood;
         *outFraction = fraction;
-        *out = (fraction <= GetConfig().submission.nearDeathBlood);
+
+        // Negative blood is a body that has bled out -- the one honest signal
+        // for actual death, per the notes. Without this check the begging
+        // fired for corpses: two bodies at -0.42 and -0.95 both asked for
+        // mercy, which is the opposite of what "close to death" means.
+        *outDead = (fraction < 0.0f) || character->isDead() ||
+                   medical->isProbablyDying();
+
+        *out = !(*outDead) &&
+               (fraction <= GetConfig().submission.nearDeathBlood);
         return true;
     }
     TR_CATCH { return false; }
@@ -314,20 +324,22 @@ void NoteDefeat(Character* character)
     }
 
     bool nearDeath = false;
+    bool alreadyGone = false;
     float bloodFraction = 1.0f;
-    SafeNearDeath(character, &nearDeath, &bloodFraction);
+    SafeNearDeath(character, &nearDeath, &bloodFraction, &alreadyGone);
 
     std::ostringstream note;
     note << CharacterName(character) << " defeated by the player ("
          << record.count << " this session, floor+session="
          << DefeatCount(character) << ") blood=" << bloodFraction
-         << " nearDeath=" << (nearDeath ? "yes" : "no");
+         << " nearDeath=" << (nearDeath ? "yes" : "no")
+         << " dead=" << (alreadyGone ? "yes" : "no");
     LogInfo(note.str());
 
     // R3.1: close enough to death to plead. The limb-loss path already opens
     // the same window from its own event; this covers bleeding out, which the
     // engine announces to nobody.
-    if (nearDeath && GetConfig().submission.begWhenNearDeath &&
+    if (nearDeath && !alreadyGone && GetConfig().submission.begWhenNearDeath &&
         GetConfig().surrenderEnabled)
     {
         OfferMercy(character);
