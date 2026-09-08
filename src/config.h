@@ -129,9 +129,14 @@ struct Chance
     // in either direction is what turns a negotiation back into a gate.
     int floor;
     int ceiling;
-    // Extra weight a caged prisoner gives to being plainly outmatched. This is
-    // what replaced the old automatic submission below a gap of -40.
+    // What being locked in the player's cage is worth on its own. This is the
+    // mod's central mechanic, so it argues loudly: an ordinary prisoner should
+    // come round on the first or second try, the way Recruit Prisoners does it.
     int intimidationBonus;
+    // Named characters are the one thing there is no second chance at, so they
+    // cost roughly twice the work of an ordinary prisoner -- without ever
+    // becoming impossible.
+    int uniquePenalty;
     // Killing one of theirs. For temperaments that can forgive it at all this
     // is a weight -- the heaviest in the engine -- rather than a closed door.
     int grudgePenalty;
@@ -149,7 +154,8 @@ struct Chance
           floor(5),
           ceiling(95),
           intimidationBonus(15),
-          grudgePenalty(35),
+          uniquePenalty(25),
+          grudgePenalty(20),
           grudgeIsAbsolute(true)
     {
     }
@@ -189,6 +195,14 @@ struct Submission
     // R2.3 -- roughing up a prisoner in your own cage. A deliberate act with a
     // cooldown, which is what makes it a choice rather than a grind, and it
     // knocks out rather than wounding: an accidental corpse is not a mechanic.
+    // The stress bar: how much each kind of hardship contributes, and how much
+    // the whole bar can argue for. Derived from present state, so it falls
+    // again when the player feeds or treats them -- keeping someone hungry is
+    // a choice that has to be maintained, not a box that stays ticked.
+    float stressFromHunger;
+    float stressFromWounds;
+    float stressFromExhaustion;
+    int maxStressChance;
     bool allowBeating;
     float beatingCooldownHours;
     float beatingKnockoutSeconds;
@@ -204,6 +218,10 @@ struct Submission
           fearfulResolve(0.6f),
           braveResolve(1.6f),
           honourableResolve(1.8f),
+          stressFromHunger(0.5f),
+          stressFromWounds(0.35f),
+          stressFromExhaustion(0.15f),
+          maxStressChance(45),
           allowBeating(true),
           beatingCooldownHours(6.0f),
           beatingKnockoutSeconds(60.0f)

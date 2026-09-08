@@ -86,6 +86,16 @@ bool SafeReadTraits(Character* character, Traits* out)
     TR_CATCH { return false; }
 }
 
+// The raw numbers behind the stress bar, kept apart from Condition because they
+// are only ever read together and only inside the cage.
+struct MedicalSnapshot
+{
+    float worstDamage;
+    float restedState;
+
+    MedicalSnapshot() : worstDamage(0.0f), restedState(1.0f) {}
+};
+
 struct Condition
 {
     bool dying;
@@ -112,6 +122,22 @@ struct Condition
     {
     }
 };
+
+bool SafeReadBody(Character* character, MedicalSnapshot* out)
+{
+    TR_TRY
+    {
+        MedicalSystem* medical = character->getMedical();
+        if (medical == NULL)
+        {
+            return false;
+        }
+        out->worstDamage = medical->worstDamage;
+        out->restedState = medical->restedState;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
 
 bool SafeReadCondition(Character* character, Condition* out)
 {
@@ -595,6 +621,8 @@ struct ChanceInputs
     // Route bonus: how much this particular situation argues for them coming.
     // A saved life is worth more than a conversation.
     int situation;
+    // How worn down they are right now, 0..1. See PrisonerStress.
+    float stress;
     // How many times the player has put them down. Weighted by temperament,
     // because the same beating does not mean the same thing to a coward and to
     // someone who intends to die on their feet.
@@ -603,9 +631,12 @@ struct ChanceInputs
     // temperaments that can be talked round at all -- the rest never get this
     // far.
     bool grudge;
+    // A named character. There is only one of them and no second attempt, so
+    // they cost more work than anyone else at the same level.
+    bool unique;
 
     ChanceInputs()
-        : npcLevel(1), playerLevel(1), relation(0.0f), haveRelation(false), defeats(0), grudge(false),
+        : npcLevel(1), playerLevel(1), relation(0.0f), haveRelation(false), defeats(0), stress(0.0f), grudge(false), unique(false),
           personality(PT_NORMAL), situation(0)
     {
     }
@@ -631,6 +662,47 @@ bool GrudgeIsUnforgivable(int personality)
            personality == PT_WARM_KIND;
 }
 
+// How worn down a prisoner is, 0..1, read from the state the engine already
+// keeps rather than from a tally of the player's actions.
+//
+// A count of defeats is the right measure for the fight that put them in the
+// cage, and the wrong one for the cage itself: beating someone a month ago
+// counts exactly as much as beating them an hour ago, and nothing the player
+// stops doing ever wears off. What actually breaks a prisoner is the present
+// -- hunger that has not been answered, wounds that have not been treated,
+// sleep that has not been had -- and all three of those are already saved with
+// the game and already recover on their own.
+//
+// So this is derived, never stored. Feed them and it falls. Treat their wounds
+// and it falls. Leave them and it climbs by itself, which is what makes the
+// cage a place where time is on the player's side.
+float PrisonerStress(const Condition& condition, const MedicalSnapshot& body)
+{
+    const Submission& sub = GetConfig().submission;
+
+    // Hunger runs 0..3 counting fullness, so an empty stomach is the top of
+    // this term rather than the bottom.
+    const float starved = 1.0f - HungerToFullness01(condition.hunger);
+
+    // worstDamage is the state of whichever part is in the worst shape.
+    float hurt = body.worstDamage;
+    if (hurt < 0.0f) hurt = 0.0f;
+    if (hurt > 1.0f) hurt = 1.0f;
+
+    // restedState counts rest, so exhaustion is its inverse.
+    float tired = 1.0f - body.restedState;
+    if (tired < 0.0f) tired = 0.0f;
+    if (tired > 1.0f) tired = 1.0f;
+
+    float stress = starved * sub.stressFromHunger
+                 + hurt    * sub.stressFromWounds
+                 + tired   * sub.stressFromExhaustion;
+
+    if (stress < 0.0f) stress = 0.0f;
+    if (stress > 1.0f) stress = 1.0f;
+    return stress;
+}
+
 // R3.5 -- temperament decides how much a beating is worth. The same three
 // knockouts break a coward and barely register on someone who has already
 // decided to die on their feet, so the count is scaled before it is spent.
@@ -649,6 +721,22 @@ float ResolveMultiplier(int personality)
     default:
         return 1.0f;
     }
+}
+
+// What being worn down argues for, divided by resolve like the defeat count:
+// the same empty stomach means less to someone who intends to outlast you.
+int ChanceFromStress(float stress, int personality)
+{
+    const Submission& sub = GetConfig().submission;
+    if (stress <= 0.0f)
+    {
+        return 0;
+    }
+    const float resolve = ResolveMultiplier(personality);
+    const float raw = (stress * sub.maxStressChance) /
+                      (resolve > 0.01f ? resolve : 1.0f);
+    const int value = (int)raw;
+    return value > sub.maxStressChance ? sub.maxStressChance : value;
 }
 
 // R3.2 -- how much having been beaten argues for yielding. Divided by resolve
@@ -682,12 +770,15 @@ void LogChanceBreakdown(Character* character, const ChanceInputs& in, int total)
     char buf[256] = { 0 };
     _snprintf_s(buf, sizeof(buf), _TRUNCATE,
                 "[chance] level=%d relation=%d personality=%d defeats=%d(x%d) "
-                "situation=%d grudge=-%d -> %d%%  (npc %d vs player %d, rel %.0f)",
+                "situation=%d stress=%d(%.0f%%) grudge=-%d unique=-%d -> %d%%  (npc %d vs player %d, rel %.0f)",
                 ChanceFromLevelGap(in.npcLevel, in.playerLevel),
                 ChanceFromRelation(in.relation, in.haveRelation),
                 ChanceFromPersonality(in.personality),
                 ChanceFromDefeats(in.defeats, in.personality), in.defeats,
-                in.situation, in.grudge ? GetConfig().chance.grudgePenalty : 0,
+                in.situation, ChanceFromStress(in.stress, in.personality),
+                in.stress * 100.0f,
+                in.grudge ? GetConfig().chance.grudgePenalty : 0,
+                in.unique ? GetConfig().chance.uniquePenalty : 0,
                 total, in.npcLevel, in.playerLevel,
                 in.haveRelation ? in.relation : 0.0f);
     LogInfo(CharacterName(character) + " " + buf);
@@ -699,8 +790,10 @@ int JoinChance(const ChanceInputs& in)
                + ChanceFromRelation(in.relation, in.haveRelation)
                + ChanceFromPersonality(in.personality)
                + ChanceFromDefeats(in.defeats, in.personality)
+               + ChanceFromStress(in.stress, in.personality)
                + in.situation
-               - (in.grudge ? GetConfig().chance.grudgePenalty : 0);
+               - (in.grudge ? GetConfig().chance.grudgePenalty : 0)
+               - (in.unique ? GetConfig().chance.uniquePenalty : 0);
 
     // Neither end is ever certain. A floor above zero keeps a hopeless case
     // merely unlikely -- which is what makes relation and personality worth
@@ -2085,8 +2178,17 @@ Verdict Evaluate(Character* character)
         in.relation     = 0.0f;
         in.haveRelation = false;
         in.personality  = traits.personality;
+        // Defeats are what it took to put them in here, and they stop
+        // accumulating once the door shuts -- there is nobody left to beat in a
+        // fight. Inside, the argument is the stress bar: hunger nobody
+        // answered, wounds nobody treated, sleep nobody allowed. Both count,
+        // but the cage is where the second one does the work.
         in.defeats      = DefeatCount(character);
+        MedicalSnapshot body;
+        SafeReadBody(character, &body);
+        in.stress       = PrisonerStress(condition, body);
         in.grudge       = grudge;
+        in.unique       = unique;
         in.situation    = config.chance.intimidationBonus;
 
         const int chance = JoinChance(in);

@@ -240,9 +240,10 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "chance_level_edge_bonus", "Chance: bono por ventaja", "Chance que ganas por cada nivel que le sacas", 0.0f, 10.0f, 0.5f, 1, &c.chance.levelEdgeBonus);
     regInt(api, mod, "chance_level_edge_cap", "Chance: techo del bono", "Cuanto puede ayudarte como maximo sacarle niveles", 0, 100, 5, &c.chance.levelEdgeCap);
     regInt(api, mod, "chance_floor", "Chance: piso global", "Nunca menos que esto (0 = permitir imposibles)", 0, 50, 1, &c.chance.floor);
+    regInt(api, mod, "chance_unique_penalty", "Chance: castigo a unicos", "Cuanto mas cuesta reclutar a un personaje con nombre", 0, 90, 5, &c.chance.uniquePenalty);
     regInt(api, mod, "chance_grudge_penalty", "Chance: rencor", "Cuanta chance pierde si mataste a alguien suyo", 0, 95, 5, &c.chance.grudgePenalty);
     regBool(api, mod, "chance_grudge_absolute", "Rencor: honorables no perdonan", "Honorables, valientes y bondadosos rechazan sin importar nada mas", &c.chance.grudgeIsAbsolute);
-    regInt(api, mod, "chance_intimidation", "Chance: peso de intimidar", "Cuanto ayuda tenerlo enjaulado y superarlo en nivel", 0, 60, 5, &c.chance.intimidationBonus);
+    regInt(api, mod, "chance_intimidation", "Chance: peso de intimidar", "Cuanto pesa tenerlo encerrado en tu jaula", 0, 60, 5, &c.chance.intimidationBonus);
     regInt(api, mod, "chance_ceiling", "Chance: techo global", "Nunca mas que esto (100 = permitir garantias)", 50, 100, 1, &c.chance.ceiling);
 
     // Sumision: cuanto aguanta antes de ceder.
@@ -257,6 +258,10 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "sub_brave_resolve", "Sumision: aguante valiente", "Multiplica lo que aguanta un valiente", 0.1f, 4.0f, 0.1f, 1, &c.submission.braveResolve);
     regFloat(api, mod, "sub_honourable_resolve", "Sumision: aguante honorable", "Multiplica lo que aguanta un honorable", 0.1f, 4.0f, 0.1f, 1, &c.submission.honourableResolve);
 
+    regFloat(api, mod, "sub_stress_hunger", "Estres: peso del hambre", "Cuanto pesa el hambre en quebrarlo", 0.0f, 1.0f, 0.05f, 2, &c.submission.stressFromHunger);
+    regFloat(api, mod, "sub_stress_wounds", "Estres: peso de las heridas", "Cuanto pesan las heridas sin curar", 0.0f, 1.0f, 0.05f, 2, &c.submission.stressFromWounds);
+    regFloat(api, mod, "sub_stress_tired", "Estres: peso del agotamiento", "Cuanto pesa no dejarlo descansar", 0.0f, 1.0f, 0.05f, 2, &c.submission.stressFromExhaustion);
+    regInt(api, mod, "sub_max_stress", "Estres: chance maxima", "Cuanta chance puede sumar la barra entera", 0, 90, 5, &c.submission.maxStressChance);
     regBool(api, mod, "sub_allow_beating", "Sumision: permitir golpear", "Deja castigar al prisionero en tu jaula", &c.submission.allowBeating);
     regFloat(api, mod, "sub_beating_cooldown", "Sumision: horas entre golpizas", "Horas de juego antes de poder volver a golpearlo", 0.5f, 48.0f, 0.5f, 1, &c.submission.beatingCooldownHours);
     regFloat(api, mod, "sub_beating_ko_seconds", "Sumision: segundos inconsciente", "Cuanto queda fuera de combate tras la golpiza", 5.0f, 600.0f, 5.0f, 0, &c.submission.beatingKnockoutSeconds);

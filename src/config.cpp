@@ -233,6 +233,7 @@ void LoadConfig(const std::string& modDirectory)
     ReadInt(text, "chanceCeiling", &g_config.chance.ceiling);
     ReadInt(text, "chanceIntimidationBonus", &g_config.chance.intimidationBonus);
     ReadInt(text, "chanceGrudgePenalty", &g_config.chance.grudgePenalty);
+    ReadInt(text, "chanceUniquePenalty", &g_config.chance.uniquePenalty);
     ReadBool(text, "chanceGrudgeIsAbsolute", &g_config.chance.grudgeIsAbsolute);
 
     ReadBool(text, "submissionCountDefeats", &g_config.submission.countDefeats);
@@ -245,6 +246,10 @@ void LoadConfig(const std::string& modDirectory)
     ReadFloat(text, "submissionFearfulResolve", &g_config.submission.fearfulResolve);
     ReadFloat(text, "submissionBraveResolve", &g_config.submission.braveResolve);
     ReadFloat(text, "submissionHonourableResolve", &g_config.submission.honourableResolve);
+    ReadFloat(text, "submissionStressFromHunger", &g_config.submission.stressFromHunger);
+    ReadFloat(text, "submissionStressFromWounds", &g_config.submission.stressFromWounds);
+    ReadFloat(text, "submissionStressFromExhaustion", &g_config.submission.stressFromExhaustion);
+    ReadInt(text, "submissionMaxStressChance", &g_config.submission.maxStressChance);
     ReadBool(text, "submissionAllowBeating", &g_config.submission.allowBeating);
     ReadFloat(text, "submissionBeatingCooldownHours", &g_config.submission.beatingCooldownHours);
     ReadFloat(text, "submissionBeatingKnockoutSeconds", &g_config.submission.beatingKnockoutSeconds);
@@ -369,6 +374,10 @@ bool SaveConfig(const std::string& modDirectory)
     file << "  \"submissionFearfulResolve\": " << g_config.submission.fearfulResolve << ",\n";
     file << "  \"submissionBraveResolve\": " << g_config.submission.braveResolve << ",\n";
     file << "  \"submissionHonourableResolve\": " << g_config.submission.honourableResolve << ",\n";
+    file << "  \"submissionStressFromHunger\": " << g_config.submission.stressFromHunger << ",\n";
+    file << "  \"submissionStressFromWounds\": " << g_config.submission.stressFromWounds << ",\n";
+    file << "  \"submissionStressFromExhaustion\": " << g_config.submission.stressFromExhaustion << ",\n";
+    file << "  \"submissionMaxStressChance\": " << g_config.submission.maxStressChance << ",\n";
     file << "  \"submissionAllowBeating\": " << (g_config.submission.allowBeating ? "true" : "false") << ",\n";
     file << "  \"submissionBeatingCooldownHours\": " << g_config.submission.beatingCooldownHours << ",\n";
     file << "  \"submissionBeatingKnockoutSeconds\": " << g_config.submission.beatingKnockoutSeconds << ",\n";
