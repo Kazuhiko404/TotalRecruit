@@ -129,7 +129,17 @@ bool SafeReadCondition(Character* character, Condition* out)
         // set for a crippled limb, so an NPC walking around with a lost arm
         // was reported as asleep and could never be recruited. _NV_ because
         // the virtual cannot be resolved from a plugin (see notes S11).
-        out->unconscious = character->_NV_isLiterallyUnconciousNotPretending();
+        // PS_KO is added because the engine's own predicate misses it: a level
+        // 77 character measured isDown=yes, proneState=PS_KO and
+        // isLiterallyUnconcious=no at the same time, so the mod quoted him a
+        // price of 347k cats while he lay on the floor. Being knocked out is
+        // the prone state saying so, whatever the predicate thinks.
+        //
+        // PS_PLAYING_DEAD stays out of this on purpose -- someone faking it is
+        // awake, and treating the fake as real is how the player farms
+        // recruits off people who never went down.
+        out->unconscious = character->_NV_isLiterallyUnconciousNotPretending() ||
+                           (character->getProneState() == PS_KO);
         // Kept only as corroboration for the log, never as the verdict.
         out->rawUnconscious = medical->isUnconcious();
         out->rawTrauma      = medical->isInBloodlossTrauma();
@@ -218,14 +228,21 @@ bool SafeIsAnimal(Character* character, bool* out)
 const float kHungerFull  = 3.0f;
 const float kHungerEmpty = 0.0f;
 
-// Whether this character belongs to an organisation of people rather than
-// roaming loose. Kenshi keeps wildlife in bookkeeping factions it flags as not
-// real; anything owned sits in a genuine faction.
+// Whether this animal belongs to an organisation of people rather than roaming
+// loose.
 //
-// Measured on three animals before being trusted: a bonedog in "Wild Dogs" read
+// Measured before being trusted: a bonedog in "Wild Dogs" read
 // notARealFaction=yes, while a Bone Mutt in the Holy Nation Outlaws and a pack
 // beast in the Viera Tribes both read no -- and the Bone Mutt had even
 // inherited its owners' OT_MILITARY type.
+//
+// A later session narrowed what the flag actually means: "Matones de Bar",
+// "Orphans" and "Rogue Traders" all read notARealFaction=yes and are entirely
+// human. So it does not mark wildlife -- it marks a loose band with no standing
+// organisation behind it. That still answers the question being asked here,
+// because an animal in such a band has no owner either, but only because this
+// is reached for animals alone. It is not a wildlife test and must not be
+// reused as one.
 //
 // The player's own animals are excluded because they are already home.
 bool SafeBelongsToRealFaction(Character* character, bool* out)

@@ -35,7 +35,7 @@ inconsciente; `hunger` no es 0..1. Los headers dan el **tipo**, nunca el
 | **I1** | ¿Los animales tienen personalidad? | ✅ **Jugado** | **Sí, y varía.** Dos Canhuesos: `PT_HONORABLE` y `PT_TRAITOROUS`. No es default del FCS |
 | **I2** | Rango real de `hunger` | ✅ **Jugado** | **0..3, donde 3 es lleno.** Confirmado por tres fuentes independientes |
 | **I3** | Qué señal sirve de "vida restante" | ✅ **Leído** | `blood`/`getMaxBlood()` y `derivedFleshHealthPercent`. Nunca `getOverallHealthRating` |
-| **I4** | ¿Escribir la marca de derrota altera la IA? | 🔬 **Instrumentada** | El mod ya escribe la marca y loguea `[I4 before-mark]` / `[I4 after-mark]` con la intención de la IA. Falta jugar y comparar |
+| **I4** | ¿Escribir la marca de derrota altera la IA? | 🔬 **Instrumentada (2º intento)** | El primer set de testigos era inútil: los 5 campos leían 0 en **42 de 42** muestras, NPCs despiertos incluidos. Ahora mide relación de facción, que sí varía |
 | **I5** | ¿El conteo de intentos sobrevive la recarga? | ✅ **Leído** | **No** — sigue en memoria. El bug de identidad que destapó ya está arreglado (§3) |
 | **I6** | Qué controles acepta el hub | ✅ **Leído** | Mucho más de lo que usamos. Ver §5 |
 
@@ -134,6 +134,11 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 | Lógica duplicada | — | Los animales en jaula tenían su propia copia de la aritmética de comidas |
 | **Regalo prometido y no entregado** | El rescatado decía *"te deja algo en pago"* y no daba nada | `owesGift` se marcaba y **nadie lo leía**. Ahora `PayPartingGift` transfiere con `Ownerships::addMoney` |
 | **Cooldown heredado de un muerto** | Invisible hasta que pasa | Los mapas usaban `Character*` crudo como clave. Ahora usan `CharKey{index, serial}` del `hand` |
+| **Cadáveres rogando por su vida** | Ventana de piedad sobre dos muertos | `blood` negativo (−0.42, −0.95) pasaba el umbral de "vida baja". Faltaba preguntar si ya estaba muerto |
+| **Un animal hablando en español** | Bestia de Carga abriendo la ventana de piedad | `mercy.cpp` no filtraba animales en ningún lado |
+| **Piedad sobre inconscientes** | El veredicto decía "espera a que despierte" y la ventana salía igual | `Evaluate` y `OfferMercy` son dos caminos y solo uno chequeaba |
+| **Precio a alguien tirado en el suelo** | Cotizó 347k a un KO | `proneState=PS_KO` con `isLiterallyUnconcious=no`. El predicado del motor no cubre PS_KO |
+| **El plea sin nombre ni variantes** | *"Piedad. Ya no puedo pelear."* siempre igual | Era una constante hardcodeada, fuera de messages.json |
 
 ---
 
