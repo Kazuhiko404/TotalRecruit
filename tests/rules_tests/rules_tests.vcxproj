@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Standalone unit tests for TotalRecruit's pure rule modules (src/*_rules.cpp
+     and friends). No engine, no KenshiLib: the rules take plain values and the
+     config structs, so they compile with the same toolset as the plugin (v100).
+     Build and run:
+       MSBuild tests/rules_tests/rules_tests.vcxproj -p:Configuration=Release -p:Platform=x64
+       tests/rules_tests/x64/Release/rules_tests.exe -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2f6a9c41-8d3e-4b57-a1c0-5e7d9b3f2a68}</ProjectGuid>
+    <RootNamespace>rules_tests</RootNamespace>
+    <TargetName>rules_tests</TargetName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v100</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)x64\Release\</OutDir>
+    <IntDir>$(ProjectDir)x64\Release\obj\</IntDir>
+    <IncludePath>$(ProjectDir)..\..\src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="chance_rules_tests.cpp" />
+    <ClCompile Include="price_rules_tests.cpp" />
+    <ClCompile Include="route_rules_tests.cpp" />
+    <ClCompile Include="..\..\src\chance_rules.cpp" />
+    <ClCompile Include="..\..\src\price_rules.cpp" />
+    <ClCompile Include="..\..\src\route_rules.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="test_support.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

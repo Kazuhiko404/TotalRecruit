@@ -1,0 +1,273 @@
+// Characterization tests for src/chance_rules.cpp: they pin the numbers the
+// plugin shipped with (config defaults), so a later change to any term shows up
+// as a failing test instead of a quiet shift in game balance.
+
+#include "test_support.h"
+#include "chance_rules.h"
+
+using namespace totalrecruit;
+
+namespace
+{
+const Chance kChance = Chance();
+const Submission kSub = Submission();
+
+// ---------------------------------------------------------------- level gap
+
+void LevelGapEqualStartsAtBase()
+{
+    const char* name = "level gap: equal levels start at levelBase";
+    CHECK(ChanceFromLevelGap(20, 20, kChance) == 45);
+}
+
+void LevelGapStrongerNpcCostsPerLevel()
+{
+    const char* name = "level gap: each level the NPC has over the player costs 1.5";
+    CHECK(ChanceFromLevelGap(30, 20, kChance) == 30);
+    CHECK(ChanceFromLevelGap(21, 20, kChance) == 44);   // 45 - (int)1.5 = 44
+}
+
+void LevelGapNeverBelowFloor()
+{
+    const char* name = "level gap: a hopeless gap bottoms out at levelGapFloor";
+    CHECK(ChanceFromLevelGap(200, 1, kChance) == 2);
+}
+
+void LevelGapWeakerNpcPaysUpToCap()
+{
+    const char* name = "level gap: out-levelling pays per level, capped";
+    CHECK(ChanceFromLevelGap(20, 30, kChance) == 60);
+    CHECK(ChanceFromLevelGap(1, 200, kChance) == 85);   // 45 + cap 40
+}
+
+// ----------------------------------------------------------------- relation
+
+void RelationIsAQuarterOrNothing()
+{
+    const char* name = "relation: a quarter of the value, zero when unknown";
+    CHECK(ChanceFromRelation(100.0f, true) == 25);
+    CHECK(ChanceFromRelation(-100.0f, true) == -25);
+    CHECK(ChanceFromRelation(40.0f, false) == 0);
+}
+
+// -------------------------------------------------------------- personality
+
+void PersonalityTable()
+{
+    const char* name = "personality: the shipped offsets";
+    CHECK(ChanceFromPersonality(Temperament_Fearful) == 20);
+    CHECK(ChanceFromPersonality(Temperament_Traitorous) == 15);
+    CHECK(ChanceFromPersonality(Temperament_Dumb) == 10);
+    CHECK(ChanceFromPersonality(Temperament_Normal) == 0);
+    CHECK(ChanceFromPersonality(Temperament_WarmKind) == 0);
+    CHECK(ChanceFromPersonality(Temperament_ColdCruel) == 0);
+    CHECK(ChanceFromPersonality(Temperament_Smart) == -5);
+    CHECK(ChanceFromPersonality(Temperament_Brave) == -15);
+    CHECK(ChanceFromPersonality(Temperament_Honorable) == -20);
+    CHECK(ChanceFromPersonality(Temperament_Maniacal) == -25);
+}
+
+// ------------------------------------------------------------------ defeats
+
+void DefeatsScaleByResolveAndCap()
+{
+    const char* name = "defeats: 12 per defeat divided by resolve, capped at 45";
+    CHECK(ChanceFromDefeats(0, Temperament_Normal, kSub) == 0);
+    CHECK(ChanceFromDefeats(2, Temperament_Normal, kSub) == 24);
+    CHECK(ChanceFromDefeats(2, Temperament_Honorable, kSub) == 13);   // 24 / 1.8
+    CHECK(ChanceFromDefeats(2, Temperament_Fearful, kSub) == 40);     // 24 / 0.6
+    CHECK(ChanceFromDefeats(10, Temperament_Normal, kSub) == 45);
+}
+
+void DefeatsIgnoredWhenCountingIsOff()
+{
+    const char* name = "defeats: countDefeats off makes the term zero";
+    Submission sub;
+    sub.countDefeats = false;
+    CHECK(ChanceFromDefeats(5, Temperament_Normal, sub) == 0);
+}
+
+// ------------------------------------------------------------------- stress
+
+void StressScalesByResolveAndCap()
+{
+    const char* name = "stress: full stress argues for maxStressChance, divided by resolve";
+    CHECK(ChanceFromStress(0.0f, Temperament_Normal, kSub) == 0);
+    CHECK(ChanceFromStress(1.0f, Temperament_Normal, kSub) == 45);
+    CHECK(ChanceFromStress(0.5f, Temperament_Normal, kSub) == 22);
+    CHECK(ChanceFromStress(1.0f, Temperament_Brave, kSub) == 28);     // 45 / 1.6
+    CHECK(ChanceFromStress(1.0f, Temperament_Fearful, kSub) == 45);   // capped
+}
+
+void HungerRunsZeroToThree()
+{
+    const char* name = "hunger: raw 0..3 maps to fullness 0..1 and clamps";
+    CHECK(HungerToFullness01(3.0f) == 1.0f);
+    CHECK(HungerToFullness01(0.0f) == 0.0f);
+    CHECK(HungerToFullness01(1.5f) == 0.5f);
+    CHECK(HungerToFullness01(9.0f) == 1.0f);
+    CHECK(HungerToFullness01(-1.0f) == 0.0f);
+}
+
+void StressFromStateWeights()
+{
+    const char* name = "stress from state: hunger 0.5, wounds 0.35, exhaustion 0.15";
+    // Fed, unhurt, fully rested: nothing wears them down.
+    CHECK(StressFromState(3.0f, 0.0f, 1.0f, kSub) == 0.0f);
+    // Starving alone is half the bar.
+    CHECK(StressFromState(0.0f, 0.0f, 1.0f, kSub) == 0.5f);
+    // Everything wrong at once is the whole bar, and no more.
+    CHECK(StressFromState(0.0f, 1.0f, 0.0f, kSub) == 1.0f);
+    CHECK(StressFromState(0.0f, 5.0f, -3.0f, kSub) == 1.0f);
+}
+
+// ----------------------------------------------------------------- grudge
+
+void GrudgeIsAbsoluteOnlyForTheLoyal()
+{
+    const char* name = "grudge: honourable, brave and kind never forgive";
+    CHECK(GrudgeIsUnforgivable(Temperament_Honorable, kChance));
+    CHECK(GrudgeIsUnforgivable(Temperament_Brave, kChance));
+    CHECK(GrudgeIsUnforgivable(Temperament_WarmKind, kChance));
+    CHECK(!GrudgeIsUnforgivable(Temperament_Normal, kChance));
+    CHECK(!GrudgeIsUnforgivable(Temperament_Traitorous, kChance));
+    CHECK(!GrudgeIsUnforgivable(Temperament_ColdCruel, kChance));
+}
+
+void GrudgeAbsoluteCanBeSwitchedOff()
+{
+    const char* name = "grudge: grudgeIsAbsolute off makes it a weight for everyone";
+    Chance chance;
+    chance.grudgeIsAbsolute = false;
+    CHECK(!GrudgeIsUnforgivable(Temperament_Honorable, chance));
+}
+
+// ------------------------------------------------------------- JoinChance
+
+void JoinChanceSumsTheTerms()
+{
+    const char* name = "join chance: level + relation + personality + defeats + stress + situation";
+    ChanceInputs in;
+    in.npcLevel = 20;
+    in.playerLevel = 20;                    // 45
+    in.relation = 40.0f;
+    in.haveRelation = true;                 // +10
+    in.personality = Temperament_Normal;    // +0
+    in.defeats = 1;                         // +12
+    in.stress = 0.0f;
+    in.situation = 5;
+    CHECK(JoinChance(in, kChance, kSub) == 72);   // 45+10+0+12+5
+}
+
+void JoinChanceSubtractsGrudgeAndUnique()
+{
+    const char* name = "join chance: grudge -20 and unique -25";
+    ChanceInputs in;
+    in.npcLevel = 20;
+    in.playerLevel = 20;
+    CHECK(JoinChance(in, kChance, kSub) == 45);
+    in.grudge = true;
+    CHECK(JoinChance(in, kChance, kSub) == 25);
+    in.unique = true;
+    CHECK(JoinChance(in, kChance, kSub) == 5);   // 0 clamped to the floor
+}
+
+void JoinChanceIsNeverCertain()
+{
+    const char* name = "join chance: clamped to [5, 95]";
+    ChanceInputs hopeless;
+    hopeless.npcLevel = 300;
+    hopeless.playerLevel = 1;
+    hopeless.personality = Temperament_Maniacal;
+    hopeless.grudge = true;
+    hopeless.unique = true;
+    CHECK(JoinChance(hopeless, kChance, kSub) == 5);
+
+    ChanceInputs sure;
+    sure.npcLevel = 1;
+    sure.playerLevel = 300;
+    sure.personality = Temperament_Fearful;
+    sure.situation = 100;
+    CHECK(JoinChance(sure, kChance, kSub) == 95);
+}
+
+// ------------------------------------------------------------- StableRoll
+
+void StableRollHonoursTheExtremes()
+{
+    const char* name = "stable roll: 100+ always, 0- never";
+    CHECK(StableRoll(7, 3, 100));
+    CHECK(StableRoll(7, 3, 250));
+    CHECK(!StableRoll(7, 3, 0));
+    CHECK(!StableRoll(7, 3, -4));
+}
+
+void StableRollNeverRerolls()
+{
+    const char* name = "stable roll: the same handle and percent always answer the same";
+    for (unsigned int i = 1; i < 200; ++i)
+    {
+        const bool first = StableRoll(i, i * 3u, 37);
+        CHECK(StableRoll(i, i * 3u, 37) == first);
+        CHECK(StableRoll(i, i * 3u, 37) == first);
+    }
+}
+
+void StableRollIsMonotonicInThePercent()
+{
+    const char* name = "stable roll: a handle that passes at p passes at every higher p";
+    for (unsigned int i = 1; i < 300; ++i)
+    {
+        bool passed = false;
+        for (int p = 1; p < 100; ++p)
+        {
+            const bool ok = StableRoll(i, 11u, p);
+            if (passed)
+            {
+                CHECK(ok);
+            }
+            passed = passed || ok;
+        }
+    }
+}
+
+void StableRollApproximatesThePercent()
+{
+    const char* name = "stable roll: about 50% of handles pass at 50%";
+    int passes = 0;
+    const int total = 2000;
+    for (int i = 1; i <= total; ++i)
+    {
+        if (StableRoll((unsigned int)i, 5u, 50))
+        {
+            ++passes;
+        }
+    }
+    CHECK(passes > total * 40 / 100);
+    CHECK(passes < total * 60 / 100);
+}
+} // namespace
+
+void RunChanceRulesTests()
+{
+    LevelGapEqualStartsAtBase();
+    LevelGapStrongerNpcCostsPerLevel();
+    LevelGapNeverBelowFloor();
+    LevelGapWeakerNpcPaysUpToCap();
+    RelationIsAQuarterOrNothing();
+    PersonalityTable();
+    DefeatsScaleByResolveAndCap();
+    DefeatsIgnoredWhenCountingIsOff();
+    StressScalesByResolveAndCap();
+    HungerRunsZeroToThree();
+    StressFromStateWeights();
+    GrudgeIsAbsoluteOnlyForTheLoyal();
+    GrudgeAbsoluteCanBeSwitchedOff();
+    JoinChanceSumsTheTerms();
+    JoinChanceSubtractsGrudgeAndUnique();
+    JoinChanceIsNeverCertain();
+    StableRollHonoursTheExtremes();
+    StableRollNeverRerolls();
+    StableRollIsMonotonicInThePercent();
+    StableRollApproximatesThePercent();
+}

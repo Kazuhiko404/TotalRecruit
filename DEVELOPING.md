@@ -94,7 +94,11 @@ qué existe — leelo antes que el `.cpp`.
 
 | Archivo | Qué hace |
 |---|---|
-| `rules.cpp/.h` | **El motor.** Qué quiere un NPC antes de unirse. Empezá acá. |
+| `rules.cpp/.h` | **El motor.** Qué quiere un NPC antes de unirse. Empezá acá. Lee el juego y arma los hechos. |
+| `route_rules.cpp/.h` | **Puro.** Qué ruta contesta primero (`ChooseEntryRoute`). El orden de precedencia vive solo acá. |
+| `chance_rules.cpp/.h` | **Puro.** El motor de chance (`JoinChance`, `ChanceFrom*`, el roll estable). |
+| `price_rules.cpp/.h` | **Puro.** La curva de precio base y el multiplicador de personalidad. |
+| `char_key.h`, `temperament.h` | **Puros.** Identidad de personaje y el enum de personalidad sin motor. `temperament_map.cpp` hace el único mapeo desde `PT_*`. |
 | `recruit_core.cpp/.h` | Resuelve el target del click, valida y ejecuta el reclutamiento. |
 | `rescue.cpp` | Ruta A — lo salvaste de morir. |
 | `surrender.cpp` | Ruta C — se rinde. Declara el método de `AI` localmente. |
@@ -121,6 +125,10 @@ qué existe — leelo antes que el `.cpp`.
 | `probe.cpp` | Diagnóstico. Con `probeOnClick` loguea todo del NPC clickeado. |
 | `dialogue_bridge.cpp` | Puente a diálogo FCS. **Compila pero nunca se ejecutó.** |
 | `game_data.cpp` | Listados de escuadras y personajes. |
+
+Los módulos marcados **Puro** no incluyen headers del motor: reciben valores
+planos y los structs de `config.h`. Eso es lo que permite compilarlos en el
+ejecutable de tests (sección 7).
 
 ### Los documentos antes que el código
 
@@ -422,3 +430,30 @@ sesiones: `hunger` no es 0..1 (un NPC bien alimentado lee ~3), y
 que esté.
 
 Commiteá después de cada cambio que funcione.
+
+---
+
+## 7. Tests (reglas puras)
+
+`tests/rules_tests` is a standalone console exe: it compiles the engine-free
+rule modules from `src/` (`*_rules.cpp` and friends) with the same v100
+toolset as the plugin, and links no KenshiLib. It never loads the game.
+
+```bash
+cd /f/Proyectos/Kenshi-mods/TotalRecruit
+
+MSBUILD="/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/MSBuild.exe"
+"$MSBUILD" tests/rules_tests/rules_tests.vcxproj -p:Configuration=Release -p:Platform=x64 -v:minimal -nologo
+tests/rules_tests/x64/Release/rules_tests.exe     # exit code 0 = green
+```
+
+Adding a rule test:
+
+1. Put the rule in an engine-free module under `src/` (plain arguments, the
+   config structs passed in, no `GetConfig()`, no `Character*`) and add the
+   `.cpp` to **both** `TotalRecruit.vcxproj` and `tests/rules_tests/rules_tests.vcxproj`.
+2. Write `tests/rules_tests/<module>_tests.cpp` with a `RunXxxTests()` function,
+   declare it in `test_support.h`, and list it in `kSuites` in `main.cpp`.
+3. Red first: run the exe, watch the new test fail for the right reason, then
+   implement. Anything that has to read the game (hooks, UI, `Safe*` readers)
+   stays out of the tests and is covered by `QA.md` instead.

@@ -81,6 +81,10 @@
     <ClCompile Include="src\hail.cpp" />
     <ClCompile Include="src\mercy.cpp" />
     <ClCompile Include="src\messages.cpp" />
+    <ClCompile Include="src\chance_rules.cpp" />
+    <ClCompile Include="src\price_rules.cpp" />
+    <ClCompile Include="src\route_rules.cpp" />
+    <ClCompile Include="src\temperament_map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h" />
@@ -105,6 +109,11 @@
     <ClInclude Include="src\hail.h" />
     <ClInclude Include="src\mercy.h" />
     <ClInclude Include="src\messages.h" />
+    <ClInclude Include="src\char_key.h" />
+    <ClInclude Include="src\temperament.h" />
+    <ClInclude Include="src\chance_rules.h" />
+    <ClInclude Include="src\price_rules.h" />
+    <ClInclude Include="src\route_rules.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

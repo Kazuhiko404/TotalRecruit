@@ -6,6 +6,9 @@
 #include "log.h"
 #include "messages.h"
 #include "defeats.h"
+#include "chance_rules.h"
+#include "price_rules.h"
+#include "route_rules.h"
 
 #include <kenshi/CharacterAnimal.h>
 #include <kenshi/CharStats.h>
@@ -59,10 +62,16 @@ struct Traits
 {
     int npcType;
     int personality;
+    // The same personality as the engine-free enum the chance rules take.
+    Temperament temperament;
     int slaveState;
     bool escapedPrisoner;
 
-    Traits() : npcType(0), personality(0), slaveState(0), escapedPrisoner(false) {}
+    Traits()
+        : npcType(0), personality(0), temperament(Temperament_Normal),
+          slaveState(0), escapedPrisoner(false)
+    {
+    }
 };
 
 // Personality and archetype come from StateBroadcastData, which the engine
@@ -79,6 +88,7 @@ bool SafeReadTraits(Character* character, Traits* out)
         }
         out->npcType         = (int)broadcast->NPCType;
         out->personality     = (int)broadcast->myPersonality;
+        out->temperament     = ToTemperament(out->personality);
         out->slaveState      = (int)broadcast->_slaveState;
         out->escapedPrisoner = broadcast->isEscapedPrisoner;
         return true;
@@ -242,18 +252,6 @@ bool SafeIsAnimal(Character* character, bool* out)
     TR_CATCH { return false; }
 }
 
-// The engine's raw hunger field is NOT a 0..1 fraction and it runs the other
-// way round: it counts fullness, so 3.0 is a full stomach and 0 is empty.
-//
-// The span is 0..3. KEP writes hunger = 3.0f to repair a broken medical state
-// and treats hunger < 0 as invalid, and a fed pack beast measured 2.99 in game
-// -- which is the reading that settles it. KEP's other line, clamping
-// (hunger - 1.0) to 0..1, drives how gaunt a body is DRAWN; borrowing it as the
-// stomach scale put a 1.69 bonedog at 69% full and tamed it without a meal,
-// when the honest answer is 56%.
-const float kHungerFull  = 3.0f;
-const float kHungerEmpty = 0.0f;
-
 // Whether this animal belongs to an organisation of people rather than roaming
 // loose.
 //
@@ -296,16 +294,6 @@ bool BelongsToSomeone(Character* character)
         return false;
     }
     return SafeBelongsToRealFaction(character, &owned) && owned;
-}
-
-// Fullness as an honest 0..1, where 1 is sated and 0 is starving. This is the
-// only number the rest of the code should reason about in percentages.
-float HungerToFullness01(float rawHunger)
-{
-    float f = (rawHunger - kHungerEmpty) / (kHungerFull - kHungerEmpty);
-    if (f < 0.0f) f = 0.0f;
-    if (f > 1.0f) f = 1.0f;
-    return f;
 }
 
 // How grown an animal is, 0..1 of its own lifespan. A pup and an old bull are
@@ -513,135 +501,13 @@ bool StableChance(Character* character, int percent)
         return false;
     }
 
-    // Knuth's multiplicative hash on both halves, so neighbouring slots do not
-    // land in neighbouring buckets.
-    const unsigned int seed = (key.index * 2654435761u) ^ (key.serial * 40503u);
-    return (int)((seed * 2654435761u) % 100u) < percent;
+    return StableRoll(key.index, key.serial, percent);
 }
 
-// One chance calculation, four routes.
-//
-// Cage, friendly, rescue and submission were each asking the same question --
-// "given how they feel about us, how the levels compare, and who they are, will
-// they come?" -- so it lives once. Each input is its own small function, which
-// is what makes any of this testable: a wrong number can be traced to one term
-// instead of one big expression.
-
-// Level gap. Being their equal or better is the strongest single argument the
-// player can make without saying anything.
-// Level is a weight, never a gate. The old shape returned a flat 100 for any
-// player who was level-equal or better, and bottomed out at 10 -- but neither
-// end was ever reached, because two hard doors elsewhere refused outright above
-// a gap of 15 and granted submission outright below -40.
-//
-// Those doors were the only refusals in the mod with no way out: relation,
-// personality and a saved life all counted for nothing against them, and the
-// player's only answer was to go and level up. Now the gap moves the odds and
-// everything else still gets a say.
-//
-// Above the player it costs, below the player it pays, and the bonus is capped
-// so that out-levelling someone is an argument rather than a guarantee.
-int ChanceFromLevelGap(int npcLevel, int playerLevel)
-{
-    const Chance& c = GetConfig().chance;
-    const int gap = npcLevel - playerLevel;
-
-    // The base is deliberately well below the ceiling. An earlier version
-    // started at 100 for anyone level-equal, which meant every other term --
-    // personality, relation, defeats -- landed on an already-full number and
-    // vanished into the clamp: a coward and a maniac both came out at 95%.
-    // Starting at a middling number is what gives the rest of the engine room
-    // to matter, which was the whole point of having four terms.
-    if (gap > 0)
-    {
-        const int chance = c.levelBase - (int)(gap * c.levelGapPenalty);
-        return chance < c.levelGapFloor ? c.levelGapFloor : chance;
-    }
-
-    const int bonus = (int)((-gap) * c.levelEdgeBonus);
-    return c.levelBase + (bonus > c.levelEdgeCap ? c.levelEdgeCap : bonus);
-}
-
-// Faction standing, as a percentage shift rather than a gate. Relation runs
-// -100..100 and is never a door on its own -- that decision predates this
-// engine and still holds.
-int ChanceFromRelation(float relation, bool haveRelation)
-{
-    if (!haveRelation)
-    {
-        return 0;
-    }
-    // A quarter of the relation: +100 adds 25 points, -100 removes 25.
-    return (int)(relation * 0.25f);
-}
-
-// Temperament. Not who is easiest to bully -- who is easiest to convince.
-int ChanceFromPersonality(int personality)
-{
-    switch (personality)
-    {
-    case PT_FEARFUL:    return  20;   // wants out of wherever this is
-    case PT_TRAITOROUS: return  15;   // loyalty was never the point
-    case PT_DUMB:       return  10;
-    case PT_NORMAL:     return   0;
-    case PT_SMART:      return  -5;   // sees the offer for what it is
-    case PT_BRAVE:      return -15;
-    case PT_HONORABLE:  return -20;   // convinced by conduct, not odds
-    case PT_MANIACAL:   return -25;   // convinced by nothing
-    default:            return   0;
-    }
-}
-
-struct ChanceInputs
-{
-    int npcLevel;
-    int playerLevel;
-    float relation;
-    bool haveRelation;
-    int personality;
-    // Route bonus: how much this particular situation argues for them coming.
-    // A saved life is worth more than a conversation.
-    int situation;
-    // How worn down they are right now, 0..1. See PrisonerStress.
-    float stress;
-    // How many times the player has put them down. Weighted by temperament,
-    // because the same beating does not mean the same thing to a coward and to
-    // someone who intends to die on their feet.
-    int defeats;
-    // They remember the player killing one of theirs. Only reaches here for
-    // temperaments that can be talked round at all -- the rest never get this
-    // far.
-    bool grudge;
-    // A named character. There is only one of them and no second attempt, so
-    // they cost more work than anyone else at the same level.
-    bool unique;
-
-    ChanceInputs()
-        : npcLevel(1), playerLevel(1), relation(0.0f), haveRelation(false), defeats(0), stress(0.0f), grudge(false), unique(false),
-          personality(PT_NORMAL), situation(0)
-    {
-    }
-};
-
-// The four terms, clamped. Never 0 and never 100: a floor keeps every route a
-// "not yet" rather than a wall, and a ceiling keeps the roll meaningful.
-// Who cannot be bought off after the player killed one of theirs.
-//
-// Loyalty is the whole of what an honourable or a brave NPC is; forgiving this
-// for cats or for a beating would cost them the only thing the mod says about
-// them. Everyone else remembers it as a grievance, which is a weight rather
-// than a wall -- a traitor never had comrades to avenge, and a cold-blooded one
-// counts the dead as a business loss.
-bool GrudgeIsUnforgivable(int personality)
-{
-    if (!GetConfig().chance.grudgeIsAbsolute)
-    {
-        return false;
-    }
-    return personality == PT_HONORABLE ||
-           personality == PT_BRAVE ||
-           personality == PT_WARM_KIND;
-}
+// The chance engine itself -- ChanceFrom*, JoinChance, the resolve table -- is
+// engine-free and lives in chance_rules.{h,cpp}, so tests/rules_tests compiles
+// the same code the plugin runs. What stays here is the part that has to read
+// the game or the config.
 
 // How worn down a prisoner is, 0..1, read from the state the engine already
 // keeps rather than from a tally of the player's actions.
@@ -659,83 +525,8 @@ bool GrudgeIsUnforgivable(int personality)
 // cage a place where time is on the player's side.
 float PrisonerStress(const Condition& condition, const MedicalSnapshot& body)
 {
-    const Submission& sub = GetConfig().submission;
-
-    // Hunger runs 0..3 counting fullness, so an empty stomach is the top of
-    // this term rather than the bottom.
-    const float starved = 1.0f - HungerToFullness01(condition.hunger);
-
-    // worstDamage is the state of whichever part is in the worst shape.
-    float hurt = body.worstDamage;
-    if (hurt < 0.0f) hurt = 0.0f;
-    if (hurt > 1.0f) hurt = 1.0f;
-
-    // restedState counts rest, so exhaustion is its inverse.
-    float tired = 1.0f - body.restedState;
-    if (tired < 0.0f) tired = 0.0f;
-    if (tired > 1.0f) tired = 1.0f;
-
-    float stress = starved * sub.stressFromHunger
-                 + hurt    * sub.stressFromWounds
-                 + tired   * sub.stressFromExhaustion;
-
-    if (stress < 0.0f) stress = 0.0f;
-    if (stress > 1.0f) stress = 1.0f;
-    return stress;
-}
-
-// R3.5 -- temperament decides how much a beating is worth. The same three
-// knockouts break a coward and barely register on someone who has already
-// decided to die on their feet, so the count is scaled before it is spent.
-float ResolveMultiplier(int personality)
-{
-    const Submission& sub = GetConfig().submission;
-    switch (personality)
-    {
-    case PT_FEARFUL:
-    case PT_DUMB:
-        return sub.fearfulResolve;
-    case PT_BRAVE:
-        return sub.braveResolve;
-    case PT_HONORABLE:
-        return sub.honourableResolve;
-    default:
-        return 1.0f;
-    }
-}
-
-// What being worn down argues for, divided by resolve like the defeat count:
-// the same empty stomach means less to someone who intends to outlast you.
-int ChanceFromStress(float stress, int personality)
-{
-    const Submission& sub = GetConfig().submission;
-    if (stress <= 0.0f)
-    {
-        return 0;
-    }
-    const float resolve = ResolveMultiplier(personality);
-    const float raw = (stress * sub.maxStressChance) /
-                      (resolve > 0.01f ? resolve : 1.0f);
-    const int value = (int)raw;
-    return value > sub.maxStressChance ? sub.maxStressChance : value;
-}
-
-// R3.2 -- how much having been beaten argues for yielding. Divided by resolve
-// rather than multiplied: a high resolve means each defeat counts for less.
-int ChanceFromDefeats(int defeats, int personality)
-{
-    const Submission& sub = GetConfig().submission;
-    if (defeats <= 0 || !sub.countDefeats)
-    {
-        return 0;
-    }
-
-    const float resolve = ResolveMultiplier(personality);
-    const float raw = (float)(defeats * sub.chancePerDefeat) /
-                      (resolve > 0.01f ? resolve : 1.0f);
-
-    const int value = (int)raw;
-    return value > sub.maxDefeatChance ? sub.maxDefeatChance : value;
+    return StressFromState(condition.hunger, body.worstDamage, body.restedState,
+                           GetConfig().submission);
 }
 
 // Every term, printed. A single percentage tells you the answer and nothing
@@ -748,15 +539,17 @@ void LogChanceBreakdown(Character* character, const ChanceInputs& in, int total)
         return;
     }
 
+    const Chance& cc = GetConfig().chance;
+    const Submission& cs = GetConfig().submission;
     char buf[256] = { 0 };
     _snprintf_s(buf, sizeof(buf), _TRUNCATE,
                 "[chance] level=%d relation=%d personality=%d defeats=%d(x%d) "
                 "situation=%d stress=%d(%.0f%%) grudge=-%d unique=-%d -> %d%%  (npc %d vs player %d, rel %.0f)",
-                ChanceFromLevelGap(in.npcLevel, in.playerLevel),
+                ChanceFromLevelGap(in.npcLevel, in.playerLevel, cc),
                 ChanceFromRelation(in.relation, in.haveRelation),
                 ChanceFromPersonality(in.personality),
-                ChanceFromDefeats(in.defeats, in.personality), in.defeats,
-                in.situation, ChanceFromStress(in.stress, in.personality),
+                ChanceFromDefeats(in.defeats, in.personality, cs), in.defeats,
+                in.situation, ChanceFromStress(in.stress, in.personality, cs),
                 in.stress * 100.0f,
                 in.grudge ? GetConfig().chance.grudgePenalty : 0,
                 in.unique ? GetConfig().chance.uniquePenalty : 0,
@@ -764,28 +557,6 @@ void LogChanceBreakdown(Character* character, const ChanceInputs& in, int total)
                 in.haveRelation ? in.relation : 0.0f);
     LogInfo(CharacterName(character) + " " + buf);
 }
-
-int JoinChance(const ChanceInputs& in)
-{
-    int chance = ChanceFromLevelGap(in.npcLevel, in.playerLevel)
-               + ChanceFromRelation(in.relation, in.haveRelation)
-               + ChanceFromPersonality(in.personality)
-               + ChanceFromDefeats(in.defeats, in.personality)
-               + ChanceFromStress(in.stress, in.personality)
-               + in.situation
-               - (in.grudge ? GetConfig().chance.grudgePenalty : 0)
-               - (in.unique ? GetConfig().chance.uniquePenalty : 0);
-
-    // Neither end is ever certain. A floor above zero keeps a hopeless case
-    // merely unlikely -- which is what makes relation and personality worth
-    // improving -- and a ceiling below 100 keeps the strongest player from
-    // collecting anyone they point at.
-    const Chance& c = GetConfig().chance;
-    if (chance < c.floor)   chance = c.floor;
-    if (chance > c.ceiling) chance = c.ceiling;
-    return chance;
-}
-
 
 bool SafePlayerMoney(Character* leader, int* out)
 {
@@ -883,22 +654,6 @@ float FactionMultiplier(Character* character, Faction* playerFaction)
     return multiplier;
 }
 
-float PersonalityMultiplier(int personality)
-{
-    const Prices& prices = GetConfig().prices;
-    switch (personality)
-    {
-    case PT_FEARFUL:
-        return prices.fearfulMultiplier;
-    case PT_BRAVE:
-    case PT_COLD_CRUEL:
-    case PT_MANIACAL:
-        return prices.braveMultiplier;
-    default:
-        return 1.0f;
-    }
-}
-
 // What someone is actually good at, and how far past their own level it goes.
 //
 // getRoughLevel() is an average, so a level 30 assassin and a level 30 baker
@@ -978,33 +733,9 @@ int PriceInCats(Character* character, const Traits& traits, Faction* playerFacti
         level = 1;
     }
 
-    // Two curves added together, because no single one covers the range.
-    //
-    // The bottom has to stay cheap: helping a new player buy a level 3 bandit
-    // for a few hundred cats is most of the point. The top has to reach the
-    // tens of thousands, or a legendary fighter is priced like a farmhand.
-    // A straight line cannot do both, and a power curve steep enough for the
-    // top makes the bottom unaffordable.
-    //
-    // So: a gentle square term carries the early levels, and a logistic S-curve
-    // -- the standard game-design answer for a cost that should accelerate and
-    // then level off -- carries the rest. Shifted to pass through zero so the
-    // sigmoid does not charge for merely existing.
-    //
-    // Calibrated against the published Recruit-Prisoners-for-Cats tiers:
-    // ~1k at 5 stats, ~7k at 12, ~20k at 25, ~35k at 40, ~55k at 50, ~80k at 75.
-    const float lv = (float)level;
-    const float shape = prices.priceCurveSteepness;
-    const float mid   = prices.priceCurveMidpoint;
-    const float sigNow  = 1.0f / (1.0f + expf(-shape * (lv - mid)));
-    const float sigZero = 1.0f / (1.0f + expf(shape * mid));
-
-    float cats = ((float)prices.catsPerLevel * 0.1f) * lv * lv
-               + (float)prices.catsCeiling * (sigNow - sigZero);
-    if (cats < (float)prices.catsMinimum)
-    {
-        cats = (float)prices.catsMinimum;
-    }
+    // The curve itself (square term plus shifted logistic, calibrated against
+    // the Recruit-Prisoners-for-Cats tiers) is engine-free: price_rules.cpp.
+    float cats = BasePriceInCats(level, prices);
 
     // Talent, only in the presets that price at all. An edge of 1.0 is somebody
     // exactly as good as their level suggests and changes nothing; the multiplier
@@ -1035,7 +766,7 @@ int PriceInCats(Character* character, const Traits& traits, Faction* playerFacti
         cats *= GetConfig().prices.uniqueMultiplier;
     }
 
-    cats *= PersonalityMultiplier(traits.personality);
+    cats *= PersonalityPriceMultiplier(traits.temperament, GetConfig().prices);
     cats *= FactionMultiplier(character, playerFaction);
 
     return (int)cats;
@@ -1115,7 +846,7 @@ Verdict EvaluateAnimal(Character* character, const Traits& traits,
     // meal before it decides you are worth following.
     if (GetConfig().animals.personalityMatters)
     {
-        const float resolve = ResolveMultiplier(traits.personality);
+        const float resolve = ResolveMultiplier(traits.temperament, GetConfig().submission);
         // Around 1.0 nothing moves. A timid animal settles for less, a
         // stubborn one asks for more, and the bar is still capped at a full
         // stomach so no temperament makes taming impossible.
@@ -1783,6 +1514,41 @@ Verdict Evaluate(Character* character)
         return verdict;
     }
 
+    // Which route answers first is decided in one place, over plain facts:
+    // route_rules.cpp. The blocks below only carry out the chosen route, so
+    // their order here is not the order of precedence -- ChooseEntryRoute is.
+    bool grudge = false;
+    if (leader != NULL)
+    {
+        SafeMemoryTag(character, leader, LT_KILLED_MY_FRIEND, &grudge);
+    }
+    const bool inMyCage = IsInPlayerCage(character);
+
+    RouteFacts facts;
+    facts.animal             = animal;
+    facts.surrenderEnabled   = config.surrenderEnabled;
+    facts.countDefeats       = config.submission.countDefeats;
+    facts.defeats            = DefeatCount(character);
+    facts.defeatsToBreak     = config.submission.defeatsToBreak;
+    facts.unconscious        = condition.unconscious;
+    facts.dying              = condition.dying;
+    facts.grudge             = grudge;
+    facts.grudgeUnforgivable = GrudgeIsUnforgivable(traits.temperament, config.chance);
+    facts.inMyCage           = inMyCage;
+    facts.rescueEnabled      = config.rescueEnabled;
+    facts.remembersSaviour   = config.rescueEnabled && RemembersPlayerAsSaviour(character);
+    facts.easyHealthy        = config.prices.easyHoursCaged > 0.0f &&
+                               !condition.wounded && !condition.starving &&
+                               condition.health >= 1.0f;
+    facts.surrendered        = config.surrenderEnabled && !animal &&
+                               IsSurrendered(character);
+
+    const Route route = ChooseEntryRoute(facts);
+    if (config.probeOnClick)
+    {
+        LogInfo(CharacterName(character) + " [route] " + RouteName(route));
+    }
+
     // Route C -- submission, and it does not go through a cage.
     //
     // This is what beating someone repeatedly is supposed to buy, and it was
@@ -1794,9 +1560,7 @@ Verdict Evaluate(Character* character)
     // Being knocked out is not a bar here -- it is the evidence. They lost to
     // you, repeatedly, and the wounds are still on them. The offer is made when
     // they come round, which is exactly how surrender reads in fiction.
-    if (!animal && config.surrenderEnabled &&
-        config.submission.countDefeats &&
-        DefeatCount(character) >= config.submission.defeatsToBreak)
+    if (route == Route_FieldYield)
     {
         MedicalSnapshot body;
         SafeReadBody(character, &body);
@@ -1817,13 +1581,13 @@ Verdict Evaluate(Character* character)
         in.playerLevel  = yieldPlayerLevel;
         in.relation     = 0.0f;
         in.haveRelation = false;
-        in.personality  = traits.personality;
+        in.personality  = traits.temperament;
         in.defeats      = DefeatCount(character);
         in.stress       = PrisonerStress(condition, body);
         in.unique       = yieldUnique;
         in.situation    = config.submission.fieldYieldBonus;
 
-        const int chance = JoinChance(in);
+        const int chance = JoinChance(in, config.chance, config.submission);
         LogChanceBreakdown(character, in, chance);
         if (StableChance(character, chance))
         {
@@ -1847,7 +1611,7 @@ Verdict Evaluate(Character* character)
     // unconscious body is not a deal, and it undercuts the rescue route, whose
     // whole point is that the offer arrives when they wake and find out who
     // saved them.
-    if (condition.unconscious)
+    if (route == Route_Unconscious)
     {
         LogCondition(character, condition, "unconscious");
         if (config.rescueEnabled && RemembersPlayerAsSaviour(character))
@@ -1881,20 +1645,13 @@ Verdict Evaluate(Character* character)
     // because there honestly is none. A turncoat or a cold-blooded one never
     // had comrades, only colleagues: they remember, it costs the player, and it
     // can still be outweighed.
-    bool grudge = false;
-    if (leader != NULL)
-    {
-        SafeMemoryTag(character, leader, LT_KILLED_MY_FRIEND, &grudge);
-    }
-
     // Except in the player's own cage. Out in the world the refusal is a free
     // one -- they walk away, and their honour costs them nothing. Behind bars
     // it costs them everything, and that is the whole argument the cage makes:
     // hunger, time and being beaten do not care what someone believes about
     // themselves. Refusing there would make the honourable the one archetype
     // the mod's central mechanic cannot touch.
-    if (grudge && GrudgeIsUnforgivable(traits.personality) &&
-        !IsInPlayerCage(character))
+    if (route == Route_GrudgeRefusal)
     {
         verdict.currency = Currency_Refused;
         verdict.reason = Say("grudge.never",
@@ -1905,7 +1662,7 @@ Verdict Evaluate(Character* character)
 
     // Route A -- rescue. Someone you pulled out of the dirt owes you nothing
     // else. Checked first because it outranks every price.
-    if (config.rescueEnabled && RemembersPlayerAsSaviour(character))
+    if (route == Route_Rescue)
     {
         verdict.viaRescue = true;
 
@@ -1930,7 +1687,7 @@ Verdict Evaluate(Character* character)
         in.playerLevel  = rescuePlayerLevel;
         in.relation     = rescueRelation;
         in.haveRelation = rescueHaveRelation;
-        in.personality  = traits.personality;
+        in.personality  = traits.temperament;
         in.defeats      = DefeatCount(character);
         // R4.4 -- how much of them the player actually put back together.
         // Bandaging someone and walking off is not the same favour as leaving
@@ -1947,7 +1704,7 @@ Verdict Evaluate(Character* character)
             in.situation = config.rescueBaseBonus + (int)(restored * config.rescueHealWeight);
         }
 
-        const int chance = JoinChance(in);
+        const int chance = JoinChance(in, config.chance, config.submission);
         LogChanceBreakdown(character, in, chance);
         if (StableChance(character, chance))
         {
@@ -1974,7 +1731,7 @@ Verdict Evaluate(Character* character)
     }
 
     // Still dying and not yet saved: the route is open, but the price is care.
-    if (config.rescueEnabled && condition.dying)
+    if (route == Route_Dying)
     {
         verdict.viaRescue = true;
         verdict.currency = Currency_Care;
@@ -1986,9 +1743,7 @@ Verdict Evaluate(Character* character)
     // player whether or not the engine happened to credit the first aid. The
     // applyFirstAid hook only fires while the player's own medic is working, so
     // a prisoner healed by a bed or by time would otherwise slip through.
-    if (config.rescueEnabled && config.prices.easyHoursCaged > 0.0f &&
-        !condition.wounded && !condition.starving && condition.health >= 1.0f &&
-        IsInPlayerCage(character))
+    if (route == Route_EasyHealthy)
     {
         verdict.willJoin = true;
         verdict.viaRescue = true;
@@ -1999,7 +1754,7 @@ Verdict Evaluate(Character* character)
 
     // Route C -- surrender. Someone you beat, still on their feet but with the
     // fight gone, can yield rather than be cut down.
-    if (config.surrenderEnabled && !animal && IsSurrendered(character))
+    if (route == Route_Surrendered)
     {
         verdict.willJoin = true;
         verdict.currency = Currency_Submission;
@@ -2017,8 +1772,7 @@ Verdict Evaluate(Character* character)
     }
 
     bool inAnyCage = false;
-    const bool inMyCage = IsInPlayerCage(character);
-    if (!inMyCage)
+    if (route == Route_FreeWorld)
     {
         SafeInPrison(character, &inAnyCage);
         if (inAnyCage)
@@ -2078,10 +1832,10 @@ Verdict Evaluate(Character* character)
             in.playerLevel  = playerLevel;
             in.relation     = relation;
             in.haveRelation = haveRelation;
-            in.personality  = traits.personality;
+            in.personality  = traits.temperament;
             // Standing this good is itself an argument.
             in.situation    = 10;
-            const int chance = JoinChance(in);
+            const int chance = JoinChance(in, config.chance, config.submission);
             LogChanceBreakdown(character, in, chance);
             if (StableChance(character, chance))
             {
@@ -2218,7 +1972,7 @@ Verdict Evaluate(Character* character)
         in.playerLevel  = playerLevel;
         in.relation     = 0.0f;
         in.haveRelation = false;
-        in.personality  = traits.personality;
+        in.personality  = traits.temperament;
         // Defeats are what it took to put them in here, and they stop
         // accumulating once the door shuts -- there is nobody left to beat in a
         // fight. Inside, the argument is the stress bar: hunger nobody
@@ -2232,7 +1986,7 @@ Verdict Evaluate(Character* character)
         in.unique       = unique;
         in.situation    = config.chance.intimidationBonus;
 
-        const int chance = JoinChance(in);
+        const int chance = JoinChance(in, config.chance, config.submission);
         LogChanceBreakdown(character, in, chance);
         if (StableChance(character, chance))
         {
