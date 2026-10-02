@@ -27,6 +27,30 @@ md5sum x64/Release/TotalRecruit.dll "$DST/TotalRecruit.dll"
 Los dos hashes tienen que ser **idénticos**. Si no lo son, estás probando el
 build anterior.
 
+## 1b. Deploy con un solo comando: `scripts/deploy.sh`
+
+```bash
+scripts/deploy.sh --dry-run   # no construye ni escribe nada: muestra que haria
+scripts/deploy.sh             # lo real (Kenshi tiene que estar cerrado)
+```
+
+Lo que hace, en orden:
+
+1. **Se niega a correr si `kenshi_x64.exe` esta abierto** (`tasklist | grep -i kenshi_x64`, exit 1). No se busca
+   `kenshi` a secas: `KenshiPatcher.exe` tambien coincide. Con `--dry-run` solo avisa.
+2. Compila `TotalRecruit.vcxproj` y `tests/rules_tests` (Release|x64) y corre `rules_tests.exe`: si un test falla, no despliega.
+3. Copia `x64/Release/TotalRecruit.dll` a la raiz del repo, a la carpeta del paquete `TotalRecruit/` (la que se commitea) y a
+   `...\Kenshi\mods\TotalRecruit\`; copia `TotalRecruit/gui/` recursivo. `RE_Kenshi.json` y `TotalRecruit.mod` se copian solo si
+   faltan en el juego. Una instalacion nueva crea la carpeta.
+4. **`config.json` y `messages.json` del juego nunca se pisan.** Guarda `*.bak-<fecha-hora>` y corre
+   `scripts/add_missing_keys.py`, que **solo agrega las claves que faltan** (recursivo: tambien dentro de `reason`, `readout`, `exclude`...) y
+   deja todo valor existente. La unica excepcion de valor es `easyHoursCaged`: pasa a 6 solo si el desplegado es exactamente 12 (el default
+   viejo); cualquier otro valor puesto a mano se respeta. Si no hay archivo desplegado, copia el del repo tal cual. Al escribir,
+   el archivo se reserializa con indentacion de 2 espacios (se pierden las lineas en blanco de formato, no valores ni claves).
+5. Compara el md5 de `x64/Release`, la raiz, el paquete y el juego, y falla si no coinciden.
+
+Necesita `python` (o `python3`) en el PATH solo para el paso 4. La carpeta del juego se puede cambiar con `TR_GAME_DIR`.
+
 ### Las tres rutas
 
 | Qué | Dónde |
@@ -35,14 +59,16 @@ build anterior.
 | Copia del repo (la que se commitea) | `TotalRecruit.dll` |
 | **El juego** | `d:\SteamLibrary\steamapps\common\Kenshi\mods\TotalRecruit\` |
 
-La carpeta desplegada necesita cuatro archivos:
+La carpeta desplegada necesita estos archivos (`scripts/deploy.sh` los pone):
 
 ```
 d:\SteamLibrary\steamapps\common\Kenshi\mods\TotalRecruit\
 ├── TotalRecruit.dll     <- cambia en cada build
 ├── TotalRecruit.mod     <- cabecera de 46 bytes, no se toca
 ├── RE_Kenshi.json       <- le dice a RE_Kenshi qué DLL cargar
-└── config.json          <- copiar desde TotalRecruit/config.json cuando cambie
+├── config.json          <- del usuario: solo se le agregan claves faltantes
+├── messages.json        <- idem
+└── gui\images	r_white.png
 ```
 
 La tarjeta de lectura (T9) dibuja sus barras con `TotalRecruit/gui/images/tr_white.png`: copiá esa carpeta `gui` a la desplegada. Sin ella el mod anda igual (usa el skin `WhiteSkin` y lo dice en el log), pero con un mod de skin (DarkUI, PowerModUI) las barras se ven oscuras.
