@@ -42,12 +42,24 @@ bool SafeReadTraits(Character* character, Traits* out);
 // What every route may look at, read once.
 void GatherCoreFacts(Character* character, CoreFacts* out);
 
+// A decision may leave marks (it starts a prisoner's hold clock, it mints the id a roll
+// is seeded from). A peek is the same read with none of that, for the readout: it
+// looks at a clock that is already running and supplies no roll key at all, so the
+// roll cannot pass and nobody gets an id for being looked at.
+enum GatherMode
+{
+    Gather_Decide,
+    Gather_Peek
+};
+
 // What one route needs beyond the core, read only when that route answers.
-CheatFacts GatherCheatFacts(Character* character);
-RescueExtra GatherRescueExtra(Character* character);
-YieldExtra GatherYieldExtra(Character* character);
-FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core);
-CageExtra GatherCageExtra(Character* character, const CoreFacts& core);
+CheatFacts GatherCheatFacts(Character* character, GatherMode mode = Gather_Decide);
+RescueExtra GatherRescueExtra(Character* character, GatherMode mode = Gather_Decide);
+YieldExtra GatherYieldExtra(Character* character, GatherMode mode = Gather_Decide);
+FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core,
+                          GatherMode mode = Gather_Decide);
+CageExtra GatherCageExtra(Character* character, const CoreFacts& core,
+                          GatherMode mode = Gather_Decide);
 
 // Why a character was judged out cold, in the log. Written whenever a verdict
 // turns on medical state, because those are the calls that have been wrong before

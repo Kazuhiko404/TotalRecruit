@@ -27,6 +27,12 @@ bool NoteCageState(Character* character);
 // this very moment), and it never restarts a clock the sweep already started.
 float HoursHeld(Character* character);
 
+// What a bystander look at the hold clock may do: read it. Never starts a clock, never
+// drops one, never mints an id. False when no clock is running for this character
+// (the periodic sweep has not seen them in the cage yet), so the caller says nothing
+// rather than "0 hours".
+bool PeekHoursHeld(Character* character, float* out);
+
 // Forgets every hold clock (new session, plugin start and stop).
 void ResetHoldClock();
 } // namespace totalrecruit

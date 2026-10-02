@@ -255,6 +255,71 @@ bool IsInPlayerCage(Character* character)
     return false;
 }
 
+namespace
+{
+// lektor is an engine-owned buffer that the caller has to release, so the gather
+// and the free are paired here, each in its own POD-only frame.
+bool SafeGatherNearby(const Ogre::Vector3& centre, float radius, lektor<RootObject*>* out)
+{
+    TR_TRY
+    {
+        ou->getCharactersWithinSphere(*out, centre, radius, 0.0f, 30.0f, 60, 0, NULL);
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+void SafeFreeList(lektor<RootObject*>* list)
+{
+    TR_TRY
+    {
+        if (list->stuff != NULL)
+        {
+            free(list->stuff);
+            list->stuff = NULL;
+        }
+    }
+    TR_CATCH { }
+}
+} // namespace
+
+bool SafeAsCharacter(RootObject* object, Character** out)
+{
+    TR_TRY
+    {
+        const itemType type = object->getDataType();
+        if (type != CHARACTER && type != HUMAN_CHARACTER &&
+            type != ANIMAL_CHARACTER && type != WORLDMAP_CHARACTER)
+        {
+            return false;
+        }
+        *out = static_cast<Character*>(object);
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+bool CharactersNear(const Ogre::Vector3& centre, float radius, std::vector<Character*>* out)
+{
+    lektor<RootObject*> nearby;
+    if (!SafeGatherNearby(centre, radius, &nearby))
+    {
+        return false;
+    }
+
+    for (unsigned int i = 0; i < nearby.size(); ++i)
+    {
+        Character* npc = NULL;
+        if (SafeAsCharacter(nearby[i], &npc))
+        {
+            out->push_back(npc);
+        }
+    }
+
+    SafeFreeList(&nearby);
+    return true;
+}
+
 std::string CharacterName(Character* character)
 {
     if (character == NULL)

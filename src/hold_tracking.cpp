@@ -31,6 +31,19 @@ float HoursHeld(Character* character)
     return g_holdClock.HoursHeld(key, now);
 }
 
+bool PeekHoursHeld(Character* character, float* out)
+{
+    double now = 0.0;
+    CharKey key;
+    if (!SafeGameHours(&now) || !SafeFindCharKey(character, &key) ||
+        !g_holdClock.IsTracked(key))
+    {
+        return false;
+    }
+    *out = g_holdClock.HoursHeld(key, now);
+    return true;
+}
+
 bool NoteCageState(Character* character)
 {
     const bool caged = IsInPlayerCage(character);

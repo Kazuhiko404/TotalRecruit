@@ -69,47 +69,6 @@ bool SafePlayerAnchor(Ogre::Vector3* out)
     TR_CATCH { return false; }
 }
 
-// lektor is an engine-owned buffer that the caller has to release, so the
-// gather and the free are paired in one place.
-bool SafeGatherNearby(const Ogre::Vector3& centre, lektor<RootObject*>* out)
-{
-    TR_TRY
-    {
-        ou->getCharactersWithinSphere(*out, centre, kHailRadius, 0.0f, 30.0f, 40, 0, NULL);
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-void SafeFreeList(lektor<RootObject*>* list)
-{
-    TR_TRY
-    {
-        if (list->stuff != NULL)
-        {
-            free(list->stuff);
-            list->stuff = NULL;
-        }
-    }
-    TR_CATCH { }
-}
-
-bool SafeIsCharacterType(RootObject* object, Character** out)
-{
-    TR_TRY
-    {
-        const itemType type = object->getDataType();
-        if (type != CHARACTER && type != HUMAN_CHARACTER &&
-            type != ANIMAL_CHARACTER && type != WORLDMAP_CHARACTER)
-        {
-            return false;
-        }
-        *out = static_cast<Character*>(object);
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
 // Only captives call out (the caller has already established the cage). A free
 // NPC shouting "let us talk" as the player walks past a town would be noise,
 // and the mod has nothing to offer them anyway.
@@ -147,19 +106,15 @@ void SweepForHails(bool hailing)
         return;
     }
 
-    lektor<RootObject*> nearby;
-    if (!SafeGatherNearby(centre, &nearby))
+    std::vector<Character*> nearby;
+    if (!CharactersNear(centre, kHailRadius, &nearby))
     {
         return;
     }
 
     for (unsigned int i = 0; i < nearby.size(); ++i)
     {
-        Character* npc = NULL;
-        if (!SafeIsCharacterType(nearby[i], &npc))
-        {
-            continue;
-        }
+        Character* npc = nearby[i];
 
         // Looked at for everyone in range, caged or not: the first sighting in
         // the cage starts the prisoner's hold clock and a sighting outside it
@@ -214,8 +169,6 @@ void SweepForHails(bool hailing)
         TellPlayer(CharacterName(npc) + " quiere hablar contigo.", false);
         LogInfo(CharacterName(npc) + " called out to the player.");
     }
-
-    SafeFreeList(&nearby);
 }
 } // namespace
 

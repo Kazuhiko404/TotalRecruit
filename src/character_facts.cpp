@@ -484,7 +484,7 @@ void GatherCoreFacts(Character* character, CoreFacts* out)
     *out = f;
 }
 
-CheatFacts GatherCheatFacts(Character* character)
+CheatFacts GatherCheatFacts(Character* character, GatherMode mode)
 {
     const Config& config = GetConfig();
     CheatFacts facts;
@@ -493,30 +493,44 @@ CheatFacts GatherCheatFacts(Character* character)
     // decide something.
     if (config.cheatNeedsCage && facts.inMyCage)
     {
-        facts.hoursHeld = HoursHeld(character);
+        if (mode == Gather_Peek)
+        {
+            facts.holdKnown = PeekHoursHeld(character, &facts.hoursHeld);
+        }
+        else
+        {
+            facts.hoursHeld = HoursHeld(character);
+            facts.holdKnown = true;
+        }
     }
     return facts;
 }
 
-RescueExtra GatherRescueExtra(Character* character)
+RescueExtra GatherRescueExtra(Character* character, GatherMode mode)
 {
     RescueExtra extra;
     extra.relation = ReadRelation(character, PlayerFaction());
-    extra.roll = MintRollKey(character);
+    if (mode == Gather_Decide)
+    {
+        extra.roll = MintRollKey(character);
+    }
     return extra;
 }
 
-YieldExtra GatherYieldExtra(Character* character)
+YieldExtra GatherYieldExtra(Character* character, GatherMode mode)
 {
     YieldExtra extra;
-    extra.roll = MintRollKey(character);
+    if (mode == Gather_Decide)
+    {
+        extra.roll = MintRollKey(character);
+    }
     return extra;
 }
 
 // Stops reading where the decision stops (another cage, a pestered NPC, an animal),
 // so a click on a bystander does not run the whole talent survey for a price nobody
 // is going to quote.
-FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core)
+FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core, GatherMode mode)
 {
     const Config& config = GetConfig();
     FreeExtra extra;
@@ -545,14 +559,14 @@ FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core)
 
     // The roll's key is only minted when the route can roll at all, so asking
     // about a bystander does not give them an id.
-    if (FreeWorldMayRoll(core, extra.relation, config))
+    if (mode == Gather_Decide && FreeWorldMayRoll(core, extra.relation, config))
     {
         extra.roll = MintRollKey(character);
     }
     return extra;
 }
 
-CageExtra GatherCageExtra(Character* character, const CoreFacts& core)
+CageExtra GatherCageExtra(Character* character, const CoreFacts& core, GatherMode mode)
 {
     const Config& config = GetConfig();
     CageExtra extra;
@@ -561,10 +575,21 @@ CageExtra GatherCageExtra(Character* character, const CoreFacts& core)
     // sighting in the hold clock.
     if (config.captivityEnabled && config.prices.easyHoursCaged > 0.0f)
     {
-        extra.hoursHeld = HoursHeld(character);
+        if (mode == Gather_Peek)
+        {
+            extra.holdKnown = PeekHoursHeld(character, &extra.hoursHeld);
+        }
+        else
+        {
+            extra.hoursHeld = HoursHeld(character);
+            extra.holdKnown = true;
+        }
     }
 
-    extra.roll = MintRollKey(character);
+    if (mode == Gather_Decide)
+    {
+        extra.roll = MintRollKey(character);
+    }
     extra.purse = ReadPurse();
     // The relation is only a price factor here (the cage chance ignores standing).
     extra.price = GatherPrice(character, core, ReadRelation(character, PlayerFaction()));

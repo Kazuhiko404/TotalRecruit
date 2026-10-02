@@ -59,6 +59,13 @@ bool SafeInPrison(Character* character, bool* out);
 // There is no getCaptor(); this is derived from inSomething and inWhat.
 bool IsInPlayerCage(Character* character);
 
+// Every character within `radius` of `centre`, as the engine lists them (the world
+// query returns any object; non-characters are dropped). Reads only.
+bool CharactersNear(const Ogre::Vector3& centre, float radius, std::vector<Character*>* out);
+
+// The raw-pointer answer to "is this object a character?" for one RootObject.
+bool SafeAsCharacter(RootObject* object, Character** out);
+
 // Display name, or "<unnamed>" when it cannot be read.
 std::string CharacterName(Character* character);
 } // namespace totalrecruit

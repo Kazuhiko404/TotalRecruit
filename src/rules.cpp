@@ -55,9 +55,12 @@ void LogPriceBreakdown(Character* character, const PriceInputs& in, int cats)
 
 // What the player is told, and what the log keeps (probeOnClick). The reason is
 // turned into text here, once, whichever route produced it.
-Verdict Finish(Verdict verdict, Character* character, const PriceInputs* price)
+Verdict Finish(Verdict verdict, Character* character, const PriceInputs* price,
+               GatherMode mode)
 {
-    if (GetConfig().probeOnClick)
+    // A peek is silent: the readout logs its own line, and the probe breakdown
+    // would repeat every few hundred milliseconds.
+    if (mode == Gather_Decide && GetConfig().probeOnClick)
     {
         if (verdict.rolled)
         {
@@ -107,13 +110,17 @@ const char* CurrencyName(Currency currency)
     }
 }
 
-Verdict Evaluate(Character* character)
+namespace
 {
+Verdict Run(Character* character, GatherMode mode, EvaluationDetail* detail)
+{
+    const bool deciding = (mode == Gather_Decide);
+
     if (character == NULL)
     {
         Verdict nobody;
         nobody.reasonKey = Reason_Nobody;
-        return Finish(nobody, character, NULL);
+        return Finish(nobody, character, NULL, mode);
     }
 
     const Config& config = GetConfig();
@@ -121,22 +128,38 @@ Verdict Evaluate(Character* character)
     // Cheat keeps the gesture and drops the price: it never reads who they are.
     if (config.preset == Preset_Cheat)
     {
-        return Finish(DecideCheat(GatherCheatFacts(character), config), character, NULL);
+        const CheatFacts facts = GatherCheatFacts(character, mode);
+        if (detail != NULL)
+        {
+            detail->route = facts.inMyCage ? Route_Cage : Route_FreeWorld;
+            detail->holdKnown = facts.holdKnown;
+            detail->hoursHeld = facts.hoursHeld;
+        }
+        return Finish(DecideCheat(facts, config), character, NULL, mode);
     }
 
     CoreFacts core;
     GatherCoreFacts(character, &core);
+    if (detail != NULL)
+    {
+        detail->haveCore = true;
+        detail->core = core;
+    }
 
     Verdict gate;
     if (DecideGate(core, config, &gate))
     {
-        return Finish(gate, character, NULL);
+        return Finish(gate, character, NULL, mode);
     }
 
     // Which route answers first is decided in one place, over plain facts:
     // route_rules.cpp. Order is not implied by the order of the cases below.
     const Route route = ChooseEntryRoute(MakeRouteFacts(core, config));
-    if (config.probeOnClick)
+    if (detail != NULL)
+    {
+        detail->route = route;
+    }
+    if (deciding && config.probeOnClick)
     {
         LogRoute(character, route);
     }
@@ -144,46 +167,65 @@ Verdict Evaluate(Character* character)
     switch (route)
     {
     case Route_FieldYield:
-        return Finish(DecideFieldYield(core, GatherYieldExtra(character), config),
-                      character, NULL);
+        return Finish(DecideFieldYield(core, GatherYieldExtra(character, mode), config),
+                      character, NULL, mode);
 
     case Route_Unconscious:
-        LogUnconsciousCondition(character);
-        return Finish(DecideUnconscious(core, config), character, NULL);
+        if (deciding)
+        {
+            LogUnconsciousCondition(character);
+        }
+        return Finish(DecideUnconscious(core, config), character, NULL, mode);
 
     case Route_GrudgeRefusal:
-        return Finish(DecideGrudgeRefusal(core), character, NULL);
+        return Finish(DecideGrudgeRefusal(core), character, NULL, mode);
 
     case Route_Rescue:
-        return Finish(DecideRescue(core, GatherRescueExtra(character), config),
-                      character, NULL);
+        return Finish(DecideRescue(core, GatherRescueExtra(character, mode), config),
+                      character, NULL, mode);
 
     case Route_Dying:
-        return Finish(DecideDying(core), character, NULL);
+        return Finish(DecideDying(core), character, NULL, mode);
 
     case Route_EasyHealthy:
-        return Finish(DecideEasyHealthy(core), character, NULL);
+        return Finish(DecideEasyHealthy(core), character, NULL, mode);
 
     case Route_Surrendered:
-        return Finish(DecideSurrendered(core), character, NULL);
+        return Finish(DecideSurrendered(core), character, NULL, mode);
 
     case Route_FreeWorld:
     {
-        const FreeExtra extra = GatherFreeExtra(character, core);
-        return Finish(DecideFreeWorld(core, extra, config), character, &extra.price);
+        const FreeExtra extra = GatherFreeExtra(character, core, mode);
+        return Finish(DecideFreeWorld(core, extra, config), character, &extra.price, mode);
     }
 
     case Route_Cage:
     default:
     {
-        const CageExtra extra = GatherCageExtra(character, core);
-        if (config.probeOnClick && config.captivityEnabled &&
+        const CageExtra extra = GatherCageExtra(character, core, mode);
+        if (detail != NULL)
+        {
+            detail->holdKnown = extra.holdKnown;
+            detail->hoursHeld = extra.hoursHeld;
+        }
+        if (deciding && config.probeOnClick && config.captivityEnabled &&
             config.prices.easyHoursCaged > 0.0f)
         {
             LogHold(character, extra.hoursHeld);
         }
-        return Finish(DecideCage(core, extra, config), character, &extra.price);
+        return Finish(DecideCage(core, extra, config), character, &extra.price, mode);
     }
     }
+}
+} // namespace
+
+Verdict Evaluate(Character* character)
+{
+    return Run(character, Gather_Decide, NULL);
+}
+
+Verdict EvaluatePeek(Character* character, EvaluationDetail* detail)
+{
+    return Run(character, Gather_Peek, detail);
 }
 } // namespace totalrecruit

@@ -119,8 +119,10 @@ struct CheatFacts
     bool inMyCage;
     // Hours held in the cage, only read when it can matter.
     float hoursHeld;
+    // The clock was read (a peek reads it only when a running clock already exists).
+    bool holdKnown;
 
-    CheatFacts() : inMyCage(false), hoursHeld(0.0f) {}
+    CheatFacts() : inMyCage(false), hoursHeld(0.0f), holdKnown(false) {}
 };
 
 struct RescueExtra
@@ -153,11 +155,13 @@ struct CageExtra
 {
     // Hours held in THIS cage, only read when the easy wait is on.
     float hoursHeld;
+    // The clock was read; false when the wait is off or a peek found no clock.
+    bool holdKnown;
     RollFact roll;
     PurseFact purse;
     PriceInputs price;
     AnimalExtra animal;
 
-    CageExtra() : hoursHeld(0.0f) {}
+    CageExtra() : hoursHeld(0.0f), holdKnown(false) {}
 };
 } // namespace totalrecruit
