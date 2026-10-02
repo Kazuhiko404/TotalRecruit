@@ -228,6 +228,9 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "hailFirstHours", &c.hailFirstHours);
     AddFloat(f, "hailRepeatHours", &c.hailRepeatHours);
     AddInt(f, "hailRepeats", &c.hailRepeats);
+    AddBool(f, "readoutEnabled", &c.readoutEnabled);
+    AddBool(f, "readoutCompact", &c.readoutCompact);
+    AddBool(f, "readoutOnHover", &c.readoutOnHover);
 
     AddInt(f, "preset", &c.preset);
     AddBool(f, "rescueEnabled", &c.rescueEnabled);

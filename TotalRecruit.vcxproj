@@ -119,6 +119,10 @@
     <ClCompile Include="src\readout_format.cpp" />
     <ClCompile Include="src\readout_catalog.cpp" />
     <ClCompile Include="src\readout_model.cpp" />
+    <ClCompile Include="src\readout_text.cpp" />
+    <ClCompile Include="src\readout_ui.cpp" />
+    <ClCompile Include="src\readout_target.cpp" />
+    <ClCompile Include="src\readout.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h" />

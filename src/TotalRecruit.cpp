@@ -33,6 +33,7 @@
 #include "spawn_panel.h"
 #include "character_identity.h"
 #include "load_boundary.h"
+#include "readout.h"
 
 
 
@@ -201,6 +202,7 @@ __declspec(dllexport) void stopPlugin()
     using namespace totalrecruit;
     LogInfo("stopPlugin called.");
 
+    ShutdownReadout();
     ShutdownHailing();
     ShutdownMercy();
     ReportMissingKeys();

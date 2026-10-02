@@ -435,6 +435,11 @@ bool InstallRecruitOverlay()
     return true;
 }
 
+Character* OverlayMenuTarget()
+{
+    return g_targetCharacter;
+}
+
 void ForgetOverlayTarget()
 {
     ClearTarget();

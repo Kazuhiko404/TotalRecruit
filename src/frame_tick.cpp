@@ -3,6 +3,7 @@
 #include "rescue.h"
 #include "hail.h"
 #include "mod_hub_integration.h"
+#include "readout.h"
 #include "log.h"
 
 #include <kenshi/gui/ForgottenGUI.h>
@@ -17,7 +18,7 @@ void (*g_forgottenGuiUpdate_orig)(ForgottenGUI*) = NULL;
 // the game's GUI update down with it.
 void SafeTick()
 {
-    TR_TRY { RescueTick(); HailTick(); ModHubTick(); }
+    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); ModHubTick(); }
     TR_CATCH { }
 }
 

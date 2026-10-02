@@ -858,5 +858,96 @@
         "sano y desconfiado: búscalo herido o hambriento"
       ]
     }
+  },
+  "readout": {
+    "_comment": "Lectura sobre el NPC (estres, chance, ruta y lo que falta). Texto corto y sin acentos: el panel no hace salto de linea. {cats} {purse} {hours} {food} {need} se reemplazan por el numero.",
+    "stress": "ESTRES",
+    "hunger": "Hambre",
+    "wounds": "Heridas",
+    "tired": "Cansancio",
+    "chance": "CHANCE",
+    "defeats": "DERROTAS",
+    "food": "BARRIGA",
+    "route": {
+      "captivity": "Cautiverio",
+      "rescue": "Rescate",
+      "surrender": "Rendicion",
+      "mercy": "Piedad",
+      "animal": "Animal",
+      "free": "Libre"
+    },
+    "line": {
+      "unreadable": "Se une",
+      "cheat": {
+        "joinsFreely": "Se une",
+        "needsCage": "Metelo en una jaula",
+        "waiting": "Espera un momento en la jaula",
+        "joins": "Quiere hablar: se une"
+      },
+      "unconscious": {
+        "owesYou": "Inconsciente: te lo debe al despertar",
+        "dying": "Se muere: curalo y espera",
+        "wait": "Inconsciente: espera a que despierte"
+      },
+      "dying": "Se muere: curalo primero",
+      "rescue": {
+        "joins": "Te debe la vida: se une",
+        "repays": "No puede seguirte: te paga con lo suyo"
+      },
+      "easyHealthy": "Sano gracias a ti: se une",
+      "fieldYield": {
+        "joins": "Se rinde y te sigue",
+        "notYet": "Aun no cede: dejalo sin comer"
+      },
+      "surrendered": "Se rinde antes que morir",
+      "grudge": {
+        "never": "Rencor: no perdona fuera de la jaula"
+      },
+      "inOthersCage": "Esta en la jaula de otro",
+      "insistence": "Harto de ti: dejalo en paz un rato",
+      "ally": {
+        "joins": "Aliado: se une",
+        "maybe": "Quiza te siga; si no, hazte mas fuerte"
+      },
+      "faction": {
+        "honour": "Su honor no trata con tu reputacion",
+        "greedy": "Te odia: ni por dinero"
+      },
+      "honour": {
+        "starving": "Tiene hambre: dale de comer",
+        "noBribes": "Honor: no acepta sobornos"
+      },
+      "military": "Leal a su faccion: no se compra",
+      "cats": {
+        "ask": "Precio {cats} cats (tienes {purse})",
+        "join": "Se une por {cats} cats"
+      },
+      "captivityDisabled": "Reclutar prisioneros esta desactivado",
+      "easyWait": "Lleva bastante encerrado: se rinde",
+      "intimidated": "Intimidado: se somete",
+      "freed": "Seguira a quien lo libero",
+      "cared": {
+        "person": "Alimentado y curado: se une",
+        "animal": "Alimentado y curado: confia en ti"
+      },
+      "starving": "Hambriento: dale de comer",
+      "wounded": "Herido: curalo",
+      "starvingAndWounded": "Hambriento y herido: comida y cura",
+      "broken": "Quebrado: te seguira",
+      "unique": {
+        "zealot": "Solo el hambre y las heridas lo quiebran"
+      },
+      "defiant": "Desafiante: hambre o golpes lo ablandan",
+      "animal": {
+        "owned": "Tiene dueno: metelo en una jaula",
+        "wary": "Desconfia: buscalo herido o hambriento",
+        "tame": {
+          "wounded": "Herido: curalo antes de domarlo",
+          "ready": "Comio de tu mano: te sigue",
+          "hungry": "Hambre {food}% / necesita {need}%"
+        }
+      },
+      "waitCage": "Faltan {hours} en la jaula"
+    }
   }
 }

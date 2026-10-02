@@ -430,6 +430,14 @@ struct Config
     float hailRepeatHours;
     int hailRepeats;
 
+    // The readout card over an NPC the mod can talk to: how worn down they are, the
+    // chance, the route and what stands in the way (readout.h). Hover follows the
+    // NPC under the cursor; off, it only shows for the selected object or the
+    // target of an open right-click menu.
+    bool readoutEnabled;
+    bool readoutCompact;
+    bool readoutOnHover;
+
     int preset; // Preset enum
     // Route A: recruit someone you saved from dying. The one route no existing
     // mod has, and the only one where the player is not exercising power.
@@ -488,6 +496,9 @@ struct Config
           hailFirstHours(24.0f),
           hailRepeatHours(6.0f),
           hailRepeats(5),
+          readoutEnabled(true),
+          readoutCompact(false),
+          readoutOnHover(true),
           friendlyRelation(20.0f),
           relationRefuseGoodNatured(-15.0f),
           relationRefuseAll(-30.0f),

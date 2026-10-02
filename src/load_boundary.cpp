@@ -9,6 +9,7 @@
 #include "mercy.h"
 #include "offer_popup.h"
 #include "recruit_overlay.h"
+#include "readout.h"
 #include "hold_tracking.h"
 #include "insistence.h"
 
@@ -46,6 +47,7 @@ void ResetSessionState()
     // UI and raw pointers first: they refer to characters the load will free.
     HideOffer();
     ForgetOverlayTarget();
+    ForgetReadout();
     ForgetCursorTarget();
     ForgetConversation();
 
@@ -58,7 +60,7 @@ void ResetSessionState()
 
     // Last: the ids the keys above were made from.
     CharacterIdentity::AbandonWorldState();
-    LogInfo("[identity] load begin: session state cleared (offer window, overlay and cursor targets, "
+    LogInfo("[identity] load begin: session state cleared (offer window, overlay, readout and cursor targets, "
             "conversation, mercy, hails, hold clock, insistence, defeats, identity registry).");
 }
 
