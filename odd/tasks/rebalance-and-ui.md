@@ -468,7 +468,7 @@ and uniques land in the reference 100-150k band instead of overshooting it).
 - In-game QA: QA.md 12.8 (U1-U21).
 
 ### T10 Docs - done
-- Commit: filled in by the next task's commit. Docs only.
+- Commit: `f5f445b` (`docs: refresh README, ESTADO, TODO, QA and REQUISITOS for the rebalance-and-ui round`). Docs only.
 - README (Status, Cheat/easy mode/price, readout card, identity coexistence, files, no Ctrl+K), ESTADO.md (section 2.1 with every T1-T9 change at
   "Compila + tests", next steps, git remote note), TODO.md rewritten, SPEC-ESTADO.md and COMPARATIVA.md bannered as historical, REQUISITOS R6.4 fixed
   and R3.3/R3.6/R3.7 marked implemented, QA.md section 12 run header and priority order.
