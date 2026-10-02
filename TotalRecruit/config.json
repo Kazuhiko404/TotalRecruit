@@ -21,7 +21,7 @@
   "surrenderEnabled": true,
   "animalsEnabled": true,
 
-  "easyHoursCaged": 12.0,
+  "easyHoursCaged": 6.0,
   "catsPerLevel": 40,
   "catsCeiling": 72000,
   "priceCurveSteepness": 0.11,
@@ -29,8 +29,6 @@
   "catsMinimum": 200,
   "hungerThreshold": 0.0,
   "woundedThreshold": 0.5,
-  "hoursCagedForProud": 12.0,
-  "uniqueExtraHours": 24.0,
   "fearfulMultiplier": 0.6,
   "braveMultiplier": 1.6,
   "factionWeight": 0.75,

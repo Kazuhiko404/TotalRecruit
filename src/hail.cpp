@@ -122,14 +122,15 @@ bool SafeIsCharacterType(RootObject* object, Character** out)
     TR_CATCH { return false; }
 }
 
-// Only captives call out. A free NPC shouting "let us talk" as the player walks
-// past a town would be noise, and the mod has nothing to offer them anyway.
+// Only captives call out (the caller has already established the cage). A free
+// NPC shouting "let us talk" as the player walks past a town would be noise,
+// and the mod has nothing to offer them anyway.
 //
-// Cheap: address identity only, no engine traversal. Everything expensive is
+// Cheap: no engine traversal beyond the exclusion list. Everything expensive is
 // gated behind this and behind the clock.
 bool CouldEverHail(Character* npc)
 {
-    return npc != NULL && IsInPlayerCage(npc) && IsRecruitable(npc, NULL);
+    return npc != NULL && IsRecruitable(npc, NULL);
 }
 
 // Expensive: the full decision engine -- medical state, faction, personality,
@@ -141,7 +142,10 @@ bool IsReadyToHail(Character* npc)
     return verdict.willJoin;
 }
 
-void SweepForHails()
+// The sweep also keeps the hold clock honest for everyone in range (see
+// NoteCageState), which is why it runs even with hailing switched off:
+// `hailing` only decides whether a ready captive calls out.
+void SweepForHails(bool hailing)
 {
     double now = 0.0;
     if (!SafeGameHours(&now))
@@ -169,8 +173,13 @@ void SweepForHails()
             continue;
         }
 
+        // Looked at for everyone in range, caged or not: the first sighting in
+        // the cage starts the prisoner's hold clock and a sighting outside it
+        // ends it, so a released-and-recaged prisoner starts over.
+        const bool caged = NoteCageState(npc);
+
         // Cheapest first: most characters in range are not captives at all.
-        if (!CouldEverHail(npc))
+        if (!hailing || !caged || !CouldEverHail(npc))
         {
             continue;
         }
@@ -225,6 +234,7 @@ void SweepForHails()
 bool InstallHailing()
 {
     g_hailed.clear();
+    ResetHoldClock();
     g_nextSweep = 0;
     LogInfo("Prisoner hailing installed.");
     return true;
@@ -233,15 +243,11 @@ bool InstallHailing()
 void ShutdownHailing()
 {
     g_hailed.clear();
+    ResetHoldClock();
 }
 
 void HailTick()
 {
-    if (!GetConfig().hailWhenReady)
-    {
-        return;
-    }
-
     const unsigned int now = GetTickCount();
     if (now < g_nextSweep)
     {
@@ -249,6 +255,6 @@ void HailTick()
     }
     g_nextSweep = now + kSweepIntervalMs;
 
-    SweepForHails();
+    SweepForHails(GetConfig().hailWhenReady);
 }
 } // namespace totalrecruit

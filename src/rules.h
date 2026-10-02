@@ -71,6 +71,15 @@ Verdict Evaluate(Character* character);
 // There is no getCaptor(); this is derived from inSomething and inWhat.
 bool IsInPlayerCage(Character* character);
 
+// Looks at where this character is right now and keeps the hold clock honest:
+// caged starts it (once), free drops it, so the easy-mode wait counts time in
+// THIS cage. Returns whether they are in the player's cage. Called by the
+// periodic sweep for everyone in range.
+bool NoteCageState(Character* character);
+
+// Forgets every hold clock (new session, plugin start and stop).
+void ResetHoldClock();
+
 // True when this character is dying rather than merely knocked out, and is not
 // faking it (PS_PLAYING_DEAD exists).
 bool IsGenuinelyDying(Character* character);

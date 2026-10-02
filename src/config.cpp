@@ -268,10 +268,8 @@ void LoadConfig(const std::string& modDirectory)
     ReadBool(text, "animalOwnedNeedCage", &g_config.animals.ownedNeedCage);
     ReadFloat(text, "animalNutritionPerMeal", &g_config.animals.nutritionPerMeal);
     ReadBool(text, "animalPersonalityMatters", &g_config.animals.personalityMatters);
-    ReadFloat(text, "hoursCagedForProud", &g_config.prices.hoursCagedForProud);
     ReadFloat(text, "fearfulMultiplier", &g_config.prices.fearfulMultiplier);
     ReadFloat(text, "braveMultiplier", &g_config.prices.braveMultiplier);
-    ReadFloat(text, "uniqueExtraHours", &g_config.prices.uniqueExtraHours);
     ReadFloat(text, "factionWeight", &g_config.prices.factionWeight);
     ReadFloat(text, "talentWeight", &g_config.prices.talentWeight);
     ReadFloat(text, "uniqueMultiplier", &g_config.prices.uniqueMultiplier);
@@ -395,8 +393,6 @@ bool SaveConfig(const std::string& modDirectory)
     file << "  \"animalStrongPenalty\": " << g_config.animals.strongPenalty << ",\n";
     file << "  \"animalEdgeDiscount\": " << g_config.animals.edgeDiscount << ",\n";
     file << "  \"animalBigEdgeDiscount\": " << g_config.animals.bigEdgeDiscount << ",\n";
-    file << "  \"hoursCagedForProud\": " << g_config.prices.hoursCagedForProud << ",\n";
-    file << "  \"uniqueExtraHours\": " << g_config.prices.uniqueExtraHours << ",\n";
     file << "  \"fearfulMultiplier\": " << g_config.prices.fearfulMultiplier << ",\n";
     file << "  \"braveMultiplier\": " << g_config.prices.braveMultiplier << ",\n";
     file << "  \"factionWeight\": " << g_config.prices.factionWeight << ",\n\n";

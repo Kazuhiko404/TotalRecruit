@@ -70,7 +70,7 @@ Out of scope:
   - `OnAccept` never clears `g_pleading` (offer_popup.cpp:623).
   - `g_pleading` is a raw pointer.
   - Route: delegated.
-- [ ] **T4 Easy mode 12h -> 6h, plus dead controls:**
+- [x] **T4 Easy mode 12h -> 6h, plus dead controls:**
   - Default `easyHoursCaged` 6.
   - Remove or wire the dead hub controls `hoursCagedForProud` and `uniqueExtraHours`.
   - Fix the hold clock so it starts at cage time, not first evaluate.
@@ -142,7 +142,7 @@ Out of scope:
 - In-game QA: QA.md section 12.1 (F1-F8).
 
 ### T3 Mercy and popup bugs - done
-- Commit: `{T3}` (`fix(mercy): clear the plea on every close path and key it by handle`). Route: delegated (same writer).
+- Commit: `a7a274c` (`fix(mercy): clear the plea on every close path and key it by handle`). Route: delegated (same writer).
 - RED: new `plea_tracker` suite with a stub that never cleared and matched on index only:
   `5/6 suites passed, 7/15728 checks failed` (clear/next-plea x4, Clear() x2, reused slot serial x1).
 - GREEN: `6/6 suites passed, 0/15728 checks failed`.
@@ -155,5 +155,25 @@ Out of scope:
 - Builds: DLL Release|x64 OK; tests green.
 - In-game QA: QA.md 12.2 (M1-M4).
 
+### T4 Easy mode and dead controls - done
+- Commit: `{T4}` (`fix(easy-mode): 6h default, drop dead controls, start the hold clock at caging`). Route: delegated (same writer).
+- RED: new `hold_clock` suite with a stub that never dropped a clock and never handled a backwards game clock:
+  `6/7 suites passed, 7/15751 checks failed` (release drops the clock x2, re-cage starts over x1, per-prisoner x2,
+  clock goes backwards x1, `Prices().easyHoursCaged == 6` x1).
+- GREEN: `7/7 suites passed, 0/15751 checks failed`.
+- `easyHoursCaged` default 12 -> 6 in `config.h` and the repo copy `TotalRecruit/config.json` (the one user-requested value
+  change). Flat for everyone: nothing reads personality or uniqueness for the wait.
+- Removed `hoursCagedForProud` and `uniqueExtraHours` from the `Prices` struct, `LoadConfig`/`SaveConfig`, the Mod Hub
+  registration and the repo `config.json`. `LoadConfig` looks keys up by name, so an old file that still has them loads fine.
+  The deployed `config.json` is NOT touched (T11 adds `easyHoursCaged` 6 there).
+- Hold clock: new engine-free `HoldClock` (src/hold_clock.{h,cpp}). `NoteCageState` (rules.cpp) is called by the periodic sweep in
+  `hail.cpp` for every character in range: first sighting in the player's cage starts the clock, a sighting outside drops it.
+  `HoursHeld` (used by Evaluate) only observes "caged" as a fallback and never restarts a running clock. A game clock that went
+  backwards (older save loaded) restarts the hold. The sweep now also runs with `hailWhenReady` off (`SweepForHails(hailing)`).
+  Known limit: a prisoner released and re-caged entirely out of the 900-unit sweep radius is not seen being free, so keeps its clock.
+- Probe log lines: `[hold] clock started/dropped` and `[hold] held=Xh easy-mode needs Yh` (probeOnClick only).
+- Builds: DLL Release|x64 OK; tests green.
+- In-game QA: QA.md 12.3 (E1-E8). `S2` control count note updated (~76).
+
 ## Next step
-T4.
+T5 (money audit). Fill in the `{T4}` commit hash above on the next commit.

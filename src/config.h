@@ -41,8 +41,10 @@ enum Preset
 struct Prices
 {
     // Easy mode: hours a captive must simply be held before they give in,
-    // regardless of who they are. 0 disables it and leaves the per-archetype
-    // prices as the only route.
+    // regardless of who they are -- flat, no per-personality or unique extra.
+    // Counted from when the prisoner was first seen in the player's cage (see
+    // hold_clock.h). 0 disables it and leaves the per-archetype prices as the
+    // only route.
     float easyHoursCaged;
     // Route B: cats demanded, scaled from the NPC's rough level.
     // Price = (catsPerLevel/10) * level^2 + catsCeiling * logistic(level).
@@ -65,14 +67,9 @@ struct Prices
     float hungerThreshold;
     // Overall health at or below this counts as "hurt enough to listen".
     float woundedThreshold;
-    // Hours in your cage before a proud NPC will consider it.
-    float hoursCagedForProud;
     // Multipliers applied to the cats price by personality.
     float fearfulMultiplier;
     float braveMultiplier;
-    // Unique characters (Fenix and the like) demand submission plus this much
-    // extra time. They are harder, never impossible.
-    float uniqueExtraHours;
     // Vanilla+ only: how much faction relation shifts the price. Relation runs
     // roughly -100..100; this is the fraction of the base price added at -100.
     float factionWeight;
@@ -86,7 +83,7 @@ struct Prices
     float uniqueMultiplier;
 
     Prices()
-        : easyHoursCaged(12.0f),
+        : easyHoursCaged(6.0f),
           catsPerLevel(40),
           catsCeiling(72000),
           priceCurveSteepness(0.11f),
@@ -94,10 +91,8 @@ struct Prices
           catsMinimum(200),
           hungerThreshold(0.0f),
           woundedThreshold(0.5f),
-          hoursCagedForProud(12.0f),
           fearfulMultiplier(0.6f),
           braveMultiplier(1.6f),
-          uniqueExtraHours(24.0f),
           factionWeight(0.75f),
           talentWeight(1.0f),
           uniqueMultiplier(2.0f)

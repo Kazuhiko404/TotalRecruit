@@ -200,9 +200,7 @@ static bool DoRegisterModHub()
     regInt(api, mod, "cats_minimum", "Cats (Mínimo)", "Precio mínimo para cualquier recluta", 0, 10000, 100, &c.prices.catsMinimum);
     regFloat(api, mod, "hunger_threshold", "Umbral de hambre", "Considera hambriento por debajo de este % de estomago lleno (0 = usar solo el motor)", 0.0f, 1.0f, 0.05f, 2, &c.prices.hungerThreshold);
     regFloat(api, mod, "wounded_threshold", "Salud (Máximo para reclutar)", "Si la salud es <= a esto, escuchan (0..1)", 0.0f, 1.0f, 0.1f, 2, &c.prices.woundedThreshold);
-    regFloat(api, mod, "easy_hours_caged", "Horas jaula (modo facil)", "Horas en jaula que bastan por si solas. 0 lo desactiva", 0.0f, 72.0f, 1.0f, 0, &c.prices.easyHoursCaged);
-    regFloat(api, mod, "hours_caged_for_proud", "Horas jaula (Orgullosos)", "Horas a esperar para NPCs orgullosos", 0.0f, 72.0f, 1.0f, 0, &c.prices.hoursCagedForProud);
-    regFloat(api, mod, "unique_extra_hours", "Horas jaula (Únicos)", "Horas extra requeridas para únicos", 0.0f, 168.0f, 6.0f, 0, &c.prices.uniqueExtraHours);
+    regFloat(api, mod, "easy_hours_caged", "Horas jaula (modo facil)", "Horas en jaula que bastan por si solas, iguales para todos. 0 lo desactiva", 0.0f, 72.0f, 1.0f, 0, &c.prices.easyHoursCaged);
     
     // Multipliers
     regFloat(api, mod, "fearful_multiplier", "Precio miedosos", "Multplicador para personalidades miedosas", 0.1f, 2.0f, 0.1f, 1, &c.prices.fearfulMultiplier);

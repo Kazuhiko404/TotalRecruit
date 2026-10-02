@@ -9,6 +9,7 @@
 #include "chance_rules.h"
 #include "price_rules.h"
 #include "route_rules.h"
+#include "hold_clock.h"
 
 #include <kenshi/CharacterAnimal.h>
 #include <kenshi/CharStats.h>
@@ -566,12 +567,15 @@ bool SafePlayerMoney(Character* leader, int* out)
 
 // How long this captive has been held, in in-game hours.
 //
-// The engine does not record when captivity began, so the first sighting is
-// taken as the start. That undercounts a prisoner taken before the plugin ever
-// saw them, which errs towards making the player wait -- the safe direction.
-// It lives only in memory: a reload restarts the clock rather than freeing
-// someone the player never actually held.
-std::map<CharKey, double> g_heldSince;
+// The engine does not record when captivity began, so the mod watches: the
+// periodic sweep (hail.cpp, through NoteCageState) starts a prisoner's clock the
+// first time it sees them in the player's cage and drops it when it sees them
+// free. A prisoner taken before the plugin ever saw them is counted from the
+// first sighting, which errs towards making the player wait -- the safe
+// direction. It lives only in memory: a reload restarts the clock rather than
+// freeing someone the player never actually held. The timing rules themselves
+// are engine-free: hold_clock.cpp.
+HoldClock g_holdClock;
 
 struct TalkState
 {
@@ -599,6 +603,10 @@ bool SafeGameHours(double* out)
     TR_CATCH { return false; }
 }
 
+// Only called for a prisoner already known to be in the player's cage, so the
+// sighting it makes is a caged one: that is the fallback for a prisoner the
+// periodic sweep has not reached yet (out of range, or caged this very moment),
+// and it never restarts a clock the sweep already started.
 float HoursHeld(Character* character)
 {
     double now = 0.0;
@@ -613,15 +621,8 @@ float HoursHeld(Character* character)
         return 0.0f;
     }
 
-    std::map<CharKey, double>::iterator found = g_heldSince.find(key);
-    if (found == g_heldSince.end())
-    {
-        g_heldSince[key] = now;
-        return 0.0f;
-    }
-
-    const double held = now - found->second;
-    return (held > 0.0) ? (float)held : 0.0f;
+    g_holdClock.Observe(key, true, now);
+    return g_holdClock.HoursHeld(key, now);
 }
 
 // Faction relation runs roughly -100..100. It only ever shifts the price, and
@@ -1227,6 +1228,31 @@ bool IsInPlayerCage(Character* character)
     }
 
     return false;
+}
+
+bool NoteCageState(Character* character)
+{
+    const bool caged = IsInPlayerCage(character);
+
+    double now = 0.0;
+    CharKey key;
+    if (SafeGameHours(&now) && SafeCharKey(character, &key))
+    {
+        const bool wasHeld = g_holdClock.IsTracked(key);
+        g_holdClock.Observe(key, caged, now);
+        if (GetConfig().probeOnClick && wasHeld != caged)
+        {
+            LogInfo(CharacterName(character) +
+                    (caged ? " [hold] clock started: seen in your cage"
+                           : " [hold] clock dropped: no longer in your cage"));
+        }
+    }
+    return caged;
+}
+
+void ResetHoldClock()
+{
+    g_holdClock.Clear();
 }
 
 bool IsGenuinelyDying(Character* character)
@@ -1955,6 +1981,14 @@ Verdict Evaluate(Character* character)
     if (config.prices.easyHoursCaged > 0.0f)
     {
         const float held = HoursHeld(character);
+        if (config.probeOnClick)
+        {
+            char note[96] = { 0 };
+            _snprintf_s(note, sizeof(note), _TRUNCATE,
+                        " [hold] held=%.1fh easy-mode needs %.1fh", held,
+                        config.prices.easyHoursCaged);
+            LogInfo(CharacterName(character) + note);
+        }
         if (held >= config.prices.easyHoursCaged)
         {
             verdict.willJoin = true;

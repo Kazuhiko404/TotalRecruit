@@ -36,7 +36,7 @@ tail -f "/d/SteamLibrary/steamapps/common/Kenshi/RE_Kenshi_log.txt" | rg "TotalR
 | # | Qué hacer | Esperado | Línea del log |
 |---|---|---|---|
 | S1 | Abrir el juego | El mod carga y el hub engancha | `startPlugin complete.` y `Mod Hub attached: api v1, size 160 bytes.` |
-| S2 | Abrir el panel de Mod Hub | ~78 controles de TotalRecruit, ninguno rechazado | Ningún `Mod Hub rejected` |
+| S2 | Abrir el panel de Mod Hub | ~76 controles de TotalRecruit, ninguno rechazado | Ningún `Mod Hub rejected` |
 | S3 | Click derecho a cualquier NPC | Sale el bloque de diagnóstico completo | `--- probe: <nombre> ---` … `--- end probe ---` |
 | S4 | Cerrar el juego | Nombra las claves de texto que falten | `messages.json has no entry for:` (o nada) |
 
@@ -335,3 +335,18 @@ la ruta que contestó primero (`field-yield`, `unconscious`, `grudge-refusal`,
 | M2 | Cerrar una súplica con la cruz de la ventana, y luego dejar que otro pierda un miembro | También se abre; antes quedaba bloqueado hasta recargar | Ninguna línea `Could not open the mercy window` |
 | M3 | Ídem con RECHAZAR | Se abre la siguiente | — |
 | M4 | Con una súplica abierta, hacerle click derecho al mismo NPC y abrir su oferta normal (si es un cautivo con precio) | ACEPTAR **cobra** según el veredicto; no lo regala como si fuera piedad | `pagaste N cats` en el mensaje |
+
+### 12.3 Modo fácil y reloj de encierro (T4)
+
+Con `probeOnClick` el reloj deja líneas `[hold]`.
+
+| # | Qué hacer | Esperado | Línea del log |
+|---|---|---|---|
+| E1 | Instalar con la config de fábrica y mirar el hub | `Horas jaula (modo facil)` arranca en **6**, igual para todos | — |
+| E2 | Encerrar a alguien en una jaula tuya y quedarse cerca (< ~900 unidades) | El reloj arranca **al encerrarlo**, no al primer click | `<nombre> [hold] clock started: seen in your cage` |
+| E3 | Esperar 6 horas de juego y hablarle | Se rinde por tiempo: *"lleva bastante encerrado y se rinde"*, sea honorable, único o cobarde | `[hold] held=6.0h easy-mode needs 6.0h` |
+| E4 | Hablarle a las 3 horas | Todavía no (otras rutas pueden decidir) | `[hold] held=3.0h easy-mode needs 6.0h` |
+| E5 | Encerrarlo un día, **sacarlo de la jaula** (que te vean pasar con él libre), volver a encerrarlo y hablarle enseguida | **No** se une al instante: el reloj empieza de cero | `[hold] clock dropped: no longer in your cage`, luego `clock started` y `held=0.0h` |
+| E6 | Abrir el hub | **Ya no** están `Horas jaula (Orgullosos)` ni `Horas jaula (Únicos)` | S2: sin `Mod Hub rejected` |
+| E7 | Cargar una config vieja que todavía trae `hoursCagedForProud` y `uniqueExtraHours` | Carga sin quejas; esas claves se ignoran | Sin errores de config en el log |
+| E8 | Con `hailWhenReady` en `false`, repetir E2 y E3 | El reloj anda igual (el barrido sigue vivo) | Las mismas líneas `[hold]` |
