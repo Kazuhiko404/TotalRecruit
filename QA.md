@@ -36,7 +36,7 @@ tail -f "/d/SteamLibrary/steamapps/common/Kenshi/RE_Kenshi_log.txt" | rg "TotalR
 | # | Qué hacer | Esperado | Línea del log |
 |---|---|---|---|
 | S1 | Abrir el juego | El mod carga y el hub engancha | `startPlugin complete.` y `Mod Hub attached: api v1, size 160 bytes.` |
-| S2 | Abrir el panel de Mod Hub | ~76 controles de TotalRecruit, ninguno rechazado | Ningún `Mod Hub rejected` |
+| S2 | Abrir el panel de Mod Hub | ~106 controles de TotalRecruit (T8 sumo 19), ninguno rechazado | Ningún `Mod Hub rejected` |
 | S3 | Click derecho a cualquier NPC | Sale el bloque de diagnóstico completo | `--- probe: <nombre> ---` … `--- end probe ---` |
 | S4 | Cerrar el juego | Nombra las claves de texto que falten | `messages.json has no entry for:` (o nada) |
 
@@ -398,3 +398,24 @@ Para ver la clave de un NPC: `"probeOnClick": true` y mirar la linea `[route] ..
 | I8 | Dejarle a un prisionero 1+ derrotas de sesion y un reloj de encierro corriendo, luego cargar otro save (o el mismo) | Nada de lo anterior se arrastra: las derrotas de sesion, el reloj de encierro, los avisos (`hail`) y la insistencia empiezan de cero; queda solo el piso que guarda el motor | `[identity] load begin: session state cleared` |
 | I9 | Tener abierta la ventana de oferta (o la de piedad) y cargar | La ventana se cierra sola, no queda el boton de reclutar apuntando a nadie | `[identity] load begin: session state cleared` |
 | I10 | Si el log muestra `hook installation failed` | El mod sigue andando con clave por handle (como antes de T7), una sola vez en el log | `[identity] persisted character id unavailable; per-character state keyed by handle ...` |
+
+### 12.7 Estructura, motivos y numeros sueltos (T8)
+
+T8 es un refactor: **el comportamiento no debe cambiar** salvo A1 (golpiza) y la linea de rencor de Z3. Todo lo de abajo es para confirmar que nada se movio. Los textos al jugador salen ahora de `messages.json` (claves nuevas bajo `reason.*`); con el `messages.json` instalado de antes, el juego sigue andando con los textos internos y al cerrar el log lista las claves que faltan (`messages.json has no entry for: reason....`): es lo esperado hasta T11.
+
+| # | Qué hacer | Esperado | Línea del log |
+|---|---|---|---|
+| A1 | Prisionero en tu jaula, ventana de oferta, **GOLPEARLO** | Queda sin sentido y la derrota **cuenta siempre** (antes se perdia si el motor no nombraba al jugador como ganador); el contador de sesion sube de a 1 | `[defeat] credited to the player explicitly (beating): <nombre> (engine winner is the player / is someone else / unreadable)` y luego `<nombre> defeated by the player (N this session, ...)` |
+| A2 | Volver a golpear al mismo prisionero enseguida | "todavia se esta recuperando del anterior": el enfriamiento (6h por defecto) corre desde ESE golpe. Antes, un golpe descartado no dejaba registro y se podia golpear sin espera | (sin linea nueva) |
+| A3 | Con `probeOnClick`, golpear a alguien que el motor no registra como tuyo | Mismo `[defeat] credited ...`; **no** aparece `[defeat-skip] ... lastGuyWhoDefeatedMe` para ese golpe | `[defeat-skip]` ausente |
+| Z1 | Hacer clic en un prisionero, un NPC libre, un aliado, un animal, un rescatado y un NPC con rencor | El texto del motivo en la ventana y en `Refused ...` es **el mismo de antes**, palabra por palabra | `Refused <nombre> (<moneda>): <motivo>` |
+| Z2 | Insistir 3 veces a un NPC libre | Linea "¡Me estás hartando! Déjame en paz." y motivo "está harto de tu insistencia...". Editar `reason.insistence` en `messages.json` (otro texto) **no cambia** la linea que dice el NPC | `[route] free-world` |
+| Z3 | Honorable, Valiente o Bondadoso que te guarda rencor (mataste a uno de los suyos), **fuera** de la jaula | Rechazo absoluto (`grudge-refusal`) y **siempre** dice "Sé lo que hiciste. Fuera de mi vista." Antes solo la decia si el texto del motivo contenia "mataste" (2 de las 7 variantes del `messages.json`); las otras 5 caian en "¿Quién eres tú? No tengo nada que hablar contigo." | `[route] grudge-refusal` |
+| Z4 | El mismo NPC con rencor, pero **dentro** de tu jaula | Sigue la ruta de jaula (ya no hay rechazo absoluto), igual que antes | `[route] cage` |
+| C1 | Hub: buscar los 19 controles nuevos | `Chance: peso de la reputacion`, `Chance: bono de aliado`, 9 `Personalidad: ...`, `Reputacion: honorables se niegan`, `Reputacion: nadie trata`, `Talento: peso de oficio`, `Talento: peso de sombra`, 4 de `Animal: ...` (niveles del descuento y factores del temperamento). Con los valores de fabrica, todo se comporta como antes | S2: sin `Mod Hub rejected` |
+| C2 | Poner `"chanceRelationWeight": 0` (o moverlo en el hub) y hacer clic en un aliado | En `[chance]` el termino `relation=` pasa a 0 | `[chance] ... relation=0 ...` |
+| C3 | Tocar un control nuevo en el hub y mirar `config.json` | La clave aparece (o cambia) en su lugar, sin perder ninguna otra edicion a mano (T6) | `Saved config to ... (N changed, M added)` |
+| C4 | Cargar con un `config.json` viejo (sin las claves nuevas) | Carga normal con los valores de antes; no se escribe nada hasta tocar el hub | `Loaded config from ...` |
+| R1 | Prisionero con 6h de encierro (modo fácil), NPC en rescate, cheat, animal con hambre, animal en jaula | Todas las rutas responden como antes (mismos motivos, mismos precios, misma barra de domesticación) | `[route] <ruta>`, `[chance] ...`, `[price] ...`, `[hold] held=...` |
+| R2 | Disparar un plea por vida baja (mercy) y por golpiza hasta casi matar | La ventana de piedad sigue abriendose (ahora por el listener de `defeats`, ya no por una llamada directa) | `defeated by the player (...) nearDeath=yes` y la ventana |
+| N1 | Insistir 5+ veces a un prisionero **en jaula** | **No** pasa nada: la insistencia no corta la charla de jaula (se registra el intento pero nadie consulta el castigo). R2.4 no dice nada de jaulas; queda como estaba y anotado en el doc de la feature | (sin `harto` en la linea del NPC) |

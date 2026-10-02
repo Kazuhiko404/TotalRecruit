@@ -96,18 +96,29 @@ qué existe — leelo antes que el `.cpp`.
 
 | Archivo | Qué hace |
 |---|---|
-| `rules.cpp/.h` | **El motor.** Qué quiere un NPC antes de unirse. Empezá acá. Lee el juego y arma los hechos. |
-| `route_rules.cpp/.h` | **Puro.** Qué ruta contesta primero (`ChooseEntryRoute`). El orden de precedencia vive solo acá. |
+| `rules.cpp/.h` | **El despachador.** `Evaluate`: junta los hechos, pregunta qué ruta contesta y devuelve el veredicto. No decide nada por su cuenta. Empezá acá. |
+| `character_facts.cpp/.h` | **Lo único que lee el motor para decidir.** `GatherCoreFacts` (una vez por pregunta) y un `Gather*Extra` por ruta; nada más lee el juego en el camino de la decisión. |
+| `entry_facts.h`, `verdict.h`, `archetype.h` | **Puros.** Los hechos planos (`CoreFacts` y los extras por ruta), el veredicto (`Verdict`, `Currency`, `ReasonKey`) y el arquetipo sin motor. |
+| `route_decisions.h` + `route_gate/cheat/rescue/yield/animal/free/cage/cats.cpp` | **Puros.** Una función por ruta, de hechos planos a `Verdict`. `route_cats` es el precio que comparten el mundo libre y la jaula. Para cambiar lo que una ruta decide, es acá y en su test. |
+| `body_rules.cpp/.h`, `relation_rules.cpp/.h` | **Puros.** Qué significan las lecturas del cuerpo (herido, hambriento, curado) y los tramos de reputación. |
+| `reason_catalog.cpp/.h` | **Puro.** Cada motivo (`ReasonKey`): su clave en `messages.json`, su texto interno y el tono de rechazo. Agregar un motivo = una fila acá + una línea en `messages.json`. |
+| `reason_text.cpp/.h` | Convierte la clave del veredicto en la línea del jugador (`Say` + `Fill`). |
+| `animal_rules.cpp/.h` | **Puro.** La barra de domesticación (madurez, nivel, temperamento). |
+| `npc_speech.cpp/.h` | Lo que dice el NPC: línea de apertura, `DescribeOffer`, `HailLine`. El tono de un rechazo sale de la clave del motivo, nunca del texto. |
+| `engine_reads.cpp/.h` | Las lecturas `Safe*` compartidas (líder, facción, reloj de juego, memoria del motor, jaula, nombre). **Si necesitás una lectura que ya existe en otro archivo, va acá, no una copia.** |
+| `hold_tracking.cpp/.h`, `insistence.cpp/.h`, `rescue_memory.cpp/.h`, `pacify.cpp/.h` | El reloj de encierro, la insistencia (R2.4), la deuda del rescate y la pacificación: estado por-sesión o memoria del motor, cada uno en su archivo. |
+| `route_rules.cpp/.h` | **Puro.** Qué ruta contesta primero (`ChooseEntryRoute`, sobre los hechos de `MakeRouteFacts`). El orden de precedencia vive solo acá. |
 | `chance_rules.cpp/.h` | **Puro.** El motor de chance (`JoinChance`, `ChanceFrom*`, el roll estable). |
 | `price_rules.cpp/.h` | **Puro.** La curva de precio, los multiplicadores (talento, personalidad, facción) y el precio final: redondeo, mínimo y tope (`FinalPriceInCats`). |
 | `money_rules.cpp/.h` | **Puro.** Cobrar y mover cats entre bolsas (`ChargePrice`, `TransferCats`): todo o nada, sin acuñar ni perder cats si un paso falla. |
 | `cats_purse.cpp/.h` | La bolsa respaldada por el motor (`CharacterPurse`): el único lugar que conoce `getMoney` / `takeMoney` / `Ownerships::addMoney`. |
-| `char_key.h`, `temperament.h` | **Puros.** La clave de personaje (`CharKey`: id persistido, o handle de respaldo) y el enum de personalidad sin motor. `temperament_map.cpp` hace el único mapeo desde `PT_*`. |
+| `char_key.h`, `temperament.h` | **Puros.** La clave de personaje (`CharKey`: id persistido, o handle de respaldo) y el enum de personalidad sin motor. `temperament_map.cpp` hace el único mapeo desde `PT_*` y `OT_*`. |
 | `identity_registry.h` | **Puro.** Qué objeto vivo lleva qué id, conflictos de ids duplicados y la elección id-o-handle (`ChooseKey`). |
 | `character_identity.cpp/.h` | Los tres hooks de `Character` (`_NV_serialise`, `_NV_loadFromSerialise`, `_DESTRUCTOR`) que guardan un UUID propio (`total_recruit.character_id`) dentro del save. Port de `TotalSparring/src/shared/game/fighter_identity`. |
 | `char_key_reader.cpp/.h` | `SafeCharKey` (crea el id) y `SafeFindCharKey` (solo lee). Si el id no se puede obtener cae al handle, logueado una vez. |
 | `load_boundary.cpp/.h` | Hookea `SaveManager::loadGame/importGame` y, al comenzar una carga, limpia toda tabla por-sesión y el registro de ids (`ResetSessionState`). |
 | `recruit_core.cpp/.h` | Resuelve el target del click, valida y ejecuta el reclutamiento. |
+| `defeats.cpp/.h` | Cuenta las derrotas (sesión + piso del motor) y la paliza `GOLPEARLO` (`CreditDefeatToPlayer`). No conoce a `mercy`: avisa por un listener que `startPlugin` conecta (`SetNearDeathListener`), para que la cadena sea `mercy` → `recruit_core` → `defeats` y no un anillo. |
 | `rescue.cpp` | Ruta A — lo salvaste de morir. |
 | `surrender.cpp` | Ruta C — se rinde. Declara el método de `AI` localmente. |
 | `feeding.cpp` | Darle comida de tu mochila. |
@@ -465,3 +476,20 @@ Adding a rule test:
 3. Red first: run the exe, watch the new test fail for the right reason, then
    implement. Anything that has to read the game (hooks, UI, `Safe*` readers)
    stays out of the tests and is covered by `QA.md` instead.
+
+Where a rule lives decides how it is tested:
+
+- What a route decides (`route_*.cpp`) takes `CoreFacts` and a per-route extra from
+  `entry_facts.h` plus the `Config`, and returns a `Verdict` whose reason is a
+  `ReasonKey`. Test it in `route_decisions_tests.cpp` with plain structs. A roll is
+  seeded from the character, so a test searches for a key that rolls the way the case
+  needs (`KeyRolling`) instead of depending on the hash.
+- What the engine says (`character_facts.cpp`, `engine_reads.cpp`) is not tested; it is
+  `QA.md`. Keep `Gather*` free of decisions: if it needs an `if` that is a game rule,
+  the rule belongs in a `route_*.cpp` and the gather only reads the extra input.
+- Adding a reason: a `ReasonKey` in `verdict.h`, a row in `reason_catalog.cpp` (key, built-in
+  text, tone), the line in `messages.json`. The catalog test fails if a row is missing.
+- Adding a tunable: the field in `config.h` with its default, one line in `ConfigFields`
+  (`config.cpp`), a clamp in `LoadConfig` if a bad value can break the arithmetic, a control
+  in `mod_hub_integration.cpp`, a test that the default is the old value and that a
+  different value reaches the result.

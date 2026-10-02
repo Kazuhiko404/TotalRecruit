@@ -83,11 +83,12 @@ Out of scope:
   Tests for the curve at fixed levels.
 - [x] **T6 Config writer.** `SaveConfig` must merge (update known keys, keep unknown and hand-edited ones) instead of truncating. Model it on `TotalSparring/core/plugin_config` add-missing-never-overwrite.
 - [x] **T7 Stable identity.** Port TotalSparring `fighter_identity` (a UUID in the character save, key `total_recruit.character_id`) plus a load-begin reset hook. Re-key `CharKey` maps and the `StableChance` seed onto it, with the handle as fallback.
-- [ ] **T8 Code structure:**
+- [x] **T8 Code structure:**
   - Split `Evaluate` into per-route rule functions.
   - Dedupe the `Safe*` helpers into one module.
   - `SpeakOpeningLine` keys off a reason enum, not Spanish substrings.
   - Move hardcoded magic numbers into config where R6.1 expects them.
+  - Also: break the defeats/mercy/recruit_core ring, credit the GOLPEARLO beating to the player, insistence-in-cage decision.
 - [ ] **T9 Stress and chance readout UI:**
   - Make the mockup in `ui-mockup/` first.
   - Then implement an in-game bar or label: NPC stress, join %, active route and blocking reason. Hover or selection based, reusing the recruit_overlay and cursor_hint pipeline and the TotalSparring overlay patterns.
@@ -287,7 +288,7 @@ and uniques land in the reference 100-150k band instead of overshooting it).
 - A user who already tuned the key keeps their value (the loader only falls back to the default for a missing key).
 
 ### T7 Stable identity and load-begin reset - done
-- Commit: filled in by the next commit (`feat(identity): ...`, see `git log`). Route: inline by the single writer the parent delegated the whole unit to
+- Commit: `d8b6381` (`feat(identity): persist a stable character id in the save and reset session state on load`). Route: inline by the single writer the parent delegated the whole unit to
   (ODD trigger: 2+ non-trivial files). TDD: strict, runner `tests/rules_tests` (MSBuild Release|x64).
 - Evidence for the fix (TotalSparring CLAUDE.md:342-346, "Fighter identity"): the engine handle changes on a game relaunch (Kazuhiko
   `1-50170900-...` became `14-3181518592-...`), so every `CharKey{index,serial}` map AND the `StableChance` seed were reset on a relaunch. The comment in
@@ -343,5 +344,93 @@ and uniques land in the reference 100-150k band instead of overshooting it).
 - Docs: DEVELOPING.md module map (identity_registry, character_identity, char_key_reader, load_boundary). New `probeOnClick` log: `[route] <name> [key] id:<uuid>`.
 - In-game QA: QA.md 12.6 (I1-I10).
 
+### T8 Code structure - done
+- Commits (5 work units, each built with `MSBuild TotalRecruit.vcxproj` Release|x64 and `MSBuild tests/rules_tests` + `rules_tests.exe`):
+  1. `b1db262` `refactor(reads): share the Safe* engine reads in one engine_reads module`
+  2. `ba0a941` `refactor(defeats): break the defeats-mercy-recruit_core include ring`
+  3. `01c5414` `fix(defeats): credit the GOLPEARLO beating to the player explicitly`
+  4. `724dbfe` `refactor(config): make the audit's magic numbers tunable, with hub controls`
+  5. `cf6ab8d` `refactor(rules): split Evaluate into per-route rule modules over one facts struct`
+- Route: single writer, inline (the parent delegated the whole unit). Triggers: 4+ files mapped, 2+ non-trivial files written.
+  TDD: strict, runner `tests/rules_tests`. RDD off (global), so no native review.
+- Size: `rules.cpp` 2221 -> 189 lines (`Evaluate` itself is ~70 lines of dispatch); `rules.h` 144 -> 21. New modules: `engine_reads` (272), `character_facts`
+  (~590, the only engine reads on the decision path), `entry_facts.h`, `verdict.h`, `route_decisions.h` + `route_gate/cheat/rescue/yield/animal/free/cage/cats.cpp`
+  (28 to 258 each), `route_rules.cpp` (+`MakeRouteFacts`), `body_rules`, `relation_rules`, `animal_rules`, `reason_catalog`, `reason_text`, `npc_speech`,
+  `hold_tracking`, `insistence`, `rescue_memory`, `pacify`, `temperament_map.h`, `archetype.h`.
+
+#### 1. `Evaluate` as a dispatcher (goals 1, 2)
+- Engine reads are gathered once: `GatherCoreFacts` (everything every route may look at) plus one small extra per route (`RescueExtra`, `FreeExtra`, `CageExtra`...,
+  read only when that route answers). `ChooseEntryRoute` (over `MakeRouteFacts`) picks the route, one pure function per route decides to a `Verdict`
+  (reason = `ReasonKey`), `RenderReason` turns the key into the player's line. Per-route gathering stops where the decision stops (another cage, a pestered
+  NPC, an animal), so a click on a bystander still does not run the talent survey.
+- The cats pay-or-join block existed twice (free world and cage), word for word: it is `ApplyCatsOffer` (route_cats). The level was read three times
+  (rescue, field yield, the rest): `CoreFacts` reads it once.
+- Roll keys are only minted for a route that can roll (`FreeWorldMayRoll`), as before, so asking about a bystander does not create an id.
+- Dead code found and dropped (provably unreachable): the `Preset_Cheat` branches inside the free-world ally block and inside the price, because Cheat returns at the
+  top of `Evaluate` for everyone. Dead code found and KEPT as shipped (not a refactor's call): the `BrokenNoPride` branch of the cage submission case (no input reaches
+  it, `ChooseCurrency` sends the starving and the wounded to care first); marked in `route_cage.cpp`.
+- Tests (`tests/rules_tests`, new suites `route_decisions`, `body_rules`, `reason_catalog`; 16 suites, 35765 checks). Evaluate is engine-bound, so these cannot run
+  against the old function: every expectation was read off the old code branch by branch (order, strict vs non-strict comparisons, which input a branch ignores)
+  and written BEFORE the modules. First build RED (modules and `MakeRouteFacts` missing, compile errors), then `16/16 suites passed, 0/35765 checks failed` on
+  the first complete build. Rolls are tested without depending on the hash (the tests search for a key that rolls the way the case needs at the percent the case produces).
+- Pure pieces moved into the characterized layer: `body_rules` (wounded/starving/easy-healthy/restored), `relation_rules` (bands), `animal_rules` (taming bar),
+  `RollsToJoin` (the verdict roll), `ChooseCurrency`, `UniqueTakesMoney`, and the whole decision of every route.
+
+#### 2. Safe* helpers (goal 3)
+- `engine_reads.{h,cpp}`: `SafeGameHours`, `SafePlayerLeader`, `SafePlayerFaction`, `SafeIsPlayerCharacter`, `SafeIsAnimal`, `SafeIsDead`, `SafeIsDown`, `SafeMemoryTag`,
+  `SafeRememberTag`, `SafeInPrison`, `SafeIsPretending`, `IsGenuinelyDying`, `IsInPlayerCage`, `CharacterName`. Copies removed from rules, defeats, surrender, mercy,
+  hail, rescue, recruit_core, probe and dialogue_bridge. C2712: each guard is a POD-only frame; `CharacterName` builds its `std::string` outside the guard.
+- The one `SafePlayerLeader` requires an active platoon (the `rules.cpp` copy did; defeats, surrender, mercy, probe and dialogue_bridge did not). The stricter rule
+  is a deliberate behaviour change at one edge: while the squad is still being built the five other callers now get "no leader" instead of asking the engine to read
+  through a null active platoon.
+
+#### 3. Include ring (goal 4)
+- `defeats` called `OfferMercy` (mercy), mercy needs the recruit path (`recruit_core`), the recruit path needs `defeats` (`CanBeatPrisoner`). `defeats` now notifies a
+  `NearDeathListener` that `startPlugin` wires to `OfferMercy` (`SetNearDeathListener`): the chain is mercy -> recruit_core -> defeats and nothing points back.
+  `CharacterName` and `IsInPlayerCage` moved to `engine_reads`, which also removed `defeats -> rules` and `rules -> recruit_core`.
+- Also broken: `rules <-> surrender` (`IsGenuinelyDying` moved to `engine_reads`).
+- Still a ring, not asked for and left: `mercy <-> offer_popup` (mercy opens the window, the window answers by calling `AcceptMercy`/`GrantMercy`).
+
+#### 4. Reason keys and messages (goal 5)
+- `Verdict` carries `reasonKey` (a `ReasonKey`) next to the text. `reason_catalog.cpp` holds each key's messages.json path, built-in text and refusal tone.
+  `SpeakOpeningLine` picks a refusing NPC's line from `RefusalToneFor(reasonKey)`; the substring search ("honor", "lealtad", "mataste"...) is gone.
+- Test (characterization): the old matcher is copied into the test as an oracle and fed every built-in reason text; the key-based tone equals it. T8 block: rewording a
+  message cannot change the tone.
+- 29 reasons that bypassed `Say()` are now messages.json keys under a new top-level `reason` block (same Spanish text as values). Keys that already existed
+  (`cheat.*`, `grudge.never`, `submission.*`, `rescue.*`, `captive.intimidated`, `unique.zealot`, `animal.*`, `faction.<band>.*`) keep their paths. `Fill` gained `{purse}`.
+  The deployed messages.json needs the new block added in T11 (the mod works without it: built-in text, and the log names the missing keys).
+- Visible consequence of a key instead of a text search: a loyal NPC (honourable, brave, kind) refusing over a grudge outside your cage always says "Se lo que hiciste"
+  (before: only when the message text happened to contain "mataste", 2 of the 7 shipped variants).
+- Fixed on the way: two fallbacks carried a raw Latin-1 byte (`animal.refused`, `unique.zealot`) that is only visible if the key is missing.
+- NOT done, flagged: `messages.json` already ships `refusal.*` and `currency.*` sections that nothing reads (the opening lines are literals in `npc_speech.cpp`). Wiring them
+  would change what NPCs say (different wording and variants), so it is a content decision, not a refactor. The other hardcoded Spanish (opening lines, `DescribeOffer`,
+  `HailLine`, the mercy and beating messages) stays in code for the same reason.
+
+#### 5. Magic numbers to config (goal 6)
+- Defaults equal the old literals (tests pin them); every key goes through the T6 table (`ConfigFields`), so load/save/merge stay one list. Old config files load unchanged;
+  the repo `config.json` is not touched (it never held the chance keys; T11 adds only missing keys to the deployed file).
+- 19 new keys, each with a Mod Hub control (hub registrations 87 -> 106):
+  `chanceRelationWeight` (0.25), `chanceAlliedBonus` (10), `chancePersonalityFearful` (20) / `Traitorous` (15) / `Dumb` (10) / `Smart` (-5) / `Brave` (-15) /
+  `Honorable` (-20) / `Maniacal` (-25) / `ColdCruel` (0) / `WarmKind` (0), `relationRefuseGoodNatured` (-15), `relationRefuseAll` (-30),
+  `talentCraftWeight` (1.6), `talentShadowWeight` (1.3), `animalEdgeLevel` (10), `animalBigEdgeLevel` (20), `animalTemperamentBase` (0.85), `animalTemperamentWeight` (0.15).
+  Values are clamped on load to ranges the rules were written for.
+- RED (stubs that ignored the config): `10/13 suites passed, 23/31576 checks failed` (chance 14, price 3, animal 6); GREEN `13/13 suites passed, 0/31576 checks failed`.
+  The shipped values were pinned first (existing chance tests, plus a new `animal_rules` suite for the taming bar, all green on first run).
+- Not moved, still literals: the relation band edges 75/25/5/-5 (naming only), the 3.0 full-stomach reading (engine fact), the `health >= 1.0` of easy-healthy.
+
+#### 6. Insistence in the cage (goal 7): decided, left as it is
+- The audit's wording ("RecordInteraction only in the non-cage branch") is slightly off: `AttemptRecruit` records every attempt, caged or not; what only the free
+  route does is CHECK `IsIgnoringPlayer`. REQUISITOS R2.4 ("cumulative, configurable cooldown") says nothing about cages, so it is not explicit; applying it would also let the
+  player lock themselves out of their own prisoner for 4-48 h, against the cage routes (easy wait, beating, care) that need repeated visits. Left unchanged, covered by QA 12.7 N1.
+
+#### 7. GOLPEARLO credit (goal 8)
+- `BeatPrisoner` forced a knockout and then asked `NoteDefeat`, which asks the engine who put them down. When `lastGuyWhoDefeatedMe` did not name the player the beating was
+  dropped, the window still said "lo dejaste sin sentido", and no record existed for the cooldown to read. `CreditDefeatToPlayer` counts it explicitly; the own-side filter and the
+  debounce still apply. Pure, tested: `DecideDefeatCredit`, `IsEchoOfLastDefeat` (defeat_rules).
+- RED (stub that ignored the explicit credit): `11/12 suites passed, 2/31513 checks failed`; GREEN `12/12 suites passed, 0/31513 checks failed`.
+- Log line for QA: `[defeat] credited to the player explicitly (beating): <name> (engine winner is the player / is someone else / unreadable)`.
+- Builds: DLL Release|x64 OK after each commit (only the known C4482/C4091 SDK warnings); tests green after each.
+- In-game QA: QA.md 12.7 (A1-A3, Z1-Z4, C1-C4, R1-R2, N1).
+
 ## Next step
-T8 (code structure). Before it, in-game QA 12.6 I4/I5 (the id surviving a save and a relaunch).
+T9 (stress and chance readout UI): make the mockup in `ui-mockup/` first. Before it, in-game QA 12.6 I4/I5 (the id surviving a save and a relaunch) and 12.7 (nothing moved, plus A1).
