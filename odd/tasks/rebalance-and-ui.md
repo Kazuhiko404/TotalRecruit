@@ -156,7 +156,7 @@ Out of scope:
 - In-game QA: QA.md 12.2 (M1-M4).
 
 ### T4 Easy mode and dead controls - done
-- Commit: `{T4}` (`fix(easy-mode): 6h default, drop dead controls, start the hold clock at caging`). Route: delegated (same writer).
+- Commit: `842f157` (`fix(easy-mode): 6h default, drop dead controls, start the hold clock at caging`). Route: delegated (same writer).
 - RED: new `hold_clock` suite with a stub that never dropped a clock and never handled a backwards game clock:
   `6/7 suites passed, 7/15751 checks failed` (release drops the clock x2, re-cage starts over x1, per-prisoner x2,
   clock goes backwards x1, `Prices().easyHoursCaged == 6` x1).
@@ -176,4 +176,4 @@ Out of scope:
 - In-game QA: QA.md 12.3 (E1-E8). `S2` control count note updated (~76).
 
 ## Next step
-T5 (money audit). Fill in the `{T4}` commit hash above on the next commit.
+T5 (money audit).
