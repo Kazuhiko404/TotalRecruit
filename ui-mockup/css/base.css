@@ -1,0 +1,25 @@
+/* Palette tokens: the same values as TotalSparring's shared/ui/ui_palette.h, which map 1:1 onto
+   the MyGUI colours TotalRecruit's readout_ui.cpp uses. Foreground tokens stay BRIGHT on
+   purpose: a MyGUI tint multiplies against whatever skin is underneath (DarkUI and PowerModUI
+   repaint it), so only the near-black grounds are allowed to be dark. */
+:root{
+  --lacquer:#141110; --bgdark:#1e1b18; --sumi:#2a2521; --line:#3a332c;
+  --text:#eee4d2; --brass:#d6b074; --golddim:#96784e; --muted:#a29684;
+  --amber:#ecb860; --danger:#ce4a3a; --ready:#7cac74; --suggested:#6c92ce;
+  --page:#0d0c0b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);
+  font:14px/1.4 "Trebuchet MS",Verdana,sans-serif;padding:20px}
+h1{font:600 20px/1.2 Georgia,serif;letter-spacing:.06em;margin:0 0 4px;color:var(--brass)}
+h2.sec{font:600 17px Georgia,serif;color:var(--brass);letter-spacing:.08em;margin:36px 0 6px;
+  border-bottom:1px solid var(--golddim);padding-bottom:5px;max-width:1100px}
+p.lead{margin:0 0 14px;color:var(--muted);max-width:90ch}
+.note{background:var(--bgdark);border-left:3px solid var(--brass);padding:10px 14px;margin:10px 0 18px;max-width:1100px;font-size:13px}
+.note b{color:var(--text)}
+.note ul{margin:6px 0 0;padding-left:18px;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted);margin:6px 0 0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
+button.tab{background:var(--sumi);color:var(--text);border:1px solid var(--golddim);padding:7px 12px;cursor:pointer;font:inherit}
+button.tab[aria-pressed=true]{background:var(--amber);color:var(--lacquer);border-color:var(--amber)}
+button:focus-visible{outline:2px solid var(--suggested);outline-offset:2px}

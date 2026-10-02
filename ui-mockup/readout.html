@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>TotalRecruit - readout mockup</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/readout.css">
+</head>
+<body>
+<h1>TotalRecruit readout</h1>
+<p class="lead">What the player sees when they hover or select an NPC the mod can talk to: how worn down they are,
+the exact chance the engine will roll against, which route answers, and the one thing standing in the way.
+Open from disk in Chrome; no server, no build. Source of truth for <code>src/readout_ui.cpp</code>;
+the rules behind each number are in <code>src/readout_model.cpp</code> (README.md in this folder).</p>
+
+<div class="note"><b>Honesty rule.</b> Every number on the card is a number the decision already computed: the chance is the
+verdict's <code>chancePercent</code>, the price is the verdict's <code>cats</code>, stress is
+<code>StressFromState</code>. The card never says whether the roll will pass (the odds are the information; the outcome is the
+click's), and showing it never starts a hold clock, records an interaction or mints an id.</div>
+
+<h2 class="sec">1. The states</h2>
+<div class="bar" id="variantBar">
+  <button class="tab" data-v="expanded" aria-pressed="true">Expanded</button>
+  <button class="tab" data-v="compact" aria-pressed="false">Compact</button>
+  <button class="tab" data-v="both" aria-pressed="false">Side by side</button>
+</div>
+<div class="gal" id="gallery"></div>
+
+<h2 class="sec">2. Where it sits</h2>
+<p class="lead">Anchored above the NPC's head (their world position projected to the screen, clamped inside the view), so it
+moves with them and never covers the cursor hint or the context menu. In <b>selection only</b> mode the same card follows
+the selected object; while a right-click menu is open the card stays on that NPC next to the <i>Hablar</i> button.</p>
+<div class="bar" id="sceneBar">
+  <button class="tab" data-s="hover" aria-pressed="true">Hover</button>
+  <button class="tab" data-s="menu" aria-pressed="false">Right-click menu open</button>
+  <button class="tab" data-s="compact" aria-pressed="false">Hover, compact</button>
+</div>
+<div class="scene" id="scene"></div>
+<p class="hint">The speech bubble is the vanilla talk marker (<code>hasDialogue_Fast</code>) the mod already shows; the card never draws on top of it.</p>
+
+<h2 class="sec">3. What each route shows</h2>
+<table class="spec">
+  <tr><th>Block</th><th>Shown for</th><th>Source</th></tr>
+  <tr><td>Route tag</td><td>always</td><td>Rescate: out cold, dying, saved, healed up. Cautiverio: your cage. Rendicion: field yield, surrender, the grudge refusal outside the cage is Libre. Piedad: the plea on screen. Animal: any animal. Libre: the open world.</td></tr>
+  <tr><td>Estres bar + Hambre / Heridas / Cansancio</td><td>Cautiverio, Rendicion (the routes whose roll reads stress)</td><td><code>StressFromState</code>; the three parts are its three terms and add up to the bar</td></tr>
+  <tr><td>Chance bar</td><td>any route that rolled</td><td><code>Verdict::chancePercent</code> (JoinChance)</td></tr>
+  <tr><td>Barriga bar + notch</td><td>animals</td><td>fullness and the fullness the animal needs (<code>TamingFullnessNeeded</code>)</td></tr>
+  <tr><td>Derrotas pips</td><td>Cautiverio and Rendicion, or any NPC you have beaten</td><td>defeat count against <code>defeatsToBreak</code></td></tr>
+  <tr><td>Main line</td><td>always</td><td>the verdict's reason key, with the number it carries (price, hours, stomach)</td></tr>
+  <tr><td>Second line (expanded only)</td><td>a caged cats-prisoner while the easy wait still runs</td><td>hours left of <code>easyHoursCaged</code></td></tr>
+</table>
+
+<h2 class="sec">4. Mod Hub controls</h2>
+<div class="gal" id="hub"></div>
+
+<script src="js/data.js"></script>
+<script src="js/readout.js"></script>
+<script>
+(function () {
+  var gallery = document.getElementById('gallery');
+  var variant = 'expanded';
+
+  function drawGallery() {
+    var h = '';
+    STATES.forEach(function (s) {
+      var body;
+      if (variant === 'both') {
+        body = '<div class="pair">' + readoutHTML(s.vm, false, true) + readoutHTML(s.vm, true, true) + '</div>';
+      } else {
+        body = readoutHTML(s.vm, variant === 'compact', true);
+      }
+      h += '<figure>' + body + '<figcaption><b>' + s.title + '.</b> ' + s.note + '</figcaption></figure>';
+    });
+    gallery.innerHTML = h;
+  }
+  document.getElementById('variantBar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    variant = b.getAttribute('data-v');
+    [].forEach.call(this.querySelectorAll('button'), function (x) {
+      x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+    });
+    drawGallery();
+  });
+  drawGallery();
+
+  var scene = document.getElementById('scene');
+  function drawScene(mode) {
+    var cage = stateById('cage').vm, animal = stateById('animal').vm;
+    var compact = mode === 'compact';
+    var h = '<div class="ground"></div>';
+    // caged bandit, mouse over him
+    h += '<div class="cage" style="left:150px"></div><div class="npc" style="left:168px"></div>';
+    h += '<div class="npc" style="left:430px"></div>';
+    h += '<div class="npc" style="left:620px"></div>';
+    h += '<div class="at" style="left:185px;top:222px">' + readoutHTML(cage, compact) + '</div>';
+    h += '<div class="bubble" style="left:185px;top:135px;display:none"></div>';
+    if (mode === 'menu') {
+      h += '<div class="cursor" style="left:200px;top:230px"></div>';
+      h += '<div class="ctxmenu" style="left:206px;top:236px"><div>Atacar</div><div>Hablar</div><div>Mover aqui</div></div>';
+      h += '<div class="ctxbtn" style="left:332px;top:236px">Hablar</div>';
+      h += '<div class="callout" style="left:445px;top:240px">The card stays on the NPC. The Hablar button keeps its own place beside the menu.</div>';
+    } else {
+      h += '<div class="cursor" style="left:215px;top:262px"></div>';
+      h += '<div class="callout" style="left:445px;top:60px">Hover: the card follows the NPC under the cursor (about 4 updates a second). It hides when the mouse is over any window.</div>';
+    }
+    h += '<div class="bubble" style="left:447px;top:240px">...</div>';
+    h += '<div class="at" style="left:637px;top:280px;opacity:.55">' + readoutHTML(animal, true) + '</div>';
+    h += '<div class="callout" style="left:700px;top:330px;max-width:160px">Only one card at a time.</div>';
+    scene.innerHTML = h;
+  }
+  var sceneMode = 'hover';
+  document.getElementById('sceneBar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    sceneMode = b.getAttribute('data-s');
+    [].forEach.call(this.querySelectorAll('button'), function (x) {
+      x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+    });
+    drawScene(sceneMode);
+  });
+  drawScene(sceneMode);
+
+  var hub = [
+    ['Mostrar lectura de estres y chance', 'readoutEnabled', 'ON', 'Muestra el panel sobre el NPC con el que podrias hablar'],
+    ['Lectura compacta', 'readoutCompact', 'OFF', 'Una version mas chica: sin el desglose ni las derrotas'],
+    ['Lectura al pasar el mouse', 'readoutOnHover', 'ON', 'OFF = solo sobre el NPC seleccionado o el del menu abierto']
+  ];
+  document.getElementById('hub').innerHTML = hub.map(function (r) {
+    return '<figure><div class="rd noarrow" style="pointer-events:auto"><div class="hd"><span class="nm">' + r[0] +
+      '</span><span class="tag r-libre">' + r[2] + '</span></div><div class="why" style="border:0">' + r[3] +
+      '</div></div><figcaption><code>' + r[1] + '</code></figcaption></figure>';
+  }).join('');
+})();
+</script>
+</body>
+</html>

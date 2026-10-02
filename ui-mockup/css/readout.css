@@ -1,0 +1,93 @@
+/* The readout card. Every px below is the C++ constant of the same name in src/readout_ui.cpp
+   (kCardWidth, kCardWidthCompact, kPad, kBarH ...). Measure in Chrome, then copy. */
+:root{
+  --card-w:264px; --card-w-compact:176px; --pad:8px;
+  --bar-h:8px; --bar-h-compact:5px;
+  --hunger:#ecb860;   /* amber */
+  --wounds:#ce4a3a;   /* vermilion */
+  --tired:#6c92ce;    /* indigo */
+}
+.rd{width:var(--card-w);background:rgba(20,17,16,.92);border:1px solid var(--line);
+  padding:var(--pad);display:flex;flex-direction:column;gap:5px;position:relative;
+  box-shadow:0 6px 18px #000a;pointer-events:none;user-select:none}
+.rd.compact{width:var(--card-w-compact);gap:3px;padding:6px 7px}
+.rd.noarrow::after{display:none}
+/* a small notch points at the NPC when the card is anchored above their head */
+.rd::after{content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:10px;margin-left:-5px;
+  background:rgba(20,17,16,.92);border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  transform:rotate(45deg)}
+
+.rd .hd{display:flex;align-items:center;justify-content:space-between;gap:6px;
+  border-bottom:1px solid var(--golddim);padding-bottom:4px}
+.rd .nm{font:600 14px Georgia,serif;color:var(--brass);letter-spacing:.04em;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;min-width:0}
+.rd.compact .nm{font-size:13px}
+.rd .tag{flex:none;font:600 10px "Trebuchet MS",sans-serif;letter-spacing:.08em;text-transform:uppercase;
+  padding:1px 6px;border:1px solid var(--golddim);color:var(--text);background:var(--sumi)}
+.tag.r-cautiverio{border-color:var(--amber);color:var(--amber)}
+.tag.r-rendicion{border-color:var(--danger);color:#f08a7c}
+.tag.r-rescate{border-color:var(--ready);color:var(--ready)}
+.tag.r-animal{border-color:var(--suggested);color:#9db8e6}
+.tag.r-libre{border-color:var(--golddim);color:var(--text)}
+.tag.r-piedad{border-color:var(--brass);color:var(--brass)}
+
+.rd .row{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;
+  color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.rd .row b{font:600 13px "Trebuchet MS",sans-serif;color:var(--text);letter-spacing:0;
+  font-variant-numeric:tabular-nums}
+.rd .row b.hot{color:var(--amber)}
+.rd .row b.cold{color:var(--muted)}
+
+.rd .track{height:var(--bar-h);background:var(--sumi);border:1px solid var(--line);position:relative;display:flex}
+.rd.compact .track{height:var(--bar-h-compact)}
+.rd .seg{height:100%}
+.rd .seg.hunger{background:var(--hunger)}
+.rd .seg.wounds{background:var(--wounds)}
+.rd .seg.tired{background:var(--tired)}
+.rd .fill{height:100%;background:var(--brass)}
+.rd .fill.good{background:var(--ready)}
+.rd .fill.low{background:var(--danger)}
+/* the animal bar has a notch at the fullness the animal needs */
+.rd .notch{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text)}
+
+.rd .legend{display:flex;gap:9px;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rd .legend i{display:inline-block;width:7px;height:7px;margin-right:3px}
+.rd .pips{display:inline-flex;gap:3px;vertical-align:middle;margin-right:6px}
+.rd .pip{width:9px;height:9px;border:1px solid var(--golddim);background:var(--sumi)}
+.rd .pip.on{background:var(--amber);border-color:var(--amber)}
+
+.rd .why{border-top:1px solid var(--line);padding-top:4px;font-size:12px;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rd .why.alt{border-top:none;padding-top:0;color:var(--muted);font-size:11px}
+.rd .why.ok{color:var(--ready)}
+.rd .why.no{color:#f08a7c}
+
+/* ------------- where it sits on screen ------------- */
+.scene{position:relative;width:860px;height:420px;background:
+  radial-gradient(ellipse at 50% 120%,#3b2f22 0,#1a1511 55%,#0e0c0a 100%);border:1px solid var(--line);overflow:hidden}
+.scene .ground{position:absolute;left:0;right:0;bottom:0;height:110px;background:linear-gradient(#2a2118,#15110d)}
+.npc{position:absolute;width:34px;height:120px;bottom:70px}
+.npc::before{content:"";position:absolute;left:9px;top:0;width:16px;height:18px;border-radius:50%;background:#6a5a48}
+.npc::after{content:"";position:absolute;left:3px;top:20px;width:28px;height:70px;border-radius:8px 8px 3px 3px;background:#4d4034}
+.cage{position:absolute;width:70px;height:128px;bottom:66px;border:2px solid #6a5a48;border-top-width:5px;
+  background:repeating-linear-gradient(90deg,transparent 0 9px,#6a5a4888 9px 11px)}
+.at{position:absolute;transform:translate(-50%,-100%)}
+.cursor{position:absolute;width:14px;height:14px;border:2px solid var(--text);border-radius:50% 50% 50% 0;
+  transform:rotate(-45deg);box-shadow:0 0 6px #000}
+.bubble{position:absolute;transform:translate(-50%,-100%);width:22px;height:18px;background:#e9dfc9;border-radius:6px;
+  color:#222;font:700 12px sans-serif;text-align:center;line-height:18px}
+.ctxmenu{position:absolute;width:122px;background:#1b1713;border:1px solid var(--line);font-size:12px}
+.ctxmenu div{padding:4px 8px;color:var(--muted);border-bottom:1px solid #2a2521}
+.ctxbtn{position:absolute;width:96px;height:26px;background:var(--sumi);border:1px solid var(--golddim);color:var(--text);
+  text-align:center;line-height:24px;font:12px "Trebuchet MS",sans-serif}
+.callout{position:absolute;font-size:12px;color:var(--amber);max-width:230px}
+
+/* ------------- galleries ------------- */
+.gal{display:flex;flex-wrap:wrap;gap:26px 22px;align-items:flex-start}
+.gal figure{margin:0;display:flex;flex-direction:column;gap:6px}
+.gal figcaption{font-size:12px;color:var(--muted);max-width:260px}
+.gal figcaption b{color:var(--brass)}
+.pair{display:flex;gap:16px;align-items:flex-start}
+.spec{border-collapse:collapse;font-size:12px;max-width:1100px}
+.spec td,.spec th{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+.spec th{color:var(--brass);background:var(--bgdark)}

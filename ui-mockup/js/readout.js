@@ -1,0 +1,68 @@
+// Draws one view-model as the readout card. Presentation only: no rule lives here.
+// C++ twin: src/readout_ui.cpp (widgets) fed by src/readout_model.cpp (this object).
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+function barRow(label, valueHtml, trackHtml) {
+  return '<div class="row"><span>' + label + '</span>' + valueHtml + '</div>' + trackHtml;
+}
+
+function stressBlock(vm, compact) {
+  var s = vm.stress;
+  var track = '<div class="track">' +
+    '<div class="seg hunger" style="width:' + s.hunger + '%"></div>' +
+    '<div class="seg wounds" style="width:' + s.wounds + '%"></div>' +
+    '<div class="seg tired" style="width:' + s.tired + '%"></div></div>';
+  var html = barRow('Estres', '<b>' + vm.stressPct + '%</b>', track);
+  if (!compact) {
+    html += '<div class="legend">' +
+      '<span><i style="background:var(--hunger)"></i>Hambre ' + s.hunger + '</span>' +
+      '<span><i style="background:var(--wounds)"></i>Heridas ' + s.wounds + '</span>' +
+      '<span><i style="background:var(--tired)"></i>Cansancio ' + s.tired + '</span></div>';
+  }
+  return html;
+}
+
+function chanceBlock(vm) {
+  var cls = vm.chancePct >= 66 ? 'good' : (vm.chancePct < 25 ? 'low' : '');
+  var track = '<div class="track"><div class="fill ' + cls + '" style="width:' + vm.chancePct + '%"></div></div>';
+  return barRow('Chance', '<b class="hot">' + vm.chancePct + '%</b>', track);
+}
+
+function foodBlock(vm) {
+  var cls = vm.foodPct >= vm.foodNeededPct ? 'good' : '';
+  var track = '<div class="track"><div class="fill ' + cls + '" style="width:' + vm.foodPct + '%"></div>' +
+    '<div class="notch" style="left:' + vm.foodNeededPct + '%"></div></div>';
+  return barRow('Barriga', '<b>' + vm.foodPct + '%</b>', track);
+}
+
+function defeatsRow(vm) {
+  var pips = '';
+  for (var i = 0; i < vm.defeatsNeeded; i++) {
+    pips += '<span class="pip' + (i < vm.defeats ? ' on' : '') + '"></span>';
+  }
+  return '<div class="row"><span>Derrotas</span><span><span class="pips">' + pips + '</span><b>' +
+    vm.defeats + '/' + vm.defeatsNeeded + '</b></span></div>';
+}
+
+function readoutHTML(vm, compact, noArrow) {
+  var h = '<div class="rd' + (compact ? ' compact' : '') + (noArrow ? ' noarrow' : '') + '">';
+  h += '<div class="hd"><span class="nm">' + esc(vm.name) + '</span>' +
+       '<span class="tag r-' + vm.route + '">' + esc(vm.routeLabel) + '</span></div>';
+  if (vm.showStress) h += stressBlock(vm, compact);
+  if (vm.showFood) h += foodBlock(vm);
+  if (vm.showChance) h += chanceBlock(vm);
+  if (vm.showDefeats && !compact) h += defeatsRow(vm);
+  h += '<div class="why ' + vm.why.tone + '" title="' + esc(vm.why.text) + '">' + esc(vm.why.text) + '</div>';
+  if (vm.alt && !compact) h += '<div class="why alt">' + esc(vm.alt.text) + '</div>';
+  return h + '</div>';
+}
+
+function stateById(id) {
+  for (var i = 0; i < STATES.length; i++) if (STATES[i].id === id) return STATES[i];
+  return STATES[0];
+}
