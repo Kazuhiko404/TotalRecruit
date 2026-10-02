@@ -1,6 +1,7 @@
 #include "common.h"
 #include "recruit_overlay.h"
 #include "recruit_core.h"
+#include "engine_reads.h"
 #include "defeats.h"
 #include "config.h"
 #include "log.h"

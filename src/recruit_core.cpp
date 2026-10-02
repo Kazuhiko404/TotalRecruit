@@ -3,6 +3,7 @@
 #include "config.h"
 #include "log.h"
 #include "rules.h"
+#include "engine_reads.h"
 #include "dialogue_bridge.h"
 #include "dialogue_authoring.h"
 #include "offer_popup.h"
@@ -61,31 +62,6 @@ bool ListContains(const std::vector<std::string>& list, const std::string& value
         }
     }
     return false;
-}
-
-// Reads through a possibly-dangling pointer, so each accessor is guarded.
-bool SafeIsDead(Character* character, bool* out)
-{
-    TR_TRY { *out = character->isDead(); return true; }
-    TR_CATCH { return false; }
-}
-
-bool SafeIsDown(Character* character, bool* out)
-{
-    TR_TRY { *out = character->isDown(); return true; }
-    TR_CATCH { return false; }
-}
-
-bool SafeIsAnimal(Character* character, bool* out)
-{
-    TR_TRY { *out = (character->isAnimal() != NULL); return true; }
-    TR_CATCH { return false; }
-}
-
-bool SafeIsPlayerCharacter(Character* character, bool* out)
-{
-    TR_TRY { *out = character->isPlayerCharacter(); return true; }
-    TR_CATCH { return false; }
 }
 
 // Faction::getName returns a reference, so only a pointer crosses the guard.
@@ -170,29 +146,12 @@ void SafeRefreshPortraits(Character* character)
     TR_CATCH { }
 }
 
-// getName returns std::string by value, so the call and the copy out of it
-// both live in a helper that the guard only jumps through.
-void CopyName(Character* character, char* buffer, size_t size)
-{
-    strncpy_s(buffer, size, character->getName().c_str(), _TRUNCATE);
-}
-
 // showPlayerAMessage takes a std::string, so the temporary is built in a plain
 // function and only the call itself is guarded.
 void PostMessage(const char* text, bool queued)
 {
     ou->showPlayerAMessage(std::string(text), queued);
     ou->playNotification(NULL);
-}
-
-bool SafeCopyName(Character* character, char* buffer, size_t size)
-{
-    TR_TRY
-    {
-        CopyName(character, buffer, size);
-        return true;
-    }
-    TR_CATCH { return false; }
 }
 
 void ShowMessage(const char* text, bool isProblem)
@@ -346,21 +305,6 @@ bool PresentOffer(Character* character, const Verdict& verdict, const std::strin
     return ShowOffer(character, body, SpeakAcceptLine(verdict), "RECHAZAR", extraLabel);
 }
 } // namespace
-
-std::string CharacterName(Character* character)
-{
-    if (character == NULL)
-    {
-        return "<unnamed>";
-    }
-
-    char buffer[128] = { 0 };
-    if (!SafeCopyName(character, buffer, sizeof(buffer)))
-    {
-        return "<unnamed>";
-    }
-    return std::string(buffer);
-}
 
 Character* CharacterFromTarget(RootObject* target)
 {

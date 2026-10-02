@@ -3,6 +3,7 @@
 #include "rules.h"
 #include "config.h"
 #include "recruit_core.h"
+#include "engine_reads.h"
 #include "feeding.h"
 #include "log.h"
 #include "mercy.h"

@@ -1,6 +1,7 @@
 #include "common.h"
 #include "surrender.h"
 #include "rules.h"
+#include "engine_reads.h"
 #include "config.h"
 #include "log.h"
 
@@ -26,25 +27,6 @@ namespace totalrecruit
 {
 namespace
 {
-bool SafePlayerLeader(Character** out)
-{
-    TR_TRY
-    {
-        if (ou == NULL || ou->player == NULL)
-        {
-            return false;
-        }
-        Platoon* platoon = ou->player->currentPlatoon;
-        if (platoon == NULL)
-        {
-            return false;
-        }
-        *out = platoon->getSquadLeader();
-        return (*out != NULL);
-    }
-    TR_CATCH { return false; }
-}
-
 // TaskStateData is a POD of {StateType key, bool val, bool progressionOnly}, so
 // building one and handing it to the engine's own evaluator costs nothing and
 // needs no address. _NV_stateIsTrue is used rather than the virtual, because
@@ -102,16 +84,6 @@ bool SafeBeatenBy(Character* character, Character* who, bool* out)
     TR_CATCH { return false; }
 }
 
-bool SafeMemoryTag(Character* character, Character* about,
-                   CharacterPerceptionTags_LongTerm tag, bool* out)
-{
-    TR_TRY
-    {
-        *out = character->getCharacterMemoryTag(about, tag);
-        return true;
-    }
-    TR_CATCH { return false; }
-}
 } // namespace
 
 bool IsSurrendered(Character* character)

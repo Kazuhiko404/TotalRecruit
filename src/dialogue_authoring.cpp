@@ -3,6 +3,7 @@
 #include "rules.h"
 #include "config.h"
 #include "recruit_core.h"
+#include "engine_reads.h"
 #include "log.h"
 
 namespace totalrecruit

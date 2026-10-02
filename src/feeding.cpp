@@ -2,6 +2,7 @@
 #include "feeding.h"
 #include "config.h"
 #include "recruit_core.h"
+#include "engine_reads.h"
 #include "log.h"
 
 #include <kenshi/Inventory.h>

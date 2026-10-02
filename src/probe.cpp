@@ -1,6 +1,7 @@
 #include "common.h"
 #include "probe.h"
 #include "recruit_core.h"
+#include "engine_reads.h"
 #include "log.h"
 
 #include <sstream>
@@ -188,25 +189,6 @@ bool SafeHasDialogue(Character* character, int* outHasDialogue, int* outTalkToMe
     TR_CATCH { return false; }
 }
 
-bool SafePlayerLeaderPtr(Character** out)
-{
-    TR_TRY
-    {
-        if (ou == NULL || ou->player == NULL)
-        {
-            return false;
-        }
-        Platoon* platoon = ou->player->currentPlatoon;
-        if (platoon == NULL)
-        {
-            return false;
-        }
-        *out = platoon->getSquadLeader();
-        return (*out != NULL);
-    }
-    TR_CATCH { return false; }
-}
-
 bool SafeFactionName(Faction* faction, const char** out)
 {
     TR_TRY
@@ -245,20 +227,6 @@ bool SafeFactionFlags(Faction* faction, int* outNotReal, int* outIsPlayer,
         *outFundamentalType  = (int)faction->getFundamentalNPCType();
         *outSize             = faction->getFactionSize();
         return true;
-    }
-    TR_CATCH { return false; }
-}
-
-bool SafePlayerFaction(Faction** out)
-{
-    TR_TRY
-    {
-        if (ou == NULL || ou->player == NULL)
-        {
-            return false;
-        }
-        *out = ou->player->participant;
-        return (*out != NULL);
     }
     TR_CATCH { return false; }
 }
@@ -495,7 +463,7 @@ std::string ProbeCharacter(Character* character)
         }
 
         Character* playerLeader = NULL;
-        if (SafePlayerLeaderPtr(&playerLeader) && playerLeader != NULL)
+        if (SafePlayerLeader(&playerLeader) && playerLeader != NULL)
         {
             static const char* kTagNames[] = {
                 "LIFESAVER", "MY_CAPTOR", "FREED_ME",

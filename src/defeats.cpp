@@ -3,6 +3,7 @@
 #include "config.h"
 #include "log.h"
 #include "rules.h"
+#include "engine_reads.h"
 #include "mercy.h"
 #include "recruit_core.h"
 #include "defeat_rules.h"
@@ -32,39 +33,6 @@ struct Record
 // Keyed by CharKey (rules.h), never by the pointer: an address is not an
 // identity, and a freed character's address is handed to the next one.
 std::map<CharKey, Record> g_defeats;
-
-bool SafeGameHours(double* out)
-{
-    TR_TRY
-    {
-        if (ou == NULL)
-        {
-            return false;
-        }
-        *out = ou->getTimeStamp_inGameHours().getTotalHours();
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-bool SafePlayerLeader(Character** out)
-{
-    TR_TRY
-    {
-        if (ou == NULL || ou->player == NULL)
-        {
-            return false;
-        }
-        Platoon* platoon = ou->player->currentPlatoon;
-        if (platoon == NULL)
-        {
-            return false;
-        }
-        *out = platoon->getSquadLeader();
-        return (*out != NULL);
-    }
-    TR_CATCH { return false; }
-}
 
 // LT_SQUAD_LOST_TO_ME_ONCE reads, from the NPC's side, as "this player's people
 // beat mine" -- which is exactly what a defeat is. It persists in the save,
@@ -124,12 +92,6 @@ void SafeLogIntent(Character* character, const char* when)
     {
         LogInfo(CharacterName(character) + " " + buf);
     }
-}
-
-bool SafeIsPlayerCharacter(Character* character, bool* out)
-{
-    TR_TRY { *out = character->isPlayerCharacter(); return true; }
-    TR_CATCH { return false; }
 }
 
 // R3.1 -- begging for your life when you are close to losing it.
@@ -382,12 +344,6 @@ bool SafeForceKnockout(Character* character, float seconds)
         medical->knockoutForceTimer(seconds);
         return true;
     }
-    TR_CATCH { return false; }
-}
-
-bool SafeIsDown(Character* character, bool* out)
-{
-    TR_TRY { *out = character->isDown(); return true; }
     TR_CATCH { return false; }
 }
 

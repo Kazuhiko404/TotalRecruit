@@ -1,6 +1,7 @@
 #include "common.h"
 #include "hail.h"
 #include "rules.h"
+#include "engine_reads.h"
 #include "config.h"
 #include "recruit_core.h"
 #include "dialogue_authoring.h"
@@ -40,22 +41,6 @@ struct HailState
 std::map<CharKey, HailState> g_hailed;
 
 unsigned int g_nextSweep = 0;
-
-// The same clock the price rules use, so "hours" means one thing across the
-// mod: in-game hours, which stop when the game is paused.
-bool SafeGameHours(double* out)
-{
-    TR_TRY
-    {
-        if (ou == NULL)
-        {
-            return false;
-        }
-        *out = ou->getTimeStamp_inGameHours().getTotalHours();
-        return true;
-    }
-    TR_CATCH { return false; }
-}
 
 bool SafePlayerAnchor(Ogre::Vector3* out)
 {

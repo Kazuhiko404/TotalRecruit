@@ -1,6 +1,7 @@
 #include "common.h"
 #include "rescue.h"
 #include "rules.h"
+#include "engine_reads.h"
 #include "dialogue_bridge.h"
 #include "config.h"
 #include "recruit_core.h"
@@ -14,12 +15,6 @@ namespace
 bool (*g_applyFirstAid_orig)(MedicalSystem*, float, Item*, float, Character*) = NULL;
 bool (*g_applyDoctoring_orig)(MedicalSystem*, float, Item*, float, Character*) = NULL;
 bool (*g_sendDialogEvent_orig)(Character*, Character*, EventTriggerEnum) = NULL;
-
-bool SafeIsPlayerCharacter(Character* character, bool* out)
-{
-    TR_TRY { *out = character->isPlayerCharacter(); return true; }
-    TR_CATCH { return false; }
-}
 
 bool SafePatient(MedicalSystem* medical, Character** out)
 {

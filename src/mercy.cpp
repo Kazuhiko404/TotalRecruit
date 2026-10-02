@@ -1,6 +1,7 @@
 #include "common.h"
 #include "mercy.h"
 #include "rules.h"
+#include "engine_reads.h"
 #include "messages.h"
 #include "config.h"
 #include "recruit_core.h"
@@ -34,30 +35,6 @@ PleaTracker g_pleading;
 // having already pleaded and could never open the window.
 std::set<CharKey> g_begged;
 
-bool SafeIsPlayers(Character* npc, bool* out)
-{
-    TR_TRY
-    {
-        *out = npc->isPlayerCharacter();
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-bool SafePlayerLeaderLocal(Character** out)
-{
-    TR_TRY
-    {
-        if (ou == NULL || ou->player == NULL || ou->player->currentPlatoon == NULL)
-        {
-            return false;
-        }
-        *out = ou->player->currentPlatoon->getSquadLeader();
-        return (*out != NULL);
-    }
-    TR_CATCH { return false; }
-}
-
 bool SafeReadPersonality(Character* npc, int* out)
 {
     TR_TRY
@@ -70,15 +47,6 @@ bool SafeReadPersonality(Character* npc, int* out)
         *out = (int)broadcast->myPersonality;
         return true;
     }
-    TR_CATCH { return false; }
-}
-
-// What they say while the window is open. Deliberately not branched on
-// personality: the whole point of this route is that the wound outranks the
-// temperament, so a maniac and a coward beg with the same words.
-bool SafeIsBeast(Character* npc, bool* out)
-{
-    TR_TRY { *out = (npc->isAnimal() != NULL); return true; }
     TR_CATCH { return false; }
 }
 
@@ -170,7 +138,7 @@ void ForgetMercy(Character* npc)
 bool PayTribute(Character* npc)
 {
     Character* leader = NULL;
-    if (!SafePlayerLeaderLocal(&leader))
+    if (!SafePlayerLeader(&leader))
     {
         return false;
     }
@@ -199,7 +167,7 @@ void GrantMercy(Character* npc)
     ForgetMercy(npc);
 
     Character* leader = NULL;
-    SafePlayerLeaderLocal(&leader);
+    SafePlayerLeader(&leader);
 
     // The same reset the rescue route uses: combat off, the player is no
     // longer an enemy, and the AI is told to reconsider so they actually walk
@@ -268,7 +236,7 @@ void OfferMercy(Character* npc)
     // Already yours, or already asked once. A limb lost in a later fight does
     // not reopen a question the player has answered.
     bool mine = false;
-    if (SafeIsPlayers(npc, &mine) && mine)
+    if (SafeIsPlayerCharacter(npc, &mine) && mine)
     {
         return;
     }
@@ -283,7 +251,7 @@ void OfferMercy(Character* npc)
     // thing that breaks the fiction the rest of the mod works to keep. Beasts
     // are tamed with food, and that path is elsewhere.
     bool beast = false;
-    if (SafeIsBeast(npc, &beast) && beast)
+    if (SafeIsAnimal(npc, &beast) && beast)
     {
         return;
     }

@@ -1,6 +1,7 @@
 #include "common.h"
 #include "dialogue_bridge.h"
 #include "rules.h"
+#include "engine_reads.h"
 #include "config.h"
 #include "recruit_core.h"
 #include "log.h"
@@ -78,25 +79,6 @@ bool SafeAddPackage(Character* npc, GameData* package)
         }
         npc->dialogue->addDialoguePackage(package);
         return true;
-    }
-    TR_CATCH { return false; }
-}
-
-bool SafePlayerLeader(Character** out)
-{
-    TR_TRY
-    {
-        if (ou == NULL || ou->player == NULL)
-        {
-            return false;
-        }
-        Platoon* platoon = ou->player->currentPlatoon;
-        if (platoon == NULL)
-        {
-            return false;
-        }
-        *out = platoon->getSquadLeader();
-        return (*out != NULL);
     }
     TR_CATCH { return false; }
 }

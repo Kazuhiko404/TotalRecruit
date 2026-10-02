@@ -45,7 +45,4 @@ void CompleteOffer(Character* character, bool accepted);
 // feeding them, for now. Reopens the offer afterwards so the player sees what
 // changed without working through the context menu again.
 void HelpCaptive(Character* character);
-
-// Display name, or "<unnamed>" when it cannot be read.
-std::string CharacterName(Character* character);
 } // namespace totalrecruit

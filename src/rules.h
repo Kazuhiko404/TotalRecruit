@@ -68,10 +68,6 @@ struct Verdict
 // nothing to desynchronise on load, and nothing to save-scum.
 Verdict Evaluate(Character* character);
 
-// True when the player's faction owns the cage this character is locked in.
-// There is no getCaptor(); this is derived from inSomething and inWhat.
-bool IsInPlayerCage(Character* character);
-
 // Looks at where this character is right now and keeps the hold clock honest:
 // caged starts it (once), free drops it, so the easy-mode wait counts time in
 // THIS cage. Returns whether they are in the player's cage. Called by the

@@ -12,6 +12,7 @@
 #include "money_rules.h"
 #include "route_rules.h"
 #include "hold_clock.h"
+#include "engine_reads.h"
 
 #include <kenshi/CharacterAnimal.h>
 #include <kenshi/CharStats.h>
@@ -27,39 +28,6 @@ namespace
 // than returning null, so every dereference is guarded. Each guard keeps a
 // POD-only frame: C2712 counts every C++ object in the whole function, not just
 // the ones inside the __try block.
-
-bool SafePlayerFaction(Faction** out)
-{
-    TR_TRY
-    {
-        if (ou == NULL || ou->player == NULL)
-        {
-            return false;
-        }
-        *out = ou->player->participant;
-        return (*out != NULL);
-    }
-    TR_CATCH { return false; }
-}
-
-bool SafePlayerLeader(Character** out)
-{
-    TR_TRY
-    {
-        if (ou == NULL || ou->player == NULL)
-        {
-            return false;
-        }
-        Platoon* platoon = ou->player->currentPlatoon;
-        if (platoon == NULL || platoon->activePlatoon == NULL)
-        {
-            return false;
-        }
-        *out = platoon->getSquadLeader();
-        return (*out != NULL);
-    }
-    TR_CATCH { return false; }
-}
 
 struct Traits
 {
@@ -243,18 +211,6 @@ bool SafeIsUnique(Character* character, bool* out)
     TR_CATCH { return false; }
 }
 
-bool SafeIsDead(Character* character, bool* out)
-{
-    TR_TRY { *out = character->isDead(); return true; }
-    TR_CATCH { return false; }
-}
-
-bool SafeIsAnimal(Character* character, bool* out)
-{
-    TR_TRY { *out = (character->isAnimal() != NULL); return true; }
-    TR_CATCH { return false; }
-}
-
 // Whether this animal belongs to an organisation of people rather than roaming
 // loose.
 //
@@ -361,74 +317,6 @@ float TamingFullnessNeeded(Character* character, int npcLevel, int playerLevel)
     if (needed < config.animals.cubFullness) needed = config.animals.cubFullness;
     if (needed > 1.0f) needed = 1.0f;
     return needed;
-}
-
-// inSomething only reads IN_PRISON while the character is actually inside a
-// cage object. A prisoner you carried in and dropped, or one wearing shackles,
-// reads IN_NOTHING -- so captivity is the union of the three signals the engine
-// offers rather than just that one.
-bool SafeInPrison(Character* character, bool* out)
-{
-    TR_TRY
-    {
-        *out = (character->inSomething == IN_PRISON) ||
-               character->isChainedMode() ||
-               character->isKidnapped();
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-// The cage is resolved as RootObjectBase rather than Building: getFaction lives
-// on the base, and including Building.h collides with Platoon.h over
-// BuildingDesignation, which both define identically and neither guards.
-bool SafeCageFaction(Character* character, Faction** out)
-{
-    TR_TRY
-    {
-        RootObjectBase* cage = character->inWhat.getRootObjectBase();
-        if (cage == NULL)
-        {
-            return false;
-        }
-        *out = cage->getFaction();
-        return (*out != NULL);
-    }
-    TR_CATCH { return false; }
-}
-
-// isMySlave / isMyFactionsSlave answer "does this belong to me" for a captive
-// with no cage object to inspect.
-bool SafeIsMyPrisoner(Character* leader, Character* captive, bool* out)
-{
-    TR_TRY
-    {
-        *out = leader->isMySlave(captive) || leader->isMyFactionsSlave(captive);
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-bool SafeMemoryTag(Character* character, Character* about,
-                   CharacterPerceptionTags_LongTerm tag, bool* out)
-{
-    TR_TRY
-    {
-        *out = character->getCharacterMemoryTag(about, tag);
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-bool SafeRememberTag(Character* character, Character* about,
-                     CharacterPerceptionTags_LongTerm tag)
-{
-    TR_TRY
-    {
-        character->rememberCharacter(about, tag);
-        return true;
-    }
-    TR_CATCH { return false; }
 }
 
 bool SafeFactionRelation(Character* character, Faction* playerFaction, float* out)
@@ -602,20 +490,6 @@ struct TalkState
 
 std::map<CharKey, TalkState> g_talkStates;
 
-
-bool SafeGameHours(double* out)
-{
-    TR_TRY
-    {
-        if (ou == NULL)
-        {
-            return false;
-        }
-        *out = ou->getTimeStamp_inGameHours().getTotalHours();
-        return true;
-    }
-    TR_CATCH { return false; }
-}
 
 // Only called for a prisoner already known to be in the player's cage, so the
 // sighting it makes is a caged one: that is the fallback for a prisoner the
@@ -1191,48 +1065,6 @@ std::string SpeakAcceptLine(const Verdict& verdict)
     // Short enough to fit the button. What the player is agreeing to is spelled
     // out in the window's body, so the button only has to say yes.
     return "ACEPTAR";
-}
-
-bool IsInPlayerCage(Character* character)
-{
-    if (character == NULL)
-    {
-        return false;
-    }
-
-    bool inPrison = false;
-    if (!SafeInPrison(character, &inPrison) || !inPrison)
-    {
-        return false;
-    }
-
-    Faction* playerFaction = NULL;
-    if (!SafePlayerFaction(&playerFaction))
-    {
-        return false;
-    }
-
-    // Held in an actual cage: the cage's owner decides whose prisoner they are.
-    Faction* cageFaction = NULL;
-    if (SafeCageFaction(character, &cageFaction))
-    {
-        return cageFaction == playerFaction;
-    }
-
-    // Shackled or carried off, with no cage object to ask. The engine still
-    // knows who owns them, so fall back to that -- otherwise a prisoner dragged
-    // home would be unreachable for having been put down in the wrong spot.
-    Character* leader = NULL;
-    if (SafePlayerLeader(&leader))
-    {
-        bool mine = false;
-        if (SafeIsMyPrisoner(leader, character, &mine) && mine)
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 bool NoteCageState(Character* character)
