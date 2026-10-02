@@ -1,6 +1,5 @@
 #include "common.h"
 #include "surrender.h"
-#include "rules.h"
 #include "engine_reads.h"
 #include "config.h"
 #include "log.h"

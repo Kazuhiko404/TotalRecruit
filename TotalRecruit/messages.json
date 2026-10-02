@@ -754,5 +754,109 @@
       "no cede aun: vencelo de nuevo o dejalo sin curar",
       "todavia cree que puede contigo: demostrale que no"
     ]
+  },
+  "_razones": [
+    "Los motivos que el jugador lee cuando un NPC no se une todavia, o por que si.",
+    "{cats} es el precio (o el % de estomago que falta) y {purse} lo que llevas encima.",
+    "Estos son los mismos textos que el mod trae por dentro: editalos para reescribirlos."
+  ],
+  "reason": {
+    "nobody": [
+      "no hay nadie ahí"
+    ],
+    "animalsDisabled": [
+      "los animales están desactivados"
+    ],
+    "unreadable": [
+      "se une a ti"
+    ],
+    "pretending": [
+      "se está haciendo el muerto"
+    ],
+    "dead": [
+      "está muerto"
+    ],
+    "unconscious": {
+      "owesYou": [
+        "inconsciente: te lo deberá al despertar"
+      ],
+      "dying": [
+        "se muere y no reacciona: cúralo y espera"
+      ],
+      "wait": [
+        "inconsciente: espera a que despierte"
+      ]
+    },
+    "dying": [
+      "se está muriendo: cúralo primero"
+    ],
+    "easyHealthy": [
+      "sano gracias a ti, y quiere unirse"
+    ],
+    "surrendered": [
+      "se rinde antes que morir aquí"
+    ],
+    "inOthersCage": [
+      "está en la jaula de otro"
+    ],
+    "insistence": [
+      "está harto de tu insistencia: déjalo en paz un rato"
+    ],
+    "honour": {
+      "starving": [
+        "tiene hambre y aceptaria comida"
+      ],
+      "noBribes": [
+        "su honor le impide aceptar sobornos: gana su respeto, o enciérralo y somételo"
+      ]
+    },
+    "military": [
+      "sirve con lealtad a su facción: gana reputación, o enciérralo y somételo"
+    ],
+    "cats": {
+      "ask": [
+        "pide {cats} cats y tienes {purse}"
+      ],
+      "join": [
+        "se une por {cats} cats"
+      ]
+    },
+    "captivityDisabled": [
+      "el reclutamiento de prisioneros está desactivado"
+    ],
+    "easyWait": [
+      "lleva bastante encerrado y se rinde"
+    ],
+    "freed": [
+      "seguirá a quien lo liberó"
+    ],
+    "cared": {
+      "person": [
+        "alimentado y curado: se unirá"
+      ],
+      "animal": [
+        "alimentado y curado: confía en ti"
+      ]
+    },
+    "starving": [
+      "hambriento: dale de comer"
+    ],
+    "wounded": [
+      "herido: cúralo"
+    ],
+    "starvingAndWounded": [
+      "hambriento y herido: dale comida y cúralo"
+    ],
+    "broken": [
+      "quebrado y sin orgullo: te seguirá"
+    ],
+    "defiant": [
+      "sigue desafiante: déjalo con hambre o hérelo"
+    ],
+    "animal": {
+      "wary": [
+        "sano y desconfiado: búscalo herido o hambriento"
+      ]
+    }
   }
 }

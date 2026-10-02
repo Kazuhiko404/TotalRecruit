@@ -43,6 +43,14 @@ bool SafeMemoryTag(Character* character, Character* about,
 bool SafeRememberTag(Character* character, Character* about,
                      CharacterPerceptionTags_LongTerm tag);
 
+// PS_PLAYING_DEAD is a real prone state, so "unconscious" alone would let the player
+// farm recruits off NPCs that are only pretending.
+bool SafeIsPretending(Character* character, bool* out);
+
+// True when this character is dying rather than merely knocked out, and is not
+// faking it (PS_PLAYING_DEAD exists).
+bool IsGenuinelyDying(Character* character);
+
 // In a cage of anyone's, shackled, or carried off as a prisoner. Not the same
 // as IsInPlayerCage: this does not say whose.
 bool SafeInPrison(Character* character, bool* out);

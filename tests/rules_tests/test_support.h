@@ -25,4 +25,7 @@ void RunJsonMergeTests();
 void RunAtomicFileTests();
 void RunCharKeyTests();
 void RunIdentityRegistryTests();
+void RunRouteDecisionsTests();
+void RunBodyRulesTests();
+void RunReasonCatalogTests();
 void RunAnimalRulesTests();

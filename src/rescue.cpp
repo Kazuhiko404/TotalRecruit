@@ -1,6 +1,8 @@
 #include "common.h"
 #include "rescue.h"
 #include "rules.h"
+#include "rescue_memory.h"
+#include "pacify.h"
 #include "engine_reads.h"
 #include "dialogue_bridge.h"
 #include "config.h"

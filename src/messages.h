@@ -29,7 +29,8 @@ std::string Say(const std::string& path, const std::string& fallback,
 // incomplete file names itself instead of hiding behind the fallback.
 void ReportMissingKeys();
 
-// Replaces {name}, {cats} and {hours} in a line that has already been chosen.
+// Replaces {name}, {cats}, {hours} and {purse} (what the player is carrying) in a
+// line that has already been chosen.
 std::string Fill(const std::string& text, const std::string& name,
-                 int cats, int hours);
+                 int cats, int hours, int purse = 0);
 } // namespace totalrecruit

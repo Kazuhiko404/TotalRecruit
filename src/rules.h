@@ -1,140 +1,21 @@
 #pragma once
 
-#include <string>
-
-#include "char_key.h"
-#include "char_key_reader.h"
-#include "temperament.h"
+#include "verdict.h"
 
 class Character;
 
 namespace totalrecruit
 {
-// What an NPC wants before they will join. Every NPC has a currency; none has a
-// closed door. "Not yet, and here is why" is a state this mod can express --
-// that is the whole point of doing it in code instead of dialogue data.
-enum Currency
-{
-    Currency_None,        // nothing owed; they will come
-    Currency_Cats,        // bandits, traders: pay them
-    Currency_Care,        // the starving and the wounded: feed and heal them
-    Currency_Freedom,     // slaves: let them go
-    Currency_Submission,  // soldiers, the proud: beat them, then wait
-    Currency_Refused      // the one honest no
-};
-
-// The result of asking "will this NPC join, and if not, what is missing?".
-struct Verdict
-{
-    bool willJoin;
-    bool wantsFood;
-    Currency currency;
-    // Cats demanded, when currency is Currency_Cats.
-    int cats;
-    // Player-facing explanation. Always populated -- telling the player WHY is
-    // the feature, not a debug aid.
-    std::string reason;
-    // Which route recognised this NPC, for logging and for choosing the
-    // dialogue record to fire.
-    bool viaRescue;
-    bool viaCaptivity;
-    // Which faction-relation band this NPC sits in ("aliado", "hostil", ...).
-    // Carried on the verdict so the spoken line and the reason cannot disagree
-    // about how well the two of you get on.
-    std::string band;
-    // Animals reach every route a person does, but they do not speak. Carried
-    // so the caller knows to draw a sound instead of a sentence.
-    bool isAnimal;
-    // They will not join, but they want to pay their debt with what they carry.
-    // The NPC paying the player, never the reverse.
-    bool owesGift;
-
-    Verdict()
-        : willJoin(false),
-          wantsFood(false),
-          currency(Currency_None),
-          cats(0),
-          reason(),
-          viaRescue(false),
-          viaCaptivity(false),
-          isAnimal(false),
-          owesGift(false)
-    {
-    }
-};
-
-// Evaluates an NPC against the active preset. Stateless: everything is read
-// from the world at the moment of the call, so there is nothing to persist,
-// nothing to desynchronise on load, and nothing to save-scum.
+// Evaluates an NPC against the active preset: will they join, and if not, what is
+// missing? Stateless: everything is read from the world at the moment of the call,
+// so there is nothing to persist, nothing to desynchronise on load, and nothing to
+// save-scum.
+//
+// It is a dispatcher. The engine is read once (character_facts.cpp), the route that
+// answers first is chosen over plain facts (route_rules.cpp), that route decides
+// (route_*.cpp) and the reason it names becomes the player's line (reason_text.cpp).
 Verdict Evaluate(Character* character);
-
-// Looks at where this character is right now and keeps the hold clock honest:
-// caged starts it (once), free drops it, so the easy-mode wait counts time in
-// THIS cage. Returns whether they are in the player's cage. Called by the
-// periodic sweep for everyone in range.
-bool NoteCageState(Character* character);
-
-// Forgets every hold clock (new session, plugin start and stop).
-void ResetHoldClock();
-
-// Forgets every insistence record (who has been pestered, who is ignoring the
-// player). Called when a save loads.
-void ResetTalkStates();
-
-// True when this character is dying rather than merely knocked out, and is not
-// faking it (PS_PLAYING_DEAD exists).
-bool IsGenuinelyDying(Character* character);
-
-// Records that the player saved this character's life, so the debt survives
-// even if the player walks away before they wake.
-void MarkRescuedBy(Character* character, Character* saviour);
-
-// True when the character remembers the player as their lifesaver.
-bool RemembersPlayerAsSaviour(Character* character);
-
-// Hands over what a rescued NPC is carrying when they cannot follow the player,
-// and returns how many cats changed hands (0 if they had nothing, or if they
-// have already paid). The debt is settled once and the fact is stored in the
-// engine's own per-character memory, so it survives a reload.
-int PayPartingGift(Character* character);
 
 // Human-readable currency name, for logs and status lines.
 const char* CurrencyName(Currency currency);
-
-// What this NPC says about their own situation, in their own voice. Varies by
-// archetype and personality, so a maniacal bandit and a fearful farmer do not
-// open with the same line. Used to fill in a placeholder dialogue at runtime.
-std::string SpeakOpeningLine(Character* character, const Verdict& verdict);
-
-// The label for the "yes" reply, naming the price so the player sees what they
-// are agreeing to.
-std::string SpeakAcceptLine(const Verdict& verdict);
-
-// What the offer window says about the situation, in the narrator's voice
-// rather than the NPC's. The NPC already speaks in a bubble over their head, so
-// repeating those words in the window wastes the only line it has -- this
-// states what is happening and why instead.
-std::string DescribeOffer(Character* character, const Verdict& verdict);
-
-// A short line a captive calls out when they are ready to be recruited, so the
-// player learns it without having to right-click on spec. Varies by personality
-// -- a fearful prisoner pleads, a proud one concedes grudgingly -- and picks
-// from several so the same prisoner does not repeat himself word for word.
-std::string HailLine(Character* character);
-
-// Checks if the NPC is currently ignoring the player due to excessive insistence.
-bool IsIgnoringPlayer(Character* character, double* outRemainingHours = NULL);
-
-// Records an interaction attempt for insistence tracking. Returns true if ignored.
-bool RecordInteraction(Character* character, double nowHours);
-
-// Stops hostility, clears temp enemies, and resets AI action so recruited or
-// rescued NPCs do not immediately turn and attack the player.
-void SafePacify(Character* character, Character* playerLeader = NULL);
-
-// SafeCharKey / SafeFindCharKey (the key every per-character map uses, and the
-// persisted id behind it) live in char_key_reader.h.
-
-// The one mapping from the engine's PT_* personality to the plugin's own.
-Temperament ToTemperament(int personality);
 } // namespace totalrecruit

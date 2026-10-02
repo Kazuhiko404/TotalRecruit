@@ -280,7 +280,7 @@ void ReportMissingKeys()
 }
 
 std::string Fill(const std::string& text, const std::string& name,
-                 int cats, int hours)
+                 int cats, int hours, int purse)
 {
     std::string out = text;
 
@@ -289,11 +289,13 @@ std::string Fill(const std::string& text, const std::string& name,
     const std::string catsText = number;
     _snprintf_s(number, sizeof(number), _TRUNCATE, "%d", hours);
     const std::string hoursText = number;
+    _snprintf_s(number, sizeof(number), _TRUNCATE, "%d", purse);
+    const std::string purseText = number;
 
-    const char* keys[3] = { "{name}", "{cats}", "{hours}" };
-    const std::string values[3] = { name, catsText, hoursText };
+    const char* keys[4] = { "{name}", "{cats}", "{hours}", "{purse}" };
+    const std::string values[4] = { name, catsText, hoursText, purseText };
 
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         for (;;)
         {

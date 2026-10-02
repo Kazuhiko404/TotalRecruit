@@ -406,6 +406,42 @@ void JoinChanceUsesTheConfiguredTerms()
     chance.personality[Temperament_Brave] = 0;
     CHECK(JoinChance(in, chance, kSub) == 45 + 40);
 }
+
+// --- T8: the verdict roll, moved out of rules.cpp (StableChance) unchanged.
+
+void TheVerdictRollHonoursTheExtremesWithoutAKey()
+{
+    const char* name = "verdict roll: 100 always joins, 0 never does, even with no key";
+    const CharKey none;
+    CHECK(RollsToJoin(false, none, 100));
+    CHECK(RollsToJoin(false, none, 150));
+    CHECK(!RollsToJoin(false, none, 0));
+    CHECK(!RollsToJoin(false, none, -5));
+}
+
+void TheVerdictRollRefusesWhenThereIsNoKey()
+{
+    const char* name = "verdict roll: with no key to seed from the answer is no";
+    const CharKey none;
+    for (int percent = 1; percent < 100; ++percent)
+    {
+        CHECK(!RollsToJoin(false, none, percent));
+    }
+}
+
+void TheVerdictRollIsTheStableRoll()
+{
+    const char* name = "verdict roll: with a key it is exactly StableRoll, so it never rerolls";
+    for (unsigned int i = 1; i < 200; ++i)
+    {
+        const CharKey key(i, i * 7u);
+        for (int percent = 1; percent < 100; percent += 11)
+        {
+            CHECK(RollsToJoin(true, key, percent) == StableRoll(key, percent));
+            CHECK(RollsToJoin(true, key, percent) == RollsToJoin(true, key, percent));
+        }
+    }
+}
 } // namespace
 
 void RunChanceRulesTests()
@@ -440,4 +476,7 @@ void RunChanceRulesTests()
     PersonalityTableIsConfigurable();
     PersonalityDefaultsAreTheShippedTable();
     JoinChanceUsesTheConfiguredTerms();
+    TheVerdictRollHonoursTheExtremesWithoutAKey();
+    TheVerdictRollRefusesWhenThereIsNoKey();
+    TheVerdictRollIsTheStableRoll();
 }

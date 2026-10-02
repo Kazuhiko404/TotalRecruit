@@ -91,6 +91,14 @@ int JoinChance(const ChanceInputs& in, const Chance& chance, const Submission& s
 // form below is the one the mod rolls with.
 bool StableRoll(unsigned int index, unsigned int serial, int percent);
 
+// A chance the player cannot re-roll by clicking. PLAN.md settled that this mod
+// has no dice, and the reason was save-scumming: a percentage rolled per click is
+// really "click until it works". The roll is seeded from the character, so they
+// see a real chance that stays decided once it is decided. 100 and above always
+// joins, 0 and below never does, and with no key to seed from there is no stable
+// answer to give -- inventing one that changes per call is worse than refusing.
+bool RollsToJoin(bool haveKey, const CharKey& key, int percent);
+
 // The same roll seeded from a CharKey. A key that carries a persisted id is
 // seeded from the id, so an NPC keeps their luck across a game relaunch; a
 // handle-only key (the fallback) is seeded exactly as above.

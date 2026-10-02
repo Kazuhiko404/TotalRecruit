@@ -34,6 +34,21 @@ bool SafeIsMyPrisoner(Character* leader, Character* captive, bool* out)
     TR_CATCH { return false; }
 }
 
+bool SafeIsProbablyDying(Character* character, bool* out)
+{
+    TR_TRY
+    {
+        MedicalSystem* medical = character->getMedical();
+        if (medical == NULL)
+        {
+            return false;
+        }
+        *out = medical->isProbablyDying();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
 // getName returns std::string by value, so the call and the copy out of it
 // both live in a helper that the guard only jumps through.
 void CopyName(Character* character, char* buffer, size_t size)
@@ -162,6 +177,40 @@ bool SafeRememberTag(Character* character, Character* about,
         return true;
     }
     TR_CATCH { return false; }
+}
+
+bool SafeIsPretending(Character* character, bool* out)
+{
+    TR_TRY
+    {
+        // PS_PLAYING_DEAD is the engine's own answer, so ask for it. The old test
+        // -- down but not unconscious -- also caught anyone whose legs are
+        // crippled: they cannot stand, so isDown() is true, and they are wide
+        // awake, so the negation is true too. A one-legged NPC standing there
+        // talking was being called a faker.
+        *out = (character->getProneState() == PS_PLAYING_DEAD);
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+bool IsGenuinelyDying(Character* character)
+{
+    if (character == NULL)
+    {
+        return false;
+    }
+
+    bool dying = false;
+    if (!SafeIsProbablyDying(character, &dying))
+    {
+        return false;
+    }
+
+    bool pretending = false;
+    SafeIsPretending(character, &pretending);
+
+    return dying && !pretending;
 }
 
 bool IsInPlayerCage(Character* character)

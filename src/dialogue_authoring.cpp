@@ -1,6 +1,7 @@
 #include "common.h"
 #include "dialogue_authoring.h"
 #include "rules.h"
+#include "npc_speech.h"
 #include "config.h"
 #include "recruit_core.h"
 #include "engine_reads.h"

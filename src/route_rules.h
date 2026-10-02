@@ -7,6 +7,9 @@
 // swallow a case that a later rule was written to handle. The order is one
 // function now, over plain facts, so a test can state it.
 
+#include "config.h"
+#include "entry_facts.h"
+
 namespace totalrecruit
 {
 enum Route
@@ -66,6 +69,11 @@ struct RouteFacts
 
 // The first route that applies, in priority order.
 Route ChooseEntryRoute(const RouteFacts& facts);
+
+// The facts the order is decided on, from what was read and the config. The
+// switches live here, not in the readers: "remembers the player as their saviour"
+// is only a fact about the route when rescue is on.
+RouteFacts MakeRouteFacts(const CoreFacts& core, const Config& config);
 
 const char* RouteName(Route route);
 } // namespace totalrecruit

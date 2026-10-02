@@ -1,7 +1,30 @@
 #include "route_rules.h"
+#include "chance_rules.h"
+#include "body_rules.h"
 
 namespace totalrecruit
 {
+RouteFacts MakeRouteFacts(const CoreFacts& core, const Config& config)
+{
+    RouteFacts f;
+    f.animal             = core.animal;
+    f.surrenderEnabled   = config.surrenderEnabled;
+    f.countDefeats       = config.submission.countDefeats;
+    f.defeats            = core.defeats;
+    f.defeatsToBreak     = config.submission.defeatsToBreak;
+    f.unconscious        = core.unconscious;
+    f.dying              = core.dying;
+    f.grudge             = core.grudge;
+    f.grudgeUnforgivable = GrudgeIsUnforgivable(core.temperament, config.chance);
+    f.inMyCage           = core.inMyCage;
+    f.rescueEnabled      = config.rescueEnabled;
+    f.remembersSaviour   = config.rescueEnabled && core.rememberedAsSaviour;
+    f.easyHealthy        = IsEasyHealthy(config.prices.easyHoursCaged, core.wounded,
+                                         core.starving, core.health);
+    f.surrendered        = core.surrendered;
+    return f;
+}
+
 Route ChooseEntryRoute(const RouteFacts& f)
 {
     // Loyalty first. To an honourable, brave or kind NPC refusing the person

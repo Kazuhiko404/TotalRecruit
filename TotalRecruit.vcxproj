@@ -97,6 +97,24 @@
     <ClCompile Include="src\char_key_reader.cpp" />
     <ClCompile Include="src\load_boundary.cpp" />
     <ClCompile Include="src\engine_reads.cpp" />
+    <ClCompile Include="src\reason_text.cpp" />
+    <ClCompile Include="src\npc_speech.cpp" />
+    <ClCompile Include="src\character_facts.cpp" />
+    <ClCompile Include="src\pacify.cpp" />
+    <ClCompile Include="src\rescue_memory.cpp" />
+    <ClCompile Include="src\insistence.cpp" />
+    <ClCompile Include="src\hold_tracking.cpp" />
+    <ClCompile Include="src\route_cage.cpp" />
+    <ClCompile Include="src\route_free.cpp" />
+    <ClCompile Include="src\route_cats.cpp" />
+    <ClCompile Include="src\route_animal.cpp" />
+    <ClCompile Include="src\route_yield.cpp" />
+    <ClCompile Include="src\route_rescue.cpp" />
+    <ClCompile Include="src\route_cheat.cpp" />
+    <ClCompile Include="src\route_gate.cpp" />
+    <ClCompile Include="src\relation_rules.cpp" />
+    <ClCompile Include="src\body_rules.cpp" />
+    <ClCompile Include="src\reason_catalog.cpp" />
     <ClCompile Include="src\animal_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -140,6 +158,21 @@
     <ClInclude Include="src\char_key_reader.h" />
     <ClInclude Include="src\load_boundary.h" />
     <ClInclude Include="src\engine_reads.h" />
+    <ClInclude Include="src\entry_facts.h" />
+    <ClInclude Include="src\temperament_map.h" />
+    <ClInclude Include="src\archetype.h" />
+    <ClInclude Include="src\verdict.h" />
+    <ClInclude Include="src\reason_text.h" />
+    <ClInclude Include="src\npc_speech.h" />
+    <ClInclude Include="src\character_facts.h" />
+    <ClInclude Include="src\pacify.h" />
+    <ClInclude Include="src\rescue_memory.h" />
+    <ClInclude Include="src\insistence.h" />
+    <ClInclude Include="src\hold_tracking.h" />
+    <ClInclude Include="src\route_decisions.h" />
+    <ClInclude Include="src\relation_rules.h" />
+    <ClInclude Include="src\body_rules.h" />
+    <ClInclude Include="src\reason_catalog.h" />
     <ClInclude Include="src\animal_rules.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -188,6 +188,14 @@ unsigned int HashId(const std::string& id)
 }
 } // namespace
 
+bool RollsToJoin(bool haveKey, const CharKey& key, int percent)
+{
+    if (percent >= 100) return true;
+    if (percent <= 0)   return false;
+    if (!haveKey)       return false;
+    return StableRoll(key, percent);
+}
+
 bool StableRoll(const CharKey& key, int percent)
 {
     if (!key.HasId())

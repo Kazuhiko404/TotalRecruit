@@ -9,7 +9,8 @@
 #include "mercy.h"
 #include "offer_popup.h"
 #include "recruit_overlay.h"
-#include "rules.h"
+#include "hold_tracking.h"
+#include "insistence.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4091)
