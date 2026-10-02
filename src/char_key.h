@@ -22,6 +22,11 @@ struct CharKey
     CharKey() : index(0), serial(0) {}
     CharKey(unsigned int i, unsigned int s) : index(i), serial(s) {}
 
+    bool operator==(const CharKey& other) const
+    {
+        return index == other.index && serial == other.serial;
+    }
+
     bool operator<(const CharKey& other) const
     {
         if (index != other.index) return index < other.index;

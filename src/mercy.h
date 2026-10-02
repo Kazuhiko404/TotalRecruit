@@ -23,7 +23,9 @@ void OfferMercy(Character* npc);
 // its third button means "spare them" rather than "feed them".
 bool IsMercyPending(Character* npc);
 
-// Clears the plea without acting on it (the player closed the window).
+// Clears the plea without acting on it (the player closed the window). With an
+// NPC it ends that NPC's plea only; with NULL it ends whichever is pending, for
+// the window closing by a path that has no one to name.
 void ForgetMercy(Character* npc);
 
 // Aceptar: they join, free of charge (R3.7). Not routed through the price

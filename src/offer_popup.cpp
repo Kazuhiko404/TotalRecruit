@@ -618,18 +618,25 @@ void Close()
     g_open = false;
     g_subject = NULL;
     SafeSetVisible(g_root, false);
+    // Whatever way the window ends -- an answer, the title-bar cross, the HUD
+    // hiding it, shutdown -- no plea is on screen any more. A pending plea
+    // blocks every later one, so leaving it set meant no one could beg again
+    // until a reload. The handlers below read IsMercyPending BEFORE calling
+    // Close for the same reason.
+    ForgetMercy(NULL);
 }
 
 void OnAccept(MyGUI::Widget* /*sender*/)
 {
     Character* npc = g_subject;
+    const bool plea = IsMercyPending(npc);
     Close();
 
     if (npc != NULL)
     {
         // A plea for mercy is answered by its own rule, not by the price
         // evaluation every other offer goes through.
-        if (IsMercyPending(npc))
+        if (plea)
         {
             AcceptMercy(npc);
         }
@@ -652,6 +659,7 @@ void OnWindowButton(MyGUI::Window* /*sender*/, const std::string& button)
 void OnDecline(MyGUI::Widget* /*sender*/)
 {
     Character* npc = g_subject;
+    const bool plea = IsMercyPending(npc);
     Close();
 
     if (npc != NULL)
@@ -659,9 +667,8 @@ void OnDecline(MyGUI::Widget* /*sender*/)
         // Refusing a plea is a real answer: nothing changes, they stay hostile,
         // and the fight goes on. It is not the same as the captive decline,
         // which only reports that they were left where they are.
-        if (IsMercyPending(npc))
+        if (plea)
         {
-            ForgetMercy(npc);
             TellPlayer(CharacterName(npc) + ": ignoraste su súplica.", false);
         }
         else
@@ -677,6 +684,7 @@ void OnDecline(MyGUI::Widget* /*sender*/)
 void OnExtra(MyGUI::Widget* /*sender*/)
 {
     Character* npc = g_subject;
+    const bool plea = IsMercyPending(npc);
     Close();
 
     if (npc != NULL)
@@ -684,7 +692,7 @@ void OnExtra(MyGUI::Widget* /*sender*/)
         // The third button is context: it feeds a starving captive, but for
         // someone pleading over a lost limb it is the one answer that is
         // neither joining nor killing.
-        if (IsMercyPending(npc))
+        if (plea)
         {
             GrantMercy(npc);
         }
@@ -714,6 +722,12 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
     {
         return false;
     }
+
+    // Opening a window replaces whatever was on screen, plea included, and the
+    // buttons below route on whether a plea is pending. A plea that outlived
+    // its window would turn this offer's ACEPTAR into a free join. OfferMercy
+    // marks its plea AFTER this call succeeds, for the same reason.
+    ForgetMercy(NULL);
 
     const bool haveAccept = !acceptLabel.empty();
     const bool haveExtra = !extraLabel.empty();

@@ -8,6 +8,7 @@
 #include "dialogue_authoring.h"
 #include "log.h"
 #include "mercy_rules.h"
+#include "plea_tracker.h"
 
 #include <set>
 
@@ -17,7 +18,11 @@ namespace
 {
 // Who is currently pleading. One at a time: a brawl can cripple several people
 // in the same second, and a stack of windows would be worse than none.
-Character* g_pleading = NULL;
+//
+// Held as a CharKey (rules.h) inside a PleaTracker, not as the Character*: an
+// address is not an identity, and the engine hands a freed character's address
+// to the next one, so a stranger could answer to a dead man's plea.
+PleaTracker g_pleading;
 
 // Everyone who has already begged. A second lost limb is not a second plea --
 // the player already gave their answer.
@@ -137,12 +142,23 @@ Temperament ReadTemperament(Character* npc)
 
 bool IsMercyPending(Character* npc)
 {
-    return npc != NULL && npc == g_pleading;
+    CharKey key;
+    return npc != NULL && SafeCharKey(npc, &key) && g_pleading.IsPending(key);
 }
 
-void ForgetMercy(Character* /*npc*/)
+void ForgetMercy(Character* npc)
 {
-    g_pleading = NULL;
+    if (npc == NULL)
+    {
+        g_pleading.Clear();
+        return;
+    }
+
+    CharKey key;
+    if (SafeCharKey(npc, &key))
+    {
+        g_pleading.ClearIf(key);
+    }
 }
 
 // Moves what the beaten NPC is carrying into the player's purse.
@@ -198,7 +214,7 @@ void GrantMercy(Character* npc)
         return;
     }
 
-    g_pleading = NULL;
+    ForgetMercy(npc);
 
     Character* leader = NULL;
     SafePlayerLeaderLocal(&leader);
@@ -238,7 +254,7 @@ void AcceptMercy(Character* npc)
         return;
     }
 
-    g_pleading = NULL;
+    ForgetMercy(npc);
 
     const std::string name = CharacterName(npc);
     if (ResolvePlea(PleaAnswer_Accept, ReadTemperament(npc)) != PleaOutcome_Join)
@@ -262,7 +278,7 @@ void AcceptMercy(Character* npc)
 
 void OfferMercy(Character* npc)
 {
-    if (npc == NULL || g_pleading != NULL)
+    if (npc == NULL || g_pleading.HasPending())
     {
         return;
     }
@@ -317,7 +333,6 @@ void OfferMercy(Character* npc)
     }
 
     g_begged.insert(key);
-    g_pleading = npc;
 
     const std::string line = PleaLine(npc);
     SpeakAloud(npc, line);
@@ -330,14 +345,18 @@ void OfferMercy(Character* npc)
     {
         // No window means no choice, and silently recruiting or silently
         // sparing would both be decisions the player never made.
-        g_pleading = NULL;
         LogError("Could not open the mercy window for " + CharacterName(npc));
+        return;
     }
+
+    // Marked only now that the window is up: ShowOffer clears any plea so that
+    // an ordinary offer cannot inherit one, and this one has just replaced it.
+    g_pleading.Begin(key);
 }
 
 void ShutdownMercy()
 {
-    g_pleading = NULL;
+    g_pleading.Clear();
     g_begged.clear();
 }
 } // namespace totalrecruit

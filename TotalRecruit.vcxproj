@@ -87,6 +87,7 @@
     <ClCompile Include="src\temperament_map.cpp" />
     <ClCompile Include="src\defeat_rules.cpp" />
     <ClCompile Include="src\mercy_rules.cpp" />
+    <ClCompile Include="src\plea_tracker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h" />
@@ -118,6 +119,7 @@
     <ClInclude Include="src\route_rules.h" />
     <ClInclude Include="src\defeat_rules.h" />
     <ClInclude Include="src\mercy_rules.h" />
+    <ClInclude Include="src\plea_tracker.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

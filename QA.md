@@ -326,3 +326,12 @@ la ruta que contestó primero (`field-yield`, `unconscious`, `grudge-refusal`,
 | F6 | Vencer a alguien 2 veces, guardar, **salir al escritorio**, volver y hablarle fuera de la jaula | Sigue en la ruta del campo: el progreso sobrevivió | `[route] field-yield`; tras una derrota más, `floor+session=2` o más |
 | F7 | Un NPC pide piedad (perdió un miembro o sangre < 25%). Apretar **ACEPTAR** | **Se une gratis**, también un honorable o un valiente. Nunca un precio en cats ni *"su honor le impide aceptar sobornos"* | `Accepted the plea of <nombre>: joined without a price.` y **ningún** `pagaste` |
 | F8 | Mismo caso, apretar **IGNORAR** (solo si puede comprar su vida) | Se va; si llevaba cats, te los deja | `Tribute of N cats from <nombre>` |
+
+### 12.2 Ventana de piedad (T3)
+
+| # | Qué hacer | Esperado | Línea del log |
+|---|---|---|---|
+| M1 | Aceptar una súplica (ACEPTAR) y, **sin recargar**, dejar que otro NPC pierda un miembro | Se abre una **segunda** súplica | `Accepted the plea of <A>` y después el diálogo de piedad de <B> |
+| M2 | Cerrar una súplica con la cruz de la ventana, y luego dejar que otro pierda un miembro | También se abre; antes quedaba bloqueado hasta recargar | Ninguna línea `Could not open the mercy window` |
+| M3 | Ídem con RECHAZAR | Se abre la siguiente | — |
+| M4 | Con una súplica abierta, hacerle click derecho al mismo NPC y abrir su oferta normal (si es un cautivo con precio) | ACEPTAR **cobra** según el veredicto; no lo regala como si fuera piedad | `pagaste N cats` en el mensaje |

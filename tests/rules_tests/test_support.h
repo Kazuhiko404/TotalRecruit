@@ -18,3 +18,4 @@ void RunPriceRulesTests();
 void RunRouteRulesTests();
 void RunDefeatRulesTests();
 void RunMercyRulesTests();
+void RunPleaTrackerTests();

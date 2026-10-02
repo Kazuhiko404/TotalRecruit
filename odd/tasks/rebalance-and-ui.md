@@ -66,7 +66,7 @@ Out of scope:
   - The reload floor is too low: `persistedFloorCount` 1 is less than `defeatsToBreak` 2, which breaks R3.3.
   - A mercy plea accepted is answered with a price or an honour refusal (R3.6/R3.7).
   - Route: delegated.
-- [ ] **T3 Mercy and popup bugs:**
+- [x] **T3 Mercy and popup bugs:**
   - `OnAccept` never clears `g_pleading` (offer_popup.cpp:623).
   - `g_pleading` is a raw pointer.
   - Route: delegated.
@@ -124,7 +124,7 @@ Out of scope:
 - QA: nothing engine-visible changed. Smoke only: with `probeOnClick` the log now has a `[route] <name>` line per Evaluate.
 
 ### T2 Route-order bugs - done
-- Commit: `{T2}` (`fix(rules): correct route order, defeat floor and plea accept`). Route: delegated (same writer).
+- Commit: `381bdde` (`fix(rules): correct route order, defeat floor and plea accept`). Route: delegated (same writer).
 - RED (before any production change): `rules_tests.exe` printed `2/5 suites passed, 22/15705 checks failed`:
   route_rules 9 failures (grudge vs field-yield x2, caged-with-defeats x6, reload x1), defeat_rules 3 (floor 1 < 2),
   mercy_rules 10 (accept not a join).
@@ -141,5 +141,19 @@ Out of scope:
 - Tracked: T1 hash filled in above. `D6` in QA.md changed from `floor+session=1` to `2`.
 - In-game QA: QA.md section 12.1 (F1-F8).
 
+### T3 Mercy and popup bugs - done
+- Commit: `{T3}` (`fix(mercy): clear the plea on every close path and key it by handle`). Route: delegated (same writer).
+- RED: new `plea_tracker` suite with a stub that never cleared and matched on index only:
+  `5/6 suites passed, 7/15728 checks failed` (clear/next-plea x4, Clear() x2, reused slot serial x1).
+- GREEN: `6/6 suites passed, 0/15728 checks failed`.
+- New engine-free `PleaTracker` (src/plea_tracker.{h,cpp}) holds the pending plea as a `CharKey`; `CharKey` gained `operator==`.
+  `mercy.cpp` replaced `Character* g_pleading` with it. A reused slot has a new serial so a stranger cannot match.
+- Clear-on-every-path: `AcceptMercy`/`GrantMercy`/decline call `ForgetMercy`; `offer_popup.cpp` `Close()` now calls
+  `ForgetMercy(NULL)` (any end of the window: cross, HideOffer, shutdown) and the handlers read `IsMercyPending` BEFORE
+  `Close()`. `ShowOffer` clears any pending plea on entry so a later ordinary offer cannot inherit it (it would have turned
+  its ACEPTAR into a free join); `OfferMercy` therefore marks the plea after `ShowOffer` succeeds.
+- Builds: DLL Release|x64 OK; tests green.
+- In-game QA: QA.md 12.2 (M1-M4).
+
 ## Next step
-T3.
+T4.
