@@ -16,3 +16,5 @@ int Checks();
 void RunChanceRulesTests();
 void RunPriceRulesTests();
 void RunRouteRulesTests();
+void RunDefeatRulesTests();
+void RunMercyRulesTests();

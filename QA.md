@@ -107,7 +107,7 @@ nuevo, así que un NPC de 17% era cuestión de insistir con F9.
 
 | # | Qué hacer | Esperado | Falla si |
 |---|---|---|---|
-| D6 | Vencerlo 3 veces, guardar, salir, entrar, click | `floor+session=1` — perdió precisión | Da `0`: la marca no persistió |
+| D6 | Vencerlo 3 veces, guardar, salir, entrar, click | `floor+session=2` — perdió precisión pero no la ruta (el piso nunca baja de `defeatsToBreak`) | Da `0`: la marca no persistió. Da `1`: el piso volvió a quedar bajo el umbral |
 | D7 | Tras D6, mirar el probe | `memoryTags: SQUAD_LOST_TO_ME` | No aparece el tag |
 
 El diseño acepta perder precisión (3 → 1). Lo que **nunca** puede pasar es
@@ -305,3 +305,24 @@ Con esto puedo diagnosticar sin pedirte nada más:
 
 El `[chance]` y el `--- probe:` juntos dicen casi siempre dónde está el problema,
 porque muestran cada término por separado en vez de solo el resultado.
+
+---
+
+## 12. Ronda rebalance-and-ui
+
+Con `"probeOnClick": true`, cada click escribe `[route] <nombre>` en el log: es
+la ruta que contestó primero (`field-yield`, `unconscious`, `grudge-refusal`,
+`rescue`, `dying`, `easy-healthy`, `surrendered`, `free-world`, `cage`).
+
+### 12.1 Orden de rutas (T2)
+
+| # | Qué hacer | Esperado | Línea del log |
+|---|---|---|---|
+| F1 | Un honorable, valiente o bondadoso que **recuerda que mataste a uno de los suyos**: vencerlo 2 veces **fuera** de la jaula y hablarle | Se niega: *"mataste a alguien suyo, y eso no se compra"*. **No** se rinde | `[route] grudge-refusal` |
+| F2 | Mismo caso pero **dentro de tu jaula** | La jaula sí lo toca (el hambre y el tiempo no entienden de honor) | `[route] cage` |
+| F3 | Un prisionero **tuyo** con 2 o más derrotas, sano y alimentado, con `easyHoursCaged` > 0 | Entra por el atajo del modo fácil, no por *"todavía no se quiebra"* | `[route] easy-healthy` |
+| F4 | Un prisionero tuyo con 2 o más derrotas, hambriento o herido, con `easyHoursCaged` en 0 | Llega a los fallbacks de la jaula: cuidados, precio en cats, o intimidación; **no** el cartel de sumisión del campo | `[route] cage` y una línea `[chance]` con `defeats=` > 0 |
+| F5 | Un NPC **libre** vencido 2 veces | Sigue cediendo (es la ruta del campo) | `[route] field-yield` |
+| F6 | Vencer a alguien 2 veces, guardar, **salir al escritorio**, volver y hablarle fuera de la jaula | Sigue en la ruta del campo: el progreso sobrevivió | `[route] field-yield`; tras una derrota más, `floor+session=2` o más |
+| F7 | Un NPC pide piedad (perdió un miembro o sangre < 25%). Apretar **ACEPTAR** | **Se une gratis**, también un honorable o un valiente. Nunca un precio en cats ni *"su honor le impide aceptar sobornos"* | `Accepted the plea of <nombre>: joined without a price.` y **ningún** `pagaste` |
+| F8 | Mismo caso, apretar **IGNORAR** (solo si puede comprar su vida) | Se va; si llevaba cats, te los deja | `Tribute of N cats from <nombre>` |

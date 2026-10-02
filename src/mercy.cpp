@@ -7,6 +7,7 @@
 #include "offer_popup.h"
 #include "dialogue_authoring.h"
 #include "log.h"
+#include "mercy_rules.h"
 
 #include <set>
 
@@ -120,32 +121,17 @@ std::string PleaLine(Character* npc)
                 CharacterName(npc), 0, 0);
 }
 
-// Who can buy their way out of this, and who cannot.
-//
-// A coward, a turncoat or a plain brute will offer whatever they carry -- and
-// that is what gives "Ignorar" its weight, because walking away now costs the
-// player something concrete. An honourable or brave one will not: they join or
-// they die on their feet. Letting them purchase an exit would contradict the
-// one thing that defines them, and would cheapen both routes at once.
-bool CanBuyTheirLife(Character* npc)
+// Their temperament, as the engine-free enum the plea rules (mercy_rules.cpp)
+// take. Unreadable reads as Normal, which can neither buy its life nor be
+// refused the accept.
+Temperament ReadTemperament(Character* npc)
 {
     int personality = PT_NORMAL;
     if (!SafeReadPersonality(npc, &personality))
     {
-        return false;
+        return Temperament_Normal;
     }
-
-    switch (personality)
-    {
-    case PT_FEARFUL:
-    case PT_TRAITOROUS:
-    case PT_DUMB:
-    case PT_COLD_CRUEL:
-    case PT_MANIACAL:
-        return true;
-    default:
-        return false;   // honourable, brave, and anyone unread
-    }
+    return ToTemperament(personality);
 }
 } // namespace
 
@@ -227,7 +213,8 @@ void GrantMercy(Character* npc)
     // They pay for the road out with whatever they carry. That is what makes
     // this "ignore" rather than "spare": the player is declining something
     // concrete, not just being merciful in the abstract.
-    if (CanBuyTheirLife(npc) && PayTribute(npc))
+    if (ResolvePlea(PleaAnswer_Ignore, ReadTemperament(npc)) == PleaOutcome_LetGoWithTribute &&
+        PayTribute(npc))
     {
         TellPlayer(name + ": te dej\xc3\xb3 lo que llevaba y se fue.", false);
     }
@@ -236,6 +223,41 @@ void GrantMercy(Character* npc)
         TellPlayer(name + ": lo dejaste marchar.", false);
     }
     LogInfo("Let " + name + " go after they lost a limb.");
+}
+
+// ACEPTAR on a plea. The plea itself said "I will do what you ask", so the
+// answer is not a negotiation: they join, free of charge, whoever they are.
+//
+// This used to go through the ordinary Evaluate like any other offer, which
+// could answer a plea with a cats price, or with "his honour forbids bribes" --
+// the opposite of R3.6 (the honourable join or die) and R3.7 (accepting joins).
+void AcceptMercy(Character* npc)
+{
+    if (npc == NULL)
+    {
+        return;
+    }
+
+    g_pleading = NULL;
+
+    const std::string name = CharacterName(npc);
+    if (ResolvePlea(PleaAnswer_Accept, ReadTemperament(npc)) != PleaOutcome_Join)
+    {
+        return;
+    }
+
+    std::string message;
+    if (Recruit(npc, &message))
+    {
+        TellPlayer(Fill(Say("mercy.joinedNotice", "{name}: se une a ti.", npc),
+                        name, 0, 0),
+                   false);
+        LogInfo("Accepted the plea of " + name + ": joined without a price.");
+    }
+    else
+    {
+        TellPlayer(name + ": " + message, true);
+    }
 }
 
 void OfferMercy(Character* npc)
@@ -302,7 +324,7 @@ void OfferMercy(Character* npc)
 
     // Ignoring is only a third option when there is something to ignore. An
     // honourable NPC has made this a two-answer question: take them or fight.
-    const char* thirdLabel = CanBuyTheirLife(npc) ? "IGNORAR" : "";
+    const char* thirdLabel = CanBuyTheirLife(ReadTemperament(npc)) ? "IGNORAR" : "";
 
     if (!ShowOffer(npc, line, "ACEPTAR", "RECHAZAR", thirdLabel))
     {

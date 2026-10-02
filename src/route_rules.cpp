@@ -4,7 +4,20 @@ namespace totalrecruit
 {
 Route ChooseEntryRoute(const RouteFacts& f)
 {
-    if (!f.animal && f.surrenderEnabled && f.countDefeats &&
+    // Loyalty first. To an honourable, brave or kind NPC refusing the person
+    // who killed a comrade is the thing that defines them, so no beating
+    // outside the cage may buy it off -- this used to sit below field-yield,
+    // which handed such an NPC to the player after two defeats.
+    if (f.grudge && f.grudgeUnforgivable && !f.inMyCage)
+    {
+        return Route_GrudgeRefusal;
+    }
+
+    // Field-yield is the route for a beating in the open, so it applies outside
+    // the cage only. Inside, the defeats still count -- they feed the chance --
+    // but a caged NPC keeps every cage route (easy wait, healthy, care, cats);
+    // taking this one first returned before any of them could run.
+    if (!f.inMyCage && !f.animal && f.surrenderEnabled && f.countDefeats &&
         f.defeats >= f.defeatsToBreak)
     {
         return Route_FieldYield;
@@ -13,11 +26,6 @@ Route ChooseEntryRoute(const RouteFacts& f)
     if (f.unconscious)
     {
         return Route_Unconscious;
-    }
-
-    if (f.grudge && f.grudgeUnforgivable && !f.inMyCage)
-    {
-        return Route_GrudgeRefusal;
     }
 
     if (f.rescueEnabled && f.remembersSaviour)

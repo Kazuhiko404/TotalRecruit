@@ -85,6 +85,8 @@
     <ClCompile Include="src\price_rules.cpp" />
     <ClCompile Include="src\route_rules.cpp" />
     <ClCompile Include="src\temperament_map.cpp" />
+    <ClCompile Include="src\defeat_rules.cpp" />
+    <ClCompile Include="src\mercy_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h" />
@@ -114,6 +116,8 @@
     <ClInclude Include="src\chance_rules.h" />
     <ClInclude Include="src\price_rules.h" />
     <ClInclude Include="src\route_rules.h" />
+    <ClInclude Include="src\defeat_rules.h" />
+    <ClInclude Include="src\mercy_rules.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

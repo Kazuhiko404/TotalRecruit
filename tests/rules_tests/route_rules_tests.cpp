@@ -1,9 +1,11 @@
 // Characterization tests for src/route_rules.cpp: the order in which Evaluate's
-// routes are tried, as it shipped. T2 changes parts of this order; the tests
-// that pin the shipped order for the cases T2 touches are rewritten there.
+// routes are tried. The first block pins the order as it shipped; the T2 blocks
+// state the corrected order for the cases the audit found.
 
 #include "test_support.h"
 #include "route_rules.h"
+#include "defeat_rules.h"
+#include "config.h"
 
 #include <cstring>
 
@@ -145,23 +147,106 @@ void FieldYieldRespectsTheSwitches()
     CHECK(ChooseEntryRoute(f) == Route_FreeWorld);
 }
 
-void ShippedOrderPutsFieldYieldFirst()
+// T2a -- the grudge check used to sit below field-yield, so an honourable,
+// brave or kind NPC beaten twice outside the cage yielded to the very person
+// who killed one of theirs.
+void GrudgeOutranksFieldYield()
 {
-    const char* name = "route (shipped order): field-yield outranks unconscious and grudge";
+    const char* name = "route: an unforgiving grudge refuses before field-yield";
     RouteFacts f;
     f.defeats = 2;
+    f.grudge = true;
+    f.grudgeUnforgivable = true;
+    CHECK(ChooseEntryRoute(f) == Route_GrudgeRefusal);
+}
+
+void GrudgeOutranksFieldYieldEvenWhenUnconscious()
+{
+    const char* name = "route: the grudge refusal also beats field-yield while out cold";
+    RouteFacts f;
+    f.defeats = 4;
     f.unconscious = true;
     f.grudge = true;
     f.grudgeUnforgivable = true;
+    CHECK(ChooseEntryRoute(f) == Route_GrudgeRefusal);
+}
+
+void ForgivingGrudgeStillYieldsInTheField()
+{
+    const char* name = "route: a grudge that can be forgiven does not block field-yield";
+    RouteFacts f;
+    f.defeats = 2;
+    f.grudge = true;
+    f.grudgeUnforgivable = false;
     CHECK(ChooseEntryRoute(f) == Route_FieldYield);
 }
 
-void ShippedOrderSwallowsTheCage()
+void FieldYieldStillBeatsUnconsciousOutsideTheCage()
 {
-    const char* name = "route (shipped order): a caged NPC with enough defeats takes field-yield";
+    const char* name = "route: outside the cage field-yield is still tried while unconscious";
+    RouteFacts f;
+    f.defeats = 2;
+    f.unconscious = true;
+    CHECK(ChooseEntryRoute(f) == Route_FieldYield);
+}
+
+// T2b -- field-yield returned for every NPC with enough defeats, caged or not,
+// so a prisoner beaten twice never reached the cage fallbacks (easy-mode wait,
+// healthy shortcut, care, cats). In the cage the defeats still count -- they
+// feed the chance -- but the route is the cage.
+void CagedNpcWithDefeatsKeepsTheCageRoute()
+{
+    const char* name = "route: a caged NPC with enough defeats takes the cage route";
     RouteFacts f;
     f.defeats = 2;
     f.inMyCage = true;
+    CHECK(ChooseEntryRoute(f) == Route_Cage);
+    f.defeats = 9;
+    CHECK(ChooseEntryRoute(f) == Route_Cage);
+}
+
+void CagedNpcWithDefeatsKeepsEasyHealthy()
+{
+    const char* name = "route: defeats do not remove the easy-healthy shortcut in the cage";
+    RouteFacts f;
+    f.defeats = 3;
+    f.inMyCage = true;
+    f.easyHealthy = true;
+    CHECK(ChooseEntryRoute(f) == Route_EasyHealthy);
+}
+
+void CagedNpcWithDefeatsStillDies()
+{
+    const char* name = "route: defeats do not hide a dying prisoner or a rescue debt";
+    RouteFacts f;
+    f.defeats = 3;
+    f.inMyCage = true;
+    f.dying = true;
+    CHECK(ChooseEntryRoute(f) == Route_Dying);
+    f.remembersSaviour = true;
+    CHECK(ChooseEntryRoute(f) == Route_Rescue);
+}
+
+void CagedNpcWithDefeatsStillWaitsWhenUnconscious()
+{
+    const char* name = "route: a caged NPC is not asked anything while out cold";
+    RouteFacts f;
+    f.defeats = 3;
+    f.inMyCage = true;
+    f.unconscious = true;
+    CHECK(ChooseEntryRoute(f) == Route_Unconscious);
+}
+
+// T2c -- after a reload the session count is gone and only the persisted floor
+// remains. With a floor under defeatsToBreak the field-yield route was lost.
+void ReloadedNpcKeepsTheFieldYieldRoute()
+{
+    const char* name = "route: a reloaded, previously beaten NPC still yields in the field";
+    Submission sub;   // shipped defaults: persistedFloorCount 1 < defeatsToBreak 2
+    RouteFacts f;
+    f.defeatsToBreak = sub.defeatsToBreak;
+    f.defeats = EffectiveDefeatCount(0, PersistedDefeatFloor(true, sub.persistedFloorCount,
+                                                             sub.defeatsToBreak));
     CHECK(ChooseEntryRoute(f) == Route_FieldYield);
 }
 
@@ -198,7 +283,14 @@ void RunRouteRulesTests()
     ForgivingGrudgeIsNotARefusal();
     FieldYieldNeedsEnoughDefeats();
     FieldYieldRespectsTheSwitches();
-    ShippedOrderPutsFieldYieldFirst();
-    ShippedOrderSwallowsTheCage();
+    GrudgeOutranksFieldYield();
+    GrudgeOutranksFieldYieldEvenWhenUnconscious();
+    ForgivingGrudgeStillYieldsInTheField();
+    FieldYieldStillBeatsUnconsciousOutsideTheCage();
+    CagedNpcWithDefeatsKeepsTheCageRoute();
+    CagedNpcWithDefeatsKeepsEasyHealthy();
+    CagedNpcWithDefeatsStillDies();
+    CagedNpcWithDefeatsStillWaitsWhenUnconscious();
+    ReloadedNpcKeepsTheFieldYieldRoute();
     RouteNamesAreDistinct();
 }

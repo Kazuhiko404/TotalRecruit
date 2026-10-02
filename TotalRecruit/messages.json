@@ -663,6 +663,11 @@
       "{name}: se marcha con vida por tu decision.",
       "{name}: no olvidara que lo perdonaste."
     ],
+    "joinedNotice": [
+      "{name}: se une a ti.",
+      "{name}: acepta tu mano y te sigue.",
+      "{name}: jura seguirte. Sin precio."
+    ],
     "ignoredNotice": [
       "{name}: ignoraste su suplica.",
       "{name}: no mostraste misericordia.",

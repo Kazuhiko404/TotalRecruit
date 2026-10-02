@@ -60,7 +60,7 @@ Out of scope:
 - [x] **T1 Test harness.** Add `tests/rules_tests` (vcxproj, stubs, runner) able to compile pure rule code from `src/`. Move or extract the pure pieces it needs.
   - Route: delegated (needs 4+ files).
   - Check: tests build and run green.
-- [ ] **T2 Route-order bugs** (rules), with tests:
+- [x] **T2 Route-order bugs** (rules), with tests:
   - The field-yield branch runs before the grudge check (rules.cpp 1797 vs 1896).
   - A caged NPC with 2 or more defeats loses the cage fallbacks (easy wait, healthy, Care, cats).
   - The reload floor is too low: `persistedFloorCount` 1 is less than `defeatsToBreak` 2, which breaks R3.3.
@@ -108,7 +108,7 @@ Out of scope:
 (updated per task; commit hashes are filled in by the next task's commit, since a commit cannot name itself)
 
 ### T1 Test harness - done
-- Commit: `{T1}` (`test: add rules_tests harness and extract pure rule modules`).
+- Commit: `c0b00fa` (`test: add rules_tests harness and extract pure rule modules`).
 - Route: delegated (one writer for T1-T4). Trigger: 4+ files plus 2+ non-trivial files.
 - Pure modules extracted from `rules.cpp`, compiled by both the DLL and the tests (no duplicated logic):
   `chance_rules` (ChanceFrom*, JoinChance, StressFromState, StableRoll), `price_rules` (BasePriceInCats,
@@ -123,5 +123,23 @@ Out of scope:
 - Docs: DEVELOPING.md module map and a new "Tests" section.
 - QA: nothing engine-visible changed. Smoke only: with `probeOnClick` the log now has a `[route] <name>` line per Evaluate.
 
+### T2 Route-order bugs - done
+- Commit: `{T2}` (`fix(rules): correct route order, defeat floor and plea accept`). Route: delegated (same writer).
+- RED (before any production change): `rules_tests.exe` printed `2/5 suites passed, 22/15705 checks failed`:
+  route_rules 9 failures (grudge vs field-yield x2, caged-with-defeats x6, reload x1), defeat_rules 3 (floor 1 < 2),
+  mercy_rules 10 (accept not a join).
+- GREEN: `5/5 suites passed, 0/15705 checks failed`.
+- a) `ChooseEntryRoute` now tries the unforgivable grudge before field-yield.
+- b) Field-yield applies outside the player's cage only; in the cage defeats still feed the chance and the cage routes
+  (easy wait, easy-healthy, care, cats, intimidation) stay reachable. The reach of "one more way in" was not needed.
+- c) New `defeat_rules` (`PersistedDefeatFloor`): the floor never drops below `defeatsToBreak`. `persistedFloorCount`
+  stays configurable (it only matters when set above `defeatsToBreak`); Mod Hub description updated. `DefeatCount` uses it.
+- d) New `mercy_rules` (`CanBuyTheirLife`, `ResolvePlea`) holds R3.6/R3.7. ACEPTAR on a plea now calls `AcceptMercy`
+  (mercy.cpp): `Recruit` directly, no `Evaluate`, no price, no honour refusal. New message key `mercy.joinedNotice`.
+  `AcceptMercy` also clears the pending plea (see T3).
+- Builds: `MSBuild TotalRecruit.vcxproj Release|x64` OK; `MSBuild tests/rules_tests` OK; tests green.
+- Tracked: T1 hash filled in above. `D6` in QA.md changed from `floor+session=1` to `2`.
+- In-game QA: QA.md section 12.1 (F1-F8).
+
 ## Next step
-T2.
+T3.

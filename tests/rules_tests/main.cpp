@@ -43,6 +43,8 @@ const Suite kSuites[] = {
     { "chance_rules", RunChanceRulesTests },
     { "price_rules",  RunPriceRulesTests },
     { "route_rules",  RunRouteRulesTests },
+    { "defeat_rules", RunDefeatRulesTests },
+    { "mercy_rules",  RunMercyRulesTests },
 };
 } // namespace
 

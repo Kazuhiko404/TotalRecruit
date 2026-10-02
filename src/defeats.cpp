@@ -5,6 +5,7 @@
 #include "rules.h"
 #include "mercy.h"
 #include "recruit_core.h"
+#include "defeat_rules.h"
 #include "rules.h"
 
 #include <map>
@@ -339,19 +340,23 @@ int DefeatCount(Character* character)
 
     // The floor is what a reload leaves behind. It cannot say how many times,
     // only that it happened at least once -- so precision is lost and progress
-    // is not, which is the trade this design set out to make.
+    // is not, which is the trade this design set out to make. It is never
+    // allowed under defeatsToBreak (defeat_rules.cpp), or a reload would undo
+    // the progress the floor exists to keep.
     Character* leader = NULL;
     int floor = 0;
     if (SafePlayerLeader(&leader))
     {
         bool marked = false;
-        if (SafeHasFloor(character, leader, &marked) && marked)
+        if (SafeHasFloor(character, leader, &marked))
         {
-            floor = GetConfig().submission.persistedFloorCount;
+            const Submission& sub = GetConfig().submission;
+            floor = PersistedDefeatFloor(marked, sub.persistedFloorCount,
+                                         sub.defeatsToBreak);
         }
     }
 
-    return session > floor ? session : floor;
+    return EffectiveDefeatCount(session, floor);
 }
 
 // R2.3 -- the beating.

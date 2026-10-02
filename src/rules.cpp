@@ -1549,7 +1549,10 @@ Verdict Evaluate(Character* character)
         LogInfo(CharacterName(character) + " [route] " + RouteName(route));
     }
 
-    // Route C -- submission, and it does not go through a cage.
+    // Route C -- submission, and it does not go through a cage. Outside one,
+    // that is: a prisoner already in the player's cage takes the cage route
+    // even with the defeats to break (route_rules.cpp), where those defeats
+    // feed the chance instead of ending the conversation.
     //
     // This is what beating someone repeatedly is supposed to buy, and it was
     // unreachable: every route that reads the defeat count lived inside the

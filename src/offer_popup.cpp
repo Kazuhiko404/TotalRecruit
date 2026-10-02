@@ -627,7 +627,16 @@ void OnAccept(MyGUI::Widget* /*sender*/)
 
     if (npc != NULL)
     {
-        CompleteOffer(npc, true);
+        // A plea for mercy is answered by its own rule, not by the price
+        // evaluation every other offer goes through.
+        if (IsMercyPending(npc))
+        {
+            AcceptMercy(npc);
+        }
+        else
+        {
+            CompleteOffer(npc, true);
+        }
     }
 }
 

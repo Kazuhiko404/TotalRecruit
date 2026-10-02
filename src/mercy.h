@@ -26,7 +26,11 @@ bool IsMercyPending(Character* npc);
 // Clears the plea without acting on it (the player closed the window).
 void ForgetMercy(Character* npc);
 
-// Perdonar: drop aggro and let them go.
+// Aceptar: they join, free of charge (R3.7). Not routed through the price
+// evaluation, which could answer a plea with a cats price or a refusal.
+void AcceptMercy(Character* npc);
+
+// Ignorar: drop aggro and let them go.
 void GrantMercy(Character* npc);
 
 void ShutdownMercy();
