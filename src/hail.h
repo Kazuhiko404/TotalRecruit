@@ -16,6 +16,10 @@ namespace totalrecruit
 bool InstallHailing();
 void ShutdownHailing();
 
+// Drops every hail clock and restarts the sweep timer. The load boundary calls
+// it: the clocks belong to prisoners of the world that was just abandoned.
+void ForgetAllHails();
+
 // Called from the frame tick. Cheap on most frames: it only does real work a
 // few times a minute, and only for captives held by the player.
 void HailTick();

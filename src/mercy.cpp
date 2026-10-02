@@ -145,7 +145,7 @@ Temperament ReadTemperament(Character* npc)
 bool IsMercyPending(Character* npc)
 {
     CharKey key;
-    return npc != NULL && SafeCharKey(npc, &key) && g_pleading.IsPending(key);
+    return npc != NULL && SafeFindCharKey(npc, &key) && g_pleading.IsPending(key);
 }
 
 void ForgetMercy(Character* npc)
@@ -157,7 +157,7 @@ void ForgetMercy(Character* npc)
     }
 
     CharKey key;
-    if (SafeCharKey(npc, &key))
+    if (SafeFindCharKey(npc, &key))
     {
         g_pleading.ClearIf(key);
     }
@@ -336,9 +336,14 @@ void OfferMercy(Character* npc)
     g_pleading.Begin(key);
 }
 
-void ShutdownMercy()
+void ForgetAllMercy()
 {
     g_pleading.Clear();
     g_begged.clear();
+}
+
+void ShutdownMercy()
+{
+    ForgetAllMercy();
 }
 } // namespace totalrecruit

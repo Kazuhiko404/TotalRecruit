@@ -11,8 +11,10 @@
 //
 //   1. A floor written into the engine's per-character memory. Coarse, and the
 //      only part that survives a save.
-//   2. A precise session count in the plugin, keyed by handle rather than by
-//      pointer so a reused address cannot inherit somebody else's history.
+//   2. A precise session count in the plugin, keyed by CharKey (the persisted
+//      character id, the engine handle as fallback) rather than by pointer so a
+//      reused address cannot inherit somebody else's history. Dropped when a
+//      save loads (load_boundary.cpp).
 //   3. Present condition -- hunger and wounds -- which needs no count at all.
 //
 // A reload costs precision, never progress.
@@ -45,4 +47,9 @@ bool CanBeatPrisoner(Character* character, double* outHoursLeft);
 // Installs the knockout hook.
 bool InstallDefeatTracking();
 void RemoveDefeatTracking();
+
+// Drops every session defeat count. The load boundary calls it: the counts
+// belong to the world that was just abandoned (the engine's own per-character
+// floor, layer 1 above, is what carries over a load).
+void ForgetAllDefeats();
 } // namespace totalrecruit

@@ -171,4 +171,38 @@ bool StableRoll(unsigned int index, unsigned int serial, int percent)
     const unsigned int seed = (index * 2654435761u) ^ (serial * 40503u);
     return (int)((seed * 2654435761u) % 100u) < percent;
 }
+
+namespace
+{
+// FNV-1a over the id's bytes, then Murmur3's finaliser so the low bits (the
+// ones "% 100" reads) depend on every byte: ids that differ in one character
+// must not land in neighbouring buckets.
+unsigned int HashId(const std::string& id)
+{
+    unsigned int h = 2166136261u;
+    for (std::string::size_type i = 0; i < id.size(); ++i)
+    {
+        h ^= (unsigned char)id[i];
+        h *= 16777619u;
+    }
+    h ^= h >> 16;
+    h *= 0x85ebca6bu;
+    h ^= h >> 13;
+    h *= 0xc2b2ae35u;
+    h ^= h >> 16;
+    return h;
+}
+} // namespace
+
+bool StableRoll(const CharKey& key, int percent)
+{
+    if (!key.HasId())
+    {
+        return StableRoll(key.index, key.serial, percent);
+    }
+
+    if (percent >= 100) return true;
+    if (percent <= 0)   return false;
+    return (int)(HashId(key.id) % 100u) < percent;
+}
 } // namespace totalrecruit

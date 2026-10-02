@@ -31,6 +31,8 @@
 #include "mercy.h"
 #include "messages.h"
 #include "spawn_panel.h"
+#include "character_identity.h"
+#include "load_boundary.h"
 
 
 
@@ -154,6 +156,12 @@ __declspec(dllexport) void startPlugin()
         LogInfo("Disabled by config; no hooks installed.");
         return;
     }
+
+    // Persisted character ids (T7) and the reset at a save load. Installed first
+    // so every key the later modules ask for already comes from the id. Neither
+    // failure is fatal: the keys fall back to the engine handle.
+    CharacterIdentity::InstallHooks();
+    LoadBoundary::Install();
 
     const bool overlayOk = InstallRecruitOverlay();
     LogInfo(overlayOk ? "Context-menu hooks installed."

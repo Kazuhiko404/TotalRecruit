@@ -82,7 +82,7 @@ Out of scope:
 
   Tests for the curve at fixed levels.
 - [x] **T6 Config writer.** `SaveConfig` must merge (update known keys, keep unknown and hand-edited ones) instead of truncating. Model it on `TotalSparring/core/plugin_config` add-missing-never-overwrite.
-- [ ] **T7 Stable identity.** Port TotalSparring `fighter_identity` (a UUID in the character save, key `total_recruit.character_id`) plus a load-begin reset hook. Re-key `CharKey` maps and the `StableChance` seed onto it, with the handle as fallback.
+- [x] **T7 Stable identity.** Port TotalSparring `fighter_identity` (a UUID in the character save, key `total_recruit.character_id`) plus a load-begin reset hook. Re-key `CharKey` maps and the `StableChance` seed onto it, with the handle as fallback.
 - [ ] **T8 Code structure:**
   - Split `Evaluate` into per-route rule functions.
   - Dedupe the `Safe*` helpers into one module.
@@ -258,7 +258,7 @@ and uniques land in the reference 100-150k band instead of overshooting it).
   characters rarely have flat stats, so the median quote may sit 20-50% above the curve; the `[price]` lines will show it.
 
 ### T6 Config writer - done
-- Commit: filled in by the next commit (`fix(config): merge into config.json ...`, see `git log`). Route: delegated (same writer).
+- Commit: `ec07ff1` (`fix(config): merge into config.json instead of truncating it`). Route: delegated (same writer).
 - RED (stubs for `MergeJsonKeys`, the `Json*` encoders and `WriteFileAtomically`, plus the new suites): `8/10 suites passed, 72/15933 checks
   failed` (json_merge 65, atomic_file 7). GREEN: `10/10 suites passed, 0/15933 checks failed`. DLL Release|x64 builds.
 - New pure module `json_merge` (the text merge): matches keys at any depth by whole name, first occurrence wins (the same rule as the reader);
@@ -281,10 +281,67 @@ and uniques land in the reference 100-150k band instead of overshooting it).
   merge logic here is new rather than ported.
 
 ### Tuning after T6 - talent cap 2.0 -> 1.5
-- Commit: `tune(price): ...` (hash filled in by the T7 commit). Answers the T5 open question: talent already raises the join chance, and quotes were
+- Commit: `84e4d77` (`tune(price): lower default talentMaxMultiplier from 2.0 to 1.5`). Answers the T5 open question: talent already raises the join chance, and quotes were
   landing 20-50% above the calibrated tiers, so `talentMaxMultiplier` default is now **1.5** (`config.h`, repo `TotalRecruit/config.json`, value change only).
 - RED: `price_rules` default-cap and cap-at-1.5 checks failed (`9/10 suites passed, 2/15935 checks failed`). GREEN: `10/10 suites passed, 0/15935`.
 - A user who already tuned the key keeps their value (the loader only falls back to the default for a missing key).
 
+### T7 Stable identity and load-begin reset - done
+- Commit: filled in by the next commit (`feat(identity): ...`, see `git log`). Route: inline by the single writer the parent delegated the whole unit to
+  (ODD trigger: 2+ non-trivial files). TDD: strict, runner `tests/rules_tests` (MSBuild Release|x64).
+- Evidence for the fix (TotalSparring CLAUDE.md:342-346, "Fighter identity"): the engine handle changes on a game relaunch (Kazuhiko
+  `1-50170900-...` became `14-3181518592-...`), so every `CharKey{index,serial}` map AND the `StableChance` seed were reset on a relaunch. The comment in
+  `rules.cpp` ("the handle's index and serial travel with the save") was wrong and is rewritten; the same claim in `chance_rules.h` is fixed too.
+- RED (stubs only: `CharKey::FromId` ignoring the id, a `Registry` that tracks nothing, `StableRoll(CharKey)` forwarding to the handle form):
+  `9/12 suites passed, 35/46208 checks failed` (char_key 9, identity_registry 23, stable roll 3).
+- GREEN: `12/12 suites passed, 0/31499 checks failed`. DLL Release|x64 builds (only the known C4482/C4091 warnings).
+- Pure, tested: `char_key.h` (`CharKey` is now an id OR a handle: `FromId`, `HasId`, `ToString`; id keys zero index/serial so two reads of one character
+  always compare equal; usable as `std::map`/`std::set` key), `identity_registry.h` (port of TotalSparring `FighterIdentityPolicy::Registry`:
+  Begin/Current/Load/Bind/Find/SavedId/End/Clear with lifetimes and sticky duplicate-id conflicts; `ChooseKey` is the id-or-handle policy),
+  `StableRoll(const CharKey&, int)` (FNV-1a plus a Murmur finaliser of the id; a handle-only key rolls exactly as before).
+- Engine-bound (build + log lines + QA 12.6): `character_identity.{h,cpp}` (the three `Character` hooks, save key **`total_recruit.character_id`**),
+  `char_key_reader.{h,cpp}` (`SafeCharKey` mints, `SafeFindCharKey` only reads, so the hold-clock sweep over everyone in range does not mint ids for
+  bystanders; the handle is the fallback, logged once), `load_boundary.{h,cpp}` (hooks `SaveManager::loadGame` / `importGame`).
+- Hooks and addresses (header RVAs; KenshiLib maps them to the running exe): `Character::_DESTRUCTOR` 0x622300, `Character::_NV_loadFromSerialise` 0x6267D0,
+  `Character::_NV_serialise` 0x627920, `SaveManager::loadGame` 0x3739E0, `SaveManager::importGame` 0x378510. `CharacterHuman` overrides serialise /
+  loadFromSerialise, so the `_NV_` trap (base code only) could apply to humans; not verified by disassembly (the installed exe does not match the header RVAs).
+  The evidence is Kill Counter, a published mod that relies on the same two base hooks for per-character data in the save, and TotalSparring. QA I4/I5 prove it.
+- Chaining: `KenshiLib::AddHook` chains (MinHook); each mod's detour receives the previous detour as its "original". Ours call the original exactly once with
+  every argument untouched (serialise forwards `arg1`/`arg2` as received and recovers `this` as the one that is not the returned slot), take the registry lock
+  only AFTER the original returned (native callbacks may re-enter load/destroy), and use a distinct save key from TotalSparring (`total_sparring.fighter_id`)
+  and Proving Grounds (`proving_grounds.fighter_id`). Load order only decides call order; behaviour does not depend on it. The id is written to the
+  `GAMESTATE_CHARACTER` instance state and to `STATS` (Kill Counter's proven location); a load reads the former first. NOT fail-closed: hooks missing or a
+  duplicate id means the handle key is used, and a failed save write is logged once and never flips the key mid-session.
+- Why the load reset is at `loadGame`/`importGame` BEGIN and not `GameWorld::loadAllPlatoons` (the hook TotalSparring's `session_hooks` uses): `loadAllPlatoons`
+  runs inside the load, after characters bound the ids they read back from the save, so a reset there would discard them. TotalSparring resets identity at
+  load begin for the same reason; this mod resets everything there, from one place (`LoadBoundary::ResetSessionState`).
+- Re-keyed onto `CharKey` (id, handle fallback): `g_defeats`, `g_hailed`, `g_begged`, `PleaTracker`, `HoldClock`, `g_talkStates`, and the `StableChance` seed
+  (verdict roll). They already used `CharKey`, so the type change carried them; reads that must not mint (`DefeatCount`, `CanBeatPrisoner`, `IsMercyPending`,
+  `ForgetMercy`, `IsIgnoringPlayer`, the non-caged branch of `NoteCageState`) use `SafeFindCharKey`.
+- Cleared at load begin (every file-scope map/set and every raw `Character*` / `RootObject*` global found by grepping `src/`):
+  1. `g_defeats` (defeats.cpp, `ForgetAllDefeats`)
+  2. `g_hailed` + `g_nextSweep` (hail.cpp, `ForgetAllHails`)
+  3. `g_begged` + `g_pleading` (mercy.cpp, `ForgetAllMercy`)
+  4. `g_holdClock` (rules.cpp, `ResetHoldClock`)
+  5. `g_talkStates` (rules.cpp, `ResetTalkStates`)
+  6. dialogue bridge: `g_conversationNpc`, `g_conversationActive`, `g_pendingRecruit`, `g_pendingCats`, `g_quotedFor`, `g_quotedCats` (`ForgetConversation`;
+     this is the pending-recruit hand-off that `RescueTick` consumes)
+  7. `g_lastTarget`, `g_lastWasRecruitable` (cursor_hint.cpp, `ForgetCursorTarget`)
+  8. `g_targetObject`, `g_targetCharacter` and the button (recruit_overlay.cpp, `ForgetOverlayTarget`)
+  9. the open offer / mercy window and its `g_subject` (offer_popup.cpp, `HideOffer`)
+  10. the identity registry (`CharacterIdentity::AbandonWorldState`, last)
+  Deliberately kept: `g_spawnedThisSession` (spawn_core.cpp: a per-process cap on panel spawns, a reload must not reset it), the FCS data caches in
+  game_data.cpp (static game data, not per-save), config and messages.
+- Behaviour change to expect: saves from before this have no ids, so a character gets a new UUID on first sight (written at the next save). That
+  character's stable join roll is **recast once** (the seed moves from the handle to the id); from then on it survives a relaunch.
+- Persisting per-character state through the save: NOT done. Defeats already have an engine-backed floor (layer 1 of `defeats.h`); the hold clock
+  restarting after a reload is the deliberate safe direction (the player waits again, nobody is freed for time they did not serve). Writing more fields means
+  the serialise hook calling back into rules/defeats code from inside engine save callbacks, which cannot be verified without in-game saves, and the
+  id write itself is still unproven in game. Left in memory; revisit after QA I4/I5 pass.
+- Not verified here: the game was not run. The id surviving a save and a relaunch is only proven by QA 12.6 I4/I5 (TotalSparring's own relaunch test, H.33,
+  is also still pending; its log has only the `Hooked` lines).
+- Docs: DEVELOPING.md module map (identity_registry, character_identity, char_key_reader, load_boundary). New `probeOnClick` log: `[route] <name> [key] id:<uuid>`.
+- In-game QA: QA.md 12.6 (I1-I10).
+
 ## Next step
-T7 (stable identity).
+T8 (code structure). Before it, in-game QA 12.6 I4/I5 (the id surviving a save and a relaunch).

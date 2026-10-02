@@ -9,6 +9,7 @@
 // arguments. That is what lets tests/rules_tests compile this file on its own.
 
 #include "config.h"
+#include "char_key.h"
 #include "temperament.h"
 
 namespace totalrecruit
@@ -82,7 +83,14 @@ float StressFromState(float rawHunger, float worstDamage, float restedState,
 int JoinChance(const ChanceInputs& in, const Chance& chance, const Submission& sub);
 
 // The stable roll: the same (index, serial) and percent always give the same
-// answer, so a refusal is never an invitation to ask again. Seeded from the
-// character handle, which travels with the save.
+// answer, so a refusal is never an invitation to ask again. This form is the
+// handle fallback: the engine handle holds inside one process but is reassigned
+// when the game is relaunched, so it does NOT travel with the save. The CharKey
+// form below is the one the mod rolls with.
 bool StableRoll(unsigned int index, unsigned int serial, int percent);
+
+// The same roll seeded from a CharKey. A key that carries a persisted id is
+// seeded from the id, so an NPC keeps their luck across a game relaunch; a
+// handle-only key (the fallback) is seeded exactly as above.
+bool StableRoll(const CharKey& key, int percent);
 } // namespace totalrecruit

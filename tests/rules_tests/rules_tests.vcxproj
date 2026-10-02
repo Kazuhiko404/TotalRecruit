@@ -51,6 +51,8 @@
     <ClCompile Include="money_rules_tests.cpp" />
     <ClCompile Include="json_merge_tests.cpp" />
     <ClCompile Include="atomic_file_tests.cpp" />
+    <ClCompile Include="char_key_tests.cpp" />
+    <ClCompile Include="identity_registry_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />

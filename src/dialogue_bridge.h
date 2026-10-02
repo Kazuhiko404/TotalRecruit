@@ -17,6 +17,10 @@ namespace totalrecruit
 bool InstallDialogueBridge();
 void ShutdownDialogueBridge();
 
+// Drops the conversation NPC, the quote and the pending recruit -- all raw
+// Character pointers into the world that a load is about to discard.
+void ForgetConversation();
+
 // Attaches the configured DIALOGUE_PACKAGE to this character if it is missing,
 // then opens the player-choice window on the given DIALOGUE record.
 // Returns false when no package is configured or the record does not resolve,

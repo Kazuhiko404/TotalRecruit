@@ -220,11 +220,19 @@ bool InstallDialogueBridge()
     return true;
 }
 
-void ShutdownDialogueBridge()
+void ForgetConversation()
 {
     g_conversationNpc = NULL;
     g_conversationActive = false;
     g_pendingRecruit = NULL;
+    g_pendingCats = 0;
+    g_quotedFor = NULL;
+    g_quotedCats = 0;
+}
+
+void ShutdownDialogueBridge()
+{
+    ForgetConversation();
 }
 
 bool IsConversationActive()

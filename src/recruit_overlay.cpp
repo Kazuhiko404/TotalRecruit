@@ -434,6 +434,12 @@ bool InstallRecruitOverlay()
     return true;
 }
 
+void ForgetOverlayTarget()
+{
+    ClearTarget();
+    HideButton();
+}
+
 void ShutdownRecruitOverlay()
 {
     ClearTarget();

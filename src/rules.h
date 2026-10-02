@@ -3,6 +3,7 @@
 #include <string>
 
 #include "char_key.h"
+#include "char_key_reader.h"
 #include "temperament.h"
 
 class Character;
@@ -80,6 +81,10 @@ bool NoteCageState(Character* character);
 // Forgets every hold clock (new session, plugin start and stop).
 void ResetHoldClock();
 
+// Forgets every insistence record (who has been pestered, who is ignoring the
+// player). Called when a save loads.
+void ResetTalkStates();
+
 // True when this character is dying rather than merely knocked out, and is not
 // faking it (PS_PLAYING_DEAD exists).
 bool IsGenuinelyDying(Character* character);
@@ -131,10 +136,8 @@ bool RecordInteraction(Character* character, double nowHours);
 // rescued NPCs do not immediately turn and attack the player.
 void SafePacify(Character* character, Character* playerLeader = NULL);
 
-// Returns false when the handle cannot be read. Every caller treats that as
-// "no record": forgetting state is a smaller failure than applying it to the
-// wrong character.
-bool SafeCharKey(Character* character, CharKey* out);
+// SafeCharKey / SafeFindCharKey (the key every per-character map uses, and the
+// persisted id behind it) live in char_key_reader.h.
 
 // The one mapping from the engine's PT_* personality to the plugin's own.
 Temperament ToTemperament(int personality);

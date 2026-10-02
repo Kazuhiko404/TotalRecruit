@@ -5,6 +5,8 @@
 #include "test_support.h"
 #include "chance_rules.h"
 
+#include <cstdio>
+
 using namespace totalrecruit;
 
 namespace
@@ -246,6 +248,96 @@ void StableRollApproximatesThePercent()
     CHECK(passes > total * 40 / 100);
     CHECK(passes < total * 60 / 100);
 }
+
+// ------------------------------------------- StableRoll seeded from an id
+// A persisted id seeds the roll, so an NPC keeps their luck across a relaunch.
+
+CharKey IdKey(const char* format, int i)
+{
+    char id[96];
+    _snprintf_s(id, sizeof(id), _TRUNCATE, format, i);
+    return CharKey::FromId(id);
+}
+
+void IdRollNeverRerolls()
+{
+    const char* name = "stable roll (id): the same id and percent always answer the same";
+    for (int i = 0; i < 200; ++i)
+    {
+        const CharKey key = IdKey("0a1b2c3d-%04d-4e5f-8a9b-c0d1e2f3a4b5", i);
+        const bool first = StableRoll(key, 37);
+        CHECK(StableRoll(key, 37) == first);
+        // A rebuilt key, as after a relaunch.
+        CHECK(StableRoll(IdKey("0a1b2c3d-%04d-4e5f-8a9b-c0d1e2f3a4b5", i), 37) == first);
+    }
+}
+
+void IdRollHonoursTheExtremes()
+{
+    const char* name = "stable roll (id): 100+ always, 0- never";
+    const CharKey key = CharKey::FromId("aaaa-bbbb");
+    CHECK(StableRoll(key, 100));
+    CHECK(StableRoll(key, 300));
+    CHECK(!StableRoll(key, 0));
+    CHECK(!StableRoll(key, -2));
+}
+
+void IdRollIsMonotonicInThePercent()
+{
+    const char* name = "stable roll (id): an id that passes at p passes at every higher p";
+    for (int i = 0; i < 300; ++i)
+    {
+        const CharKey key = IdKey("id-%d", i);
+        bool passed = false;
+        for (int p = 1; p < 100; ++p)
+        {
+            const bool ok = StableRoll(key, p);
+            if (passed)
+            {
+                CHECK(ok);
+            }
+            passed = passed || ok;
+        }
+    }
+}
+
+void IdRollApproximatesThePercent()
+{
+    const char* name = "stable roll (id): about 50% of ids pass at 50%, and 25% at 25%";
+    int half = 0;
+    int quarter = 0;
+    const int total = 4000;
+    for (int i = 0; i < total; ++i)
+    {
+        const CharKey key = IdKey("npc-%d-4000-8000-000000000000", i);
+        if (StableRoll(key, 50)) ++half;
+        if (StableRoll(key, 25)) ++quarter;
+    }
+    CHECK(half > total * 45 / 100 && half < total * 55 / 100);
+    CHECK(quarter > total * 20 / 100 && quarter < total * 30 / 100);
+}
+
+void IdRollSpreadsNeighbouringIds()
+{
+    const char* name = "stable roll (id): ids that differ in one character do not roll alike";
+    int agree = 0;
+    const int total = 1000;
+    for (int i = 0; i < total; ++i)
+    {
+        if (StableRoll(IdKey("npc-%d", i), 50) == StableRoll(IdKey("npc-%d", i + 1), 50)) ++agree;
+    }
+    CHECK(agree > total * 35 / 100 && agree < total * 65 / 100);   // independent coins agree about half the time
+}
+
+void HandleKeyRollsAsBefore()
+{
+    const char* name = "stable roll (key): a handle-only key rolls exactly as the (index, serial) form";
+    for (unsigned int i = 1; i < 200; ++i)
+    {
+        CHECK(StableRoll(CharKey(i, i * 3u), 37) == StableRoll(i, i * 3u, 37));
+        CHECK(StableRoll(CharKey(i, 11u), 60) == StableRoll(i, 11u, 60));
+    }
+}
 } // namespace
 
 void RunChanceRulesTests()
@@ -270,4 +362,10 @@ void RunChanceRulesTests()
     StableRollNeverRerolls();
     StableRollIsMonotonicInThePercent();
     StableRollApproximatesThePercent();
+    IdRollNeverRerolls();
+    IdRollHonoursTheExtremes();
+    IdRollIsMonotonicInThePercent();
+    IdRollApproximatesThePercent();
+    IdRollSpreadsNeighbouringIds();
+    HandleKeyRollsAsBefore();
 }

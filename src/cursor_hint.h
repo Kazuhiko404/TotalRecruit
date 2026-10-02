@@ -14,4 +14,7 @@ namespace totalrecruit
 // the rules would talk to.
 bool InstallCursorHint();
 void ShutdownCursorHint();
+
+// Drops the remembered hover target (a raw Character pointer) at a load.
+void ForgetCursorTarget();
 } // namespace totalrecruit

@@ -190,9 +190,14 @@ bool InstallCursorHint()
     return true;
 }
 
-void ShutdownCursorHint()
+void ForgetCursorTarget()
 {
     g_lastTarget = NULL;
     g_lastWasRecruitable = false;
+}
+
+void ShutdownCursorHint()
+{
+    ForgetCursorTarget();
 }
 } // namespace totalrecruit

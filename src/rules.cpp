@@ -462,20 +462,6 @@ const char* RelationBand(float relation)
 
 } // namespace
 
-// Declared in rules.h so every per-character map in the mod shares one identity
-// type instead of each file declaring its own.
-bool SafeCharKey(Character* character, CharKey* out)
-{
-    TR_TRY
-    {
-        const hand& self = character->getHandle();
-        out->index  = self.index;
-        out->serial = self.serial;
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
 namespace
 {
 // A chance the player cannot re-roll by clicking. PLAN.md settled that this mod
@@ -488,9 +474,14 @@ namespace
 // gate, re-rolling would turn a 4% NPC into a matter of patience.
 //
 // The seed used to be the pointer, which is not an identity: it changes when
-// the game is reloaded, so the dice were quietly recast on every load. The
-// handle's index and serial travel with the save, so the same NPC keeps the
-// same answer across sessions.
+// the game is reloaded, so the dice were quietly recast on every load. It is
+// now the character's persisted id (character_identity.h), which is written
+// into the save itself, so the same NPC keeps the same answer across a reload
+// AND a game relaunch. The engine handle looks stable but is not: it is
+// reassigned on a relaunch (TotalSparring CLAUDE.md, "Fighter identity"), so it
+// is only the fallback when the id cannot be had, and then the roll is recast
+// by each relaunch. An NPC with no id yet (a save from before this mod stored
+// ids) gets a new one on first sight, so the roll of such an NPC changes once.
 bool StableChance(Character* character, int percent)
 {
     if (percent >= 100) return true;
@@ -504,7 +495,7 @@ bool StableChance(Character* character, int percent)
         return false;
     }
 
-    return StableRoll(key.index, key.serial, percent);
+    return StableRoll(key, percent);
 }
 
 // The chance engine itself -- ChanceFrom*, JoinChance, the resolve table -- is
@@ -1250,7 +1241,11 @@ bool NoteCageState(Character* character)
 
     double now = 0.0;
     CharKey key;
-    if (SafeGameHours(&now) && SafeCharKey(character, &key))
+    // Looks at everyone in range, so it must not mint an id for each bystander:
+    // a character that is not caged and has no id cannot have a running clock.
+    const bool haveKey = caged ? SafeCharKey(character, &key)
+                               : SafeFindCharKey(character, &key);
+    if (SafeGameHours(&now) && haveKey)
     {
         const bool wasHeld = g_holdClock.IsTracked(key);
         g_holdClock.Observe(key, caged, now);
@@ -1267,6 +1262,11 @@ bool NoteCageState(Character* character)
 void ResetHoldClock()
 {
     g_holdClock.Clear();
+}
+
+void ResetTalkStates()
+{
+    g_talkStates.clear();
 }
 
 bool IsGenuinelyDying(Character* character)
@@ -1524,7 +1524,12 @@ Verdict Evaluate(Character* character)
     const Route route = ChooseEntryRoute(facts);
     if (config.probeOnClick)
     {
-        LogInfo(CharacterName(character) + " [route] " + RouteName(route));
+        // The key is what the roll is seeded from: "id:<uuid>" survives a game
+        // relaunch, "handle:..." (the fallback) does not.
+        CharKey probeKey;
+        const bool haveKey = SafeCharKey(character, &probeKey);
+        LogInfo(CharacterName(character) + " [route] " + RouteName(route) +
+                " [key] " + (haveKey ? probeKey.ToString() : std::string("unreadable")));
     }
 
     // Route C -- submission, and it does not go through a cage. Outside one,
@@ -2123,7 +2128,7 @@ bool IsIgnoringPlayer(Character* character, double* outRemainingHours)
     }
 
     CharKey key;
-    if (!SafeCharKey(character, &key))
+    if (!SafeFindCharKey(character, &key))
     {
         return false;
     }

@@ -102,7 +102,11 @@ qué existe — leelo antes que el `.cpp`.
 | `price_rules.cpp/.h` | **Puro.** La curva de precio, los multiplicadores (talento, personalidad, facción) y el precio final: redondeo, mínimo y tope (`FinalPriceInCats`). |
 | `money_rules.cpp/.h` | **Puro.** Cobrar y mover cats entre bolsas (`ChargePrice`, `TransferCats`): todo o nada, sin acuñar ni perder cats si un paso falla. |
 | `cats_purse.cpp/.h` | La bolsa respaldada por el motor (`CharacterPurse`): el único lugar que conoce `getMoney` / `takeMoney` / `Ownerships::addMoney`. |
-| `char_key.h`, `temperament.h` | **Puros.** Identidad de personaje y el enum de personalidad sin motor. `temperament_map.cpp` hace el único mapeo desde `PT_*`. |
+| `char_key.h`, `temperament.h` | **Puros.** La clave de personaje (`CharKey`: id persistido, o handle de respaldo) y el enum de personalidad sin motor. `temperament_map.cpp` hace el único mapeo desde `PT_*`. |
+| `identity_registry.h` | **Puro.** Qué objeto vivo lleva qué id, conflictos de ids duplicados y la elección id-o-handle (`ChooseKey`). |
+| `character_identity.cpp/.h` | Los tres hooks de `Character` (`_NV_serialise`, `_NV_loadFromSerialise`, `_DESTRUCTOR`) que guardan un UUID propio (`total_recruit.character_id`) dentro del save. Port de `TotalSparring/src/shared/game/fighter_identity`. |
+| `char_key_reader.cpp/.h` | `SafeCharKey` (crea el id) y `SafeFindCharKey` (solo lee). Si el id no se puede obtener cae al handle, logueado una vez. |
+| `load_boundary.cpp/.h` | Hookea `SaveManager::loadGame/importGame` y, al comenzar una carga, limpia toda tabla por-sesión y el registro de ids (`ResetSessionState`). |
 | `recruit_core.cpp/.h` | Resuelve el target del click, valida y ejecuta el reclutamiento. |
 | `rescue.cpp` | Ruta A — lo salvaste de morir. |
 | `surrender.cpp` | Ruta C — se rinde. Declara el método de `AI` localmente. |

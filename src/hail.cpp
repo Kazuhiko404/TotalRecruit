@@ -231,11 +231,16 @@ void SweepForHails(bool hailing)
 }
 } // namespace
 
-bool InstallHailing()
+void ForgetAllHails()
 {
     g_hailed.clear();
-    ResetHoldClock();
     g_nextSweep = 0;
+}
+
+bool InstallHailing()
+{
+    ForgetAllHails();
+    ResetHoldClock();
     LogInfo("Prisoner hailing installed.");
     return true;
 }

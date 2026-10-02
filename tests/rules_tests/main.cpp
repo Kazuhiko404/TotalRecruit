@@ -50,6 +50,8 @@ const Suite kSuites[] = {
     { "money_rules", RunMoneyRulesTests },
     { "json_merge", RunJsonMergeTests },
     { "atomic_file", RunAtomicFileTests },
+    { "char_key", RunCharKeyTests },
+    { "identity_registry", RunIdentityRegistryTests },
 };
 } // namespace
 

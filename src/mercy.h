@@ -36,4 +36,8 @@ void AcceptMercy(Character* npc);
 void GrantMercy(Character* npc);
 
 void ShutdownMercy();
+
+// Forgets the pending plea and everyone who already begged. The load boundary
+// calls it: both belong to the world that was just abandoned.
+void ForgetAllMercy();
 } // namespace totalrecruit

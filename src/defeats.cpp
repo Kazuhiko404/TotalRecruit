@@ -329,7 +329,7 @@ int DefeatCount(Character* character)
 
     int session = 0;
     CharKey key;
-    if (SafeCharKey(character, &key))
+    if (SafeFindCharKey(character, &key))
     {
         std::map<CharKey, Record>::const_iterator it = g_defeats.find(key);
         if (it != g_defeats.end())
@@ -428,7 +428,7 @@ bool CanBeatPrisoner(Character* character, double* outHoursLeft)
 
     CharKey key;
     double now = 0.0;
-    if (!SafeCharKey(character, &key) || !SafeGameHours(&now))
+    if (!SafeFindCharKey(character, &key) || !SafeGameHours(&now))
     {
         return false;
     }
@@ -511,8 +511,13 @@ bool InstallDefeatTracking()
     return true;
 }
 
-void RemoveDefeatTracking()
+void ForgetAllDefeats()
 {
     g_defeats.clear();
+}
+
+void RemoveDefeatTracking()
+{
+    ForgetAllDefeats();
 }
 } // namespace totalrecruit

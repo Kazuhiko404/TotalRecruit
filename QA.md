@@ -381,3 +381,20 @@ Cada guardado deja una línea `Saved config to ...config.json (N changed, M adde
 | C6 | Borrar `config.json` y tocar un ajuste | Se crea un archivo completo, con el bloque `exclude` anidado | `(N changed, M added)` |
 | C7 | Romper el `config.json` a mano (borrar la última llave) y tocar un ajuste | Queda `config.json.bak` con el texto roto y un `config.json` nuevo válido | `config.json is not valid JSON; kept a copy as ...config.json.bak` |
 | C8 | Tras varios guardados mirar la carpeta del mod | No hay `config.json.tmp` | — |
+
+### 12.6 Identidad estable y reinicio al cargar (T7)
+
+Para ver la clave de un NPC: `"probeOnClick": true` y mirar la linea `[route] ... [key] id:<uuid>` (o `[key] handle:i-s` si cayo al respaldo). Todo cuelga de `RE_Kenshi_log.txt`. **La persistencia del id dentro del save no esta probada en juego** (ni en TotalSparring ni aca): I4 e I5 son la prueba.
+
+| # | Qué hacer | Esperado | Línea del log |
+|---|---|---|---|
+| I1 | Arrancar el juego | Los dos hooks se instalan | `[identity] Hooked Character::_DESTRUCTOR, _NV_loadFromSerialise, _NV_serialise (persisted character id).` y `[identity] Hooked SaveManager::loadGame / importGame (session reset at load begin).` |
+| I2 | Cargar un save y hacer clic en un prisionero | Recibe un id nuevo (solo la primera vez que el mod lo toca) | `[identity] first character id created this session (<uuid>); it reaches the save at the next save.` y `[key] id:<uuid>` |
+| I3 | Guardar la partida | El id se escribe en el save | `[identity] first character id written into a save state (<uuid>).` |
+| I4 | Sin cerrar el juego, cargar ese mismo save y hacer clic en el mismo prisionero | Antes de cargar se limpia todo; despues el id se lee del save y es **el mismo uuid** de I2 | `[identity] world reset at load begin; the previous world read N id(s) from its save, created M and wrote K.`, `[identity] load begin: session state cleared (...)`, `[identity] first character id read back from the save (<uuid>)` |
+| I5 | Guardar, cerrar Kenshi por completo, abrirlo, cargar y clic en el mismo prisionero | El mismo uuid (antes el handle cambiaba) y el **mismo % de unirse** que antes de cerrar (la tirada ya no se vuelve a sortear) | `first character id read back from the save` con el uuid de I2/I3; `[key] id:<uuid>` igual |
+| I6 | Probar con TotalSparring (y Kill Counter) cargados a la vez | Los tres mods mantienen su id y funcionan: un duelo de TotalSparring y una oferta de TotalRecruit, sin cuelgues | las tres lineas `Hooked Character::_NV_serialise` (una por mod); tras guardar y cargar, `first fighter id read back` **y** `first character id read back` |
+| I7 | Abrir un save de antes de este cambio (sin ids) y hacer clic en un NPC | Recibe un id nuevo; su **tirada cambia una vez** (la clave pasa de handle a id) y desde ahi es estable | `first character id created this session` |
+| I8 | Dejarle a un prisionero 1+ derrotas de sesion y un reloj de encierro corriendo, luego cargar otro save (o el mismo) | Nada de lo anterior se arrastra: las derrotas de sesion, el reloj de encierro, los avisos (`hail`) y la insistencia empiezan de cero; queda solo el piso que guarda el motor | `[identity] load begin: session state cleared` |
+| I9 | Tener abierta la ventana de oferta (o la de piedad) y cargar | La ventana se cierra sola, no queda el boton de reclutar apuntando a nadie | `[identity] load begin: session state cleared` |
+| I10 | Si el log muestra `hook installation failed` | El mod sigue andando con clave por handle (como antes de T7), una sola vez en el log | `[identity] persisted character id unavailable; per-character state keyed by handle ...` |

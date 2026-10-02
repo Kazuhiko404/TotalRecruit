@@ -8,4 +8,8 @@ bool InstallRecruitOverlay();
 
 // Destroys the button and drops any target reference.
 void ShutdownRecruitOverlay();
+
+// Drops the clicked target (raw engine pointers) and hides the button, so a
+// load cannot leave it aimed at a character the engine just freed.
+void ForgetOverlayTarget();
 } // namespace totalrecruit
