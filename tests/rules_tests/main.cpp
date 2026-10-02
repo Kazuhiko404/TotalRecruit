@@ -47,6 +47,7 @@ const Suite kSuites[] = {
     { "mercy_rules",  RunMercyRulesTests },
     { "plea_tracker", RunPleaTrackerTests },
     { "hold_clock", RunHoldClockTests },
+    { "money_rules", RunMoneyRulesTests },
 };
 } // namespace
 

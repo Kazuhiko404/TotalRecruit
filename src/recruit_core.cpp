@@ -9,6 +9,8 @@
 #include "feeding.h"
 #include "messages.h"
 #include "defeats.h"
+#include "cats_purse.h"
+#include "money_rules.h"
 
 #include <algorithm>
 
@@ -183,28 +185,6 @@ void PostMessage(const char* text, bool queued)
     ou->playNotification(NULL);
 }
 
-// Takes cats out of the player's purse. Money lives on the squad leader, and
-// takeMoney reports whether the funds were actually there.
-bool DeductMoney(int amount, bool* paid)
-{
-    if (ou == NULL || ou->player == NULL)
-    {
-        return false;
-    }
-    Platoon* platoon = ou->player->currentPlatoon;
-    if (platoon == NULL)
-    {
-        return false;
-    }
-    Character* leader = platoon->getSquadLeader();
-    if (leader == NULL)
-    {
-        return false;
-    }
-    *paid = leader->takeMoney(amount);
-    return true;
-}
-
 bool SafeCopyName(Character* character, char* buffer, size_t size)
 {
     TR_TRY
@@ -221,25 +201,48 @@ void ShowMessage(const char* text, bool isProblem)
     TR_CATCH { }
 }
 
-bool ChargePlayer(int amount)
-{
-    bool paid = false;
-    TR_TRY
-    {
-        if (!DeductMoney(amount, &paid))
-        {
-            return false;
-        }
-    }
-    TR_CATCH { return false; }
-    return paid;
-}
-
 std::string IntToString(int value)
 {
     char buffer[32] = { 0 };
     _snprintf_s(buffer, sizeof(buffer), _TRUNCATE, "%d", value);
     return std::string(buffer);
+}
+
+// What this verdict actually costs in cats. Verdict::cats is also used by the
+// animal route to carry "percent of stomach missing" for its message, so it is
+// only money when the currency says it is.
+int CatsDue(const Verdict& verdict)
+{
+    return (verdict.currency == Currency_Cats && verdict.cats > 0) ? verdict.cats : 0;
+}
+
+// The player's purse is the squad leader's. All the arithmetic -- whether the
+// funds are there, all-or-nothing, the refund -- is money_rules.cpp.
+ChargeResult ChargePlayer(int amount)
+{
+    Character* leader = PlayerPurseOwner();
+    if (leader == NULL)
+    {
+        return Charge_Failed;
+    }
+    CharacterPurse purse(leader);
+    return ChargePrice(purse, amount);
+}
+
+// Gives back a charge whose purchase did not happen.
+void RefundPlayer(int amount)
+{
+    Character* leader = PlayerPurseOwner();
+    if (leader == NULL)
+    {
+        LogError("Could not refund " + IntToString(amount) + " cats: no player purse.");
+        return;
+    }
+    CharacterPurse purse(leader);
+    if (!RefundCharge(purse, amount))
+    {
+        LogError("Refund of " + IntToString(amount) + " cats was refused.");
+    }
 }
 
 // Building::specialFunction, read at its documented offset rather than through
@@ -600,7 +603,7 @@ void AttemptRecruit(Character* character)
                                                       : config.dialogue.captive;
     if (OpenConversation(character, dialogueId))
     {
-        RememberPendingPrice(character, verdict.cats);
+        RememberPendingPrice(character, CatsDue(verdict));
         return;
     }
 
@@ -711,7 +714,8 @@ void CompleteOffer(Character* character, bool accepted)
     }
 
     // Money only moves here. Declining, or walking away, costs nothing.
-    if (!SettlePrice(character, verdict.cats, name))
+    const int due = CatsDue(verdict);
+    if (!SettlePrice(character, due, name))
     {
         return;
     }
@@ -723,24 +727,47 @@ void CompleteOffer(Character* character, bool accepted)
     }
     else
     {
+        // Paid but not delivered: the engine refused the recruit. Put the money back.
+        RefundPrice(character, due, name);
         TellPlayer(name + ": " + message, true);
     }
 }
 
 bool SettlePrice(Character* character, int cats, const std::string& name)
 {
-    if (cats <= 0)
+    switch (ChargePlayer(cats))
     {
+    case Charge_Free:
         return true;
-    }
 
-    if (!ChargePlayer(cats))
-    {
-        TellPlayer(name + ": no tienes suficientes fondos (" + IntToString(cats) + " cats)", true);
+    case Charge_Paid:
+        LogInfo("Charged " + IntToString(cats) + " cats for " + name + ".");
+        TellPlayer(Fill(Say("money.paid", "{name}: pagaste {cats} cats", character),
+                        name, cats, 0),
+                   false);
+        return true;
+
+    case Charge_Short:
+    case Charge_Failed:
+    default:
+        TellPlayer(Fill(Say("money.short", "{name}: no tienes suficientes fondos ({cats} cats)",
+                            character),
+                        name, cats, 0),
+                   true);
         return false;
     }
+}
 
-    TellPlayer(name + ": pagaste " + IntToString(cats) + " cats", false);
-    return true;
+void RefundPrice(Character* character, int cats, const std::string& name)
+{
+    if (cats <= 0)
+    {
+        return;
+    }
+    RefundPlayer(cats);
+    LogInfo("Refunded " + IntToString(cats) + " cats: " + name + " could not be recruited.");
+    TellPlayer(Fill(Say("money.refunded", "{name}: te devolvieron {cats} cats", character),
+                    name, cats, 0),
+               false);
 }
 } // namespace totalrecruit

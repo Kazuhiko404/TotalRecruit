@@ -49,10 +49,13 @@ struct Prices
     // Route B: cats demanded, scaled from the NPC's rough level.
     // Price = (catsPerLevel/10) * level^2 + catsCeiling * logistic(level).
     // The square term keeps low levels affordable; the logistic carries the top
-    // and flattens instead of running away. See PriceInCats for the calibration.
+    // and flattens instead of running away. Calibrated in price_rules.cpp against
+    // the Recruit-Prisoners-for-Cats tiers; the quote is that curve times talent,
+    // uniqueness, personality and faction, rounded to 10 and held between
+    // catsMinimum and catsHardCap (FinalPriceInCats).
     int catsPerLevel;
-    // What the strongest characters approach. Not a hard cap: talent, faction
-    // and personality still multiply on top.
+    // What the strongest ordinary characters approach. Not a hard cap: talent,
+    // faction, personality and uniqueness still multiply on top, until catsHardCap.
     int catsCeiling;
     // How sharply the price accelerates around the midpoint.
     float priceCurveSteepness;
@@ -81,13 +84,22 @@ struct Prices
     // strong -- they are the only one there is, and there is no second attempt
     // if you decide later that you wanted them.
     float uniqueMultiplier;
+    // Hard ceiling on the final price after every multiplier. Multipliers stack
+    // (talent x unique x personality x faction), so without one a single
+    // character could be quoted millions. 0 removes the ceiling (the price is
+    // still kept inside the int range). The reference mod's strongest uniques sit
+    // at 100-150k, which is what the default allows.
+    int catsHardCap;
+    // The most the talent multiplier may add. 2.0 means a specialist costs at most
+    // double what their level alone says.
+    float talentMaxMultiplier;
 
     Prices()
         : easyHoursCaged(6.0f),
-          catsPerLevel(40),
-          catsCeiling(72000),
-          priceCurveSteepness(0.11f),
-          priceCurveMidpoint(45.0f),
+          catsPerLevel(90),
+          catsCeiling(28000),
+          priceCurveSteepness(0.09f),
+          priceCurveMidpoint(31.0f),
           catsMinimum(200),
           hungerThreshold(0.0f),
           woundedThreshold(0.5f),
@@ -95,7 +107,9 @@ struct Prices
           braveMultiplier(1.6f),
           factionWeight(0.75f),
           talentWeight(1.0f),
-          uniqueMultiplier(2.0f)
+          uniqueMultiplier(2.0f),
+          catsHardCap(150000),
+          talentMaxMultiplier(2.0f)
     {
     }
 };

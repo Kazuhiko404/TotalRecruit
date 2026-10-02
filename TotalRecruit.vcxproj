@@ -83,6 +83,8 @@
     <ClCompile Include="src\messages.cpp" />
     <ClCompile Include="src\chance_rules.cpp" />
     <ClCompile Include="src\price_rules.cpp" />
+    <ClCompile Include="src\money_rules.cpp" />
+    <ClCompile Include="src\cats_purse.cpp" />
     <ClCompile Include="src\route_rules.cpp" />
     <ClCompile Include="src\temperament_map.cpp" />
     <ClCompile Include="src\defeat_rules.cpp" />
@@ -117,6 +119,8 @@
     <ClInclude Include="src\temperament.h" />
     <ClInclude Include="src\chance_rules.h" />
     <ClInclude Include="src\price_rules.h" />
+    <ClInclude Include="src\money_rules.h" />
+    <ClInclude Include="src\cats_purse.h" />
     <ClInclude Include="src\route_rules.h" />
     <ClInclude Include="src\defeat_rules.h" />
     <ClInclude Include="src\mercy_rules.h" />

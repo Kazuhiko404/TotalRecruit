@@ -233,6 +233,7 @@ void RescueTick()
     else
     {
         LogInfo("Post-dialogue recruit failed: " + message);
+        RefundPrice(pending, cats, name);
     }
 }
 } // namespace totalrecruit

@@ -273,6 +273,8 @@ void LoadConfig(const std::string& modDirectory)
     ReadFloat(text, "factionWeight", &g_config.prices.factionWeight);
     ReadFloat(text, "talentWeight", &g_config.prices.talentWeight);
     ReadFloat(text, "uniqueMultiplier", &g_config.prices.uniqueMultiplier);
+    ReadInt(text, "catsHardCap", &g_config.prices.catsHardCap);
+    ReadFloat(text, "talentMaxMultiplier", &g_config.prices.talentMaxMultiplier);
 
     ReadString(text, "dialoguePackage", &g_config.dialogue.package);
     ReadString(text, "dialogueRescue", &g_config.dialogue.rescue);
@@ -291,6 +293,21 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.hailFirstHours, kHailFirstHoursMin, kHailFirstHoursMax);
     ClampFloat(&g_config.hailRepeatHours, kHailRepeatHoursMin, kHailRepeatHoursMax);
     ClampInt(&g_config.hailRepeats, kHailRepeatsMin, kHailRepeatsMax);
+
+    // Money tunables. A negative or absurd value would otherwise reach the price
+    // arithmetic: a negative minimum or ceiling, a curve that never leaves zero.
+    ClampInt(&g_config.prices.catsPerLevel, 0, 1000);
+    ClampInt(&g_config.prices.catsCeiling, 0, 1000000);
+    ClampInt(&g_config.prices.catsMinimum, 0, 1000000);
+    ClampInt(&g_config.prices.catsHardCap, 0, 100000000);
+    ClampFloat(&g_config.prices.priceCurveSteepness, 0.01f, 1.0f);
+    ClampFloat(&g_config.prices.priceCurveMidpoint, 1.0f, 200.0f);
+    ClampFloat(&g_config.prices.fearfulMultiplier, 0.0f, 20.0f);
+    ClampFloat(&g_config.prices.braveMultiplier, 0.0f, 20.0f);
+    ClampFloat(&g_config.prices.factionWeight, 0.0f, 5.0f);
+    ClampFloat(&g_config.prices.talentWeight, 0.0f, 10.0f);
+    ClampFloat(&g_config.prices.uniqueMultiplier, 0.0f, 50.0f);
+    ClampFloat(&g_config.prices.talentMaxMultiplier, 1.0f, 50.0f);
 
     g_modDirectory = modDirectory;
     LogInfo("Loaded config from " + path);
@@ -342,7 +359,11 @@ bool SaveConfig(const std::string& modDirectory)
 
     file << "  \"easyHoursCaged\": " << g_config.prices.easyHoursCaged << ",\n";
     file << "  \"catsPerLevel\": " << g_config.prices.catsPerLevel << ",\n";
+    file << "  \"catsCeiling\": " << g_config.prices.catsCeiling << ",\n";
+    file << "  \"priceCurveSteepness\": " << g_config.prices.priceCurveSteepness << ",\n";
+    file << "  \"priceCurveMidpoint\": " << g_config.prices.priceCurveMidpoint << ",\n";
     file << "  \"catsMinimum\": " << g_config.prices.catsMinimum << ",\n";
+    file << "  \"catsHardCap\": " << g_config.prices.catsHardCap << ",\n";
     file << "  \"hungerThreshold\": " << g_config.prices.hungerThreshold << ",\n";
     file << "  \"woundedThreshold\": " << g_config.prices.woundedThreshold << ",\n";
 
@@ -395,7 +416,10 @@ bool SaveConfig(const std::string& modDirectory)
     file << "  \"animalBigEdgeDiscount\": " << g_config.animals.bigEdgeDiscount << ",\n";
     file << "  \"fearfulMultiplier\": " << g_config.prices.fearfulMultiplier << ",\n";
     file << "  \"braveMultiplier\": " << g_config.prices.braveMultiplier << ",\n";
-    file << "  \"factionWeight\": " << g_config.prices.factionWeight << ",\n\n";
+    file << "  \"factionWeight\": " << g_config.prices.factionWeight << ",\n";
+    file << "  \"talentWeight\": " << g_config.prices.talentWeight << ",\n";
+    file << "  \"talentMaxMultiplier\": " << g_config.prices.talentMaxMultiplier << ",\n";
+    file << "  \"uniqueMultiplier\": " << g_config.prices.uniqueMultiplier << ",\n\n";
 
     file << "  \"dialoguePackage\": \"" << g_config.dialogue.package << "\",\n";
     file << "  \"dialogueRescue\": \"" << g_config.dialogue.rescue << "\",\n";

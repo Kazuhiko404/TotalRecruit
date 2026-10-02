@@ -20,3 +20,4 @@ void RunDefeatRulesTests();
 void RunMercyRulesTests();
 void RunPleaTrackerTests();
 void RunHoldClockTests();
+void RunMoneyRulesTests();

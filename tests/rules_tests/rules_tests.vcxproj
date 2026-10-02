@@ -48,6 +48,7 @@
     <ClCompile Include="mercy_rules_tests.cpp" />
     <ClCompile Include="plea_tracker_tests.cpp" />
     <ClCompile Include="hold_clock_tests.cpp" />
+    <ClCompile Include="money_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -55,6 +56,7 @@
     <ClCompile Include="..\..\src\mercy_rules.cpp" />
     <ClCompile Include="..\..\src\plea_tracker.cpp" />
     <ClCompile Include="..\..\src\hold_clock.cpp" />
+    <ClCompile Include="..\..\src\money_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

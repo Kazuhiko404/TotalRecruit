@@ -350,3 +350,19 @@ Con `probeOnClick` el reloj deja líneas `[hold]`.
 | E6 | Abrir el hub | **Ya no** están `Horas jaula (Orgullosos)` ni `Horas jaula (Únicos)` | S2: sin `Mod Hub rejected` |
 | E7 | Cargar una config vieja que todavía trae `hoursCagedForProud` y `uniqueExtraHours` | Carga sin quejas; esas claves se ignoran | Sin errores de config en el log |
 | E8 | Con `hailWhenReady` en `false`, repetir E2 y E3 | El reloj anda igual (el barrido sigue vivo) | Las mismas líneas `[hold]` |
+
+### 12.4 Dinero: precio, cobro y reembolso (T5)
+
+Con `probeOnClick` cada cotización deja una línea `[price]` con todos los factores. Anotar el nivel real de varios NPC (level en `[chance]`) y comparar con la curva: ~1.1k a nivel 5, ~3k a 10, ~9.6k a 20, ~14k a 25, ~32k a 40, ~45k a 50, ~57k a 60, ~76k a 75, antes de multiplicadores. Los valores son múltiplos de 10.
+
+| # | Qué hacer | Esperado | Línea del log |
+|---|---|---|---|
+| P1 | Hablarle a un cautivo con precio en cats, con la bolsa llena | La ventana muestra N cats; ACEPTAR cobra **exactamente** N | `Charged N cats for <nombre>.` y el mensaje *pagaste N cats*; la bolsa baja N |
+| P2 | Lo mismo con **menos** cats que el precio | *pide N cats y tienes M*; si igual se fuerza ACEPTAR no se cobra nada | Sin línea `Charged`; mensaje *no tienes suficientes fondos* |
+| P3 | Comprar a un cobarde de nivel 1 | El precio es el mínimo (200), no menos | `[price] ... -> 200 cats (floor 200, cap 150000)` |
+| P4 | Comprar a un único fuerte con personalidad valiente | El precio nunca pasa de 150000 aunque los multiplicadores lo pidan | `[price] ... -> 150000 cats` |
+| P5 | Provocar que el reclutamiento falle después de cobrar (si el motor lo rechaza) | La bolsa vuelve al valor de antes | `Refunded N cats: <nombre> could not be recruited.` |
+| P6 | Rescatar a alguien que no puede seguirte y lleva cats | Te los deja una sola vez; la bolsa del NPC queda en 0 y la tuya sube exactamente eso | `<nombre> paid the player N cats for the rescue.`; sin segunda línea al reabrir |
+| P7 | Soltar con IGNORAR a quien suplicó piedad y llevaba cats | Tu bolsa sube N y la suya queda en 0 | `Tribute of N cats from <nombre>` |
+| P8 | Cambiar cualquier ajuste en el hub y reiniciar el juego | Los precios no cambian respecto a antes de tocar el hub (techo, pendiente, punto medio, talento y únicos se conservan) | `[price]` con los mismos factores |
+| P9 | Mirar el hub | Aparecen `Talento: tope` y `Cats: tope final`; `Cats por nivel` llega a 300 | S2: sin `Mod Hub rejected` |

@@ -32,6 +32,10 @@ void TellPlayer(const std::string& message, bool isProblem);
 // follow. A price of zero always succeeds.
 bool SettlePrice(Character* character, int cats, const std::string& name);
 
+// Gives back what SettlePrice took, for a purchase that then failed (the engine
+// refused the recruit). Without it the player paid and got nobody.
+void RefundPrice(Character* character, int cats, const std::string& name);
+
 // Called once the player has answered the offer window. On acceptance the price
 // is paid and the recruit goes through; on refusal the NPC says so and nothing
 // changes. Money only ever moves here, so walking away costs nothing.

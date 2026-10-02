@@ -529,6 +529,21 @@
       "{name}: vacia su bolsa: {cats} cats para ti"
     ]
   },
+  "_dinero": [
+    "Lo que le pasa a tu bolsa: pago, falta de fondos y devolucion.",
+    "{cats} es el precio en cats."
+  ],
+  "money": {
+    "paid": [
+      "{name}: pagaste {cats} cats"
+    ],
+    "short": [
+      "{name}: no tienes suficientes fondos ({cats} cats)"
+    ],
+    "refunded": [
+      "{name}: te devolvieron {cats} cats"
+    ]
+  },
   "_animales": [
     "Los animales no hablan: se les dibuja un sonido, no una frase.",
     "Dejalos vacios si preferis que no salga ninguna burbuja."

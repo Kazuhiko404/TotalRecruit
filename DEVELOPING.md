@@ -97,7 +97,9 @@ qué existe — leelo antes que el `.cpp`.
 | `rules.cpp/.h` | **El motor.** Qué quiere un NPC antes de unirse. Empezá acá. Lee el juego y arma los hechos. |
 | `route_rules.cpp/.h` | **Puro.** Qué ruta contesta primero (`ChooseEntryRoute`). El orden de precedencia vive solo acá. |
 | `chance_rules.cpp/.h` | **Puro.** El motor de chance (`JoinChance`, `ChanceFrom*`, el roll estable). |
-| `price_rules.cpp/.h` | **Puro.** La curva de precio base y el multiplicador de personalidad. |
+| `price_rules.cpp/.h` | **Puro.** La curva de precio, los multiplicadores (talento, personalidad, facción) y el precio final: redondeo, mínimo y tope (`FinalPriceInCats`). |
+| `money_rules.cpp/.h` | **Puro.** Cobrar y mover cats entre bolsas (`ChargePrice`, `TransferCats`): todo o nada, sin acuñar ni perder cats si un paso falla. |
+| `cats_purse.cpp/.h` | La bolsa respaldada por el motor (`CharacterPurse`): el único lugar que conoce `getMoney` / `takeMoney` / `Ownerships::addMoney`. |
 | `char_key.h`, `temperament.h` | **Puros.** Identidad de personaje y el enum de personalidad sin motor. `temperament_map.cpp` hace el único mapeo desde `PT_*`. |
 | `recruit_core.cpp/.h` | Resuelve el target del click, valida y ejecuta el reclutamiento. |
 | `rescue.cpp` | Ruta A — lo salvaste de morir. |

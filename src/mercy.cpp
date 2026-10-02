@@ -9,6 +9,8 @@
 #include "log.h"
 #include "mercy_rules.h"
 #include "plea_tracker.h"
+#include "cats_purse.h"
+#include "money_rules.h"
 
 #include <set>
 
@@ -161,32 +163,10 @@ void ForgetMercy(Character* npc)
     }
 }
 
-// Moves what the beaten NPC is carrying into the player's purse.
-//
-// takeMoney(n) removes n and reports whether the funds were there, so a
-// negative n is the documented way the engine adds -- the same call the price
-// path already relies on, run in reverse. Whatever the NPC actually has is
-// taken first, so this can never mint cats out of nothing.
-bool SafeMoveMoney(Character* from, Character* to, int* outAmount)
-{
-    TR_TRY
-    {
-        const int purse = from->_NV_getMoney();
-        if (purse <= 0)
-        {
-            return false;
-        }
-        if (!from->_NV_takeMoney(purse))
-        {
-            return false;
-        }
-        to->_NV_takeMoney(-purse);
-        *outAmount = purse;
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
+// What the beaten NPC is carrying goes to the player. The move is
+// money_rules.cpp's TransferAllCats: a checked debit from them, then a credit to
+// the player, with the debit put back if the credit fails -- so this can neither
+// mint cats out of nothing nor destroy the NPC's purse when the credit is refused.
 bool PayTribute(Character* npc)
 {
     Character* leader = NULL;
@@ -195,8 +175,10 @@ bool PayTribute(Character* npc)
         return false;
     }
 
-    int amount = 0;
-    if (!SafeMoveMoney(npc, leader, &amount))
+    CharacterPurse theirs(npc);
+    CharacterPurse mine(leader);
+    const int amount = TransferAllCats(theirs, mine);
+    if (amount <= 0)
     {
         return false;
     }

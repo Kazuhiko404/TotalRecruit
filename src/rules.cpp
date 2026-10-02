@@ -8,6 +8,8 @@
 #include "defeats.h"
 #include "chance_rules.h"
 #include "price_rules.h"
+#include "cats_purse.h"
+#include "money_rules.h"
 #include "route_rules.h"
 #include "hold_clock.h"
 
@@ -559,6 +561,27 @@ void LogChanceBreakdown(Character* character, const ChanceInputs& in, int total)
     LogInfo(CharacterName(character) + " " + buf);
 }
 
+// Every factor of a quote, printed, for the same reason as the chance breakdown:
+// a price that looks wrong has to say which multiplier made it so.
+void LogPriceBreakdown(Character* character, const PriceInputs& in, int cats)
+{
+    if (!GetConfig().probeOnClick)
+    {
+        return;
+    }
+
+    const Prices& prices = GetConfig().prices;
+    char buf[256] = { 0 };
+    _snprintf_s(buf, sizeof(buf), _TRUNCATE,
+                "[price] level=%d base=%.0f talent=x%.2f unique=x%.2f personality=x%.2f "
+                "faction=x%.2f -> %d cats (floor %d, cap %d)",
+                in.level, BasePriceInCats(in.level, prices), in.talentMultiplier,
+                in.unique ? prices.uniqueMultiplier : 1.0f,
+                PersonalityPriceMultiplier(in.personality, prices),
+                in.factionMultiplier, cats, prices.catsMinimum, prices.catsHardCap);
+    LogInfo(CharacterName(character) + " " + buf);
+}
+
 bool SafePlayerMoney(Character* leader, int* out)
 {
     TR_TRY { *out = leader->getMoney(); return true; }
@@ -625,9 +648,9 @@ float HoursHeld(Character* character)
     return g_holdClock.HoursHeld(key, now);
 }
 
-// Faction relation runs roughly -100..100. It only ever shifts the price, and
-// only in Vanilla+: as a gate it would make half the world unrecruitable, which
-// is exactly the problem this mod exists to solve.
+// Faction relation only ever shifts the price, and only in Vanilla+: as a gate it
+// would make half the world unrecruitable, which is exactly the problem this mod
+// exists to solve. The arithmetic (and its clamps) is price_rules.cpp.
 float FactionMultiplier(Character* character, Faction* playerFaction)
 {
     const Config& config = GetConfig();
@@ -642,17 +665,7 @@ float FactionMultiplier(Character* character, Faction* playerFaction)
         return 1.0f;
     }
 
-    const float normalised = relation / 100.0f;
-    float multiplier = 1.0f - (normalised * config.prices.factionWeight);
-    if (multiplier < 0.25f)
-    {
-        multiplier = 0.25f;
-    }
-    if (multiplier > 3.0f)
-    {
-        multiplier = 3.0f;
-    }
-    return multiplier;
+    return FactionPriceMultiplier(relation, config.prices);
 }
 
 // What someone is actually good at, and how far past their own level it goes.
@@ -723,9 +736,14 @@ bool SafeReadTalent(Character* character, int level, Talent* out)
     TR_CATCH { return false; }
 }
 
+// Reads everything that decides the quote, then lets price_rules.cpp do the
+// arithmetic. The player's own level is deliberately not an input: the price is
+// what this person is worth, and how hard they are to win over is already the
+// level gap's job in JoinChance. Pricing both would charge twice for one fact and
+// make the same prisoner cost different amounts depending on who is asking.
 int PriceInCats(Character* character, const Traits& traits, Faction* playerFaction)
 {
-    const Prices& prices = GetConfig().prices;
+    const Config& cfg = GetConfig();
 
     int level = 1;
     SafeRoughLevel(character, &level);
@@ -734,15 +752,14 @@ int PriceInCats(Character* character, const Traits& traits, Faction* playerFacti
         level = 1;
     }
 
-    // The curve itself (square term plus shifted logistic, calibrated against
-    // the Recruit-Prisoners-for-Cats tiers) is engine-free: price_rules.cpp.
-    float cats = BasePriceInCats(level, prices);
+    PriceInputs inputs;
+    inputs.level = level;
+    inputs.personality = traits.temperament;
 
     // Talent, only in the presets that price at all. An edge of 1.0 is somebody
     // exactly as good as their level suggests and changes nothing; the multiplier
     // only bites for people who are unusually good at something.
-    const Config& cfg = GetConfig();
-    if (cfg.preset != Preset_Cheat && cfg.prices.talentWeight > 0.0f)
+    if (cfg.preset != Preset_Cheat)
     {
         Talent talent;
         if (SafeReadTalent(character, level, &talent) && talent.edge > 1.0f)
@@ -753,8 +770,7 @@ int PriceInCats(Character* character, const Traits& traits, Faction* playerFacti
             if (strcmp(talent.kind, "oficio") == 0)      familyWeight = 1.6f;
             else if (strcmp(talent.kind, "sombra") == 0) familyWeight = 1.3f;
 
-            const float over = (talent.edge - 1.0f) * familyWeight;
-            cats *= 1.0f + (over * cfg.prices.talentWeight);
+            inputs.talentMultiplier = TalentMultiplier(talent.edge, familyWeight, cfg.prices);
         }
     }
 
@@ -762,15 +778,13 @@ int PriceInCats(Character* character, const Traits& traits, Faction* playerFacti
     // is. The reference mod puts its uniques at 100-150k against ~80k for the
     // strongest ordinary fighter, and that gap is the whole point of a name.
     bool named = false;
-    if (SafeIsUnique(character, &named) && named)
-    {
-        cats *= GetConfig().prices.uniqueMultiplier;
-    }
+    inputs.unique = (SafeIsUnique(character, &named) && named);
 
-    cats *= PersonalityPriceMultiplier(traits.temperament, GetConfig().prices);
-    cats *= FactionMultiplier(character, playerFaction);
+    inputs.factionMultiplier = FactionMultiplier(character, playerFaction);
 
-    return (int)cats;
+    const int cats = FinalPriceInCats(inputs, cfg.prices);
+    LogPriceBreakdown(character, inputs, cats);
+    return cats;
 }
 
 // Which currency does this archetype deal in? Condition takes precedence over
@@ -1289,64 +1303,6 @@ void MarkRescuedBy(Character* character, Character* saviour)
     }
 }
 
-// The other direction from the price paths: the NPC paying the player.
-// Ownerships::addMoney is the counterpart KEP uses beside takeMoney, and it is
-// non-virtual and exported, so no sign games with a deduction.
-bool SafeTheirMoney(Character* character, int* out)
-{
-    TR_TRY
-    {
-        Ownerships* owned = character->getOwnerships();
-        if (owned == NULL)
-        {
-            return false;
-        }
-        *out = owned->getMoney();
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-// Moves cats from the NPC to the player's leader. takeMoney is virtual and a
-// plugin cannot call it, so the debit goes through addMoney with a negative
-// amount -- the same function, which keeps both halves on one code path.
-bool SafeGiveToPlayer(Character* from, int amount, bool* moved)
-{
-    *moved = false;
-    TR_TRY
-    {
-        if (amount <= 0 || ou == NULL || ou->player == NULL)
-        {
-            return false;
-        }
-        Ownerships* theirs = from->getOwnerships();
-        if (theirs == NULL)
-        {
-            return false;
-        }
-        Platoon* platoon = ou->player->currentPlatoon;
-        if (platoon == NULL)
-        {
-            return false;
-        }
-        Character* leader = platoon->getSquadLeader();
-        if (leader == NULL)
-        {
-            return false;
-        }
-        Ownerships* mine = leader->getOwnerships();
-        if (mine == NULL)
-        {
-            return false;
-        }
-        theirs->addMoney(-amount);
-        mine->addMoney(amount);
-        *moved = true;
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
 // Whether this NPC has already handed over their parting gift. Stored in the
 // engine's own per-character memory, so it survives a reload: without it the
 // player could reopen the window and be paid again by the same rescued NPC
@@ -1380,16 +1336,12 @@ int PayPartingGift(Character* character)
 
     // They give what they are carrying, never a figure the mod invents. An NPC
     // with empty pockets owes the same debt and simply cannot pay it -- which
-    // is the honest outcome, not a bug.
-    int purse = 0;
-    if (!SafeTheirMoney(character, &purse) || purse <= 0)
-    {
-        return 0;
-    }
-
-    const int gift = purse;
-    bool moved = false;
-    if (!SafeGiveToPlayer(character, gift, &moved) || !moved)
+    // is the honest outcome, not a bug. The move itself is money_rules.cpp:
+    // checked debit, then credit, and the debit is put back if the credit fails.
+    CharacterPurse theirs(character);
+    CharacterPurse mine(leader);
+    const int gift = TransferAllCats(theirs, mine);
+    if (gift <= 0)
     {
         return 0;
     }
