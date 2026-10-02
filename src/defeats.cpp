@@ -2,12 +2,9 @@
 #include "defeats.h"
 #include "config.h"
 #include "log.h"
-#include "rules.h"
+#include "char_key_reader.h"
 #include "engine_reads.h"
-#include "mercy.h"
-#include "recruit_core.h"
 #include "defeat_rules.h"
-#include "rules.h"
 
 #include <map>
 #include <sstream>
@@ -21,6 +18,8 @@ namespace
 // whole function, not just those inside the __try block.
 
 void (*g_knockout_orig)(MedicalSystem*, float) = NULL;
+
+NearDeathListener g_nearDeathListener = NULL;
 
 struct Record
 {
@@ -278,7 +277,10 @@ void NoteDefeat(Character* character)
     if (nearDeath && !alreadyGone && GetConfig().submission.begWhenNearDeath &&
         GetConfig().surrenderEnabled)
     {
-        OfferMercy(character);
+        if (g_nearDeathListener != NULL)
+        {
+            g_nearDeathListener(character);
+        }
     }
 }
 
@@ -451,6 +453,11 @@ void NoteIfDown(Character* character)
     }
 
     NoteDefeat(character);
+}
+
+void SetNearDeathListener(NearDeathListener listener)
+{
+    g_nearDeathListener = listener;
 }
 
 bool InstallDefeatTracking()

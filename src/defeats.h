@@ -44,6 +44,14 @@ bool BeatPrisoner(Character* character, std::string* outMessage);
 // offer the button at all.
 bool CanBeatPrisoner(Character* character, double* outHoursLeft);
 
+// Who is told when a defeat leaves someone close enough to death to plead. The
+// defeat tracker only knows that it happened; what a plea does (a window, three
+// answers) is mercy.cpp's business, and mercy.cpp already depends on the recruit
+// path, which depends on this module. Naming the listener here, and wiring it in
+// startPlugin, keeps that chain one-directional instead of a ring.
+typedef void (*NearDeathListener)(Character* character);
+void SetNearDeathListener(NearDeathListener listener);
+
 // Installs the knockout hook.
 bool InstallDefeatTracking();
 void RemoveDefeatTracking();

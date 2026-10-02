@@ -1,7 +1,6 @@
 #include "common.h"
 #include "rules.h"
 #include "config.h"
-#include "recruit_core.h"
 #include "surrender.h"
 #include "log.h"
 #include "messages.h"

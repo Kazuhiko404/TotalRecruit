@@ -177,6 +177,8 @@ __declspec(dllexport) void startPlugin()
     // Route A. Also installs the per-frame tick that completes recruits the
     // player accepted in dialogue, which cannot happen inside the hook itself.
     const bool rescueOk = InstallRescueHooks();
+    // The defeat tracker does not know about pleas; this is where they meet.
+    SetNearDeathListener(&OfferMercy);
     InstallDefeatTracking();
     const bool tickOk = InstallFrameTick();
 
