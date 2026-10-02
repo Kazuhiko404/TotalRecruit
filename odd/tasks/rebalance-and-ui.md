@@ -94,7 +94,7 @@ Out of scope:
   - Then implement an in-game bar or label: NPC stress, join %, active route and blocking reason. Hover or selection based, reusing the recruit_overlay and cursor_hint pipeline and the TotalSparring overlay patterns.
   - Make it configurable in the Mod Hub.
 - [x] **T10 Docs.** Refresh README Status, TODO.md, SPEC-ESTADO (mark superseded), ESTADO.md, QA.md (new cases for T2-T9), and REQUISITOS R6.4.
-- [ ] **T11 Build and deploy.**
+- [x] **T11 Build and deploy.**
   - Release|x64 build.
   - Deploy the DLL with an md5 check.
   - Add only the missing keys to the deployed `config.json` and `messages.json`, plus `easyHoursCaged` 6.
@@ -475,3 +475,15 @@ and uniques land in the reference 100-150k band instead of overshooting it).
 
 ## Next step
 T11: Release|x64 build, then `scripts/deploy.sh` (dry-run first) once Kenshi is closed; in-game QA per QA.md 12 afterwards.
+
+### T11 evidence (2026-10-01)
+- `scripts/deploy.sh --dry-run`: fresh install (no `mods\TotalRecruit` in the game folder), nothing written.
+- `scripts/deploy.sh`: DLL built, `rules_tests` 19/19 suites, 0/36664 checks failed.
+  - Copied the DLL, `gui/`, `RE_Kenshi.json`, `TotalRecruit.mod`, `config.json` and `messages.json`.
+  - md5 `5cb3e12e121cb15c0da969b301934e35` matches in x64/Release, the repo root, the package folder and the game folder.
+  - The deployed `easyHoursCaged` is 6.0.
+- Known cosmetic issue: on a real run the script still prints "would be copied" for the fresh-install lines.
+- The mod still has to be enabled in the Kenshi launcher. "THE Recruit Anyone mod" is also installed, so consider disabling it to avoid overlapping recruitment.
+
+## Next step (after T11)
+In-game QA in the QA.md §12 priority order.
