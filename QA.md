@@ -419,3 +419,35 @@ T8 es un refactor: **el comportamiento no debe cambiar** salvo A1 (golpiza) y la
 | R1 | Prisionero con 6h de encierro (modo fácil), NPC en rescate, cheat, animal con hambre, animal en jaula | Todas las rutas responden como antes (mismos motivos, mismos precios, misma barra de domesticación) | `[route] <ruta>`, `[chance] ...`, `[price] ...`, `[hold] held=...` |
 | R2 | Disparar un plea por vida baja (mercy) y por golpiza hasta casi matar | La ventana de piedad sigue abriendose (ahora por el listener de `defeats`, ya no por una llamada directa) | `defeated by the player (...) nearDeath=yes` y la ventana |
 | N1 | Insistir 5+ veces a un prisionero **en jaula** | **No** pasa nada: la insistencia no corta la charla de jaula (se registra el intento pero nadie consulta el castigo). R2.4 no dice nada de jaulas; queda como estaba y anotado en el doc de la feature | (sin `harto` en la linea del NPC) |
+
+### 12.8 Lectura de estres y chance (T9)
+
+La tarjeta de `ui-mockup/readout.html` sobre el NPC. Todo se prueba con `"probeOnClick": true` en `config.json`: cada vez que lo dibujado cambia, el log dice **lo mismo que se ve** en una linea `[readout]`, y se compara con `[chance]`/`[price]` de un clic en el mismo NPC (la tarjeta no calcula nada propio: tiene que coincidir). El mod necesita `gui/images/tr_white.png` en su carpeta (sin el, las barras usan el skin `WhiteSkin` y el log lo dice).
+
+Linea: `[readout] <nombre> route=<ruta> chance=<n>% stress=<n>% (hunger H wounds W tired T) defeats=<a/b> food=<n>% line="<texto>" [hover|selection|menu]`
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| U1 | Pasar el mouse sobre un prisionero en tu jaula (modo facil 6h, precio en cats) | Tarjeta sobre su cabeza: ruta **Cautiverio**, barra de estres con 3 colores y la leyenda `Hambre/Heridas/Cansancio` que suma el total, barra de chance, derrotas `n/2`, linea de precio `Precio N cats (tienes M)` y debajo `Faltan Xh en la jaula` | `[readout] ... route=captivity chance=..% stress=..% ... [hover]` |
+| U2 | Hacer clic (menu contextual) en ese mismo prisionero y comparar | `chance=` de la tarjeta == `-> N%` de `[chance] ...` del clic; el precio de la tarjeta == `[price] ... -> N cats`; el estres == `stress=N(...%)` de `[chance]` | `[chance] ... -> N%`, `[price] ... -> N cats` |
+| U3 | Esperar en la jaula hasta que pasen las 6h | La segunda linea baja `Faltan 3h` -> `2h` -> `45min` y al llegar a 0 la tarjeta dice `Lleva bastante encerrado: se rinde` en verde. El tiempo coincide con `[hold] held=` | `[hold] held=Xh easy-mode needs 6.0h` |
+| U4 | Alimentar al prisionero (o curarlo) con la tarjeta a la vista | El estres baja en la tarjeta en menos de ~0.5 s | `[readout]` con otro `stress=` |
+| U5 | NPC que venciste 2 veces en campo abierto (sin jaula) | Ruta **Rendicion**, derrotas `2/2` llenas, chance y estres, linea `Aun no cede: dejalo sin comer` (o la que corresponda) | `route=surrender` |
+| U6 | Animal suelto con hambre | Ruta **Animal**, barra **Barriga** con la marca blanca en lo que necesita y `Hambre 56% / necesita 80%` (los numeros del motor, p. ej. un perro hueso a ~56%); sin barra de estres ni de chance | `route=animal ... food=56% line="Hambre 56% / necesita 80%"` |
+| U7 | Darle de comer hasta pasar la marca | La barra se pone verde y dice `Comio de tu mano: te sigue` | `line="Comio de tu mano: te sigue"` |
+| U8 | NPC honorable/valiente/bondadoso con rencor (mataste a uno de los suyos), fuera de la jaula | Ruta **Libre**, linea roja `Rencor: no perdona fuera de la jaula`, **sin** barras de chance ni estres | `route=free chance=- stress=- ... line="Rencor: ..."` |
+| U9 | Aliado (reputacion >= 20) en campo abierto | Ruta **Libre** con barra de chance y `Quiza te siga; si no, hazte mas fuerte`. La tarjeta **no** dice si la tirada va a salir: hacer clic varias veces seguidas en el mismo NPC no cambia ni el % ni la linea | `route=free chance=..%` |
+| U10 | Persona en rescate (la salvaste), inconsciente, y moribunda | Ruta **Rescate**; moribundo: `Se muere: curalo primero`; inconsciente: `Inconsciente: espera a que despierte` | `route=rescue` |
+| U11 | Pasar el mouse por un NPC **no reclutable** (excluido por config, muerto, o tu propio escuadron) | No aparece tarjeta | (sin linea) |
+| U12 | Mouse sobre una ventana del juego (inventario, etc.) con un NPC detras | La tarjeta se oculta (modo hover); vuelve al sacar el mouse | (sin linea) |
+| U13 | Seleccionar un NPC que no es tuyo (clic izquierdo) y apagar `Lectura: al pasar el mouse` en el hub | La tarjeta aparece solo para el seleccionado o el del menu abierto. Si ver al NPC seleccionado **no** funciona, anotarlo: `selectedObject` no esta confirmado para personajes | `[selection]` en la linea |
+| U14 | Abrir el menu contextual sobre un NPC | La tarjeta queda sobre ese NPC (fuente `[menu]`) y el boton `Hablar` sigue a su lado, sin tapar nada. Al hacer clic en `Hablar` la tarjeta se oculta con la ventana de oferta | `[menu]` |
+| U15 | Hub: `Lectura: activa` en OFF | Ninguna tarjeta; en ON vuelve en <0.5 s. `Lectura: compacta` ON: tarjeta de 176 px sin leyenda ni derrotas ni segunda linea | S2: sin `Mod Hub rejected` |
+| U16 | Mover la camara / el NPC camina con la tarjeta visible | La tarjeta lo sigue cada cuadro, nunca se sale de la pantalla (se pega al borde) | (sin linea) |
+| U17 | **No debe tener efectos**: pasar el mouse por un prisionero nuevo (sin id) en tu jaula, y por un NPC libre cualquiera | No aparece `first character id created` por pasar el mouse; el reloj de encierro **no** arranca por mirarlo (la linea `Faltan` aparece recien cuando el barrido de `hail` ya vio al prisionero); sin insistencia registrada | `[identity] first character id created` ausente tras solo pasar el mouse |
+| U18 | Cargar un save con la tarjeta a la vista | La tarjeta desaparece sola; no queda apuntando a nadie | `[identity] load begin: session state cleared (offer window, overlay, readout and cursor targets, ...)` |
+| U19 | Tarjeta sobre un NPC con **DarkUI o PowerModUI** activo | Fondo oscuro, texto y barras brillantes (no se ponen negros) | `[readout] fills use .../gui/images/tr_white.png` |
+| U20 | La tarjeta **no roba clics**: clic izquierdo y derecho a traves de ella sobre el NPC | Funciona como si no estuviera | (sin linea) |
+| U21 | Mirar el log al abrir el juego por primera vez con la tarjeta | Una linea `[readout] fills use ...tr_white.png`; si falta la carpeta `gui/images`, `[readout] no gui/images/tr_white.png ...` y las barras igual se ven | |
+
+**Lo que hay que confirmar jugando** (no se puede saber sin correr el juego): que el mouse sobre un NPC se detecta (radio de 48 px sobre el centro del cuerpo, proyectando con la camara de Kenshi); que `getPositionBip01()` queda a la altura del torso y el ancla de 70 px queda sobre la cabeza; que `selectedObject` de `PlayerInterface` contiene al NPC seleccionado; que la leyenda cabe en 264 px con la fuente `Kenshi_StandardFont_MediumSmall` (una linea larga se corta, no se ajusta).

@@ -45,6 +45,8 @@ d:\SteamLibrary\steamapps\common\Kenshi\mods\TotalRecruit\
 └── config.json          <- copiar desde TotalRecruit/config.json cuando cambie
 ```
 
+La tarjeta de lectura (T9) dibuja sus barras con `TotalRecruit/gui/images/tr_white.png`: copiá esa carpeta `gui` a la desplegada. Sin ella el mod anda igual (usa el skin `WhiteSkin` y lo dice en el log), pero con un mod de skin (DarkUI, PowerModUI) las barras se ven oscuras.
+
 **Ojo con el `config.json` fuente**: vive en `TotalRecruit/config.json` — la
 subcarpeta, no la raíz del proyecto. Si agregás una clave, copiala también:
 
@@ -96,7 +98,7 @@ qué existe — leelo antes que el `.cpp`.
 
 | Archivo | Qué hace |
 |---|---|
-| `rules.cpp/.h` | **El despachador.** `Evaluate`: junta los hechos, pregunta qué ruta contesta y devuelve el veredicto. No decide nada por su cuenta. Empezá acá. |
+| `rules.cpp/.h` | **El despachador.** `Evaluate`: junta los hechos, pregunta qué ruta contesta y devuelve el veredicto. No decide nada por su cuenta. Empezá acá. `EvaluatePeek` es la misma pregunta como espectador (sin reloj de encierro, sin id, sin tirada, sin log): lo usa la tarjeta. |
 | `character_facts.cpp/.h` | **Lo único que lee el motor para decidir.** `GatherCoreFacts` (una vez por pregunta) y un `Gather*Extra` por ruta; nada más lee el juego en el camino de la decisión. |
 | `entry_facts.h`, `verdict.h`, `archetype.h` | **Puros.** Los hechos planos (`CoreFacts` y los extras por ruta), el veredicto (`Verdict`, `Currency`, `ReasonKey`) y el arquetipo sin motor. |
 | `route_decisions.h` + `route_gate/cheat/rescue/yield/animal/free/cage/cats.cpp` | **Puros.** Una función por ruta, de hechos planos a `Verdict`. `route_cats` es el precio que comparten el mundo libre y la jaula. Para cambiar lo que una ruta decide, es acá y en su test. |
@@ -130,6 +132,12 @@ qué existe — leelo antes que el `.cpp`.
 | `recruit_overlay.cpp` | El botón junto al menú contextual (dos hooks). |
 | `offer_popup.cpp` | La ventana de decisión. Acá vive el retrato. |
 | `hail.cpp` | Los cautivos avisan, programado sobre el reloj de juego. |
+| `readout.cpp/.h` | La tarjeta de estres y chance sobre el NPC, de punta a punta: cada 250 ms busca el objetivo, pregunta a las reglas **sin efectos** (`EvaluatePeek`), arma la vista y la dibuja; entre actualizaciones solo la mueve. Con `probeOnClick` loguea `[readout] ...` lo mismo que se ve. |
+| `readout_model.cpp/.h` | **Puro.** Que muestra la tarjeta (`BuildReadout`): ruta, estres y sus 3 partes, chance, derrotas, barriga, linea principal y espera. Solo reusa numeros que la decision ya calculo. |
+| `readout_catalog.cpp/.h`, `readout_format.cpp/.h` | **Puros.** La linea corta de cada motivo (un renglon por `ReasonKey` + la espera; el test exige que quepan en la tarjeta) y como se escriben cats (`9.570`) y horas (`3h`, `45min`). |
+| `readout_text.cpp/.h` | Las palabras de la tarjeta: `messages.json` bloque `readout`, con texto interno si falta. |
+| `readout_target.cpp/.h` | A quien mira la tarjeta: el menu abierto, el objeto seleccionado o el NPC bajo el mouse (proyecta a pantalla los personajes cerca del centro de camara y toma el mas cercano al cursor). Solo lee. |
+| `readout_ui.cpp/.h` | Los widgets MyGUI de la tarjeta (capa `ToolTip`, sin foco de mouse, rellenos con `gui/images/tr_white.png` o `WhiteSkin`). Medidas = las variables CSS de `ui-mockup/css/readout.css`. |
 | `dialogue_authoring.cpp` | Escribe las líneas y las burbujas. |
 | `mercy.cpp` | Ruta piedad: al perder un miembro, tres respuestas. |
 | `mod_hub_integration.cpp` | Ajustes en el panel de Mod Hub (`src/emc/` es su API). |

@@ -89,7 +89,7 @@ Out of scope:
   - `SpeakOpeningLine` keys off a reason enum, not Spanish substrings.
   - Move hardcoded magic numbers into config where R6.1 expects them.
   - Also: break the defeats/mercy/recruit_core ring, credit the GOLPEARLO beating to the player, insistence-in-cage decision.
-- [ ] **T9 Stress and chance readout UI:**
+- [x] **T9 Stress and chance readout UI:**
   - Make the mockup in `ui-mockup/` first.
   - Then implement an in-game bar or label: NPC stress, join %, active route and blocking reason. Hover or selection based, reusing the recruit_overlay and cursor_hint pipeline and the TotalSparring overlay patterns.
   - Make it configurable in the Mod Hub.
@@ -432,5 +432,39 @@ and uniques land in the reference 100-150k band instead of overshooting it).
 - Builds: DLL Release|x64 OK after each commit (only the known C4482/C4091 SDK warnings); tests green after each.
 - In-game QA: QA.md 12.7 (A1-A3, Z1-Z4, C1-C4, R1-R2, N1).
 
+### T9 Stress and chance readout UI - done
+- Commits (4 work units; DLL Release|x64 and `tests/rules_tests` built after each code one):
+  1. `83cb624` `docs(ui): HTML mockup of the stress and chance readout` (`ui-mockup/readout.html`, `css/`, `js/`, `README.md` with the design decisions)
+  2. `4be4298` `feat(readout): pure view-model for the stress and chance readout`
+  3. `5796127` `feat(rules): EvaluatePeek, the decision asked as a bystander without side effects`
+  4. `2028525` `feat(readout): in-game stress and chance readout over the NPC, with Mod Hub controls`
+- Route: single writer, inline (the parent delegated the whole unit). Triggers: 4+ files mapped, 2+ non-trivial files. TDD strict, runner `tests/rules_tests`.
+- Mockup first (own commit, screenshot-checked in Chrome): six states (caged bandit, field yield, animal, refused/grudge, ally, saved life), expanded and compact, the
+  on-screen placement (above the NPC head, hover / right-click menu) and the Mod Hub controls. Decisions are in `ui-mockup/README.md`.
+- RED: stubs for `StressTermsFromState`, `FormatCats/FormatHoursLeft/FillLine`, the catalog and `BuildReadout` plus the new tests: `15/19 suites passed, 107/36434 checks failed`.
+  GREEN: `19/19 suites passed, 0/36664 checks failed` (the one failure on the way was a test whose rolled stress contradicted its own facts; the test was corrected, not the code).
+- Pure and tested: `readout_model` (what the card shows), `readout_catalog` (one short line per `ReasonKey` + the cage wait; the test enforces <= 40 ASCII chars at the widest
+  fill, unique keys, one row per reason), `readout_format` (`9.570`, `3h`/`45min` rounded up), `StressTermsFromState` (the three terms; `StressFromState` is now built from it, so the
+  bar and its parts cannot drift), and `Verdict::tameFullness/tameNeeded` set by `DecideAnimal` (the stomach bar behind an animal verdict, -1 otherwise).
+- Honesty: every number is one the decision computed. Chance = `Verdict::chancePercent`; price = `Verdict::cats`; stress = the stress the roll used (`chanceInputs.stress`) when it rolled,
+  else `StressFromState`; animal bar = the two numbers `DecideAnimal` compared.
+- `EvaluatePeek` (rules.cpp, one `Run(character, mode, detail)` shared with `Evaluate`; `GatherMode` in character_facts): no hold clock started (`PeekHoursHeld` reads a clock that already
+  runs, else the wait line is simply absent), no id minted, **no roll key supplied** (so the roll can never pass), no probe logging. Consequence, deliberate: the card shows the odds and what is
+  needed if luck does not carry them, never whether the roll will pass (a peek that read the existing id would reveal the stable outcome and make the percent meaningless, and
+  would behave differently for NPCs with and without an id). `SafeFindCharKey` is therefore not even needed on this path.
+- Side finding, not changed: the existing cursor-hint/`hasDialogue_Fast` path calls `Evaluate` (decide mode) for every candidate NPC, so a caged bystander already gets an id and a hold clock from the
+  talk marker. That is T7/T4 behaviour; the readout does not add to it.
+- Engine bits: `readout_target` (menu target from `recruit_overlay`, `PlayerInterface::selectedObject`, hover = characters near the camera centre projected through `Ogre::Camera`
+  view*projection, nearest to the mouse within 48 px, never the player's own; hidden when the mouse is over a window), `readout_ui` (MyGUI on the `ToolTip` layer, `Pick=false`,
+  no mouse focus anywhere, fills = shipped `gui/images/tr_white.png` registered like TotalSparring `ui_resources`, fallback `WhiteSkin`, stock Kenshi fonts), `readout` (250 ms update, per-frame follow,
+  hides while the offer window is open, `ForgetReadout` in the load-boundary reset (item 11 of the list), `ShutdownReadout` at stop). `engine_reads` gained `CharactersNear` / `SafeAsCharacter`
+  (hail uses them: its private copies are gone).
+- Config (T6 table, hub controls): `readoutEnabled` (true), `readoutCompact` (false), `readoutOnHover` (true). The repo `config.json` is untouched (defaults apply); `messages.json` gained a `readout` block
+  (labels, six route names, 49 short lines, ASCII Spanish); `TotalRecruit/gui/images/tr_white.png` is new and must be deployed with the mod (T11).
+- Log line (probeOnClick, only when what is drawn changes): `[readout] <name> route=<r> chance=<n>% stress=<n>% (hunger H wounds W tired T) defeats=a/b food=<n>% line="..." [hover|selection|menu]`.
+- Not available / not verified (no running game): that the hover pick lands on the NPC (projection is plain view*projection of `getPositionBip01()`), that `selectedObject` holds a selected NPC, and
+  that the longest lines fit 264 px in `Kenshi_StandardFont_MediumSmall`. All listed in QA 12.8. The offer for Piedad (mercy) route name exists but a plea target is rarely under the cursor.
+- In-game QA: QA.md 12.8 (U1-U21).
+
 ## Next step
-T9 (stress and chance readout UI): make the mockup in `ui-mockup/` first. Before it, in-game QA 12.6 I4/I5 (the id surviving a save and a relaunch) and 12.7 (nothing moved, plus A1).
+T10 (docs): README Status, TODO.md, SPEC-ESTADO (mark superseded), ESTADO.md, QA.md header list, REQUISITOS R6.4. Before it, in-game QA 12.8 (above all U1, U2, U6, U13, U17), 12.6 I4/I5 and 12.7.
