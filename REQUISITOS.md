@@ -118,7 +118,7 @@ sumisión.
 *Verificado:* el motor tiene una llamada de noqueo interceptable, así que contar
 es posible.
 
-**R3.3 — El conteo necesita un piso que sobreviva la recarga.** *(P1)*
+**R3.3 — El conteo necesita un piso que sobreviva la recarga.** *(P1; implementado en T2: el piso nunca baja de `defeatsToBreak`)*
 Un contador propio vive en memoria y una recarga lo borra. La solución pedida
 —inteligente, con respaldo— son tres niveles:
 
@@ -144,7 +144,7 @@ dejarlo tirado. Es el bucle que la nota pide, y encaja con R2.3 y R3.2.
 Cuántas derrotas hacen falta y con qué probabilidad cede depende del
 temperamento. Un cobarde cede antes que un valiente.
 
-**R3.6 — Quién puede comprar su vida.** *(P1, decidido)*
+**R3.6 — Quién puede comprar su vida.** *(P1, decidido; implementado en T2, `mercy_rules`)*
 
 | Temperamento | Al rogar por su vida |
 |---|---|
@@ -154,7 +154,7 @@ temperamento. Un cobarde cede antes que un valiente.
 
 Un honorable comprando su salida contradice lo único que lo define.
 
-**R3.7 — Tres respuestas, y la tercera cuesta algo.** *(P1, parcialmente hecho)*
+**R3.7 — Tres respuestas, y la tercera cuesta algo.** *(P1; implementado en T2: ACEPTAR se une gratis, sin precio ni rechazo por honor)*
 Aceptar, Ignorar, Rechazar. **Ignorar** —no "Perdonar"— porque con R3.6 el
 jugador renuncia a algo concreto: pierde el pago que le estaban ofreciendo. El
 NPC pierde el agro y se va. **Rechazar** mantiene el agro y la pelea sigue.
@@ -255,9 +255,9 @@ el resto son alcanzables sin inventar nada.
 
 **R6.4 — Los que no se pueden llevar al panel, documentados.** *(P2)*
 
-*Corregido por I6:* el hub **sí** expone `register_text_setting`, así que los
-identificadores de diálogo y las listas de exclusión pueden ir al panel. Lo que
-queda para el archivo es menos de lo que decía este requisito. Falta confirmar
+*Corregido por I6:* el hub **sí** acepta texto libre (`register_text_setting`), así que los
+identificadores de diálogo y las listas de exclusión **pueden** ir al panel; este requisito
+partía de que no. Lo que queda solo en el archivo es menos de lo que decía. Falta confirmar
 el layout del struct antes de llamar esas funciones (ver [ESTADO.md](ESTADO.md) §5).
 
 ---

@@ -1,3 +1,7 @@
+> **HISTÓRICO — superado por [ESTADO.md](ESTADO.md).** Este documento describe el estado de
+> septiembre y no se mantiene. Lo vigente (qué existe, qué se jugó y qué solo compila) está en
+> `ESTADO.md`; las pruebas pendientes en `QA.md` §12.
+
 # TotalRecruit frente a los cuatro mods de reclutamiento
 
 Análisis contra `../Kenshi_Guia_Completa_Mods_Reclutamiento.md`, que documenta

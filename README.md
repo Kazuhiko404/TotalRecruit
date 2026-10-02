@@ -46,6 +46,20 @@ They are in your cage. What they want depends on who they are:
 
 Fearful people come cheaper. The brave and the cruel cost more.
 
+**Easy mode.** A healthy, fed prisoner who has been in your cage long enough
+simply joins. The wait is **6 game hours, flat for everyone** (`easyHoursCaged`;
+it used to be 12). The clock starts when the prisoner is first seen in your cage
+and is dropped when they leave it.
+
+**Price.** Quotes follow one calibrated curve by the recruit's own level, roughly
+1k at level 5, 3k at 10, 10k at 20, 32k at 40, 57k at 60 and 76k at 75, for an
+ordinary character. Talent (up to x1.5), uniqueness (x2), personality (coward x0.6,
+brave/cruel x1.6) and faction standing multiply it, the result is rounded to the
+nearest 10, floored at `catsMinimum` and capped at `catsHardCap` (150,000). Your own
+level is not part of the price: it already drives the join chance. A charge is
+all-or-nothing, and if the engine refuses the recruit afterwards the cats are
+refunded.
+
 ### Surrender
 
 You beat them, and they are bleeding out or running. Rather than be cut down,
@@ -60,7 +74,9 @@ itself.
 
 ## Presets
 
-- **Cheat** — anyone, instantly. The original behaviour.
+- **Cheat** — the cage and a one-minute wait, nothing else: the character must be
+  in your cage and held for `cheatHoursCaged` (0.02 game hours); no cats, food,
+  submission, level or standing. `cheatNeedsCage` turns the cage requirement off.
 - **Balanced** — the prices above. *(default)*
 - **Vanilla+** — as Balanced, plus faction relation shifting the price.
 
@@ -78,21 +94,47 @@ launcher.
 ├── TotalRecruit.mod
 ├── RE_Kenshi.json
 ├── config.json
-└── TotalRecruit.dll
+├── messages.json         <- every line the NPCs and the UI say
+├── TotalRecruit.dll
+└── gui/images/tr_white.png   <- fills of the readout card
 ```
 
-Requires [RE_Kenshi](https://www.nexusmods.com/kenshi/mods/847). It coexists
-with UnlimitedRecruitV2 and with the dialogue-based recruitment mods — all
-widget names are distinct, and the overlay anchors beside the context menu
-rather than below it, where other mods put theirs.
+`gui/images` is needed for the readout bars to look right with a skin mod such as
+DarkUI or PowerModUI; without it the mod still works and falls back to `WhiteSkin`.
+
+Requires [RE_Kenshi](https://www.nexusmods.com/kenshi/mods/847). Settings live in
+Emkej's Mod Hub (optional: without it the mod
+runs on `config.json`). It coexists with UnlimitedRecruitV2 and with the
+dialogue-based recruitment mods — all widget names are distinct, and the overlay
+anchors beside the context menu rather than below it, where other mods put theirs.
+
+It also coexists with **TotalSparring** and **Kill Counter**. TotalRecruit gives
+each character its own id, stored in the save under `total_recruit.character_id`
+(TotalSparring uses `total_sparring.fighter_id`), so nothing is shared or
+overwritten and a character keeps their join roll and state across a relaunch.
+A save from before this has no ids: each character gets one on first contact and
+their stable roll is recast once.
 
 ## Controls
 
 | | |
 |---|---|
 | Right-click an NPC | The recruit button, labelled with what they want |
-| **Ctrl+K** | Settings |
+| Hover or select an NPC | The stress and join-chance card (see below) |
 | **Shift+K** | Spawn panel |
+
+Settings are in the Mod Hub panel, not in a window of this mod.
+
+### The readout card
+
+Hover an NPC (or select one, or open their menu) and a small card appears over
+their head: the route that answers them (Captivity, Surrender, Animal, Free,
+Rescue, Mercy), a three-colour stress bar (hunger, wounds, tiredness), the join
+chance, the defeats counted against the threshold, the stomach bar for animals,
+one short line saying what stands in the way, and the hours still to wait when
+easy mode applies. Every number is one the decision itself computed. The card
+shows the odds, never whether the roll will pass, and asking has no side effects.
+Hub switches: card on/off, compact, hover on/off.
 
 ## Optional: FCS dialogue
 
@@ -125,8 +167,9 @@ Useful actions: `DA_JOIN_SQUAD_FAST`, `DA_TAKE_MONEY`, `DA_FREE_TARGET_SLAVE`,
 
 ## Configuration
 
-Everything in the settings panel is also in `config.json`. `preset` is `0`
-Cheat, `1` Balanced, `2` Vanilla+.
+Everything in the Mod Hub is also in `config.json`. `preset` is `0` Cheat, `1`
+Balanced, `2` Vanilla+. The Hub writes by merging into the file: keys you edited
+by hand, comments and unknown keys are kept.
 
 Set `probeOnClick` to `true` to log an NPC's personality, archetype and medical
 state on right-click. That goes to `RE_Kenshi_log.txt` in the Kenshi root —
@@ -151,6 +194,8 @@ SDK traps.
 
 ## Status
 
-Compiles clean and exports correctly. **Not yet play-tested** — see the
-verification section of [PLAN.md](PLAN.md) for exactly what remains unproven
-against a running game.
+Built (Release|x64) and unit-tested: `tests/rules_tests` covers the engine-free
+rules (route order, chance, price curve, money transfers, defeats, hold clock,
+identity registry, config merge, readout view-model). **In-game QA is pending**:
+the cases to run, in priority order, are in [QA.md](QA.md) section 12.
+[ESTADO.md](ESTADO.md) says what is proven in play and what only compiles.

@@ -93,7 +93,7 @@ Out of scope:
   - Make the mockup in `ui-mockup/` first.
   - Then implement an in-game bar or label: NPC stress, join %, active route and blocking reason. Hover or selection based, reusing the recruit_overlay and cursor_hint pipeline and the TotalSparring overlay patterns.
   - Make it configurable in the Mod Hub.
-- [ ] **T10 Docs.** Refresh README Status, TODO.md, SPEC-ESTADO (mark superseded), ESTADO.md, QA.md (new cases for T2-T9), and REQUISITOS R6.4.
+- [x] **T10 Docs.** Refresh README Status, TODO.md, SPEC-ESTADO (mark superseded), ESTADO.md, QA.md (new cases for T2-T9), and REQUISITOS R6.4.
 - [ ] **T11 Build and deploy.**
   - Release|x64 build.
   - Deploy the DLL with an md5 check.
@@ -433,6 +433,7 @@ and uniques land in the reference 100-150k band instead of overshooting it).
 - In-game QA: QA.md 12.7 (A1-A3, Z1-Z4, C1-C4, R1-R2, N1).
 
 ### T9 Stress and chance readout UI - done
+- Docs commit: `98d5d0f` (`docs(readout): module map, QA 12.8 and the T9 evidence`).
 - Commits (4 work units; DLL Release|x64 and `tests/rules_tests` built after each code one):
   1. `83cb624` `docs(ui): HTML mockup of the stress and chance readout` (`ui-mockup/readout.html`, `css/`, `js/`, `README.md` with the design decisions)
   2. `4be4298` `feat(readout): pure view-model for the stress and chance readout`
@@ -466,5 +467,11 @@ and uniques land in the reference 100-150k band instead of overshooting it).
   that the longest lines fit 264 px in `Kenshi_StandardFont_MediumSmall`. All listed in QA 12.8. The offer for Piedad (mercy) route name exists but a plea target is rarely under the cursor.
 - In-game QA: QA.md 12.8 (U1-U21).
 
+### T10 Docs - done
+- Commit: filled in by the next task's commit. Docs only.
+- README (Status, Cheat/easy mode/price, readout card, identity coexistence, files, no Ctrl+K), ESTADO.md (section 2.1 with every T1-T9 change at
+  "Compila + tests", next steps, git remote note), TODO.md rewritten, SPEC-ESTADO.md and COMPARATIVA.md bannered as historical, REQUISITOS R6.4 fixed
+  and R3.3/R3.6/R3.7 marked implemented, QA.md section 12 run header and priority order.
+
 ## Next step
-T10 (docs): README Status, TODO.md, SPEC-ESTADO (mark superseded), ESTADO.md, QA.md header list, REQUISITOS R6.4. Before it, in-game QA 12.8 (above all U1, U2, U6, U13, U17), 12.6 I4/I5 and 12.7.
+T11: Release|x64 build, then `scripts/deploy.sh` (dry-run first) once Kenshi is closed; in-game QA per QA.md 12 afterwards.

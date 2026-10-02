@@ -1,3 +1,7 @@
+> **HISTÓRICO — superado por [ESTADO.md](ESTADO.md).** Este documento describe el estado de
+> septiembre y no se mantiene. Lo vigente (qué existe, qué se jugó y qué solo compila) está en
+> `ESTADO.md`; las pruebas pendientes en `QA.md` §12.
+
 # Especificación y estado — los cuatro modos
 
 Comparación entre la especificación escrita a mano y lo que el código hace hoy.

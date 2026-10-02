@@ -310,6 +310,27 @@ porque muestran cada término por separado en vez de solo el resultado.
 
 ## 12. Ronda rebalance-and-ui
 
+### Cabecera de la corrida
+
+```
+Run header
+  Build / commit : ________   DLL md5: ________   (md5sum x64/Release, raiz del repo y carpeta del juego)
+  Fecha          : ________   Idioma: es
+  Save usado     : ________   Save nuevo o largo: ________
+  Resultado      : Humo ___/4   Areas fallidas: ________
+```
+
+Antes de empezar: `tasklist | rg kenshi_x64` (si esta abierto, cerralo del todo), desplegar con
+`scripts/deploy.sh` y verificar que los tres md5 coinciden (DEVELOPING.md §1b).
+
+### Orden de prioridad
+
+1. **Humo S1-S4** (§1). Si algo falla, nada mas importa.
+2. **12.6 I4/I5**: el id estable sobrevive una recarga y un relanzamiento (lo de mayor riesgo: hooks sin verificar).
+3. **12.8 U1, U2, U6, U13, U17**: la tarjeta (puntería, numeros iguales a los del clic, sin efectos secundarios).
+4. **12.4 P1-P9**: el dinero (precio, cobro, reembolso).
+5. El resto: 12.1 (rutas), 12.2 (piedad), 12.3 (modo facil), 12.5 (config), 12.7 (estructura), y lo que quede de 12.6 y 12.8.
+
 Con `"probeOnClick": true`, cada click escribe `[route] <nombre>` en el log: es
 la ruta que contestó primero (`field-yield`, `unconscious`, `grudge-refusal`,
 `rescue`, `dying`, `easy-healthy`, `surrendered`, `free-world`, `cage`).

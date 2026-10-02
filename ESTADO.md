@@ -3,6 +3,10 @@
 Qué está hecho, qué falta, y qué tan seguro es cada afirmación. Todo verificado
 contra `src/` y contra el log de partidas reales, no de memoria.
 
+Actualizado tras la ronda `rebalance-and-ui` (T1-T9, rama `feat/rebalance-and-ui`).
+Todo lo nuevo de esa ronda esta en **Compila + tests**: compila en Release|x64 y sus
+reglas puras pasan `tests/rules_tests`, pero **nada se jugo todavia** (ver §2.1 y QA.md §12).
+
 Este documento reemplaza la lectura cruzada de `REQUISITOS.md` (lo que falta),
 `SPEC-ESTADO.md` (spec vs código), `COMPARATIVA.md` (contra otros mods) y
 `PLAN.md` §8 (confirmado vs solo compila).
@@ -18,6 +22,7 @@ columna propia:
 |---|---|
 | **Jugado** | Se vio funcionar en una partida, con la línea del log que lo prueba |
 | **Compila** | El código existe y linkea, pero nadie lo ejecutó en el juego |
+| **Compila + tests** | Como *Compila*, y además la regla pura tiene pruebas automáticas (`tests/rules_tests`, sin motor). Prueba la lógica, no el juego |
 | **Leído** | Verificado en headers o en la lib, sin ejecutar |
 | **Idea** | Escrito en un documento, sin código |
 
@@ -36,7 +41,7 @@ inconsciente; `hunger` no es 0..1. Los headers dan el **tipo**, nunca el
 | **I2** | Rango real de `hunger` | ✅ **Jugado** | **0..3, donde 3 es lleno.** Confirmado por tres fuentes independientes |
 | **I3** | Qué señal sirve de "vida restante" | ✅ **Leído** | `blood`/`getMaxBlood()` y `derivedFleshHealthPercent`. Nunca `getOverallHealthRating` |
 | **I4** | ¿Escribir la marca de derrota altera la IA? | 🔬 **Instrumentada (2º intento)** | El primer set de testigos era inútil: los 5 campos leían 0 en **42 de 42** muestras, NPCs despiertos incluidos. Ahora mide relación de facción, que sí varía |
-| **I5** | ¿El conteo de intentos sobrevive la recarga? | ✅ **Leído** | **No** — sigue en memoria. El bug de identidad que destapó ya está arreglado (§3) |
+| **I5** | ¿El conteo de intentos sobrevive la recarga? | ✅ **Leído** | **No** — sigue en memoria. El bug de identidad que destapó se arregló con el id estable (§2.1, T7); falta probarlo con una recarga real (QA 12.6 I4/I5) |
 | **I6** | Qué controles acepta el hub | ✅ **Leído** | Mucho más de lo que usamos. Ver §5 |
 
 ### Cómo se resolvió I2, que es el caso ejemplar
@@ -64,7 +69,7 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
 | R1.1 | Jaula obligatoria | ✅ **Compila** | Cheat exige jaula del jugador. `cheatNeedsCage` lo apaga |
-| R1.2 | Un minuto y avisa | ✅ **Compila** | `cheatHoursCaged` = 0.02 (un minuto de juego) |
+| R1.2 | Un minuto y avisa | ✅ **Compila + tests** | `cheatHoursCaged` = 0.02 (un minuto de juego); `DecideCheat` en `route_cheat.cpp` |
 | R1.3 | Cero condiciones más | ✅ **Jugado** | Es lo que hace hoy |
 | R1.4 | Umbral de amistad configurable, default 20 | ✅ **Compila** | `friendlyRelation`, default **20**. No aplica a Cheat |
 
@@ -83,11 +88,11 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 |---|---|---|---|
 | R3.1 | Rogar por vida baja | ✅ **Jugado** | `blood/getMaxBlood()` (I3). Ahora con guarda de muerte: un cadáver no ruega |
 | R3.2 | Contar veces inconsciente | ✅ **Jugado** | Hook a `knockout` + respaldo por estado. Confirmado: `Grunt Mason (2 this session)` |
-| R3.3 | Piso persistente que sobreviva recarga | ✅ **Compila** | Tres capas. Falta confirmar que sobrevive una recarga real |
+| R3.3 | Piso persistente que sobreviva recarga | ✅ **Compila + tests** | Tres capas. T2: el piso nunca baja de `defeatsToBreak` (antes 1 < 2). Falta confirmar una recarga real (QA 12.1 F6) |
 | R3.4 | Curar y volver a pegar | ✅ **Jugado** | `Grunt Mason` llegó a 2 derrotas |
 | R3.5 | Personalidad decide cuánto aguanta | ✅ **Compila** | `ResolveMultiplier`: cobarde 0.6, valiente 1.6, honorable 1.8 |
-| R3.6 | Quién puede comprar su vida | ✅ **Compila** | `CanBuyTheirLife` (`mercy.cpp:88`) |
-| R3.7 | Aceptar / Ignorar / Rechazar | ✅ **Compila** | Botón "IGNORAR" condicional (`mercy.cpp:223`) |
+| R3.6 | Quién puede comprar su vida | ✅ **Compila + tests** | `CanBuyTheirLife` (`mercy_rules`, T2) |
+| R3.7 | Aceptar / Ignorar / Rechazar | ✅ **Compila + tests** | ACEPTAR en una súplica **se une gratis** (`AcceptMercy`, sin precio ni rechazo por honor, T2). IGNORAR sigue condicional |
 | R3.8 | Pagar para que lo dejes ir | ✅ **Compila** | Ya estaba: `PayTribute` al ignorarlo, solo para quien puede comprar su vida |
 
 ### BALANCED — rescate (§4)
@@ -115,14 +120,45 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
-| R6.1 | Todo lo nuevo configurable | ✅ **Compila** | **~75 controles.** No quedan números hardcodeados en las rutas |
+| R6.1 | Todo lo nuevo configurable | ✅ **Compila + tests** | **~106 controles** (T8 sumó 19). Quedan literales: tramos de reputación 75/25/5/-5 y el 3.0 de barriga llena |
 | R6.2 | Preferir el hub | ✅ **Jugado** | 43+ controles |
 | R6.3 | Agrupar el panel | 🔬 **Instrumentada** | El hub da 160 bytes contra los 72 que declaramos. El log ahora vuelca los slots; llamar a ciegas crashea |
-| R6.4 | Documentar lo que no va al panel | ⚠️ **Mal escrito** | I6 lo desmiente: `register_text_setting` existe, sí puede ir al panel |
+| R6.4 | Documentar lo que no va al panel | ✅ **Corregido** | REQUISITOS.md ya lo dice según I6: el hub sí acepta texto libre (`register_text_setting`) |
 
 ---
 
-## 3. Bugs encontrados y arreglados en esta ronda
+### 2.1 Ronda `rebalance-and-ui` (T1-T9)
+
+Todo en **Compila + tests**. Nada de esto se jugó: cada fila apunta a su caso en QA.md §12.
+
+| Cambio | Tarea | Estado | Detalle | QA |
+|---|---|---|---|---|
+| Arnés de pruebas `tests/rules_tests` | T1 | ✅ **Compila + tests** | Exe de consola sin motor; 19 suites, 36664 checks verdes. Módulos puros compartidos con el DLL | S1 |
+| Orden de rutas | T2 | ✅ **Compila + tests** | El rencor imbatible va antes que ceder en el campo; en jaula las derrotas alimentan la chance y los fallbacks siguen vivos | 12.1 F1-F6 |
+| ACEPTAR una súplica = unirse gratis | T2 | ✅ **Compila + tests** | `AcceptMercy`; clave nueva `mercy.joinedNotice` | 12.1 F7-F8 |
+| Piso de derrotas persistido | T2 | ✅ **Compila + tests** | `PersistedDefeatFloor` nunca baja de `defeatsToBreak` | 12.1 F6 |
+| Súplica limpiada en cada cierre | T3 | ✅ **Compila + tests** | `PleaTracker` por `CharKey`, ya no un `Character*` crudo; `Close()` olvida la súplica | 12.2 M1-M4 |
+| Modo fácil 12h → 6h, plano | T4 | ✅ **Compila + tests** | `easyHoursCaged` 6; se quitaron `hoursCagedForProud` y `uniqueExtraHours` | 12.3 E1-E8 |
+| Reloj de encierro | T4 | ✅ **Compila + tests** | `HoldClock`: arranca al enjaular, se suelta al salir, reinicia si el reloj de juego retrocede | 12.3 |
+| Curva de precio recalibrada | T5 | ✅ **Compila + tests** | `catsPerLevel 90, catsCeiling 28000, steepness 0.09, midpoint 31`; mínimo al final, redondeo a 10, `catsHardCap` 150000, `talentMaxMultiplier` 1.5 | 12.4 P1-P9 |
+| Cobro todo-o-nada, reembolso, transferencias | T5 | ✅ **Compila + tests** | `money_rules` + `cats_purse`; regalo y tributo con una sola convención | 12.4 |
+| Escritor de config que mezcla | T6 | ✅ **Compila + tests** | `SaveConfig` actualiza en su lugar y conserva ediciones a mano; escritura atómica | 12.5 C1-C8 |
+| Id estable de personaje en el save | T7 | ✅ **Compila + tests** | `total_recruit.character_id`; `CharKey` = id o handle; reinicio de sesión al empezar una carga. **La parte del motor (hooks) no está probada** | 12.6 I1-I10 |
+| `Evaluate` dividido por ruta | T8 | ✅ **Compila + tests** | `route_*.cpp`, `character_facts`, `reason_catalog`; `rules.cpp` 2221 → 189 líneas | 12.7 |
+| Motivos por clave, textos en `messages.json` | T8 | ✅ **Compila + tests** | Bloque `reason` nuevo (29 claves); el tono del rechazo sale de la clave | 12.7 Z1-Z4 |
+| 19 números sueltos a config + hub | T8 | ✅ **Compila + tests** | Defaults = los literales viejos | 12.7 C1-C4 |
+| Anillo de includes `defeats`/`mercy`/`recruit_core` roto | T8 | ✅ **Compila** | `SetNearDeathListener` | 12.7 R2 |
+| Golpiza `GOLPEARLO` acreditada al jugador | T8 | ✅ **Compila + tests** | `CreditDefeatToPlayer` | 12.7 A1-A3 |
+| Tarjeta de estrés y chance | T9 | ✅ **Compila + tests** | Vista pura probada; la UI MyGUI, la puntería del hover y que el texto quepa **no** están probados | 12.8 U1-U21 |
+| `EvaluatePeek` | T9 | ✅ **Compila + tests** | La misma decisión sin efectos (sin reloj, sin id, sin tirada) | 12.8 U17 |
+
+**Nota sobre git.** `origin/main` es un commit squash ajeno (`6257bd6`) con el mismo
+árbol que `4a23201`, así que un `git push` normal de esta rama será rechazado.
+Entregarla (rebase, force, PR) es decisión del usuario; no se empujó nada.
+
+---
+
+## 3. Bugs encontrados y arreglados en la ronda anterior
 
 | Bug | Cómo se veía | Causa real |
 |---|---|---|
@@ -221,16 +257,21 @@ Para I4 concretamente: pegale a un NPC hasta dejarlo inconsciente, mirá las dos
 líneas `[I4 ...]`, y después observalo un rato. Si su facción no cambia de trato
 y no huye distinto, el tag es seguro y **R3.3 queda confirmado**.
 
-### El orden de REQUISITOS §8
+### Siguiente paso: QA en partida
 
-*Todo lo de esta lista está implementado.* Lo que queda:
+El orden de prioridad esta en **QA.md §12** (arriba de todo):
 
-1. **Jugarlo.** Nada de lo nuevo pasó de **compila** a **jugado** todavía.
-2. **I4** — dos clicks y un rato de observación, con el log ya puesto.
-3. **R6.3** — confirmar el layout del hub con el volcado de slots, y recién ahí
-   llamar a `register_setting_section`.
+1. Humo **S1-S4**: carga, hub, probe, texto faltante.
+2. **12.6 I4/I5**: el id estable sobrevive una recarga y un relanzamiento. Es lo que mas
+   riesgo tiene (hooks de `Character` sin verificar contra el exe).
+3. **12.8 U1/U2/U6/U13/U17**: la tarjeta (puntería, números iguales al clic, sin efectos).
+4. **12.4 P1-P9**: el dinero.
+5. El resto de §12 (F, M, E, C, A/Z/N).
 
-### Lo grande de esta ronda: la sumisión sin jaula
+Pendientes abiertos fuera de QA: **I4** (la marca de derrota ¿altera la IA?), **R6.3**
+(secciones del hub), ejercitar el puente de diálogo FCS. Ver TODO.md.
+
+### Lo grande de la ronda anterior: la sumisión sin jaula
 
 El log lo destapó sin ambigüedad: **19 personajes, todos con
 `inSomething=IN_NOTHING`, y cero líneas de `[chance]`**. El jugador venció al
@@ -267,7 +308,7 @@ Así que se **deriva**, no se almacena. Le das de comer y baja. Lo curás y baja
 Lo dejás y sube sola. Mantener a alguien con hambre pasa a ser una decisión que
 hay que sostener, no una casilla que queda marcada.
 
-### Riesgos conocidos de esta ronda
+### Riesgos conocidos de la ronda anterior
 
 - **El botón extra es uno solo.** Si el prisionero tiene hambre y además se le
   puede pegar, gana la comida. Es una limitación de la ventana, no un olvido.
@@ -284,7 +325,8 @@ hay que sostener, no una casilla que queda marcada.
 | Documento | Problema |
 |---|---|
 | `COMPARATIVA.md` | §3.1 y §3.2 ya resueltos, sigue diciendo que faltan |
-| `REQUISITOS.md` R6.4 | I6 lo desmiente: el hub sí acepta texto libre |
+| `SPEC-ESTADO.md`, `COMPARATIVA.md` | Marcados como históricos (banner arriba); la verdad vigente es este documento |
+| `REQUISITOS.md` R6.4 | ✅ Corregido (I6) |
 | `REQUISITOS.md` §7 | Cinco de seis investigaciones cerradas |
 | `PLAN.md` §8 | No incluye lo de esta ronda |
 | `KENSHI-MODDING-NOTES.md` §11 | ✅ Corregido: se agregó `eatItem` no alimenta animales, y que los `.ini` de mods sin fuentes pueden ser documentación |
