@@ -35,30 +35,24 @@ int ChanceFromLevelGap(int npcLevel, int playerLevel, const Chance& c)
     return c.levelBase + (bonus > c.levelEdgeCap ? c.levelEdgeCap : bonus);
 }
 
-int ChanceFromRelation(float relation, bool haveRelation)
+int ChanceFromRelation(float relation, bool haveRelation, const Chance& chance)
 {
     if (!haveRelation)
     {
         return 0;
     }
-    // A quarter of the relation: +100 adds 25 points, -100 removes 25.
-    return (int)(relation * 0.25f);
+    // chance.relationWeight of the relation: +100 adds 25 points at the default
+    // quarter, -100 removes 25.
+    return (int)(relation * chance.relationWeight);
 }
 
-int ChanceFromPersonality(Temperament personality)
+int ChanceFromPersonality(Temperament personality, const Chance& chance)
 {
-    switch (personality)
+    if ((int)personality < 0 || (int)personality >= (int)Temperament_Count)
     {
-    case Temperament_Fearful:    return  20;   // wants out of wherever this is
-    case Temperament_Traitorous: return  15;   // loyalty was never the point
-    case Temperament_Dumb:       return  10;
-    case Temperament_Normal:     return   0;
-    case Temperament_Smart:      return  -5;   // sees the offer for what it is
-    case Temperament_Brave:      return -15;
-    case Temperament_Honorable:  return -20;   // convinced by conduct, not odds
-    case Temperament_Maniacal:   return -25;   // convinced by nothing
-    default:                     return   0;
+        return 0;
     }
+    return chance.personality[personality];
 }
 
 float ResolveMultiplier(Temperament personality, const Submission& sub)
@@ -145,8 +139,8 @@ float StressFromState(float rawHunger, float worstDamage, float restedState,
 int JoinChance(const ChanceInputs& in, const Chance& c, const Submission& sub)
 {
     int chance = ChanceFromLevelGap(in.npcLevel, in.playerLevel, c)
-               + ChanceFromRelation(in.relation, in.haveRelation)
-               + ChanceFromPersonality(in.personality)
+               + ChanceFromRelation(in.relation, in.haveRelation, c)
+               + ChanceFromPersonality(in.personality, c)
                + ChanceFromDefeats(in.defeats, in.personality, sub)
                + ChanceFromStress(in.stress, in.personality, sub)
                + in.situation

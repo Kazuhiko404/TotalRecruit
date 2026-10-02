@@ -52,6 +52,7 @@ const Suite kSuites[] = {
     { "atomic_file", RunAtomicFileTests },
     { "char_key", RunCharKeyTests },
     { "identity_registry", RunIdentityRegistryTests },
+    { "animal_rules", RunAnimalRulesTests },
 };
 } // namespace
 

@@ -27,6 +27,19 @@ float PersonalityPriceMultiplier(Temperament personality, const Prices& prices);
 // skill is. Never below 1.0, never above prices.talentMaxMultiplier.
 float TalentMultiplier(float edge, float familyWeight, const Prices& prices);
 
+// The families of skill a talent can belong to (rules.cpp reads the stats and
+// says which one the character's best stat falls in).
+enum TalentFamily
+{
+    TalentFamily_Combat,
+    TalentFamily_Shadow,
+    TalentFamily_Craft
+};
+
+// How rare that kind of skill is: the weight TalentMultiplier scales the edge by.
+// Combat is the baseline; the other two come from prices.
+float TalentFamilyWeight(TalentFamily family, const Prices& prices);
+
 // Faction standing as a price multiplier. `relation` runs roughly -100..100:
 // liked sellers charge less, hated ones more. Clamped to 0.25..3.0.
 float FactionPriceMultiplier(float relation, const Prices& prices);

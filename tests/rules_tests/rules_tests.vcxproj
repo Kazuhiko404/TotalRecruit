@@ -53,6 +53,7 @@
     <ClCompile Include="atomic_file_tests.cpp" />
     <ClCompile Include="char_key_tests.cpp" />
     <ClCompile Include="identity_registry_tests.cpp" />
+    <ClCompile Include="animal_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -63,6 +64,7 @@
     <ClCompile Include="..\..\src\money_rules.cpp" />
     <ClCompile Include="..\..\src\json_merge.cpp" />
     <ClCompile Include="..\..\src\atomic_file.cpp" />
+    <ClCompile Include="..\..\src\animal_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

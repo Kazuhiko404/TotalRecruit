@@ -216,6 +216,40 @@ void MultipliersStackInOrderWithOneRounding()
     // 32158.79 * 1.25 * 2.0 * 1.6 * 0.8 = 102908
     CHECK(Near((float)FinalPriceInCats(in, kPrices), 102910.0f, 20.0f));
 }
+
+// --- T8: the family weights moved out of rules.cpp into the config.
+
+void FamilyWeightsKeepTheirShippedValues()
+{
+    const char* name = "talent family: combat 1.0, shadow 1.3, craft 1.6 by default";
+    CHECK(TalentFamilyWeight(TalentFamily_Combat, kPrices) == 1.0f);
+    CHECK(Near(TalentFamilyWeight(TalentFamily_Shadow, kPrices), 1.3f, 0.0001f));
+    CHECK(Near(TalentFamilyWeight(TalentFamily_Craft, kPrices), 1.6f, 0.0001f));
+}
+
+void FamilyWeightsAreConfigurable()
+{
+    const char* name = "talent family: shadow and craft follow the config, combat stays 1.0";
+    Prices prices;
+    prices.craftFamilyWeight = 2.5f;
+    prices.shadowFamilyWeight = 0.5f;
+    CHECK(Near(TalentFamilyWeight(TalentFamily_Craft, prices), 2.5f, 0.0001f));
+    CHECK(Near(TalentFamilyWeight(TalentFamily_Shadow, prices), 0.5f, 0.0001f));
+    CHECK(TalentFamilyWeight(TalentFamily_Combat, prices) == 1.0f);
+}
+
+void FamilyWeightChangesTheQuote()
+{
+    const char* name = "talent family: a heavier craft weight makes the same craftsman dearer";
+    Prices heavy;
+    heavy.craftFamilyWeight = 3.0f;
+    heavy.talentMaxMultiplier = 5.0f;
+    Prices light = heavy;
+    light.craftFamilyWeight = 1.0f;
+    const float edge = 1.5f;
+    CHECK(TalentMultiplier(edge, TalentFamilyWeight(TalentFamily_Craft, heavy), heavy) >
+          TalentMultiplier(edge, TalentFamilyWeight(TalentFamily_Craft, light), light));
+}
 } // namespace
 
 void RunPriceRulesTests()
@@ -234,4 +268,7 @@ void RunPriceRulesTests()
     TalentMultiplierIsBounded();
     FactionMultiplierIsBounded();
     MultipliersStackInOrderWithOneRounding();
+    FamilyWeightsKeepTheirShippedValues();
+    FamilyWeightsAreConfigurable();
+    FamilyWeightChangesTheQuote();
 }

@@ -51,6 +51,15 @@ float PersonalityPriceMultiplier(Temperament personality, const Prices& prices)
     }
 }
 
+// A craftsman is worth more than a swordsman of the same level: Kenshi hands you
+// fighters constantly and engineers almost never. Combat is the baseline.
+float TalentFamilyWeight(TalentFamily family, const Prices& prices)
+{
+    if (family == TalentFamily_Craft)  return prices.craftFamilyWeight;
+    if (family == TalentFamily_Shadow) return prices.shadowFamilyWeight;
+    return 1.0f;
+}
+
 float TalentMultiplier(float edge, float familyWeight, const Prices& prices)
 {
     if (prices.talentWeight <= 0.0f || edge <= 1.0f)

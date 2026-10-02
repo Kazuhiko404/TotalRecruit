@@ -50,11 +50,13 @@ struct ChanceInputs
 // player it pays, and the bonus is capped.
 int ChanceFromLevelGap(int npcLevel, int playerLevel, const Chance& chance);
 
-// Faction standing as a percentage shift: a quarter of the relation.
-int ChanceFromRelation(float relation, bool haveRelation);
+// Faction standing as a percentage shift: chance.relationWeight of the relation
+// (a quarter by default).
+int ChanceFromRelation(float relation, bool haveRelation, const Chance& chance);
 
-// Temperament: not who is easiest to bully, who is easiest to convince.
-int ChanceFromPersonality(Temperament personality);
+// Temperament: not who is easiest to bully, who is easiest to convince. The
+// offsets are chance.personality[] (Chance's constructor holds the defaults).
+int ChanceFromPersonality(Temperament personality, const Chance& chance);
 
 // R3.5 -- how much a temperament divides what a beating is worth.
 float ResolveMultiplier(Temperament personality, const Submission& sub);

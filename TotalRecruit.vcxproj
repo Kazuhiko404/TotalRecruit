@@ -97,6 +97,7 @@
     <ClCompile Include="src\char_key_reader.cpp" />
     <ClCompile Include="src\load_boundary.cpp" />
     <ClCompile Include="src\engine_reads.cpp" />
+    <ClCompile Include="src\animal_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h" />
@@ -139,6 +140,7 @@
     <ClInclude Include="src\char_key_reader.h" />
     <ClInclude Include="src\load_boundary.h" />
     <ClInclude Include="src\engine_reads.h" />
+    <ClInclude Include="src\animal_rules.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

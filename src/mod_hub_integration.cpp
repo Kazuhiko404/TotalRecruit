@@ -272,6 +272,29 @@ static bool DoRegisterModHub()
     regBool(api, mod, "animal_personality_matters", "Animal: cuenta la personalidad", "Un animal desconfiado pide mas comida que uno timido", &c.animals.personalityMatters);
     regBool(api, mod, "animal_owned_need_cage", "Animal: domesticos solo por jaula", "Un animal con dueno no se convence con comida: hay que enjaularlo", &c.animals.ownedNeedCage);
     regFloat(api, mod, "animal_big_edge_discount", "Animal: descuento +20", "Descuento si le sacas 20 niveles o mas", 0.0f, 1.0f, 0.05f, 2, &c.animals.bigEdgeDiscount);
+    regInt(api, mod, "animal_edge_level", "Animal: niveles para el descuento", "Cuantos niveles le tenes que sacar para el descuento chico", 1, 100, 1, &c.animals.edgeLevel);
+    regInt(api, mod, "animal_big_edge_level", "Animal: niveles para el descuento grande", "Cuantos niveles le tenes que sacar para el descuento grande", 1, 100, 1, &c.animals.bigEdgeLevel);
+    regFloat(api, mod, "animal_temperament_base", "Animal: base del temperamento", "Con temperamento normal la barra se multiplica por base + peso (1.0 = no cambia)", 0.0f, 2.0f, 0.05f, 2, &c.animals.temperamentBase);
+    regFloat(api, mod, "animal_temperament_weight", "Animal: peso del temperamento", "Cuanto mueve la barra el aguante de su temperamento (0 = no cuenta)", 0.0f, 2.0f, 0.05f, 2, &c.animals.temperamentWeight);
+
+    // Chance engine: the terms that used to be literals in the rules.
+    regFloat(api, mod, "chance_relation_weight", "Chance: peso de la reputacion", "Que fraccion de la reputacion (-100..100) se suma a la chance", 0.0f, 1.0f, 0.05f, 2, &c.chance.relationWeight);
+    regInt(api, mod, "chance_allied_bonus", "Chance: bono de aliado", "Lo que suma ser amigo (reputacion sobre el umbral amistoso)", 0, 60, 5, &c.chance.alliedBonus);
+    regInt(api, mod, "chance_pers_fearful", "Personalidad: miedoso", "Puntos de chance que suma o resta ser miedoso", -50, 50, 1, &c.chance.personality[Temperament_Fearful]);
+    regInt(api, mod, "chance_pers_traitorous", "Personalidad: traidor", "Puntos de chance que suma o resta ser traidor", -50, 50, 1, &c.chance.personality[Temperament_Traitorous]);
+    regInt(api, mod, "chance_pers_dumb", "Personalidad: simple", "Puntos de chance que suma o resta ser simple", -50, 50, 1, &c.chance.personality[Temperament_Dumb]);
+    regInt(api, mod, "chance_pers_smart", "Personalidad: astuto", "Puntos de chance que suma o resta ser astuto", -50, 50, 1, &c.chance.personality[Temperament_Smart]);
+    regInt(api, mod, "chance_pers_brave", "Personalidad: valiente", "Puntos de chance que suma o resta ser valiente", -50, 50, 1, &c.chance.personality[Temperament_Brave]);
+    regInt(api, mod, "chance_pers_honorable", "Personalidad: honorable", "Puntos de chance que suma o resta ser honorable", -50, 50, 1, &c.chance.personality[Temperament_Honorable]);
+    regInt(api, mod, "chance_pers_maniacal", "Personalidad: maniaco", "Puntos de chance que suma o resta ser maniaco", -50, 50, 1, &c.chance.personality[Temperament_Maniacal]);
+    regInt(api, mod, "chance_pers_coldcruel", "Personalidad: frio y cruel", "Puntos de chance que suma o resta ser frio y cruel", -50, 50, 1, &c.chance.personality[Temperament_ColdCruel]);
+    regInt(api, mod, "chance_pers_warmkind", "Personalidad: calido y bondadoso", "Puntos de chance que suma o resta ser calido y bondadoso", -50, 50, 1, &c.chance.personality[Temperament_WarmKind]);
+
+    // Reputation gates and the talent families of the price.
+    regFloat(api, mod, "relation_refuse_good_natured", "Reputacion: honorables se niegan", "Por debajo de esta reputacion un honorable o bondadoso no trata contigo", -100.0f, 100.0f, 5.0f, 0, &c.relationRefuseGoodNatured);
+    regFloat(api, mod, "relation_refuse_all", "Reputacion: nadie trata", "Por debajo de esta reputacion ni siquiera el dinero los convence", -100.0f, 100.0f, 5.0f, 0, &c.relationRefuseAll);
+    regFloat(api, mod, "talent_craft_weight", "Talento: peso de oficio", "Cuanto pesa el talento en oficios (ingenieria, herreria, medicina...)", 0.0f, 5.0f, 0.1f, 1, &c.prices.craftFamilyWeight);
+    regFloat(api, mod, "talent_shadow_weight", "Talento: peso de sombra", "Cuanto pesa el talento en sigilo, robo y asesinato", 0.0f, 5.0f, 0.1f, 1, &c.prices.shadowFamilyWeight);
 
     return true;
 }

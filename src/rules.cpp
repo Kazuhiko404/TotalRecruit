@@ -11,6 +11,7 @@
 #include "money_rules.h"
 #include "route_rules.h"
 #include "hold_clock.h"
+#include "animal_rules.h"
 #include "engine_reads.h"
 
 #include <kenshi/CharacterAnimal.h>
@@ -283,39 +284,13 @@ bool SafeRoughLevel(Character* character, int* out)
 // How full an animal has to be before it will follow the player, as a 0..1
 // fraction of its stomach. Replaces counting meals: the engine already tracks
 // fullness, and a bar the player can watch fill is honest in a way that a
-// hidden tally is not.
-//
-// Same shape the meal count had, because that shape was calibrated and works:
-// a cub or a weakling bonds on very little, a grown beast wants far more, and
-// looking stronger than it discounts the bill.
-float TamingFullnessNeeded(Character* character, int npcLevel, int playerLevel)
+// hidden tally is not. The arithmetic is animal_rules.cpp; this only reads how
+// grown the animal is (a pup and an old bull are not the same negotiation).
+float ReadTamingBar(Character* character, int npcLevel, int playerLevel)
 {
-    const Config& config = GetConfig();
-
     float maturity = 1.0f;
     SafeAnimalMaturity(character, &maturity);
-
-    // A cub or a weakling: a mouthful and it follows you home.
-    if (maturity < config.animals.cubMaturity || npcLevel <= config.animals.weakLevel)
-    {
-        return config.animals.cubFullness;
-    }
-
-    float needed = config.animals.baseFullness +
-                   maturity * config.animals.maturityWeight;
-
-    if (npcLevel > config.animals.strongLevel)
-    {
-        needed += config.animals.strongPenalty;
-    }
-
-    const int edge = playerLevel - npcLevel;
-    if (edge >= 20)      needed -= config.animals.bigEdgeDiscount;
-    else if (edge >= 10) needed -= config.animals.edgeDiscount;
-
-    if (needed < config.animals.cubFullness) needed = config.animals.cubFullness;
-    if (needed > 1.0f) needed = 1.0f;
-    return needed;
+    return TamingFullnessNeeded(maturity, npcLevel, playerLevel, GetConfig().animals);
 }
 
 bool SafeFactionRelation(Character* character, Faction* playerFaction, float* out)
@@ -427,8 +402,8 @@ void LogChanceBreakdown(Character* character, const ChanceInputs& in, int total)
                 "[chance] level=%d relation=%d personality=%d defeats=%d(x%d) "
                 "situation=%d stress=%d(%.0f%%) grudge=-%d unique=-%d -> %d%%  (npc %d vs player %d, rel %.0f)",
                 ChanceFromLevelGap(in.npcLevel, in.playerLevel, cc),
-                ChanceFromRelation(in.relation, in.haveRelation),
-                ChanceFromPersonality(in.personality),
+                ChanceFromRelation(in.relation, in.haveRelation, cc),
+                ChanceFromPersonality(in.personality, cc),
                 ChanceFromDefeats(in.defeats, in.personality, cs), in.defeats,
                 in.situation, ChanceFromStress(in.stress, in.personality, cs),
                 in.stress * 100.0f,
@@ -543,10 +518,10 @@ struct Talent
     // Best stat found, and how far above the character's own level it sits.
     // 1.0 means "as good as their level suggests"; 2.0 means twice that.
     float edge;
-    // Which family that best stat belongs to, for the line the player reads.
-    const char* kind;
+    // Which family that best stat belongs to: how rare that kind of skill is.
+    TalentFamily family;
 
-    Talent() : edge(1.0f), kind("") {}
+    Talent() : edge(1.0f), family(TalentFamily_Combat) {}
 };
 
 bool SafeReadTalent(Character* character, int level, Talent* out)
@@ -575,26 +550,26 @@ bool SafeReadTalent(Character* character, int level, Talent* out)
         };
 
         float best = 0.0f;
-        const char* kind = "";
+        TalentFamily family = TalentFamily_Combat;
 
         for (int i = 0; i < 5; ++i)
         {
             const float v = stats->getStat(combat[i], false);
-            if (v > best) { best = v; kind = "combate"; }
+            if (v > best) { best = v; family = TalentFamily_Combat; }
         }
         for (int i = 0; i < 4; ++i)
         {
             const float v = stats->getStat(shadow[i], false);
-            if (v > best) { best = v; kind = "sombra"; }
+            if (v > best) { best = v; family = TalentFamily_Shadow; }
         }
         for (int i = 0; i < 8; ++i)
         {
             const float v = stats->getStat(craft[i], false);
-            if (v > best) { best = v; kind = "oficio"; }
+            if (v > best) { best = v; family = TalentFamily_Craft; }
         }
 
         out->edge = best / (float)level;
-        out->kind = kind;
+        out->family = family;
         return true;
     }
     TR_CATCH { return false; }
@@ -630,9 +605,7 @@ int PriceInCats(Character* character, const Traits& traits, Faction* playerFacti
         {
             // A craftsman is worth more than a swordsman of the same level:
             // Kenshi hands you fighters constantly and engineers almost never.
-            float familyWeight = 1.0f;
-            if (strcmp(talent.kind, "oficio") == 0)      familyWeight = 1.6f;
-            else if (strcmp(talent.kind, "sombra") == 0) familyWeight = 1.3f;
+            const float familyWeight = TalentFamilyWeight(talent.family, cfg.prices);
 
             inputs.talentMultiplier = TalentMultiplier(talent.edge, familyWeight, cfg.prices);
         }
@@ -716,7 +689,7 @@ Verdict EvaluateAnimal(Character* character, const Traits& traits,
     }
 
     const float fullness = HungerToFullness01(condition.hunger);
-    float needed = TamingFullnessNeeded(character, npcLevel, playerLevel);
+    float needed = ReadTamingBar(character, npcLevel, playerLevel);
 
     // R5.4 -- animals have a temperament, and it varies: two bonedogs of the
     // same breed measured PT_HONORABLE and PT_TRAITOROUS. So it counts here as
@@ -726,11 +699,7 @@ Verdict EvaluateAnimal(Character* character, const Traits& traits,
     if (GetConfig().animals.personalityMatters)
     {
         const float resolve = ResolveMultiplier(traits.temperament, GetConfig().submission);
-        // Around 1.0 nothing moves. A timid animal settles for less, a
-        // stubborn one asks for more, and the bar is still capped at a full
-        // stomach so no temperament makes taming impossible.
-        needed *= (0.85f + resolve * 0.15f);
-        if (needed > 1.0f) needed = 1.0f;
+        needed = ApplyAnimalTemperament(needed, resolve, GetConfig().animals);
     }
 
     verdict.wantsFood = (fullness < needed);
@@ -752,7 +721,7 @@ Verdict EvaluateAnimal(Character* character, const Traits& traits,
     }
 
     // The gap is what the player acts on, so it is the number the line carries.
-    const int missing = (int)((needed - fullness) * 100.0f + 0.5f);
+    const int missing = MissingStomachPercent(needed, fullness);
     verdict.cats = missing;   // percent, not money: the window reads it as the price
     verdict.reason = Fill(Say("animal.tame.hungry",
                               "todav\xc3\xad" "a tiene hambre: le falta {cats}% de barriga",
@@ -1651,7 +1620,7 @@ Verdict Evaluate(Character* character)
             in.haveRelation = haveRelation;
             in.personality  = traits.temperament;
             // Standing this good is itself an argument.
-            in.situation    = 10;
+            in.situation    = config.chance.alliedBonus;
             const int chance = JoinChance(in, config.chance, config.submission);
             LogChanceBreakdown(character, in, chance);
             if (StableChance(character, chance))
@@ -1672,9 +1641,9 @@ Verdict Evaluate(Character* character)
             return verdict;
         }
 
-        // Below -15 an honourable or kind NPC has nothing to discuss. Their
+        // Below relationRefuseGoodNatured (-15) an honourable or kind NPC has nothing to discuss. Their
         // objection is who you are, and no amount of money answers that.
-        if (haveRelation && relation < -15.0f && goodNatured)
+        if (haveRelation && relation < config.relationRefuseGoodNatured && goodNatured)
         {
             verdict.currency = Currency_Refused;
             verdict.reason = Say("faction." + band + ".reasonHonourable",
@@ -1683,9 +1652,9 @@ Verdict Evaluate(Character* character)
             return verdict;
         }
 
-        // Below -30 even the greedy stop listening. Money works because the
+        // Below relationRefuseAll (-30) even the greedy stop listening. Money works because the
         // seller expects to live to spend it; past open war that stops holding.
-        if (haveRelation && relation < -30.0f)
+        if (haveRelation && relation < config.relationRefuseAll)
         {
             verdict.currency = Currency_Refused;
             verdict.reason = Say("faction.enemigo.reasonGreedy",

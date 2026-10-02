@@ -47,9 +47,9 @@ void LevelGapWeakerNpcPaysUpToCap()
 void RelationIsAQuarterOrNothing()
 {
     const char* name = "relation: a quarter of the value, zero when unknown";
-    CHECK(ChanceFromRelation(100.0f, true) == 25);
-    CHECK(ChanceFromRelation(-100.0f, true) == -25);
-    CHECK(ChanceFromRelation(40.0f, false) == 0);
+    CHECK(ChanceFromRelation(100.0f, true, kChance) == 25);
+    CHECK(ChanceFromRelation(-100.0f, true, kChance) == -25);
+    CHECK(ChanceFromRelation(40.0f, false, kChance) == 0);
 }
 
 // -------------------------------------------------------------- personality
@@ -57,16 +57,16 @@ void RelationIsAQuarterOrNothing()
 void PersonalityTable()
 {
     const char* name = "personality: the shipped offsets";
-    CHECK(ChanceFromPersonality(Temperament_Fearful) == 20);
-    CHECK(ChanceFromPersonality(Temperament_Traitorous) == 15);
-    CHECK(ChanceFromPersonality(Temperament_Dumb) == 10);
-    CHECK(ChanceFromPersonality(Temperament_Normal) == 0);
-    CHECK(ChanceFromPersonality(Temperament_WarmKind) == 0);
-    CHECK(ChanceFromPersonality(Temperament_ColdCruel) == 0);
-    CHECK(ChanceFromPersonality(Temperament_Smart) == -5);
-    CHECK(ChanceFromPersonality(Temperament_Brave) == -15);
-    CHECK(ChanceFromPersonality(Temperament_Honorable) == -20);
-    CHECK(ChanceFromPersonality(Temperament_Maniacal) == -25);
+    CHECK(ChanceFromPersonality(Temperament_Fearful, kChance) == 20);
+    CHECK(ChanceFromPersonality(Temperament_Traitorous, kChance) == 15);
+    CHECK(ChanceFromPersonality(Temperament_Dumb, kChance) == 10);
+    CHECK(ChanceFromPersonality(Temperament_Normal, kChance) == 0);
+    CHECK(ChanceFromPersonality(Temperament_WarmKind, kChance) == 0);
+    CHECK(ChanceFromPersonality(Temperament_ColdCruel, kChance) == 0);
+    CHECK(ChanceFromPersonality(Temperament_Smart, kChance) == -5);
+    CHECK(ChanceFromPersonality(Temperament_Brave, kChance) == -15);
+    CHECK(ChanceFromPersonality(Temperament_Honorable, kChance) == -20);
+    CHECK(ChanceFromPersonality(Temperament_Maniacal, kChance) == -25);
 }
 
 // ------------------------------------------------------------------ defeats
@@ -338,6 +338,74 @@ void HandleKeyRollsAsBefore()
         CHECK(StableRoll(CharKey(i, 11u), 60) == StableRoll(i, 11u, 60));
     }
 }
+
+// --- T8: the relation weight and the personality table moved into the config.
+
+void RelationWeightIsConfigurable()
+{
+    const char* name = "relation: the weight comes from the config";
+    Chance chance;
+    chance.relationWeight = 0.5f;
+    CHECK(ChanceFromRelation(100.0f, true, chance) == 50);
+    CHECK(ChanceFromRelation(-40.0f, true, chance) == -20);
+    chance.relationWeight = 0.0f;
+    CHECK(ChanceFromRelation(100.0f, true, chance) == 0);
+    CHECK(ChanceFromRelation(100.0f, false, chance) == 0);
+}
+
+void PersonalityTableIsConfigurable()
+{
+    const char* name = "personality: every offset comes from the config table";
+    Chance chance;
+    chance.personality[Temperament_Fearful]    = 1;
+    chance.personality[Temperament_Traitorous] = 2;
+    chance.personality[Temperament_Dumb]       = 3;
+    chance.personality[Temperament_Normal]     = 4;
+    chance.personality[Temperament_Smart]      = 5;
+    chance.personality[Temperament_Brave]      = 6;
+    chance.personality[Temperament_Honorable]  = 7;
+    chance.personality[Temperament_Maniacal]   = 8;
+    chance.personality[Temperament_ColdCruel]  = 9;
+    chance.personality[Temperament_WarmKind]   = 10;
+    CHECK(ChanceFromPersonality(Temperament_Fearful, chance) == 1);
+    CHECK(ChanceFromPersonality(Temperament_Traitorous, chance) == 2);
+    CHECK(ChanceFromPersonality(Temperament_Dumb, chance) == 3);
+    CHECK(ChanceFromPersonality(Temperament_Normal, chance) == 4);
+    CHECK(ChanceFromPersonality(Temperament_Smart, chance) == 5);
+    CHECK(ChanceFromPersonality(Temperament_Brave, chance) == 6);
+    CHECK(ChanceFromPersonality(Temperament_Honorable, chance) == 7);
+    CHECK(ChanceFromPersonality(Temperament_Maniacal, chance) == 8);
+    CHECK(ChanceFromPersonality(Temperament_ColdCruel, chance) == 9);
+    CHECK(ChanceFromPersonality(Temperament_WarmKind, chance) == 10);
+}
+
+void PersonalityDefaultsAreTheShippedTable()
+{
+    const char* name = "personality: the constructor holds the shipped offsets, 0 for the rest";
+    const Chance chance;
+    CHECK(chance.personality[Temperament_Fearful] == 20);
+    CHECK(chance.personality[Temperament_Maniacal] == -25);
+    CHECK(chance.personality[Temperament_Normal] == 0);
+    CHECK(chance.personality[Temperament_ColdCruel] == 0);
+    CHECK(chance.personality[Temperament_WarmKind] == 0);
+    CHECK(chance.relationWeight == 0.25f);
+    CHECK(chance.alliedBonus == 10);
+}
+
+void JoinChanceUsesTheConfiguredTerms()
+{
+    const char* name = "join chance: a configured weight and table reach the total";
+    ChanceInputs in;
+    in.npcLevel = in.playerLevel = 20;     // +45
+    in.relation = 80.0f;
+    in.haveRelation = true;
+    in.personality = Temperament_Brave;
+    Chance chance;
+    CHECK(JoinChance(in, chance, kSub) == 45 + 20 - 15);
+    chance.relationWeight = 0.5f;          // +40 instead of +20
+    chance.personality[Temperament_Brave] = 0;
+    CHECK(JoinChance(in, chance, kSub) == 45 + 40);
+}
 } // namespace
 
 void RunChanceRulesTests()
@@ -368,4 +436,8 @@ void RunChanceRulesTests()
     IdRollApproximatesThePercent();
     IdRollSpreadsNeighbouringIds();
     HandleKeyRollsAsBefore();
+    RelationWeightIsConfigurable();
+    PersonalityTableIsConfigurable();
+    PersonalityDefaultsAreTheShippedTable();
+    JoinChanceUsesTheConfiguredTerms();
 }

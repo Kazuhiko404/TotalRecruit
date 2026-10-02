@@ -18,6 +18,8 @@ enum Temperament
     Temperament_Honorable,
     Temperament_Maniacal,
     Temperament_ColdCruel,
-    Temperament_WarmKind
+    Temperament_WarmKind,
+    // Not a temperament: the number of them, for tables indexed by one.
+    Temperament_Count
 };
 } // namespace totalrecruit

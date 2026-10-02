@@ -251,8 +251,12 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "talentWeight", &c.prices.talentWeight);
     AddFloat(f, "talentMaxMultiplier", &c.prices.talentMaxMultiplier);
     AddFloat(f, "uniqueMultiplier", &c.prices.uniqueMultiplier);
+    AddFloat(f, "talentCraftWeight", &c.prices.craftFamilyWeight);
+    AddFloat(f, "talentShadowWeight", &c.prices.shadowFamilyWeight);
 
     AddFloat(f, "friendlyRelation", &c.friendlyRelation);
+    AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
+    AddFloat(f, "relationRefuseAll", &c.relationRefuseAll);
     AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);
     AddFloat(f, "cheatHoursCaged", &c.cheatHoursCaged);
     AddInt(f, "rescueBaseBonus", &c.rescueBaseBonus);
@@ -274,6 +278,17 @@ std::vector<Field> ConfigFields(Config& c)
     AddInt(f, "chanceGrudgePenalty", &c.chance.grudgePenalty);
     AddInt(f, "chanceUniquePenalty", &c.chance.uniquePenalty);
     AddBool(f, "chanceGrudgeIsAbsolute", &c.chance.grudgeIsAbsolute);
+    AddFloat(f, "chanceRelationWeight", &c.chance.relationWeight);
+    AddInt(f, "chanceAlliedBonus", &c.chance.alliedBonus);
+    AddInt(f, "chancePersonalityFearful", &c.chance.personality[Temperament_Fearful]);
+    AddInt(f, "chancePersonalityTraitorous", &c.chance.personality[Temperament_Traitorous]);
+    AddInt(f, "chancePersonalityDumb", &c.chance.personality[Temperament_Dumb]);
+    AddInt(f, "chancePersonalitySmart", &c.chance.personality[Temperament_Smart]);
+    AddInt(f, "chancePersonalityBrave", &c.chance.personality[Temperament_Brave]);
+    AddInt(f, "chancePersonalityHonorable", &c.chance.personality[Temperament_Honorable]);
+    AddInt(f, "chancePersonalityManiacal", &c.chance.personality[Temperament_Maniacal]);
+    AddInt(f, "chancePersonalityColdCruel", &c.chance.personality[Temperament_ColdCruel]);
+    AddInt(f, "chancePersonalityWarmKind", &c.chance.personality[Temperament_WarmKind]);
 
     AddBool(f, "submissionCountDefeats", &c.submission.countDefeats);
     AddFloat(f, "submissionDefeatDebounceHours", &c.submission.defeatDebounceHours);
@@ -307,6 +322,10 @@ std::vector<Field> ConfigFields(Config& c)
     AddBool(f, "animalOwnedNeedCage", &c.animals.ownedNeedCage);
     AddFloat(f, "animalNutritionPerMeal", &c.animals.nutritionPerMeal);
     AddBool(f, "animalPersonalityMatters", &c.animals.personalityMatters);
+    AddInt(f, "animalEdgeLevel", &c.animals.edgeLevel);
+    AddInt(f, "animalBigEdgeLevel", &c.animals.bigEdgeLevel);
+    AddFloat(f, "animalTemperamentBase", &c.animals.temperamentBase);
+    AddFloat(f, "animalTemperamentWeight", &c.animals.temperamentWeight);
 
     AddString(f, "dialoguePackage", &c.dialogue.package);
     AddString(f, "dialogueRescue", &c.dialogue.rescue);
@@ -402,6 +421,24 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.prices.talentWeight, 0.0f, 10.0f);
     ClampFloat(&g_config.prices.uniqueMultiplier, 0.0f, 50.0f);
     ClampFloat(&g_config.prices.talentMaxMultiplier, 1.0f, 50.0f);
+
+    // The numbers that used to be literals in the rules. A hand-edited value that
+    // would break the arithmetic (a negative weight, a table entry that swamps the
+    // clamp) is pulled back into a range the rules were written for.
+    ClampFloat(&g_config.prices.craftFamilyWeight, 0.0f, 10.0f);
+    ClampFloat(&g_config.prices.shadowFamilyWeight, 0.0f, 10.0f);
+    ClampFloat(&g_config.chance.relationWeight, 0.0f, 2.0f);
+    ClampInt(&g_config.chance.alliedBonus, 0, 100);
+    for (int i = 0; i < Temperament_Count; ++i)
+    {
+        ClampInt(&g_config.chance.personality[i], -100, 100);
+    }
+    ClampFloat(&g_config.relationRefuseGoodNatured, -100.0f, 100.0f);
+    ClampFloat(&g_config.relationRefuseAll, -100.0f, 100.0f);
+    ClampInt(&g_config.animals.edgeLevel, 1, 500);
+    ClampInt(&g_config.animals.bigEdgeLevel, 1, 500);
+    ClampFloat(&g_config.animals.temperamentBase, 0.0f, 2.0f);
+    ClampFloat(&g_config.animals.temperamentWeight, 0.0f, 2.0f);
 
     g_modDirectory = modDirectory;
     LogInfo("Loaded config from " + path);

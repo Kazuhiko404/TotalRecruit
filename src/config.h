@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "temperament.h"
+
 namespace totalrecruit
 {
 // Exclusions are opt-in: everything defaults to false so a fresh install has no
@@ -93,6 +95,12 @@ struct Prices
     // The most the talent multiplier may add. 1.5 means a specialist costs at most
     // half again what their level alone says.
     float talentMaxMultiplier;
+    // How rare each family of skill is, as the weight the talent edge is scaled
+    // by. Combat is the baseline (1.0): Kenshi hands you fighters constantly. A
+    // craftsman is worth more than a swordsman of the same level because
+    // engineers almost never turn up, a shadow specialist somewhere in between.
+    float craftFamilyWeight;
+    float shadowFamilyWeight;
 
     Prices()
         : easyHoursCaged(6.0f),
@@ -109,7 +117,9 @@ struct Prices
           talentWeight(1.0f),
           uniqueMultiplier(2.0f),
           catsHardCap(150000),
-          talentMaxMultiplier(1.5f)
+          talentMaxMultiplier(1.5f),
+          craftFamilyWeight(1.6f),
+          shadowFamilyWeight(1.3f)
     {
     }
 };
@@ -153,6 +163,16 @@ struct Chance
     // Loyalty is what defines them; buying it off with cats would cost them the
     // only thing the mod says about who they are.
     bool grudgeIsAbsolute;
+    // How much faction standing moves the chance: this fraction of the relation
+    // (-100..100), so 0.25 makes a full ally worth +25 points and a sworn enemy -25.
+    float relationWeight;
+    // What being on the same side is worth on its own, for those at or above
+    // friendlyRelation: standing this good is itself an argument.
+    int alliedBonus;
+    // Temperament as points of chance, indexed by Temperament. Not who is easiest
+    // to bully, who is easiest to convince: the frightened want out of wherever
+    // this is, the honourable are convinced by conduct and not by odds.
+    int personality[Temperament_Count];
 
     Chance()
         : levelBase(45),
@@ -165,8 +185,21 @@ struct Chance
           intimidationBonus(15),
           uniquePenalty(25),
           grudgePenalty(20),
-          grudgeIsAbsolute(true)
+          grudgeIsAbsolute(true),
+          relationWeight(0.25f),
+          alliedBonus(10)
     {
+        for (int i = 0; i < Temperament_Count; ++i)
+        {
+            personality[i] = 0;
+        }
+        personality[Temperament_Fearful]    =  20;   // wants out of wherever this is
+        personality[Temperament_Traitorous] =  15;   // loyalty was never the point
+        personality[Temperament_Dumb]       =  10;
+        personality[Temperament_Smart]      =  -5;   // sees the offer for what it is
+        personality[Temperament_Brave]      = -15;
+        personality[Temperament_Honorable]  = -20;   // convinced by conduct, not odds
+        personality[Temperament_Maniacal]   = -25;   // convinced by nothing
     }
 };
 
@@ -307,6 +340,15 @@ struct Animals
     // confirmed to vary between individuals of the same species, so it is on by
     // default; off falls back to maturity and level alone.
     bool personalityMatters;
+    // How many levels above the animal the player has to be for edgeDiscount and
+    // for bigEdgeDiscount.
+    int edgeLevel;
+    int bigEdgeLevel;
+    // The temperament scales the bar by (temperamentBase + resolve * temperamentWeight),
+    // where resolve is 1.0 for an ordinary animal: around 1.0 nothing moves, a
+    // timid one settles for less, a stubborn one asks for more.
+    float temperamentBase;
+    float temperamentWeight;
 
     // Calibrated against measured wildlife, not guessed: a loose bonedog sits
     // at hunger 1.69 of 3.0, so it starts the negotiation around 56% full. Any
@@ -326,7 +368,11 @@ struct Animals
           bigEdgeDiscount(0.10f),
           ownedNeedCage(true),
           nutritionPerMeal(0.40f),
-          personalityMatters(true)
+          personalityMatters(true),
+          edgeLevel(10),
+          bigEdgeLevel(20),
+          temperamentBase(0.85f),
+          temperamentWeight(0.15f)
     {
     }
 };
@@ -400,6 +446,12 @@ struct Config
     // R1.4 -- faction standing at or above this counts as friendly. Was a
     // hardcoded 25; the spec asks for 20 and for the player to be able to move it.
     float friendlyRelation;
+    // Below the first of these an honourable or kind NPC has nothing to discuss
+    // with you (their objection is who you are, and no money answers that); below
+    // the second even the greedy stop listening, because money works only while
+    // the seller expects to live to spend it. Faction standing, -100..100.
+    float relationRefuseGoodNatured;
+    float relationRefuseAll;
     // R1.1 / R1.2 -- Cheat keeps the ritual (a cage and a moment) and drops
     // every condition. Turn the cage off to get the old instant behaviour.
     bool cheatNeedsCage;
@@ -437,6 +489,8 @@ struct Config
           hailRepeatHours(6.0f),
           hailRepeats(5),
           friendlyRelation(20.0f),
+          relationRefuseGoodNatured(-15.0f),
+          relationRefuseAll(-30.0f),
           cheatNeedsCage(true),
           cheatHoursCaged(0.02f),
           rescueBaseBonus(25),
