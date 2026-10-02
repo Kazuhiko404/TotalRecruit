@@ -81,7 +81,7 @@ Out of scope:
   - The faction and personality multipliers.
 
   Tests for the curve at fixed levels.
-- [ ] **T6 Config writer.** `SaveConfig` must merge (update known keys, keep unknown and hand-edited ones) instead of truncating. Model it on `TotalSparring/core/plugin_config` add-missing-never-overwrite.
+- [x] **T6 Config writer.** `SaveConfig` must merge (update known keys, keep unknown and hand-edited ones) instead of truncating. Model it on `TotalSparring/core/plugin_config` add-missing-never-overwrite.
 - [ ] **T7 Stable identity.** Port TotalSparring `fighter_identity` (a UUID in the character save, key `total_recruit.character_id`) plus a load-begin reset hook. Re-key `CharKey` maps and the `StableChance` seed onto it, with the handle as fallback.
 - [ ] **T8 Code structure:**
   - Split `Evaluate` into per-route rule functions.
@@ -176,7 +176,7 @@ Out of scope:
 - In-game QA: QA.md 12.3 (E1-E8). `S2` control count note updated (~76).
 
 ### T5 Money audit and fix - done
-- Commit: filled in by the next commit (`fix(money): ...`, see `git log`). Route: delegated (one writer for T5-T6).
+- Commit: `cad2cf8` (`fix(money): recalibrate the price curve, cap stacked multipliers and move cats safely`). Route: delegated (one writer for T5-T6).
   Trigger: 2+ non-trivial files, and reading that prepares the write.
 - RED (stubs for `TalentMultiplier`, `FactionPriceMultiplier`, `FinalPriceInCats`, `CanAfford`, `ChargePrice`,
   `RefundCharge`, `TransferCats`, `TransferAllCats`, plus the new tests): `6/8 suites passed, 64/15842 checks failed`
@@ -257,5 +257,28 @@ and uniques land in the reference 100-150k band instead of overshooting it).
 - Open question for the user: is a talent bonus of up to x2 on top of the guide tiers acceptable? The tiers are by base stats and Kenshi
   characters rarely have flat stats, so the median quote may sit 20-50% above the curve; the `[price]` lines will show it.
 
+### T6 Config writer - done
+- Commit: filled in by the next commit (`fix(config): merge into config.json ...`, see `git log`). Route: delegated (same writer).
+- RED (stubs for `MergeJsonKeys`, the `Json*` encoders and `WriteFileAtomically`, plus the new suites): `8/10 suites passed, 72/15933 checks
+  failed` (json_merge 65, atomic_file 7). GREEN: `10/10 suites passed, 0/15933 checks failed`. DLL Release|x64 builds.
+- New pure module `json_merge` (the text merge): matches keys at any depth by whole name, first occurrence wins (the same rule as the reader);
+  replaces a value in place only when it differs (`6.0` vs 6, `0.60` vs 0.6 and `[ "a" ]` vs `["a"]` are left exactly as written); appends missing
+  keys to the top-level object keeping the file's indent and line endings; understands strings with escapes, nested objects and arrays,
+  `//` and `/* */` comments, a BOM and a trailing comma; a file that does not parse returns `ok=false` instead of being guessed at.
+- New `atomic_file` (`WriteFileAtomically`): temp file in the same directory, flushed, then `MoveFileExA(REPLACE_EXISTING | WRITE_THROUGH)`; the temp is
+  deleted on failure and the target is untouched (tested against the real file system, including a locked target).
+- `config.cpp`: one table (`ConfigFields`) now drives both `LoadConfig` and `SaveConfig`, so a key cannot be read and not saved. Parity with the
+  previous reader checked mechanically: 95 keys on both sides, identical. `SaveConfig` merges into the existing file, skips the write when nothing differs,
+  and on an unparsable file copies it to `config.json.bak` and writes a fresh one (a missing file starts from a seed that keeps the nested `exclude` block).
+  Keys that `SaveConfig` used to drop on every hub edit and that are now preserved: the price curve (`catsCeiling`, `priceCurveSteepness`,
+  `priceCurveMidpoint`), `talentWeight`, `uniqueMultiplier`, `chanceIntimidationBonus`, `chanceGrudgePenalty`, `chanceUniquePenalty`,
+  `chanceGrudgeIsAbsolute`, `animalOwnedNeedCage`, `animalNutritionPerMeal`, `animalPersonalityMatters`; string values are now escaped (a quote in
+  `recruitLabel` used to corrupt the file).
+- One-off check on the shipped `TotalRecruit/config.json`: merging no updates is byte-identical; a three-key update changed only those values and
+  appended one key after the nested `exclude` block with the comma in place.
+- In-game QA: QA.md 12.5 (C1-C8).
+- Model: `TotalSparring/src/core/plugin_config.cpp` (add-missing, never-overwrite) in intent only; that file is a fixed-schema INI-style reader, so the
+  merge logic here is new rather than ported.
+
 ## Next step
-T6 (config writer).
+T7 (stable identity).

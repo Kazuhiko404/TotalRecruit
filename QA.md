@@ -366,3 +366,18 @@ Con `probeOnClick` cada cotización deja una línea `[price]` con todos los fact
 | P7 | Soltar con IGNORAR a quien suplicó piedad y llevaba cats | Tu bolsa sube N y la suya queda en 0 | `Tribute of N cats from <nombre>` |
 | P8 | Cambiar cualquier ajuste en el hub y reiniciar el juego | Los precios no cambian respecto a antes de tocar el hub (techo, pendiente, punto medio, talento y únicos se conservan) | `[price]` con los mismos factores |
 | P9 | Mirar el hub | Aparecen `Talento: tope` y `Cats: tope final`; `Cats por nivel` llega a 300 | S2: sin `Mod Hub rejected` |
+
+### 12.5 Escritor de config (T6)
+
+Cada guardado deja una línea `Saved config to ...config.json (N changed, M added)`. `SaveConfig` corre cada vez que se toca un ajuste del Mod Hub.
+
+| # | Qué hacer | Esperado | Línea del log |
+|---|---|---|---|
+| C1 | Cambiar un ajuste en el hub y abrir `config.json` | Solo cambió ese valor: mismo orden, mismas líneas en blanco y espacios, ninguna clave perdida | `(1 changed, 0 added)` |
+| C2 | Antes de tocar el hub, agregar al `config.json` una línea `// mis notas`, una clave propia `"miClave": 5` y un `/* comentario */`. Cambiar un ajuste | Los tres siguen donde estaban | `(1 changed, ...)` |
+| C3 | Borrar `catsHardCap` del `config.json` y cambiar cualquier ajuste | La clave vuelve al final del archivo con su valor actual; la coma del último miembro queda bien y el archivo carga | `(1 changed, 1 added)` |
+| C4 | Editar a mano `catsCeiling` (p. ej. 30000), cambiar otro ajuste del hub y reiniciar | `catsCeiling` conserva 30000 (antes se perdía y volvía al default) | `[price]` con la curva editada |
+| C5 | Un valor escrito como `6.0` o `0.60` que el hub no tocó | Sigue escrito igual (`6.0`, `0.60`), no se reformatea a `6` / `0.6` | — |
+| C6 | Borrar `config.json` y tocar un ajuste | Se crea un archivo completo, con el bloque `exclude` anidado | `(N changed, M added)` |
+| C7 | Romper el `config.json` a mano (borrar la última llave) y tocar un ajuste | Queda `config.json.bak` con el texto roto y un `config.json` nuevo válido | `config.json is not valid JSON; kept a copy as ...config.json.bak` |
+| C8 | Tras varios guardados mirar la carpeta del mod | No hay `config.json.tmp` | — |

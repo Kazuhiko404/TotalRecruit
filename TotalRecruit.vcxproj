@@ -85,6 +85,8 @@
     <ClCompile Include="src\price_rules.cpp" />
     <ClCompile Include="src\money_rules.cpp" />
     <ClCompile Include="src\cats_purse.cpp" />
+    <ClCompile Include="src\json_merge.cpp" />
+    <ClCompile Include="src\atomic_file.cpp" />
     <ClCompile Include="src\route_rules.cpp" />
     <ClCompile Include="src\temperament_map.cpp" />
     <ClCompile Include="src\defeat_rules.cpp" />
@@ -121,6 +123,8 @@
     <ClInclude Include="src\price_rules.h" />
     <ClInclude Include="src\money_rules.h" />
     <ClInclude Include="src\cats_purse.h" />
+    <ClInclude Include="src\json_merge.h" />
+    <ClInclude Include="src\atomic_file.h" />
     <ClInclude Include="src\route_rules.h" />
     <ClInclude Include="src\defeat_rules.h" />
     <ClInclude Include="src\mercy_rules.h" />

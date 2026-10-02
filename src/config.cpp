@@ -1,6 +1,8 @@
 #include "common.h"
 #include "config.h"
 #include "log.h"
+#include "json_merge.h"
+#include "atomic_file.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -169,6 +171,197 @@ void ReadStringArray(const std::string& text, const std::string& key,
         cursor = end + 1;
     }
 }
+
+// One table describes every setting: the file key, its type and where it lives.
+// LoadConfig and SaveConfig both walk it, so a key can no longer be read but not
+// saved (which is how the price curve, the grudge penalty and half a dozen
+// animal settings used to be dropped on the first Mod Hub click).
+enum FieldType
+{
+    Field_Bool,
+    Field_Int,
+    Field_Float,
+    Field_String,
+    Field_StringList
+};
+
+struct Field
+{
+    const char* key;
+    FieldType type;
+    void* target;
+};
+
+void Add(std::vector<Field>& fields, const char* key, FieldType type, void* target)
+{
+    Field field;
+    field.key = key;
+    field.type = type;
+    field.target = target;
+    fields.push_back(field);
+}
+
+void AddBool(std::vector<Field>& f, const char* key, bool* p)         { Add(f, key, Field_Bool, p); }
+void AddInt(std::vector<Field>& f, const char* key, int* p)           { Add(f, key, Field_Int, p); }
+void AddFloat(std::vector<Field>& f, const char* key, float* p)       { Add(f, key, Field_Float, p); }
+void AddString(std::vector<Field>& f, const char* key, std::string* p) { Add(f, key, Field_String, p); }
+void AddList(std::vector<Field>& f, const char* key, std::vector<std::string>* p)
+{
+    Add(f, key, Field_StringList, p);
+}
+
+// The order here is the order missing keys are appended to a file.
+std::vector<Field> ConfigFields(Config& c)
+{
+    std::vector<Field> f;
+
+    AddBool(f, "enabled", &c.enabled);
+    AddBool(f, "showRecruitButton", &c.showRecruitButton);
+    AddBool(f, "autoRecruit", &c.autoRecruit);
+    AddString(f, "recruitLabel", &c.recruitLabel);
+    AddInt(f, "maxSpawnedCharacters", &c.maxSpawnedCharacters);
+    AddInt(f, "panelToggleKey", &c.panelToggleKey);
+    AddBool(f, "probeOnClick", &c.probeOnClick);
+    AddBool(f, "showTalkCursor", &c.showTalkCursor);
+    AddBool(f, "resolveCageOccupant", &c.resolveCageOccupant);
+    AddBool(f, "hailWhenReady", &c.hailWhenReady);
+    AddFloat(f, "hailFirstHours", &c.hailFirstHours);
+    AddFloat(f, "hailRepeatHours", &c.hailRepeatHours);
+    AddInt(f, "hailRepeats", &c.hailRepeats);
+
+    AddInt(f, "preset", &c.preset);
+    AddBool(f, "rescueEnabled", &c.rescueEnabled);
+    AddBool(f, "rescuePlayerOnly", &c.rescuePlayerOnly);
+    AddBool(f, "captivityEnabled", &c.captivityEnabled);
+    AddBool(f, "surrenderEnabled", &c.surrenderEnabled);
+    AddBool(f, "animalsEnabled", &c.animalsEnabled);
+
+    AddFloat(f, "easyHoursCaged", &c.prices.easyHoursCaged);
+    AddInt(f, "catsPerLevel", &c.prices.catsPerLevel);
+    AddInt(f, "catsCeiling", &c.prices.catsCeiling);
+    AddFloat(f, "priceCurveSteepness", &c.prices.priceCurveSteepness);
+    AddFloat(f, "priceCurveMidpoint", &c.prices.priceCurveMidpoint);
+    AddInt(f, "catsMinimum", &c.prices.catsMinimum);
+    AddInt(f, "catsHardCap", &c.prices.catsHardCap);
+    AddFloat(f, "hungerThreshold", &c.prices.hungerThreshold);
+    AddFloat(f, "woundedThreshold", &c.prices.woundedThreshold);
+    AddFloat(f, "fearfulMultiplier", &c.prices.fearfulMultiplier);
+    AddFloat(f, "braveMultiplier", &c.prices.braveMultiplier);
+    AddFloat(f, "factionWeight", &c.prices.factionWeight);
+    AddFloat(f, "talentWeight", &c.prices.talentWeight);
+    AddFloat(f, "talentMaxMultiplier", &c.prices.talentMaxMultiplier);
+    AddFloat(f, "uniqueMultiplier", &c.prices.uniqueMultiplier);
+
+    AddFloat(f, "friendlyRelation", &c.friendlyRelation);
+    AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);
+    AddFloat(f, "cheatHoursCaged", &c.cheatHoursCaged);
+    AddInt(f, "rescueBaseBonus", &c.rescueBaseBonus);
+    AddFloat(f, "rescueHealWeight", &c.rescueHealWeight);
+
+    AddInt(f, "insistenceAttempts", &c.insistence.attemptsBeforeIgnored);
+    AddFloat(f, "insistenceBaseHours", &c.insistence.baseHours);
+    AddFloat(f, "insistenceMaxHours", &c.insistence.maxHours);
+    AddFloat(f, "insistenceForgetHours", &c.insistence.forgetAfterHours);
+
+    AddInt(f, "chanceLevelBase", &c.chance.levelBase);
+    AddFloat(f, "chanceLevelGapPenalty", &c.chance.levelGapPenalty);
+    AddInt(f, "chanceLevelGapFloor", &c.chance.levelGapFloor);
+    AddFloat(f, "chanceLevelEdgeBonus", &c.chance.levelEdgeBonus);
+    AddInt(f, "chanceLevelEdgeCap", &c.chance.levelEdgeCap);
+    AddInt(f, "chanceFloor", &c.chance.floor);
+    AddInt(f, "chanceCeiling", &c.chance.ceiling);
+    AddInt(f, "chanceIntimidationBonus", &c.chance.intimidationBonus);
+    AddInt(f, "chanceGrudgePenalty", &c.chance.grudgePenalty);
+    AddInt(f, "chanceUniquePenalty", &c.chance.uniquePenalty);
+    AddBool(f, "chanceGrudgeIsAbsolute", &c.chance.grudgeIsAbsolute);
+
+    AddBool(f, "submissionCountDefeats", &c.submission.countDefeats);
+    AddFloat(f, "submissionDefeatDebounceHours", &c.submission.defeatDebounceHours);
+    AddInt(f, "submissionPersistedFloorCount", &c.submission.persistedFloorCount);
+    AddInt(f, "submissionChancePerDefeat", &c.submission.chancePerDefeat);
+    AddInt(f, "submissionMaxDefeatChance", &c.submission.maxDefeatChance);
+    AddBool(f, "submissionBegWhenNearDeath", &c.submission.begWhenNearDeath);
+    AddFloat(f, "submissionNearDeathBlood", &c.submission.nearDeathBlood);
+    AddFloat(f, "submissionFearfulResolve", &c.submission.fearfulResolve);
+    AddFloat(f, "submissionBraveResolve", &c.submission.braveResolve);
+    AddFloat(f, "submissionHonourableResolve", &c.submission.honourableResolve);
+    AddInt(f, "submissionDefeatsToBreak", &c.submission.defeatsToBreak);
+    AddInt(f, "submissionFieldYieldBonus", &c.submission.fieldYieldBonus);
+    AddFloat(f, "submissionStressFromHunger", &c.submission.stressFromHunger);
+    AddFloat(f, "submissionStressFromWounds", &c.submission.stressFromWounds);
+    AddFloat(f, "submissionStressFromExhaustion", &c.submission.stressFromExhaustion);
+    AddInt(f, "submissionMaxStressChance", &c.submission.maxStressChance);
+    AddBool(f, "submissionAllowBeating", &c.submission.allowBeating);
+    AddFloat(f, "submissionBeatingCooldownHours", &c.submission.beatingCooldownHours);
+    AddFloat(f, "submissionBeatingKnockoutSeconds", &c.submission.beatingKnockoutSeconds);
+
+    AddFloat(f, "animalCubMaturity", &c.animals.cubMaturity);
+    AddInt(f, "animalWeakLevel", &c.animals.weakLevel);
+    AddFloat(f, "animalCubFullness", &c.animals.cubFullness);
+    AddFloat(f, "animalBaseFullness", &c.animals.baseFullness);
+    AddFloat(f, "animalMaturityWeight", &c.animals.maturityWeight);
+    AddInt(f, "animalStrongLevel", &c.animals.strongLevel);
+    AddFloat(f, "animalStrongPenalty", &c.animals.strongPenalty);
+    AddFloat(f, "animalEdgeDiscount", &c.animals.edgeDiscount);
+    AddFloat(f, "animalBigEdgeDiscount", &c.animals.bigEdgeDiscount);
+    AddBool(f, "animalOwnedNeedCage", &c.animals.ownedNeedCage);
+    AddFloat(f, "animalNutritionPerMeal", &c.animals.nutritionPerMeal);
+    AddBool(f, "animalPersonalityMatters", &c.animals.personalityMatters);
+
+    AddString(f, "dialoguePackage", &c.dialogue.package);
+    AddString(f, "dialogueRescue", &c.dialogue.rescue);
+    AddString(f, "dialogueCaptive", &c.dialogue.captive);
+    AddString(f, "dialogueAcceptKey", &c.dialogue.acceptKey);
+
+    AddBool(f, "dead", &c.exclude.dead);
+    AddBool(f, "unconscious", &c.exclude.unconscious);
+    AddBool(f, "animals", &c.exclude.animals);
+    AddBool(f, "sameFaction", &c.exclude.sameFaction);
+    AddList(f, "factions", &c.exclude.factions);
+    AddList(f, "characterNames", &c.exclude.characterNames);
+
+    return f;
+}
+
+void ReadField(const std::string& text, const Field& field)
+{
+    switch (field.type)
+    {
+    case Field_Bool:       ReadBool(text, field.key, (bool*)field.target); break;
+    case Field_Int:        ReadInt(text, field.key, (int*)field.target); break;
+    case Field_Float:      ReadFloat(text, field.key, (float*)field.target); break;
+    case Field_String:     ReadString(text, field.key, (std::string*)field.target); break;
+    case Field_StringList: ReadStringArray(text, field.key, (std::vector<std::string>*)field.target); break;
+    }
+}
+
+JsonUpdate WriteField(const Field& field)
+{
+    switch (field.type)
+    {
+    case Field_Bool:       return JsonUpdate(field.key, JsonBool(*(bool*)field.target));
+    case Field_Int:        return JsonUpdate(field.key, JsonInt(*(int*)field.target));
+    case Field_Float:      return JsonUpdate(field.key, JsonFloat(*(float*)field.target));
+    case Field_String:     return JsonUpdate(field.key, JsonString(*(std::string*)field.target));
+    case Field_StringList: return JsonUpdate(field.key, JsonStringArray(*(std::vector<std::string>*)field.target));
+    }
+    return JsonUpdate(field.key, "null");
+}
+
+// What a brand new config.json starts from. The exclusion keys are read by name
+// wherever they sit, but the documented layout nests them, so a file the plugin
+// creates itself keeps that layout and the merge fills in the values.
+const char* const kFreshConfig =
+    "{\n"
+    "  \"exclude\": {\n"
+    "    \"dead\": true,\n"
+    "    \"unconscious\": false,\n"
+    "    \"animals\": false,\n"
+    "    \"sameFaction\": true,\n"
+    "    \"factions\": [],\n"
+    "    \"characterNames\": []\n"
+    "  }\n"
+    "}\n";
 } // namespace
 
 void LoadConfig(const std::string& modDirectory)
@@ -183,110 +376,11 @@ void LoadConfig(const std::string& modDirectory)
         return;
     }
 
-    ReadBool(text, "enabled", &g_config.enabled);
-    ReadBool(text, "showRecruitButton", &g_config.showRecruitButton);
-    ReadBool(text, "autoRecruit", &g_config.autoRecruit);
-    ReadString(text, "recruitLabel", &g_config.recruitLabel);
-    ReadInt(text, "maxSpawnedCharacters", &g_config.maxSpawnedCharacters);
-    ReadInt(text, "panelToggleKey", &g_config.panelToggleKey);
-    ReadBool(text, "probeOnClick", &g_config.probeOnClick);
-    ReadBool(text, "showTalkCursor", &g_config.showTalkCursor);
-    ReadBool(text, "resolveCageOccupant", &g_config.resolveCageOccupant);
-    ReadBool(text, "hailWhenReady", &g_config.hailWhenReady);
-    ReadFloat(text, "hailFirstHours", &g_config.hailFirstHours);
-    ReadFloat(text, "hailRepeatHours", &g_config.hailRepeatHours);
-    ReadInt(text, "hailRepeats", &g_config.hailRepeats);
-
-    ReadFloat(text, "friendlyRelation", &g_config.friendlyRelation);
-    ReadBool(text, "cheatNeedsCage", &g_config.cheatNeedsCage);
-    ReadFloat(text, "cheatHoursCaged", &g_config.cheatHoursCaged);
-    ReadInt(text, "rescueBaseBonus", &g_config.rescueBaseBonus);
-    ReadFloat(text, "rescueHealWeight", &g_config.rescueHealWeight);
-
-    ReadInt(text, "insistenceAttempts", &g_config.insistence.attemptsBeforeIgnored);
-    ReadFloat(text, "insistenceBaseHours", &g_config.insistence.baseHours);
-    ReadFloat(text, "insistenceMaxHours", &g_config.insistence.maxHours);
-    ReadFloat(text, "insistenceForgetHours", &g_config.insistence.forgetAfterHours);
-
-    ReadInt(text, "preset", &g_config.preset);
-    ReadBool(text, "rescueEnabled", &g_config.rescueEnabled);
-    ReadBool(text, "rescuePlayerOnly", &g_config.rescuePlayerOnly);
-    ReadBool(text, "captivityEnabled", &g_config.captivityEnabled);
-    ReadBool(text, "surrenderEnabled", &g_config.surrenderEnabled);
-    ReadBool(text, "animalsEnabled", &g_config.animalsEnabled);
-
-    ReadFloat(text, "easyHoursCaged", &g_config.prices.easyHoursCaged);
-    ReadInt(text, "catsPerLevel", &g_config.prices.catsPerLevel);
-    ReadInt(text, "catsCeiling", &g_config.prices.catsCeiling);
-    ReadFloat(text, "priceCurveSteepness", &g_config.prices.priceCurveSteepness);
-    ReadFloat(text, "priceCurveMidpoint", &g_config.prices.priceCurveMidpoint);
-    ReadInt(text, "catsMinimum", &g_config.prices.catsMinimum);
-    ReadFloat(text, "hungerThreshold", &g_config.prices.hungerThreshold);
-    ReadFloat(text, "woundedThreshold", &g_config.prices.woundedThreshold);
-
-    ReadInt(text, "chanceLevelBase", &g_config.chance.levelBase);
-    ReadFloat(text, "chanceLevelGapPenalty", &g_config.chance.levelGapPenalty);
-    ReadInt(text, "chanceLevelGapFloor", &g_config.chance.levelGapFloor);
-    ReadFloat(text, "chanceLevelEdgeBonus", &g_config.chance.levelEdgeBonus);
-    ReadInt(text, "chanceLevelEdgeCap", &g_config.chance.levelEdgeCap);
-    ReadInt(text, "chanceFloor", &g_config.chance.floor);
-    ReadInt(text, "chanceCeiling", &g_config.chance.ceiling);
-    ReadInt(text, "chanceIntimidationBonus", &g_config.chance.intimidationBonus);
-    ReadInt(text, "chanceGrudgePenalty", &g_config.chance.grudgePenalty);
-    ReadInt(text, "chanceUniquePenalty", &g_config.chance.uniquePenalty);
-    ReadBool(text, "chanceGrudgeIsAbsolute", &g_config.chance.grudgeIsAbsolute);
-
-    ReadBool(text, "submissionCountDefeats", &g_config.submission.countDefeats);
-    ReadFloat(text, "submissionDefeatDebounceHours", &g_config.submission.defeatDebounceHours);
-    ReadInt(text, "submissionPersistedFloorCount", &g_config.submission.persistedFloorCount);
-    ReadInt(text, "submissionChancePerDefeat", &g_config.submission.chancePerDefeat);
-    ReadInt(text, "submissionMaxDefeatChance", &g_config.submission.maxDefeatChance);
-    ReadBool(text, "submissionBegWhenNearDeath", &g_config.submission.begWhenNearDeath);
-    ReadFloat(text, "submissionNearDeathBlood", &g_config.submission.nearDeathBlood);
-    ReadFloat(text, "submissionFearfulResolve", &g_config.submission.fearfulResolve);
-    ReadFloat(text, "submissionBraveResolve", &g_config.submission.braveResolve);
-    ReadFloat(text, "submissionHonourableResolve", &g_config.submission.honourableResolve);
-    ReadInt(text, "submissionDefeatsToBreak", &g_config.submission.defeatsToBreak);
-    ReadInt(text, "submissionFieldYieldBonus", &g_config.submission.fieldYieldBonus);
-    ReadFloat(text, "submissionStressFromHunger", &g_config.submission.stressFromHunger);
-    ReadFloat(text, "submissionStressFromWounds", &g_config.submission.stressFromWounds);
-    ReadFloat(text, "submissionStressFromExhaustion", &g_config.submission.stressFromExhaustion);
-    ReadInt(text, "submissionMaxStressChance", &g_config.submission.maxStressChance);
-    ReadBool(text, "submissionAllowBeating", &g_config.submission.allowBeating);
-    ReadFloat(text, "submissionBeatingCooldownHours", &g_config.submission.beatingCooldownHours);
-    ReadFloat(text, "submissionBeatingKnockoutSeconds", &g_config.submission.beatingKnockoutSeconds);
-
-    ReadFloat(text, "animalCubMaturity", &g_config.animals.cubMaturity);
-    ReadInt(text, "animalWeakLevel", &g_config.animals.weakLevel);
-    ReadFloat(text, "animalCubFullness", &g_config.animals.cubFullness);
-    ReadFloat(text, "animalBaseFullness", &g_config.animals.baseFullness);
-    ReadFloat(text, "animalMaturityWeight", &g_config.animals.maturityWeight);
-    ReadInt(text, "animalStrongLevel", &g_config.animals.strongLevel);
-    ReadFloat(text, "animalStrongPenalty", &g_config.animals.strongPenalty);
-    ReadFloat(text, "animalEdgeDiscount", &g_config.animals.edgeDiscount);
-    ReadFloat(text, "animalBigEdgeDiscount", &g_config.animals.bigEdgeDiscount);
-    ReadBool(text, "animalOwnedNeedCage", &g_config.animals.ownedNeedCage);
-    ReadFloat(text, "animalNutritionPerMeal", &g_config.animals.nutritionPerMeal);
-    ReadBool(text, "animalPersonalityMatters", &g_config.animals.personalityMatters);
-    ReadFloat(text, "fearfulMultiplier", &g_config.prices.fearfulMultiplier);
-    ReadFloat(text, "braveMultiplier", &g_config.prices.braveMultiplier);
-    ReadFloat(text, "factionWeight", &g_config.prices.factionWeight);
-    ReadFloat(text, "talentWeight", &g_config.prices.talentWeight);
-    ReadFloat(text, "uniqueMultiplier", &g_config.prices.uniqueMultiplier);
-    ReadInt(text, "catsHardCap", &g_config.prices.catsHardCap);
-    ReadFloat(text, "talentMaxMultiplier", &g_config.prices.talentMaxMultiplier);
-
-    ReadString(text, "dialoguePackage", &g_config.dialogue.package);
-    ReadString(text, "dialogueRescue", &g_config.dialogue.rescue);
-    ReadString(text, "dialogueCaptive", &g_config.dialogue.captive);
-    ReadString(text, "dialogueAcceptKey", &g_config.dialogue.acceptKey);
-
-    ReadBool(text, "dead", &g_config.exclude.dead);
-    ReadBool(text, "unconscious", &g_config.exclude.unconscious);
-    ReadBool(text, "animals", &g_config.exclude.animals);
-    ReadBool(text, "sameFaction", &g_config.exclude.sameFaction);
-    ReadStringArray(text, "factions", &g_config.exclude.factions);
-    ReadStringArray(text, "characterNames", &g_config.exclude.characterNames);
+    const std::vector<Field> fields = ConfigFields(g_config);
+    for (size_t i = 0; i < fields.size(); ++i)
+    {
+        ReadField(text, fields[i]);
+    }
 
     // Clamped after reading rather than rejected: a nonsensical value should
     // pull back to a sane one, not disable the feature or drop the whole file.
@@ -318,6 +412,11 @@ std::string GetModDirectory()
     return g_modDirectory;
 }
 
+// Merges the current settings into the file that is there rather than rewriting
+// it: values of known keys change in place, keys the file lacks are appended, and
+// everything else -- comments, unknown keys, the player's own order and spacing --
+// is left alone. The result goes through a temporary file, so a crash cannot leave
+// a half-written config.json.
 bool SaveConfig(const std::string& modDirectory)
 {
     std::string dir = modDirectory.empty() ? g_modDirectory : modDirectory;
@@ -327,129 +426,48 @@ bool SaveConfig(const std::string& modDirectory)
     }
 
     const std::string path = dir + "\\config.json";
-    std::ofstream file(path.c_str(), std::ios::trunc);
-    if (!file.is_open())
+    const std::string existing = Slurp(path);
+
+    const std::vector<Field> fields = ConfigFields(g_config);
+    std::vector<JsonUpdate> updates;
+    for (size_t i = 0; i < fields.size(); ++i)
     {
-        LogError("Failed to open " + path + " for writing config.");
+        updates.push_back(WriteField(fields[i]));
+    }
+
+    const bool blank = existing.find_first_not_of(" \t\r\n") == std::string::npos;
+    MergeResult merged = MergeJsonKeys(blank ? std::string(kFreshConfig) : existing, updates);
+    if (!merged.ok)
+    {
+        // The file is there but is not one object we can edit safely. Keep what
+        // the player wrote next to it and start again from a fresh document,
+        // rather than either dropping their text silently or never saving.
+        const std::string backup = path + ".bak";
+        if (!CopyFileA(path.c_str(), backup.c_str(), FALSE))
+        {
+            LogError(path + " is not valid JSON and could not be backed up; not overwriting it.");
+            return false;
+        }
+        LogError(path + " is not valid JSON; kept a copy as " + backup + " and wrote a fresh file.");
+        merged = MergeJsonKeys(kFreshConfig, updates);
+    }
+
+    if (merged.ok && merged.text == existing)
+    {
+        return true;    // nothing differs, so there is nothing to write
+    }
+
+    std::string error;
+    if (!merged.ok || !WriteFileAtomically(path, merged.text, &error))
+    {
+        LogError("Failed to write config to " + path + (error.empty() ? std::string() : ": " + error));
         return false;
     }
 
-    file << "{\n";
-    file << "  \"enabled\": " << (g_config.enabled ? "true" : "false") << ",\n";
-    file << "  \"showRecruitButton\": " << (g_config.showRecruitButton ? "true" : "false") << ",\n";
-    file << "  \"autoRecruit\": " << (g_config.autoRecruit ? "true" : "false") << ",\n";
-    file << "  \"recruitLabel\": \"" << g_config.recruitLabel << "\",\n";
-    file << "  \"maxSpawnedCharacters\": " << g_config.maxSpawnedCharacters << ",\n";
-    file << "  \"panelToggleKey\": " << g_config.panelToggleKey << ",\n";
-    file << "  \"probeOnClick\": " << (g_config.probeOnClick ? "true" : "false") << ",\n";
-    file << "  \"showTalkCursor\": " << (g_config.showTalkCursor ? "true" : "false") << ",\n";
-    file << "  \"resolveCageOccupant\": " << (g_config.resolveCageOccupant ? "true" : "false") << ",\n";
-    file << "  \"hailWhenReady\": " << (g_config.hailWhenReady ? "true" : "false") << ",\n";
-    file << "  \"hailFirstHours\": " << g_config.hailFirstHours << ",\n";
-    file << "  \"hailRepeatHours\": " << g_config.hailRepeatHours << ",\n";
-    file << "  \"hailRepeats\": " << g_config.hailRepeats << ",\n\n";
-
-    file << "  \"preset\": " << g_config.preset << ",\n\n";
-
-    file << "  \"rescueEnabled\": " << (g_config.rescueEnabled ? "true" : "false") << ",\n";
-    file << "  \"rescuePlayerOnly\": " << (g_config.rescuePlayerOnly ? "true" : "false") << ",\n";
-    file << "  \"captivityEnabled\": " << (g_config.captivityEnabled ? "true" : "false") << ",\n";
-    file << "  \"surrenderEnabled\": " << (g_config.surrenderEnabled ? "true" : "false") << ",\n";
-    file << "  \"animalsEnabled\": " << (g_config.animalsEnabled ? "true" : "false") << ",\n\n";
-
-    file << "  \"easyHoursCaged\": " << g_config.prices.easyHoursCaged << ",\n";
-    file << "  \"catsPerLevel\": " << g_config.prices.catsPerLevel << ",\n";
-    file << "  \"catsCeiling\": " << g_config.prices.catsCeiling << ",\n";
-    file << "  \"priceCurveSteepness\": " << g_config.prices.priceCurveSteepness << ",\n";
-    file << "  \"priceCurveMidpoint\": " << g_config.prices.priceCurveMidpoint << ",\n";
-    file << "  \"catsMinimum\": " << g_config.prices.catsMinimum << ",\n";
-    file << "  \"catsHardCap\": " << g_config.prices.catsHardCap << ",\n";
-    file << "  \"hungerThreshold\": " << g_config.prices.hungerThreshold << ",\n";
-    file << "  \"woundedThreshold\": " << g_config.prices.woundedThreshold << ",\n";
-
-    file << "  \"friendlyRelation\": " << g_config.friendlyRelation << ",\n";
-    file << "  \"cheatNeedsCage\": " << (g_config.cheatNeedsCage ? "true" : "false") << ",\n";
-    file << "  \"cheatHoursCaged\": " << g_config.cheatHoursCaged << ",\n";
-    file << "  \"rescueBaseBonus\": " << g_config.rescueBaseBonus << ",\n";
-    file << "  \"rescueHealWeight\": " << g_config.rescueHealWeight << ",\n";
-    file << "  \"insistenceAttempts\": " << g_config.insistence.attemptsBeforeIgnored << ",\n";
-    file << "  \"insistenceBaseHours\": " << g_config.insistence.baseHours << ",\n";
-    file << "  \"insistenceMaxHours\": " << g_config.insistence.maxHours << ",\n";
-    file << "  \"insistenceForgetHours\": " << g_config.insistence.forgetAfterHours << ",\n";
-
-    file << "  \"chanceLevelBase\": " << g_config.chance.levelBase << ",\n";
-    file << "  \"chanceLevelGapPenalty\": " << g_config.chance.levelGapPenalty << ",\n";
-    file << "  \"chanceLevelGapFloor\": " << g_config.chance.levelGapFloor << ",\n";
-    file << "  \"chanceLevelEdgeBonus\": " << g_config.chance.levelEdgeBonus << ",\n";
-    file << "  \"chanceLevelEdgeCap\": " << g_config.chance.levelEdgeCap << ",\n";
-    file << "  \"chanceFloor\": " << g_config.chance.floor << ",\n";
-    file << "  \"chanceCeiling\": " << g_config.chance.ceiling << ",\n";
-
-    file << "  \"submissionCountDefeats\": " << (g_config.submission.countDefeats ? "true" : "false") << ",\n";
-    file << "  \"submissionDefeatDebounceHours\": " << g_config.submission.defeatDebounceHours << ",\n";
-    file << "  \"submissionPersistedFloorCount\": " << g_config.submission.persistedFloorCount << ",\n";
-    file << "  \"submissionChancePerDefeat\": " << g_config.submission.chancePerDefeat << ",\n";
-    file << "  \"submissionMaxDefeatChance\": " << g_config.submission.maxDefeatChance << ",\n";
-    file << "  \"submissionBegWhenNearDeath\": " << (g_config.submission.begWhenNearDeath ? "true" : "false") << ",\n";
-    file << "  \"submissionNearDeathBlood\": " << g_config.submission.nearDeathBlood << ",\n";
-    file << "  \"submissionFearfulResolve\": " << g_config.submission.fearfulResolve << ",\n";
-    file << "  \"submissionBraveResolve\": " << g_config.submission.braveResolve << ",\n";
-    file << "  \"submissionHonourableResolve\": " << g_config.submission.honourableResolve << ",\n";
-    file << "  \"submissionDefeatsToBreak\": " << g_config.submission.defeatsToBreak << ",\n";
-    file << "  \"submissionFieldYieldBonus\": " << g_config.submission.fieldYieldBonus << ",\n";
-    file << "  \"submissionStressFromHunger\": " << g_config.submission.stressFromHunger << ",\n";
-    file << "  \"submissionStressFromWounds\": " << g_config.submission.stressFromWounds << ",\n";
-    file << "  \"submissionStressFromExhaustion\": " << g_config.submission.stressFromExhaustion << ",\n";
-    file << "  \"submissionMaxStressChance\": " << g_config.submission.maxStressChance << ",\n";
-    file << "  \"submissionAllowBeating\": " << (g_config.submission.allowBeating ? "true" : "false") << ",\n";
-    file << "  \"submissionBeatingCooldownHours\": " << g_config.submission.beatingCooldownHours << ",\n";
-    file << "  \"submissionBeatingKnockoutSeconds\": " << g_config.submission.beatingKnockoutSeconds << ",\n";
-
-    file << "  \"animalCubMaturity\": " << g_config.animals.cubMaturity << ",\n";
-    file << "  \"animalWeakLevel\": " << g_config.animals.weakLevel << ",\n";
-    file << "  \"animalCubFullness\": " << g_config.animals.cubFullness << ",\n";
-    file << "  \"animalBaseFullness\": " << g_config.animals.baseFullness << ",\n";
-    file << "  \"animalMaturityWeight\": " << g_config.animals.maturityWeight << ",\n";
-    file << "  \"animalStrongLevel\": " << g_config.animals.strongLevel << ",\n";
-    file << "  \"animalStrongPenalty\": " << g_config.animals.strongPenalty << ",\n";
-    file << "  \"animalEdgeDiscount\": " << g_config.animals.edgeDiscount << ",\n";
-    file << "  \"animalBigEdgeDiscount\": " << g_config.animals.bigEdgeDiscount << ",\n";
-    file << "  \"fearfulMultiplier\": " << g_config.prices.fearfulMultiplier << ",\n";
-    file << "  \"braveMultiplier\": " << g_config.prices.braveMultiplier << ",\n";
-    file << "  \"factionWeight\": " << g_config.prices.factionWeight << ",\n";
-    file << "  \"talentWeight\": " << g_config.prices.talentWeight << ",\n";
-    file << "  \"talentMaxMultiplier\": " << g_config.prices.talentMaxMultiplier << ",\n";
-    file << "  \"uniqueMultiplier\": " << g_config.prices.uniqueMultiplier << ",\n\n";
-
-    file << "  \"dialoguePackage\": \"" << g_config.dialogue.package << "\",\n";
-    file << "  \"dialogueRescue\": \"" << g_config.dialogue.rescue << "\",\n";
-    file << "  \"dialogueCaptive\": \"" << g_config.dialogue.captive << "\",\n";
-    file << "  \"dialogueAcceptKey\": \"" << g_config.dialogue.acceptKey << "\",\n\n";
-
-    file << "  \"exclude\": {\n";
-    file << "    \"dead\": " << (g_config.exclude.dead ? "true" : "false") << ",\n";
-    file << "    \"unconscious\": " << (g_config.exclude.unconscious ? "true" : "false") << ",\n";
-    file << "    \"animals\": " << (g_config.exclude.animals ? "true" : "false") << ",\n";
-    file << "    \"sameFaction\": " << (g_config.exclude.sameFaction ? "true" : "false") << ",\n";
-    file << "    \"factions\": [";
-    for (size_t i = 0; i < g_config.exclude.factions.size(); ++i)
-    {
-        if (i > 0) file << ", ";
-        file << "\"" << g_config.exclude.factions[i] << "\"";
-    }
-    file << "],\n";
-    file << "    \"characterNames\": [";
-    for (size_t i = 0; i < g_config.exclude.characterNames.size(); ++i)
-    {
-        if (i > 0) file << ", ";
-        file << "\"" << g_config.exclude.characterNames[i] << "\"";
-    }
-    file << "]\n";
-    file << "  }\n";
-    file << "}\n";
-
-    file.close();
-    LogInfo("Saved config to " + path);
+    char counts[96] = { 0 };
+    _snprintf_s(counts, sizeof(counts), _TRUNCATE, " (%d changed, %d added)",
+                merged.replaced, merged.appended);
+    LogInfo("Saved config to " + path + counts);
     return true;
 }
 

@@ -21,3 +21,5 @@ void RunMercyRulesTests();
 void RunPleaTrackerTests();
 void RunHoldClockTests();
 void RunMoneyRulesTests();
+void RunJsonMergeTests();
+void RunAtomicFileTests();

@@ -87,7 +87,9 @@ qué existe — leelo antes que el `.cpp`.
 |---|---|
 | `TotalRecruit.cpp` | `startPlugin` / `stopPlugin`. Instala y desinstala todo. |
 | `common.h` | Includes compartidos. **El orden importa** (Ogre vs. MyGUI). |
-| `config.cpp/.h` | Lee `config.json`, aplica defaults y clamps. |
+| `config.cpp/.h` | Lee y guarda `config.json` con una sola tabla de claves (`ConfigFields`): `SaveConfig` **mezcla** en el archivo existente, no lo reescribe. |
+| `json_merge.cpp/.h` | **Puro.** El merge de texto JSON: reemplaza valores de claves conocidas en su lugar, agrega las que faltan, deja intacto el resto (comentarios, claves ajenas, orden). |
+| `atomic_file.cpp/.h` | Escritura atómica (archivo temporal + reemplazo); lo usa `SaveConfig`. Se prueba contra el disco real en `rules_tests`. |
 | `log.cpp/.h` | Todo va al log de RE_Kenshi con prefijo. |
 
 ### La decisión
