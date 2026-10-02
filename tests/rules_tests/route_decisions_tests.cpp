@@ -414,6 +414,25 @@ void AFullAnimalFollowsYou()
     CHECK(v.reasonKey == Reason_TameReady);
 }
 
+void TheTamingBarTravelsOnTheVerdict()
+{
+    const char* name = "animal: the verdict carries the fullness and the bar it was judged against";
+    // Half a stomach against a 0.95 bar.
+    Verdict v = DecideAnimal(AnimalCore(1.5f), Beast(), kConfig);
+    CHECK(v.tameFullness > 0.499f && v.tameFullness < 0.501f);
+    CHECK(v.tameNeeded > 0.949f && v.tameNeeded < 0.951f);
+
+    // Fed past it: both are still there, the bar is cleared.
+    v = DecideAnimal(AnimalCore(3.0f), Beast(), kConfig);
+    CHECK(v.tameFullness >= v.tameNeeded);
+
+    // Owned and refused: no stomach was judged, so no bar.
+    AnimalExtra extra = Beast();
+    extra.belongsToSomeone = true;
+    v = DecideAnimal(AnimalCore(3.0f), extra, kConfig);
+    CHECK(v.tameFullness < 0.0f && v.tameNeeded < 0.0f);
+}
+
 void AHungryAnimalSaysHowMuchIsMissing()
 {
     const char* name = "animal: short of the bar it wants food and names the gap in percent";
@@ -1004,6 +1023,7 @@ void RouteFactsAreBuiltFromTheCoreAndTheConfig()
 
 void RunRouteDecisionsTests()
 {
+    TheTamingBarTravelsOnTheVerdict();
     AnimalsSwitchedOffStopsAnAnimal();
     UnreadableTraitsFallBackToAPlainRecruit();
     AFakerAndACorpseAreNotRecruitable();

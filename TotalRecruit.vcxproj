@@ -116,6 +116,9 @@
     <ClCompile Include="src\body_rules.cpp" />
     <ClCompile Include="src\reason_catalog.cpp" />
     <ClCompile Include="src\animal_rules.cpp" />
+    <ClCompile Include="src\readout_format.cpp" />
+    <ClCompile Include="src\readout_catalog.cpp" />
+    <ClCompile Include="src\readout_model.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h" />

@@ -29,3 +29,6 @@ void RunRouteDecisionsTests();
 void RunBodyRulesTests();
 void RunReasonCatalogTests();
 void RunAnimalRulesTests();
+void RunReadoutFormatTests();
+void RunReadoutCatalogTests();
+void RunReadoutModelTests();

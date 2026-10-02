@@ -139,6 +139,11 @@ struct Verdict
     bool rolled;
     ChanceInputs chanceInputs;
     int chancePercent;
+    // The taming bar behind an animal verdict, as 0..1 fractions of a full stomach:
+    // how full it is and how full it has to be. Negative when the verdict is not
+    // about a stomach, so a readout never has to guess.
+    float tameFullness;
+    float tameNeeded;
 
     Verdict()
         : willJoin(false),
@@ -154,7 +159,9 @@ struct Verdict
           owesGift(false),
           rolled(false),
           chanceInputs(),
-          chancePercent(0)
+          chancePercent(0),
+          tameFullness(-1.0f),
+          tameNeeded(-1.0f)
     {
     }
 };

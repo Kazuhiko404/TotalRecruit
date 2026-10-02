@@ -45,6 +45,10 @@ Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Conf
     }
 
     v.wantsFood = (fullness < needed);
+    // The bar this verdict is judged against, for the readout: the same two numbers
+    // the comparison below uses.
+    v.tameFullness = fullness;
+    v.tameNeeded = needed;
 
     if (core.wounded)
     {

@@ -121,8 +121,8 @@ float HungerToFullness01(float rawHunger)
     return Clamp01((rawHunger - kHungerEmpty) / (kHungerFull - kHungerEmpty));
 }
 
-float StressFromState(float rawHunger, float worstDamage, float restedState,
-                      const Submission& sub)
+StressTerms StressTermsFromState(float rawHunger, float worstDamage, float restedState,
+                                 const Submission& sub)
 {
     // Hunger counts fullness, so an empty stomach is the top of this term.
     const float starved = 1.0f - HungerToFullness01(rawHunger);
@@ -131,9 +131,18 @@ float StressFromState(float rawHunger, float worstDamage, float restedState,
     // restedState counts rest, so exhaustion is its inverse.
     const float tired = Clamp01(1.0f - restedState);
 
-    return Clamp01(starved * sub.stressFromHunger
-                 + hurt    * sub.stressFromWounds
-                 + tired   * sub.stressFromExhaustion);
+    StressTerms terms;
+    terms.hunger = starved * sub.stressFromHunger;
+    terms.wounds = hurt * sub.stressFromWounds;
+    terms.tired  = tired * sub.stressFromExhaustion;
+    return terms;
+}
+
+float StressFromState(float rawHunger, float worstDamage, float restedState,
+                      const Submission& sub)
+{
+    const StressTerms t = StressTermsFromState(rawHunger, worstDamage, restedState, sub);
+    return Clamp01(t.hunger + t.wounds + t.tired);
 }
 
 int JoinChance(const ChanceInputs& in, const Chance& c, const Submission& sub)

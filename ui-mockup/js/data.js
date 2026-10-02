@@ -68,7 +68,7 @@ var STATES = [
   {
     id: 'ally',
     title: 'Friendly NPC in the open',
-    note: 'Libre, ally. Chance from standing and level gap; a price is the fallback if the roll does not carry them. (The readout never says whether the roll passed: the odds are shown, the result is still the click\'s.)',
+    note: 'Libre, ally. Chance from standing and level gap; the line is what the NPC says when the roll does not carry them (no price in this branch: allies are asked, not bribed). (The readout never says whether the roll passed: the odds are shown, the result is still the click\'s.)',
     // facts: Route FreeWorld, relation +40, level 18 vs 20, honorable? no. chance 63
     vm: {
       name: 'Mercader Ostrel', route: 'libre', routeLabel: 'Libre',
@@ -76,7 +76,7 @@ var STATES = [
       showChance: true, chancePct: 63, ready: false,
       showDefeats: false, defeats: 0, defeatsNeeded: 0,
       showFood: false,
-      why:  { text: 'Quiza te siga; si no, 4.120 cats', tone: '' },
+      why:  { text: 'Quiza te siga; si no, hazte mas fuerte', tone: '' },
       alt:  null
     }
   },

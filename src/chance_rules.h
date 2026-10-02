@@ -76,6 +76,18 @@ bool GrudgeIsUnforgivable(Temperament personality, const Chance& chance);
 // This is the honest 0..1, where 1 is sated and 0 is starving.
 float HungerToFullness01(float rawHunger);
 
+// The three terms StressFromState adds up, each already weighted and not yet clamped,
+// so a readout can say what the bar is made of. Their sum, clamped to 0..1, IS
+// StressFromState; the two cannot drift because StressFromState is built from this.
+struct StressTerms
+{
+    float hunger;
+    float wounds;
+    float tired;
+};
+StressTerms StressTermsFromState(float rawHunger, float worstDamage, float restedState,
+                                 const Submission& sub);
+
 // How worn down a prisoner is, 0..1, derived from present state only: an empty
 // stomach, the worst wound, and missing rest. Feed them and it falls.
 float StressFromState(float rawHunger, float worstDamage, float restedState,

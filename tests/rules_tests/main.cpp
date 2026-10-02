@@ -56,6 +56,9 @@ const Suite kSuites[] = {
     { "body_rules", RunBodyRulesTests },
     { "reason_catalog", RunReasonCatalogTests },
     { "animal_rules", RunAnimalRulesTests },
+    { "readout_format", RunReadoutFormatTests },
+    { "readout_catalog", RunReadoutCatalogTests },
+    { "readout_model", RunReadoutModelTests },
 };
 } // namespace
 
