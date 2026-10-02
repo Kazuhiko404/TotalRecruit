@@ -177,7 +177,9 @@ void TalentMultiplierIsBounded()
     CHECK(TalentMultiplier(1.0f, 1.0f, kPrices) == 1.0f);        // nothing unusual
     CHECK(TalentMultiplier(0.5f, 1.0f, kPrices) == 1.0f);        // never a discount
     CHECK(Near(TalentMultiplier(1.5f, 1.0f, kPrices), 1.5f, 0.001f));
-    CHECK(Near(TalentMultiplier(1.5f, 1.6f, kPrices), 1.8f, 0.001f));   // craftsmen weigh more
+    CHECK(Near(TalentMultiplier(1.25f, 1.6f, kPrices), 1.4f, 0.001f));  // craftsmen weigh more
+    CHECK(Near(TalentMultiplier(1.5f, 1.6f, kPrices), 1.5f, 0.001f));   // 1.8 asked, default cap 1.5
+    CHECK(Near(kPrices.talentMaxMultiplier, 1.5f, 0.0001f));            // talent already raises the chance
     CHECK(TalentMultiplier(20.0f, 1.6f, kPrices) == kPrices.talentMaxMultiplier);   // capped
 
     Prices off;

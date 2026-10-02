@@ -280,5 +280,11 @@ and uniques land in the reference 100-150k band instead of overshooting it).
 - Model: `TotalSparring/src/core/plugin_config.cpp` (add-missing, never-overwrite) in intent only; that file is a fixed-schema INI-style reader, so the
   merge logic here is new rather than ported.
 
+### Tuning after T6 - talent cap 2.0 -> 1.5
+- Commit: `tune(price): ...` (hash filled in by the T7 commit). Answers the T5 open question: talent already raises the join chance, and quotes were
+  landing 20-50% above the calibrated tiers, so `talentMaxMultiplier` default is now **1.5** (`config.h`, repo `TotalRecruit/config.json`, value change only).
+- RED: `price_rules` default-cap and cap-at-1.5 checks failed (`9/10 suites passed, 2/15935 checks failed`). GREEN: `10/10 suites passed, 0/15935`.
+- A user who already tuned the key keeps their value (the loader only falls back to the default for a missing key).
+
 ## Next step
 T7 (stable identity).

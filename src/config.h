@@ -90,8 +90,8 @@ struct Prices
     // still kept inside the int range). The reference mod's strongest uniques sit
     // at 100-150k, which is what the default allows.
     int catsHardCap;
-    // The most the talent multiplier may add. 2.0 means a specialist costs at most
-    // double what their level alone says.
+    // The most the talent multiplier may add. 1.5 means a specialist costs at most
+    // half again what their level alone says.
     float talentMaxMultiplier;
 
     Prices()
@@ -109,7 +109,7 @@ struct Prices
           talentWeight(1.0f),
           uniqueMultiplier(2.0f),
           catsHardCap(150000),
-          talentMaxMultiplier(2.0f)
+          talentMaxMultiplier(1.5f)
     {
     }
 };
