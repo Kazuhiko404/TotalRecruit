@@ -188,7 +188,10 @@ void Knockout_hook(MedicalSystem* thisptr, float skill)
 }
 } // namespace
 
-void NoteDefeat(Character* character)
+// Counts one defeat. `creditedToPlayer` is the caller saying the player's own
+// action caused it, which skips the question put to the engine (who beat them)
+// and keeps every other filter -- see DecideDefeatCredit.
+static void RecordDefeat(Character* character, bool creditedToPlayer)
 {
     if (character == NULL || !GetConfig().submission.countDefeats)
     {
@@ -197,25 +200,34 @@ void NoteDefeat(Character* character)
 
     const bool trace = GetConfig().probeOnClick;
 
-    // The player's own people going down is not a defeat the player inflicted.
     bool mine = false;
-    if (SafeIsPlayerCharacter(character, &mine) && mine)
-    {
-        if (trace) LogInfo("[defeat-skip] " + CharacterName(character) + ": is yours");
-        return;
-    }
-
+    const bool readMine = SafeIsPlayerCharacter(character, &mine);
     bool beatenByPlayer = false;
     const bool readWinner = SafeBeatenByPlayer(character, &beatenByPlayer);
-    if (!readWinner || !beatenByPlayer)
+
+    const DefeatCredit credit = DecideDefeatCredit(readMine && mine, readWinner,
+                                                   beatenByPlayer, creditedToPlayer);
+    if (credit != DefeatCredit_Counts)
     {
         if (trace)
         {
-            LogInfo("[defeat-skip] " + CharacterName(character) + ": " +
-                    (readWinner ? "lastGuyWhoDefeatedMe is not yours"
-                                : "lastGuyWhoDefeatedMe unreadable/empty"));
+            const char* why =
+                (credit == DefeatCredit_SkipPlayersOwn)        ? "is yours"
+              : (credit == DefeatCredit_SkipWinnerUnreadable)  ? "lastGuyWhoDefeatedMe unreadable/empty"
+                                                               : "lastGuyWhoDefeatedMe is not yours";
+            LogInfo("[defeat-skip] " + CharacterName(character) + ": " + why);
         }
         return;
+    }
+
+    if (creditedToPlayer)
+    {
+        // The line QA looks for: the beating counted although the engine's own
+        // record may name nobody (or somebody else).
+        LogInfo("[defeat] credited to the player explicitly (beating): " +
+                CharacterName(character) + " (engine winner " +
+                (readWinner ? (beatenByPlayer ? "is the player" : "is someone else")
+                            : "unreadable") + ")");
     }
 
     CharKey key;
@@ -235,7 +247,7 @@ void NoteDefeat(Character* character)
     // debounce in game hours is what separates a second beating from an echo of
     // the first.
     Record& record = g_defeats[key];
-    if (now - record.lastHour < GetConfig().submission.defeatDebounceHours)
+    if (IsEchoOfLastDefeat(now, record.lastHour, GetConfig().submission.defeatDebounceHours))
     {
         if (trace) LogInfo("[defeat-skip] " + CharacterName(character) + ": debounced");
         return;
@@ -282,6 +294,16 @@ void NoteDefeat(Character* character)
             g_nearDeathListener(character);
         }
     }
+}
+
+void NoteDefeat(Character* character)
+{
+    RecordDefeat(character, false);
+}
+
+void CreditDefeatToPlayer(Character* character)
+{
+    RecordDefeat(character, true);
 }
 
 int DefeatCount(Character* character)
@@ -425,8 +447,12 @@ bool BeatPrisoner(Character* character, std::string* outMessage)
     }
 
     // Counted like any other defeat, so the beating feeds the same submission
-    // arithmetic rather than being an action with no consequence.
-    NoteDefeat(character);
+    // arithmetic rather than being an action with no consequence. It is the
+    // player's own act, so the credit is explicit: NoteDefeat would ask the
+    // engine who put them down, and when lastGuyWhoDefeatedMe did not name the
+    // player the knockout was dropped -- while the window said "lo dejaste sin
+    // sentido" and the cooldown (which reads the same record) never started.
+    CreditDefeatToPlayer(character);
 
     if (outMessage) *outMessage = CharacterName(character) + ": lo dejaste sin sentido";
     return true;

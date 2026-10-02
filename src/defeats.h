@@ -29,6 +29,11 @@ namespace totalrecruit
 // once for the same knockout; a repeat inside the debounce window is ignored.
 void NoteDefeat(Character* character);
 
+// The same, for a knockout the player's own action caused (the beating,
+// BeatPrisoner): the engine is not asked who put them down, because the plugin
+// already knows. The debounce and the own-side filter still apply.
+void CreditDefeatToPlayer(Character* character);
+
 // How many times, as best we can tell. Never below the persistent floor.
 int DefeatCount(Character* character);
 
