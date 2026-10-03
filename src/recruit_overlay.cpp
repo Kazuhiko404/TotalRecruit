@@ -10,6 +10,7 @@
 #include "offer_popup.h"
 #include "readout.h"
 #include "button_block.h"
+#include "menu_button_release.h"
 
 namespace totalrecruit
 {
@@ -25,9 +26,18 @@ namespace
 // TotalLoot share); where it goes comes from button_block / menu_slot.
 const char* const kButtonWidgetName = "TR_RecruitButton";
 
+typedef MyGUI::delegates::IDelegate4<MyGUI::Widget*, int, int, MyGUI::MouseButton> MouseDelegate;
+
 MyGUI::Button* g_button = NULL;
-MyGUI::delegates::IDelegate4<MyGUI::Widget*, int, int, MyGUI::MouseButton>*
-    g_buttonDelegate = NULL;
+// Pressed AND released, as TotalSparring (spar_overlay.cpp:307-417) and TotalLoot
+// (context_button_input.cpp) do: Kenshi's menu acts on release, so the player can
+// hold the right button from the click that opened the menu, slide onto Hablar and
+// let go. Separate instances: MyGUI owns each delegate it is given.
+MouseDelegate* g_buttonDelegate = NULL;
+MouseDelegate* g_buttonReleaseDelegate = NULL;
+// One gesture acts once: a click's press acts and its release is an echo; a
+// hold-and-release only delivers the release, which acts (menu_button_release.h).
+clickgesture::State g_gesture;
 
 // Target of the currently open menu. Only ever dereferenced behind TR_TRY.
 RootObject* g_targetObject = NULL;
@@ -82,9 +92,31 @@ void HideButton()
     }
 }
 
-void OnRecruitClicked(MyGUI::Widget* /*sender*/, int /*left*/, int /*top*/,
-                      MyGUI::MouseButton /*button*/)
+// Left (click) and right (the menu's hold-and-release gesture) act; middle and
+// wheel buttons never do.
+bool IsActingButton(MyGUI::MouseButton button)
 {
+    return button == MyGUI::MouseButton::Left || button == MyGUI::MouseButton::Right;
+}
+
+// Bound to both pressed and released; the gesture rule lets one of them through.
+void OnRecruitClicked(MyGUI::Widget* /*sender*/, int /*left*/, int /*top*/,
+                      MyGUI::MouseButton button)
+{
+    if (!IsActingButton(button))
+    {
+        return;
+    }
+    const clickgesture::Verdict verdict = clickgesture::Classify(&g_gesture);
+    if (verdict != clickgesture::ACT)
+    {
+        if (verdict == clickgesture::STRAY && GetConfig().probeOnClick)
+        {
+            LogInfo("Recruit button event ignored: no armed gesture.");
+        }
+        return;
+    }
+
     Character* target = g_targetCharacter;
     ClearTarget();
     HideButton();
@@ -113,6 +145,8 @@ bool ConfigureButton()
         g_button->setVisible(false);
         g_buttonDelegate = MyGUI::newDelegate(&OnRecruitClicked);
         g_button->eventMouseButtonPressed += g_buttonDelegate;
+        g_buttonReleaseDelegate = MyGUI::newDelegate(&OnRecruitClicked);
+        g_button->eventMouseButtonReleased += g_buttonReleaseDelegate;
         return true;
     }
     TR_CATCH { return false; }
@@ -152,6 +186,10 @@ void Unsubscribe()
     {
         g_button->eventMouseButtonPressed -= g_buttonDelegate;
     }
+    if (g_buttonReleaseDelegate != NULL)
+    {
+        g_button->eventMouseButtonReleased -= g_buttonReleaseDelegate;
+    }
 }
 
 void SafeUnsubscribe()
@@ -187,6 +225,7 @@ void DestroyButton()
 
     g_button = NULL;
     g_buttonDelegate = NULL;
+    g_buttonReleaseDelegate = NULL;
 }
 
 // TotalSparring sits right of the menu top-aligned without avoiding anything,
@@ -342,6 +381,11 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
     // them in here made a caption too long to read, which is worse than saying
     // less.
     SafeSetCaption(g_button, config.recruitLabel.c_str());
+
+    // A fresh menu: the next press or release over Hablar is a new gesture. It never
+    // fires by itself, so the click that opened the menu cannot trigger the button
+    // unless it is released over it.
+    clickgesture::Arm(&g_gesture);
 
     // The native menu sizes itself during show, so the first anchor attempt can
     // read a stale rect; update() re-anchors every frame while it is open.

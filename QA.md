@@ -529,3 +529,17 @@ La tarjeta sigue a la **seleccion**: clic izquierdo en un NPC que no es tuyo y a
 | S12 | Hub: `Lectura: al seleccionar` OFF | Seleccionar ya no muestra nada; `Hablar` sigue mostrandola junto a la oferta | |
 | S13 | `config.json` viejo con `"readoutOnHover": true` | Se ignora sin error; la tarjeta funciona por seleccion | sin `[config]` de error |
 | S14 | Cargar un save con la tarjeta a la vista | Desaparece; no queda apuntando a nadie | `[identity] load begin ...` |
+
+### 12.12 Hablar al soltar el clic derecho (price-readout-button-tweaks T6)
+
+Como en TotalSparring y TotalLoot: mantener clic derecho sobre el NPC, deslizar el mouse hasta `Hablar` y soltar ejecuta la accion, igual que las opciones nativas del menu. El clic izquierdo sigue andando. Con `"probeOnClick": true` para ver los eventos ignorados.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| G1 | Mantener clic derecho sobre un NPC reclutable, deslizar hasta `Hablar` sin soltar, soltar encima | Se abre la oferta **una** vez | un solo `[readout] ... [hablar]` |
+| G2 | Abrir el menu y hacer clic izquierdo en `Hablar` | Se abre la oferta **una** vez (el soltar del mismo clic no la abre de nuevo) | un solo `[readout] ... [hablar]` |
+| G3 | Mantener clic derecho sobre el NPC y soltar en otro lado (el suelo, una opcion nativa) | `Hablar` no se ejecuta; la opcion nativa, si se solto sobre ella, funciona como siempre | sin `[readout] ... [hablar]` |
+| G4 | Clic derecho rapido (apretar y soltar en el NPC) | El menu se abre normal y `Hablar` **no** se ejecuta solo | sin `[readout] ... [hablar]` |
+| G5 | Mismo gesto (G1) sobre los botones de TotalSparring y TotalLoot en el mismo menu | Cada uno ejecuta solo su accion; `Hablar` no se dispara al soltar sobre otro boton | |
+| G6 | Clic con la rueda o el boton del medio sobre `Hablar` | No hace nada | |
+| G7 | Abrir el menu, cerrarlo sin elegir, abrirlo de nuevo y hacer G1 | Funciona igual (cada menu arma un gesto nuevo) | |

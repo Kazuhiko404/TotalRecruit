@@ -34,3 +34,4 @@ void RunReadoutCatalogTests();
 void RunReadoutModelTests();
 void RunTalkHintCacheTests();
 void RunMenuSlotTests();
+void RunMenuButtonReleaseTests();

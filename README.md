@@ -126,7 +126,7 @@ their stable roll is recast once.
 | | |
 |---|---|
 | Right-click an NPC | The recruit button, labelled with what they want |
-| Press the recruit button (Hablar) | The offer window, with the stress and join-chance card beside it (see below) |
+| Press the recruit button (Hablar): click it, or hold right click on the NPC, slide onto it and release, as with the game's own menu options | The offer window, with the stress and join-chance card beside it (see below) |
 | **Shift+K** | Spawn panel |
 
 Settings are in the Mod Hub panel, not in a window of this mod.

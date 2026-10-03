@@ -125,6 +125,7 @@
     <ClCompile Include="src\readout_target.cpp" />
     <ClCompile Include="src\readout.cpp" />
     <ClCompile Include="src\menu_slot.cpp" />
+    <ClCompile Include="src\menu_button_release.cpp" />
     <ClCompile Include="src\menu_obstacles.cpp" />
     <ClCompile Include="src\button_style.cpp" />
     <ClCompile Include="src\button_block.cpp" />
@@ -151,6 +152,7 @@
     <ClInclude Include="src\cursor_hint.h" />
     <ClInclude Include="src\talk_hint_cache.h" />
     <ClInclude Include="src\menu_slot.h" />
+    <ClInclude Include="src\menu_button_release.h" />
     <ClInclude Include="src\menu_obstacles.h" />
     <ClInclude Include="src\button_style.h" />
     <ClInclude Include="src\button_block.h" />
