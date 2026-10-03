@@ -13,6 +13,7 @@
 #include "hold_tracking.h"
 #include "insistence.h"
 #include "haggle_ledger.h"
+#include "cage_commands.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4091)
@@ -51,6 +52,7 @@ void ResetSessionState()
     ForgetReadout();
     ForgetCursorTarget();
     ForgetConversation();
+    ForgetCageCommands();
 
     // The per-character tables (all keyed by CharKey).
     ForgetAllMercy();
@@ -63,7 +65,8 @@ void ResetSessionState()
     // Last: the ids the keys above were made from.
     CharacterIdentity::AbandonWorldState();
     LogInfo("[identity] load begin: session state cleared (offer window, overlay, readout and cursor targets, "
-            "conversation, mercy, hails, hold clock, insistence, defeats, haggle offences, identity registry).");
+            "conversation, cage command watch and credits, mercy, hails, hold clock, insistence, defeats, "
+            "haggle offences, identity registry).");
 }
 
 bool Install()

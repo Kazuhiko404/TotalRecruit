@@ -258,9 +258,11 @@ struct Submission
     float fearfulResolve;
     float braveResolve;
     float honourableResolve;
-    // R2.3 -- roughing up a prisoner in your own cage. A deliberate act with a
-    // cooldown, which is what makes it a choice rather than a grind, and it
-    // knocks out rather than wounding: an accidental corpse is not a mechanic.
+    // R2.3 -- roughing up a prisoner in your own cage (allowBeating,
+    // beatingCooldownHours). The beating is the engine's own BEAT_CAGE_OCCUPANT
+    // order (cage_commands.h), so how long they stay down is the engine's; the
+    // cooldown only gates the popup's GOLPEARLO remedy. The old
+    // submissionBeatingKnockoutSeconds key is no longer read.
     // Route C -- yielding in the field, with no cage involved. How many times
     // the player has to beat the same person before they will consider giving
     // in. This is the route the spec asks for and it had become unreachable:
@@ -283,7 +285,6 @@ struct Submission
     int maxStressChance;
     bool allowBeating;
     float beatingCooldownHours;
-    float beatingKnockoutSeconds;
 
     Submission()
         : countDefeats(true),
@@ -302,8 +303,7 @@ struct Submission
           stressFromExhaustion(0.15f),
           maxStressChance(45),
           allowBeating(true),
-          beatingCooldownHours(6.0f),
-          beatingKnockoutSeconds(60.0f)
+          beatingCooldownHours(6.0f)
     {
     }
 };

@@ -41,6 +41,10 @@ bool SafeIsDown(Character* character, bool* out);
 // true for anyone who cannot stand, a wide-awake cripple included.
 bool SafeIsKnockedOut(Character* character, bool* out);
 
+// The task the character is on right now (its body's current action), as the
+// engine's TaskType in an int; NULL_TASK when idle.
+bool SafeCurrentTask(Character* character, int* out);
+
 // The engine's own per-character memory ("this one remembers that the player
 // ..."). It is saved with the game, which is why the mod uses it at all.
 bool SafeMemoryTag(Character* character, Character* about,

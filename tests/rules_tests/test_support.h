@@ -42,3 +42,4 @@ void RunScreenProjectionTests();
 void RunHaggleRulesTests();
 void RunCardDismissRulesTests();
 void RunFlatSliderTests();
+void RunCageCommandRulesTests();

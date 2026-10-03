@@ -1,5 +1,8 @@
 #include "engine_reads.h"
 
+#include <kenshi/CharBody.h>
+#include <kenshi/Tasker.h>
+
 namespace totalrecruit
 {
 namespace
@@ -169,6 +172,30 @@ bool SafeIsKnockedOut(Character* character, bool* out)
     {
         *out = character->_NV_isLiterallyUnconciousNotPretending() ||
                character->getProneState() == PS_KO;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// TotalPredator's RawCurrentTask (predator_logic.cpp). Kept here, not in the
+// module that watches orders: Tasker.h and AI/AITaskSystem.h both define
+// taskPriority, so one translation unit can only include one of them.
+bool SafeCurrentTask(Character* character, int* out)
+{
+    if (character == NULL || out == NULL)
+    {
+        return false;
+    }
+    TR_TRY
+    {
+        *out = (int)NULL_TASK;
+        CharBody* body = character->getBody();
+        if (body == NULL)
+        {
+            return false;
+        }
+        Tasker* action = body->getCurrentAction();
+        *out = (action != NULL) ? (int)action->key() : (int)NULL_TASK;
         return true;
     }
     TR_CATCH { return false; }

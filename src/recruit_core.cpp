@@ -15,6 +15,7 @@
 #include "feeding.h"
 #include "messages.h"
 #include "defeats.h"
+#include "cage_commands.h"
 #include "cats_purse.h"
 #include "money_rules.h"
 #include "character_facts.h"
@@ -661,13 +662,14 @@ void HelpCaptive(Character* character)
     }
     else
     {
-        if (!BeatPrisoner(character, &message))
+        // GOLPEARLO is the same native order as the context menu's Golpear: the
+        // selected character walks in and beats them, and the engine decides how
+        // it goes. The popup is already closed; the beating is the answer.
+        const CageCommandResult result = OrderSelectedToBeat(character);
+        if (result != CageCommand_Issued)
         {
-            TellPlayer(message, true);
-            return;
+            TellPlayer(CageCommandProblem(result), true);
         }
-        TellPlayer(message, false);
-        // They are unconscious now, so there is no conversation to reopen.
         return;
     }
 

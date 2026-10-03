@@ -316,7 +316,6 @@ std::vector<Field> ConfigFields(Config& c)
     AddInt(f, "submissionMaxStressChance", &c.submission.maxStressChance);
     AddBool(f, "submissionAllowBeating", &c.submission.allowBeating);
     AddFloat(f, "submissionBeatingCooldownHours", &c.submission.beatingCooldownHours);
-    AddFloat(f, "submissionBeatingKnockoutSeconds", &c.submission.beatingKnockoutSeconds);
 
     AddFloat(f, "animalCubMaturity", &c.animals.cubMaturity);
     AddInt(f, "animalWeakLevel", &c.animals.weakLevel);

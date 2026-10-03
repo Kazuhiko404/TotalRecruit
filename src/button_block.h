@@ -2,7 +2,9 @@
 
 // Port of TotalLoot/src/button_block: creates a context-menu button with the
 // shared look and places a block of them in a free slot beside the native menu.
-// TotalRecruit uses it for a block of one (the Hablar button).
+// TotalRecruit uses it for the block beside the context menu: [Hablar], or
+// [Hablar, Golpear, Noquear] for a prisoner in the player's cage
+// (recruit_overlay.cpp, cage_command_rules.h ComposeContextBlock).
 
 #include "common.h"
 #include "button_style.h"

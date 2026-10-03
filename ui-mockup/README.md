@@ -7,7 +7,7 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 
 | File | What it holds | C++ it mirrors |
 |---|---|---|
-| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / press Hablar), the per-route table, the Mod Hub controls, the recruit popup gallery (section 5) | -- |
+| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / menu on your prisoner with Golpear and Noquear / press Hablar), the per-route table, the Mod Hub controls, the recruit popup gallery (section 5) | -- |
 | `css/base.css` | palette tokens | `ui_style.h` / `ui_style.cpp` colours |
 | `css/readout.css` | the card: widths, padding, bar heights, segment colours | `kCardWidth`, `kCardWidthCompact`, `kPad`, `kBarH` ... |
 | `js/data.js` | one view-model per state (the facts that produce it are in a comment above each); `PLACEMENT` timings and gaps; `HUB` rows | `readout_model.cpp` output (`ReadoutView`); `readout.cpp` / `readout_ui.cpp` constants; `mod_hub_integration.cpp` |
@@ -98,6 +98,16 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     An offended NPC shows the raised price and the offended line with no slider. The section has a fixed height, so a
     drag never resizes the window: only texts, colours and the button row change. With the slider, the purse
     shortfall goes in the slider's line, never on the reason plate.
+
+### Cage commands (section 2, "Menu on your prisoner")
+
+17. **Golpear and Noquear beside Hablar** (user request 2026-10-03). For a prisoner awake in the player's own cage
+    with `allowBeating` on, the block beside the context menu is `[Hablar, Golpear, Noquear]`, top to bottom, one
+    `PlaceButtonBlock` call with the shared 160 x 44 style and 2 px between buttons; anyone else keeps `[Hablar]`.
+    Both are Kenshi's own orders given to the selected character (`BEAT_CAGE_OCCUPANT`, `STEALTH_KNOCKOUT`), so the
+    outcome is the game's. Noquear shows the game's own odds ("Noquear 72%", `getPlayerTaskProbability`), plain
+    "Noquear" when there are none. Labels are title case like Hablar (`cage.button.*` in `messages.json`). Each
+    button arms its own press-and-release gesture.
 
 ## Checking a change
 

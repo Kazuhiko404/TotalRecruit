@@ -16,8 +16,11 @@
 //                         persisted id and reads it back on load, so a reload
 //                         restores exactly that save's count.
 //
-// This file is the engine side: the knockout hook, the right-click fallback,
-// the "seen standing" feed and the beating. The engine's own memory tags are no
+// This file is the engine side: the knockout hook, the right-click fallback and
+// the "seen standing" feed. The beating itself is a native order now
+// (cage_commands.h); a knockout the player ordered there is credited to the
+// player by the hook (ClaimOrderedKnockoutCredit), because the engine's own
+// record of who won may name nobody. The engine's own memory tags are no
 // longer read: the engine writes LT_SQUAD_LOST_TO_ME_ONCE by itself, and reading
 // it as a defeat handed never-beaten guards the field-yield route.
 
@@ -31,11 +34,6 @@ namespace totalrecruit
 // more than once for the same knockout: only the first sighting of an episode
 // counts (defeat_episode_rules).
 void NoteDefeat(Character* character);
-
-// The same, for a knockout the player's own action caused (the beating,
-// BeatPrisoner): the engine is not asked who put them down, because the plugin
-// already knows. The episode rule and the own-side filter still apply.
-void CreditDefeatToPlayer(Character* character);
 
 // How many times the player has defeated them, as the ledger (and so the save)
 // holds it. 0 for a character never counted.
@@ -52,12 +50,9 @@ void NoteIfDown(Character* character);
 // episode is still marked counted.
 void NoteSeenStanding(Character* character);
 
-// R2.3 -- rough up a prisoner in the player's own cage. Returns false with a
-// reason when it is not allowed: too soon, not caged, or already down.
-bool BeatPrisoner(Character* character, std::string* outMessage);
-
-// Whether beating this character is currently possible, for deciding whether to
-// offer the button at all. The cooldown runs from the last counted defeat.
+// R2.3 -- whether the popup offers the GOLPEARLO remedy for this character: in
+// the player's own cage, awake, beating allowed, and the cooldown since the last
+// counted defeat has run. The beating itself is cage_commands.h.
 bool CanBeatPrisoner(Character* character, double* outHoursLeft);
 
 // Who is told when a defeat leaves someone close enough to death to plead. The

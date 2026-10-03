@@ -278,7 +278,6 @@ static bool DoRegisterModHub()
     regInt(api, mod, "sub_max_stress", "Estres: chance maxima", "Cuanta chance puede sumar la barra entera", 0, 90, 5, &c.submission.maxStressChance);
     regBool(api, mod, "sub_allow_beating", "Sumision: permitir golpear", "Deja castigar al prisionero en tu jaula", &c.submission.allowBeating);
     regFloat(api, mod, "sub_beating_cooldown", "Sumision: horas entre golpizas", "Horas de juego antes de poder volver a golpearlo", 0.5f, 48.0f, 0.5f, 1, &c.submission.beatingCooldownHours);
-    regFloat(api, mod, "sub_beating_ko_seconds", "Sumision: segundos inconsciente", "Cuanto queda fuera de combate tras la golpiza", 5.0f, 600.0f, 5.0f, 0, &c.submission.beatingKnockoutSeconds);
 
     regFloat(api, mod, "animal_nutrition_per_meal", "Animal: comida por racion", "Cuanto llena el estomago una racion (escala 0..3 del motor)", 0.05f, 3.0f, 0.05f, 2, &c.animals.nutritionPerMeal);
     regBool(api, mod, "animal_personality_matters", "Animal: cuenta la personalidad", "Un animal desconfiado pide mas comida que uno timido", &c.animals.personalityMatters);

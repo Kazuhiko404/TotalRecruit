@@ -92,6 +92,14 @@ Requisitos si se acepta:
 *Verificado:* el motor expone aplicación de daño, así que es alcanzable. Falta
 decidir si se limita a la jaula y cómo se presenta.
 
+*Estado (2026-10-03, cage-animals-submission T1):* se limita a tu jaula y se
+presenta como dos botones junto a Hablar, **Golpear** y **Noquear**, que da el
+personaje seleccionado con las órdenes del propio juego (`BEAT_CAGE_OCCUPANT`,
+`STEALTH_KNOCKOUT`). El daño, el estrés y si el noqueo sale son del motor, no
+números del mod; el desmayo forzado de 60 s se retiró. El techo es el del motor
+(la paliza de jaula está pensada para noquear, no para matar): se confirma en
+juego (`QA.md` 12.19).
+
 **R2.4 — Cooldown de insistencia acumulativo y configurable.** *(P1)*
 Hoy funciona pero con horas fijas. Debe pasar a:
 - Horas base, configurables.

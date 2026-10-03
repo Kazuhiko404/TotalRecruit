@@ -69,6 +69,7 @@ const Suite kSuites[] = {
     { "haggle_rules", RunHaggleRulesTests },
     { "card_dismiss_rules", RunCardDismissRulesTests },
     { "flat_slider", RunFlatSliderTests },
+    { "cage_command_rules", RunCageCommandRulesTests },
 };
 } // namespace
 

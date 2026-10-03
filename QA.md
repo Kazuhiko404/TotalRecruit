@@ -637,3 +637,19 @@ Solo para precios en cats (soborno en el mundo libre y la ruta de cautiverio con
 | H10 | Un mercenario que pide mas de lo que tenes | Al abrir: TIENES en rojo, "No te alcanzan para esa oferta (te faltan N)" en la linea del slider y solo CANCELAR; bajando la oferta por debajo de tu bolsa aparece OFRECER | — |
 | H11 | Rescate, piedad, rendicion / sometido y un rechazo sin precio | Ninguno tiene slider ni linea de regateo | — |
 | H12 | `haggleEnabled` en false (Mod Hub "Regateo: activo") y `Hablar` a alguien con precio | La ventana de siempre, sin slider | — |
+
+### 12.19 Golpear y Noquear al preso de tu jaula (cage-animals-submission T1)
+
+Golpear y Noquear son ordenes del propio juego (`BEAT_CAGE_OCCUPANT`, `STEALTH_KNOCKOUT`) que da el personaje **seleccionado**: el mod no calcula daño ni probabilidad. Si en 1,5 s el personaje no cambio de tarea, corre el respaldo (Golpear: el ataque de TotalSparring `FOCUSED_MELEE_ATTACK`; Noquear: `MedicalSystem::knockout` con su habilidad de asesinato). Mockup: `ui-mockup/readout.html` seccion 2, "Menu on your prisoner". Reemplaza A1-A3 (12.7) y K6 (12.13): el viejo GOLPEARLO (desmayo forzado de 60 s) ya no existe y la clave `submissionBeatingKnockoutSeconds` no se lee. Con `probeOnClick`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| C1 | Seleccionar a uno de los tuyos, clic derecho sobre un preso **despierto** en tu jaula | Al lado del menu, un bloque de tres: Hablar, Golpear, "Noquear NN%" (o "Noquear" si el juego no da probabilidad); el bloque no tapa los botones de TotalSparring / TotalLoot | `Context menu: <nombre> -> ... [cage commands]` |
+| C2 | Clic derecho sobre un NPC libre, un preso inconsciente, o con `allowBeating` apagado | Solo Hablar | sin `[cage commands]` |
+| C3 | Golpear (clic izquierdo, y otra vez con el gesto: mantener clic derecho, deslizar, soltar) | El seleccionado va a la jaula y lo golpea con sus propios golpes; una sola orden por gesto | `[cage] <tuyo> -> <preso> beat ordered (task 475, was N, checkPlayerOrderForProblems=...)` y luego `[cage] ... beat via task` (o `via fallback`) |
+| C4 | Noquear | El seleccionado intenta el noqueo sigiloso; sale o no segun su habilidad (el % del boton) | `[cage] ... knockout ordered (task 507, ...)` y `... knockout via task` o `via fallback` |
+| C5 | Cuando el preso cae por C3 o C4 | La derrota cuenta para el jugador aunque el juego no nombre a nadie como ganador | `[defeat-hook] knockout fired for <preso>`, `[defeat] credited to the player explicitly (cage command): <preso>` (o un `defeated by the player` normal) |
+| C6 | Golpear o Noquear sin nadie de tu grupo seleccionado | "Selecciona a alguien de tu grupo para hacerlo"; no pasa nada mas | — |
+| C7 | Rechazo en la ventana con remedio **GOLPEARLO** | La ventana se cierra y el seleccionado va a golpearlo (la misma orden que C3); sin seleccionado, el mensaje de C6 | igual que C3 |
+| C8 | Anotar si alguna vez aparece `via fallback` y para que orden | Evidencia: si el juego no toma `BEAT_CAGE_OCCUPANT` / `STEALTH_KNOCKOUT` desde un plugin, el respaldo es lo que se ve; reportar tambien el valor de `checkPlayerOrderForProblems` | `via fallback` |
+| C9 | Dar la orden y cargar un save antes de que se resuelva | Nada queda apuntando a nadie | `load begin: session state cleared (... cage command watch and credits ...)` |

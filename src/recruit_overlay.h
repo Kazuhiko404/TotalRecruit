@@ -4,11 +4,13 @@ class Character;
 
 namespace totalrecruit
 {
-// Installs the context-menu hooks that show a "Recruit" button anchored to
-// Kenshi's own right-click menu. Returns false if a hook could not be placed.
+// Installs the context-menu hooks that show the Hablar button anchored to
+// Kenshi's own right-click menu -- with Golpear and Noquear under it for a
+// prisoner awake in the player's cage (cage_commands.h). Returns false if a hook
+// could not be placed.
 bool InstallRecruitOverlay();
 
-// Destroys the button and drops any target reference.
+// Destroys the buttons and drops any target reference.
 void ShutdownRecruitOverlay();
 
 // True while Kenshi's right-click menu is on screen, whoever it is about.

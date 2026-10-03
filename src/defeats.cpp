@@ -7,6 +7,7 @@
 #include "defeat_rules.h"
 #include "defeat_episode_rules.h"
 #include "defeat_ledger.h"
+#include "cage_commands.h"
 
 #include <map>
 #include <sstream>
@@ -243,9 +244,10 @@ void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Si
 
     if (creditedToPlayer)
     {
-        // The line QA looks for: the beating counted although the engine's own
-        // record may name nobody (or somebody else).
-        LogInfo("[defeat] credited to the player explicitly (beating): " +
+        // The line QA looks for: a knockout ordered through a cage command
+        // counted although the engine's own record may name nobody (or somebody
+        // else).
+        LogInfo("[defeat] credited to the player explicitly (cage command): " +
                 CharacterName(character) + " (engine winner " +
                 (readWinner ? (beatenByPlayer ? "is the player" : "is someone else")
                             : "unreadable") + ")");
@@ -308,41 +310,19 @@ void Knockout_hook(MedicalSystem* thisptr, float skill)
         LogInfo("[defeat-hook] knockout fired for " + CharacterName(victim) +
                 (readBefore && !downBefore ? " (was standing)" : " (already down)"));
     }
-    RecordDefeat(victim, false,
+    // A knockout the player ordered through Golpear / Noquear is the player's,
+    // whatever the engine recorded as the winner: the fallback knockout names
+    // nobody at all. Claimed once, inside a short window (cage_command_rules.h).
+    const bool ordered = ClaimOrderedKnockoutCredit(victim);
+    RecordDefeat(victim, ordered,
                  (readBefore && !downBefore) ? DefeatEpisode::Sighting_KnockoutFromStanding
                                              : DefeatEpisode::Sighting_FoundDown);
-}
-
-// R2.3 -- the beating.
-//
-// knockoutForceTimer is the engine's own way to put someone out for a set time,
-// which is what a beating amounts to here. Damages is not fabricated: building
-// an engine struct from a plugin to inflict real wounds is how a prisoner ends
-// up dead by accident, and R2.3 asks explicitly for a ceiling.
-bool SafeForceKnockout(Character* character, float seconds)
-{
-    TR_TRY
-    {
-        MedicalSystem* medical = character->getMedical();
-        if (medical == NULL)
-        {
-            return false;
-        }
-        medical->knockoutForceTimer(seconds);
-        return true;
-    }
-    TR_CATCH { return false; }
 }
 } // namespace
 
 void NoteDefeat(Character* character)
 {
     RecordDefeat(character, false, DefeatEpisode::Sighting_FoundDown);
-}
-
-void CreditDefeatToPlayer(Character* character)
-{
-    RecordDefeat(character, true, DefeatEpisode::Sighting_FoundDown);
 }
 
 int DefeatCount(Character* character)
@@ -395,40 +375,6 @@ bool CanBeatPrisoner(Character* character, double* outHoursLeft)
             return false;
         }
     }
-    return true;
-}
-
-bool BeatPrisoner(Character* character, std::string* outMessage)
-{
-    double hoursLeft = 0.0;
-    if (!CanBeatPrisoner(character, &hoursLeft))
-    {
-        if (outMessage)
-        {
-            *outMessage = (hoursLeft > 0.0)
-                              ? "todavia se esta recuperando del anterior"
-                              : "no puedes hacer eso ahora";
-        }
-        return false;
-    }
-
-    if (!SafeForceKnockout(character, GetConfig().submission.beatingKnockoutSeconds))
-    {
-        if (outMessage) *outMessage = "no se pudo";
-        return false;
-    }
-
-    // Counted like any other defeat, so the beating feeds the same submission
-    // arithmetic rather than being an action with no consequence. It is the
-    // player's own act, so the credit is explicit: NoteDefeat would ask the
-    // engine who put them down, and when lastGuyWhoDefeatedMe did not name the
-    // player the knockout was dropped -- while the window said "lo dejaste sin
-    // sentido" and the cooldown (which reads the same record) never started.
-    // If the forced knockout already raised the hook and it counted, this is the
-    // same episode and does not count twice.
-    CreditDefeatToPlayer(character);
-
-    if (outMessage) *outMessage = CharacterName(character) + ": lo dejaste sin sentido";
     return true;
 }
 

@@ -132,6 +132,8 @@
     <ClCompile Include="src\readout_target.cpp" />
     <ClCompile Include="src\screen_projection.cpp" />
     <ClCompile Include="src\card_dismiss_rules.cpp" />
+    <ClCompile Include="src\cage_command_rules.cpp" />
+    <ClCompile Include="src\cage_commands.cpp" />
     <ClCompile Include="src\mouse_input.cpp" />
     <ClCompile Include="src\readout.cpp" />
     <ClCompile Include="src\menu_slot.cpp" />

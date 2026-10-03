@@ -40,6 +40,7 @@ is shown on hover.</p>
 <div class="bar" id="sceneBar">
   <button class="tab" data-s="select" aria-pressed="true">Selected NPC (default)</button>
   <button class="tab" data-s="menu" aria-pressed="false">Right-click menu open</button>
+  <button class="tab" data-s="cagemenu" aria-pressed="false">Menu on your prisoner (Golpear / Noquear)</button>
   <button class="tab" data-s="hablar" aria-pressed="false">Press Hablar</button>
   <button class="tab" data-s="compact" aria-pressed="false">Press Hablar, compact</button>
 </div>
@@ -170,6 +171,34 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       h += '<div class="callout" style="left:620px;top:60px;max-width:420px">Right-click menu open: the card hides until it ' +
            'closes, because the buttons of this mod and of TotalSparring / TotalLoot take the free slots on either side of ' +
            'the menu and there is no side left to step to. It comes back on its own while he stays selected.</div>';
+      scene.innerHTML = h;
+      return;
+    }
+    if (mode === 'cagemenu') {
+      // The prisoner is awake in the player's own cage and allowBeating is on: the block
+      // is [Hablar, Golpear, Noquear] (cage_command_rules.cpp ComposeContextBlock), one
+      // PlaceButtonBlock call, 160 x 44 each with kButtonGapY = 2 between them and
+      // kButtonGapX = 2 from the menu. menu_slot tries the left side first; TotalSparring's
+      // button takes the right. Noquear carries the engine's own odds for the selected
+      // character (getPlayerTaskProbability, STEALTH_KNOCKOUT); with no odds it reads "Noquear".
+      var cx = 470, cy = VIEW.h - 300, bw = 160, bh = 44, gy = 2, gx = 2;
+      var bx = cx - gx - bw;
+      h += '<div class="cage" style="left:390px"></div><div class="npc" style="left:408px"></div>';
+      h += '<div class="selring" style="left:397px"></div>';
+      h += '<div class="npc" style="left:760px"></div>';
+      h += '<div class="ctxmenu" style="left:' + cx + 'px;top:' + cy + 'px"><div>Bandido</div><div>Hablar</div>' +
+           '<div>Atacar</div><div>Examinar</div></div>';
+      h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + cy + 'px">Hablar</div>';
+      h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + (cy + bh + gy) + 'px">Golpear</div>';
+      h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + (cy + 2 * (bh + gy)) + 'px">Noquear 72%</div>';
+      h += '<div class="ctxbtn" style="left:' + (cx + 122 + gx) + 'px;top:' + cy + 'px">Sparring</div>';
+      h += '<div class="callout" style="left:16px;top:16px;max-width:300px">Right-click on a prisoner awake in your cage. ' +
+           'Golpear and Noquear are Kenshi\'s own orders (BEAT_CAGE_OCCUPANT, STEALTH_KNOCKOUT) given to the character ' +
+           'you have selected; nobody selected says "Selecciona a alguien de tu grupo para hacerlo". The mod computes ' +
+           'no damage and no odds of its own: the 72% is the game\'s.</div>';
+      h += '<div class="callout" style="left:860px;top:16px;max-width:400px">Anyone else -- not caged, already down, ' +
+           'or beating switched off -- gets the block of one, [Hablar], as in "Right-click menu open". The popup\'s ' +
+           'GOLPEARLO remedy gives the same native Golpear order and closes the window.</div>';
       scene.innerHTML = h;
       return;
     }
