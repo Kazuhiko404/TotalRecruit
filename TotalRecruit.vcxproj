@@ -134,6 +134,8 @@
     <ClCompile Include="src\card_dismiss_rules.cpp" />
     <ClCompile Include="src\cage_command_rules.cpp" />
     <ClCompile Include="src\cage_commands.cpp" />
+    <ClCompile Include="src\feeding_ledger.cpp" />
+    <ClCompile Include="src\saved_ints.cpp" />
     <ClCompile Include="src\mouse_input.cpp" />
     <ClCompile Include="src\readout.cpp" />
     <ClCompile Include="src\menu_slot.cpp" />

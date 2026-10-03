@@ -142,8 +142,12 @@ struct AnimalExtra
     bool belongsToSomeone;
     // How grown it is, 0..1 of its lifespan (1.0 when the engine cannot say).
     float maturity;
+    // Meals the player has given it (feeding_ledger.h, saved with the character
+    // as idata "total_recruit.fed_by_player"). A wild animal sits at a full
+    // stomach on its own; only food from the player's hand tames it.
+    int fedByPlayer;
 
-    AnimalExtra() : belongsToSomeone(false), maturity(1.0f) {}
+    AnimalExtra() : belongsToSomeone(false), maturity(1.0f), fedByPlayer(0) {}
 };
 
 struct CheatFacts

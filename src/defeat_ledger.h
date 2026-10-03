@@ -3,7 +3,8 @@
 // PURE: how many times the player has put each character down.
 //
 // The count lives in the character's own save state (character_identity.cpp
-// writes it next to the persisted id as idata "total_recruit.player_defeats"),
+// writes it next to the persisted id as idata "total_recruit.player_defeats",
+// one row of the saved_ints.h table),
 // so a reload restores exactly what that save knew -- not a floor, not a guess,
 // and nothing the engine wrote on its own. This ledger is the in-memory side of
 // it: cleared at load begin (load_boundary.cpp), refilled by each character's

@@ -105,6 +105,31 @@ void AnimalsNeverSurrender()
     CHECK(ChooseEntryRoute(f) == Route_FreeWorld);
 }
 
+// cage-animals-submission T2: an animal is tamed with the player's food and
+// nothing else, so neither the rescue debt nor easy mode's "healthy thanks to you"
+// may answer for it.
+void AnimalsSkipRescueAndEasyHealthy()
+{
+    const char* name = "route: an animal never takes the rescue or easy-healthy route";
+    RouteFacts f;
+    f.animal = true;
+    f.remembersSaviour = true;
+    CHECK(ChooseEntryRoute(f) == Route_FreeWorld);
+    f.inMyCage = true;
+    CHECK(ChooseEntryRoute(f) == Route_Cage);
+    f.remembersSaviour = false;
+    f.easyHealthy = true;
+    CHECK(ChooseEntryRoute(f) == Route_Cage);
+
+    // A person in the same spot still does.
+    RouteFacts person;
+    person.inMyCage = true;
+    person.easyHealthy = true;
+    CHECK(ChooseEntryRoute(person) == Route_EasyHealthy);
+    person.remembersSaviour = true;
+    CHECK(ChooseEntryRoute(person) == Route_Rescue);
+}
+
 void GrudgeRefusesOutsideTheCageOnly()
 {
     const char* name = "route: an unforgiving grudge refuses outside the cage, not inside";
@@ -307,6 +332,7 @@ void RunRouteRulesTests()
     EasyHealthyNeedsMyCage();
     SurrenderedBeatsTheTail();
     AnimalsNeverSurrender();
+    AnimalsSkipRescueAndEasyHealthy();
     GrudgeRefusesOutsideTheCageOnly();
     ForgivingGrudgeIsNotARefusal();
     FieldYieldNeedsEnoughDefeats();

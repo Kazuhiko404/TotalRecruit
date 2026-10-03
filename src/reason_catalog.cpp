@@ -58,7 +58,6 @@ const Row kRows[] = {
     { Reason_Intimidated,         "captive.intimidated",               "intimidado por tu poder, se somete", RefusalTone_Default },
     { Reason_FreedFollows,        "reason.freed",                      "seguir\xc3\xa1 a quien lo liber\xc3\xb3", RefusalTone_Default },
     { Reason_CaredFor,            "reason.cared.person",               "alimentado y curado: se unir\xc3\xa1", RefusalTone_Default },
-    { Reason_CaredForAnimal,      "reason.cared.animal",               "alimentado y curado: conf\xc3\xad" "a en ti", RefusalTone_Default },
     { Reason_Starving,            "reason.starving",                   "hambriento: dale de comer", RefusalTone_Default },
     { Reason_Wounded,             "reason.wounded",                    "herido: c\xc3\xbaralo", RefusalTone_Default },
     { Reason_StarvingAndWounded,  "reason.starvingAndWounded",         "hambriento y herido: dale comida y c\xc3\xbaralo", RefusalTone_Default },
@@ -66,10 +65,10 @@ const Row kRows[] = {
     { Reason_UniqueZealot,        "unique.zealot",                     "no hay dinero que compre lo que cree: el hambre y las heridas har\xc3\xa1n el trabajo", RefusalTone_Default },
     { Reason_Defiant,             "reason.defiant",                    "sigue desafiante: d\xc3\xa9jalo con hambre o h\xc3\xa9relo", RefusalTone_Default },
     { Reason_AnimalOwned,         "animal.owned",                      "ya tiene due\xc3\xb1o: no lo vas a convencer con comida, m\xc3\xa9telo en una jaula", RefusalTone_Default },
-    { Reason_AnimalWary,          "reason.animal.wary",                "sano y desconfiado: b\xc3\xbascalo herido o hambriento", RefusalTone_Default },
     { Reason_TameWounded,         "animal.tame.wounded",               "est\xc3\xa1 herido: c\xc3\xbaralo antes de que conf\xc3\xad" "e en ti", RefusalTone_Default },
     { Reason_TameReady,           "animal.tame.ready",                 "comi\xc3\xb3 de tu mano y te sigue", RefusalTone_Default },
     { Reason_TameHungry,          "animal.tame.hungry",                "todav\xc3\xad" "a tiene hambre: le falta {cats}% de barriga", RefusalTone_Default },
+    { Reason_TameNotFed,          "animal.tame.notFed",                "todav\xc3\xad" "a no ha comido de tu mano", RefusalTone_Default },
 };
 
 const int kRowCount = (int)(sizeof(kRows) / sizeof(kRows[0]));

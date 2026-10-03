@@ -74,35 +74,16 @@ bool UniqueTakesMoney(Temperament temperament, Archetype archetype)
 
 namespace
 {
-// What a caged animal says once the currency table has sent it to "care".
-Verdict CareVerdict(Verdict v, const CoreFacts& core, const CageExtra& extra,
-                    const Config& config, bool* done)
+// What a caged person says once the currency table has sent them to "care".
+// Animals never get here: DecideCage hands them to DecideAnimal first.
+Verdict CareVerdict(Verdict v, const CoreFacts& core)
 {
-    *done = false;
-
-    // An animal that was never hurt or hungry has no reason to bond with you;
-    // taming is something you do for a creature in need.
-    if (core.animal && !core.starving && !core.wounded && !core.rememberedAsSaviour)
-    {
-        v.reasonKey = Reason_AnimalWary;
-        return v;
-    }
-
     const bool cared = !core.starving && !core.wounded;
-
-    // A caged animal is still an animal, so it settles on the same stomach
-    // arithmetic as a loose one. Deciding this twice is how two rules that are
-    // meant to be one drift apart.
-    if (core.animal && core.starving)
-    {
-        *done = true;
-        return DecideAnimal(core, extra.animal, config);
-    }
 
     if (cared)
     {
         v.willJoin = true;
-        v.reasonKey = core.animal ? Reason_CaredForAnimal : Reason_CaredFor;
+        v.reasonKey = Reason_CaredFor;
     }
     else if (core.starving && core.wounded)
     {
@@ -129,6 +110,17 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
     {
         v.reasonKey = Reason_CaptivityDisabled;
         return v;
+    }
+
+    // A caged animal is still an animal: it is tamed with the player's food and
+    // nothing else, so it settles on the same stomach arithmetic as a loose one
+    // (DecideAnimal) before any of the cage's human arguments -- the easy wait,
+    // the intimidation roll, the saviour shortcut -- can answer for it. Deciding
+    // this twice is how two rules that are meant to be one drift apart. The
+    // animal route answers for itself: it does not carry what the cage route set.
+    if (core.animal)
+    {
+        return DecideAnimal(core, extra.animal, config);
     }
 
     v.viaCaptivity = true;
@@ -203,18 +195,9 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
         break;
 
     case Currency_Care:
-    {
-        bool done = false;
-        const Verdict cared = CareVerdict(v, core, extra, config, &done);
-        if (done)
-        {
-            // The animal route answered, and it answers for itself (it does not
-            // carry what the cage route has set so far).
-            return cared;
-        }
-        v = cared;
+        v = CareVerdict(v, core);
         break;
-    }
+
 
     case Currency_Submission:
     {

@@ -9,10 +9,13 @@ namespace totalrecruit
 // through to it produced refusals like "his honour forbids accepting bribes"
 // aimed at a pack bull.
 //
-// The whole cost is food, and how full the animal already is decides whether that
-// cost has been paid. Maturity and level set the bar (animal_rules.cpp); the
-// player's own level discounts it, which in Kenshi terms is the animal judging
-// whether you can keep feeding it.
+// The whole cost is food FROM THE PLAYER: a wild animal sits at a full stomach on
+// its own, so fullness alone handed one to anyone who spoke to it (Cabra and Goat
+// Alpha read "CAN JOIN" never having been fed). It joins once the player has fed
+// it at least once (fedByPlayer, feeding_ledger.h) and its stomach has reached the
+// bar. Maturity and level set the bar (animal_rules.cpp); the player's own level
+// discounts it, which in Kenshi terms is the animal judging whether you can keep
+// feeding it.
 Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Config& config)
 {
     Verdict v;
@@ -44,7 +47,11 @@ Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Conf
         needed = ApplyAnimalTemperament(needed, resolve, config.animals);
     }
 
-    v.wantsFood = (fullness < needed);
+    const bool fedByPlayer = extra.fedByPlayer > 0;
+    const bool pastTheBar = fullness >= needed;
+    // Food is offered until both hold: a full animal that never ate from the
+    // player's hand still takes the first meal.
+    v.wantsFood = !fedByPlayer || !pastTheBar;
     // The bar this verdict is judged against, for the readout: the same two numbers
     // the comparison below uses.
     v.tameFullness = fullness;
@@ -56,8 +63,13 @@ Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Conf
         return v;
     }
 
-    if (fullness >= needed)
+    if (pastTheBar)
     {
+        if (!fedByPlayer)
+        {
+            v.reasonKey = Reason_TameNotFed;
+            return v;
+        }
         v.willJoin = true;
         v.reasonKey = Reason_TameReady;
         return v;

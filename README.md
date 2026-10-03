@@ -30,7 +30,8 @@ offer comes **when they get back on their feet**, not the moment the bandage
 goes on.
 
 This is the only route in Kenshi where the player is not exercising power, and
-no existing recruitment mod has it. Animals live almost entirely here.
+no existing recruitment mod has it. Animals never take this route: they are
+tamed with food from your hand and nothing else (see Captivity).
 
 ### Captivity
 
@@ -43,8 +44,21 @@ They are in your cage. What they want depends on who they are:
 | Slaves | To be freed |
 | Soldiers, the proud | To be beaten first, then time |
 | Unique characters | Submission, plus a longer wait |
+| Animals | Food from **your** hand, until the stomach reaches their bar |
 
 Fearful people come cheaper. The brave and the cruel cost more.
+
+**Animals.** A wild animal sits at a full stomach on its own, so a full stomach
+proves nothing: an animal joins only once you have fed it at least once (the
+meals are saved with the character) and it is full enough. Caged or loose, the
+same rule; time in the cage, intimidation and having saved its life do not tame
+it.
+
+**Golpear and Noquear.** Right-click a prisoner awake in your cage and two
+buttons stand under Hablar. They are Kenshi's own orders (beat the cage
+occupant, stealth knockout) given to the character you have selected, so the
+wounds, the stress and whether the knockout lands are the game's; Noquear shows
+the game's own odds. A knockout ordered this way counts as your defeat.
 
 **Easy mode.** A healthy, fed prisoner who has been in your cage long enough
 simply joins. The wait is **6 game hours, flat for everyone** (`easyHoursCaged`;

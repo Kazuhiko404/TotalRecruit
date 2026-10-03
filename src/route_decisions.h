@@ -52,7 +52,9 @@ Verdict DecideGrudgeRefusal(const CoreFacts& core);
 Verdict DecideFieldYield(const CoreFacts& core, const YieldExtra& extra, const Config& config);
 Verdict DecideSurrendered(const CoreFacts& core);
 
-// route_animal: a loose animal is tamed, not negotiated with. `core.inMyCage`
+// route_animal: an animal is tamed, not negotiated with -- loose or caged
+// (DecideCage hands a caged one straight here). It joins only when the player has
+// fed it (`extra.fedByPlayer`) and its stomach reached the bar. `core.inMyCage`
 // matters: an animal that belongs to someone is only refused in the open.
 Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Config& config);
 

@@ -233,6 +233,14 @@ toma el hambre en un animal famélico y en uno saciado.
 
 El umbral debe ser configurable y depender del animal:
 
+*Nota (2026-10-03, cage-animals-submission T2):* la barra sola no alcanza. Un
+animal salvaje está lleno por su cuenta (Cabra y Goat Alpha decían "CAN JOIN"
+sin haber comido nunca), así que ahora se une solo si **el jugador le dio de
+comer al menos una vez** y además la barriga llegó al umbral. Las comidas que le
+dio el jugador se guardan con el personaje (`total_recruit.fed_by_player`, en
+comidas). Vale igual en la jaula: la espera fácil, la intimidación, el rescate y
+"sano gracias a ti" no doman a un animal.
+
 **R5.2 — Cachorros y débiles: una comida.** *(P1, ya cumplido)*
 Cría, o cualquier animal de nivel bajo, se une con muy poco. No tiene otra
 opción ni motivo para desconfiar.

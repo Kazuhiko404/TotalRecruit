@@ -613,6 +613,13 @@
         "traga rapido y vuelve a mirarte: le falta {cats}%",
         "aun no confia: llena ese {cats}% que le falta"
       ],
+      "notFed": [
+        "todavia no ha comido de tu mano",
+        "esta lleno, pero no gracias a ti: dale de comer tu",
+        "no te debe nada: nunca comio de tu mano",
+        "te olfatea con recelo: la comida tiene que salir de ti",
+        "come solo, y solo se sigue a si mismo: dale de tu mochila"
+      ],
       "wounded": [
         "esta herido: curalo antes de que confie en ti",
         "sangra demasiado para pensar en comida: curalo primero",
@@ -955,7 +962,8 @@
         "tame": {
           "wounded": "Herido: curalo antes de domarlo",
           "ready": "Comio de tu mano: te sigue",
-          "hungry": "Hambre {food}% / necesita {need}%"
+          "hungry": "Hambre {food}% / necesita {need}%",
+          "notFed": "No comio de tu mano: dale comida"
         }
       },
       "waitCage": "Faltan {hours} en la jaula",

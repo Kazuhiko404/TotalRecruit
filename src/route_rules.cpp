@@ -51,7 +51,9 @@ Route ChooseEntryRoute(const RouteFacts& f)
         return Route_Unconscious;
     }
 
-    if (f.rescueEnabled && f.remembersSaviour)
+    // An animal is tamed with the player's food and nothing else: a rescue debt
+    // or easy mode's "healthy thanks to you" never answers for it.
+    if (f.rescueEnabled && f.remembersSaviour && !f.animal)
     {
         return Route_Rescue;
     }
@@ -61,7 +63,7 @@ Route ChooseEntryRoute(const RouteFacts& f)
         return Route_Dying;
     }
 
-    if (f.rescueEnabled && f.easyHealthy && f.inMyCage)
+    if (f.rescueEnabled && f.easyHealthy && f.inMyCage && !f.animal)
     {
         return Route_EasyHealthy;
     }

@@ -14,6 +14,7 @@
 #include "insistence.h"
 #include "haggle_ledger.h"
 #include "cage_commands.h"
+#include "feeding_ledger.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4091)
@@ -60,13 +61,14 @@ void ResetSessionState()
     ResetHoldClock();
     ResetTalkStates();
     ForgetAllDefeats();
+    ForgetAllPlayerMeals();
     SessionHaggleLedger().Clear();
 
     // Last: the ids the keys above were made from.
     CharacterIdentity::AbandonWorldState();
     LogInfo("[identity] load begin: session state cleared (offer window, overlay, readout and cursor targets, "
             "conversation, cage command watch and credits, mercy, hails, hold clock, insistence, defeats, "
-            "haggle offences, identity registry).");
+            "meals from the player, haggle offences, identity registry).");
 }
 
 bool Install()

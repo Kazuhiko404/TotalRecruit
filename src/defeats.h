@@ -63,7 +63,8 @@ bool CanBeatPrisoner(Character* character, double* outHoursLeft);
 typedef void (*NearDeathListener)(Character* character);
 void SetNearDeathListener(NearDeathListener listener);
 
-// The save-state bridge, for character_identity.cpp only: the count to write
+// The save-state bridge, for the saved_ints.h table only (character_identity.cpp
+// loops over it, key "total_recruit.player_defeats"): the count to write
 // into the save state of the character carrying `persistedId`, and the count its
 // save state held when it loaded (absent key: not called). Thread-safe -- the
 // serialise hook is not guaranteed to run on the game thread.

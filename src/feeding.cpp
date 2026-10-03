@@ -4,6 +4,8 @@
 #include "recruit_core.h"
 #include "engine_reads.h"
 #include "log.h"
+#include "char_key_reader.h"
+#include "feeding_ledger.h"
 
 #include <kenshi/Inventory.h>
 #include <kenshi/Item.h>
@@ -221,14 +223,32 @@ bool FeedCaptive(Character* captive, std::string* outMessage)
         SafeReadHunger(captive, &after);
     }
 
+    // An animal is tamed only by food from the player's hand: the meal is
+    // recorded (and saved with the character), whatever it did to the stomach.
+    int meals = -1;
+    bool animal = false;
+    CharKey key;
+    if (SafeIsAnimal(captive, &animal) && animal && SafeCharKey(captive, &key))
+    {
+        meals = RecordPlayerMeal(key);
+    }
+
     const std::string name = CharacterName(captive);
     {
-        char buf[160] = { 0 };
+        char buf[200] = { 0 };
         _snprintf_s(buf, sizeof(buf), _TRUNCATE,
-                    " with %s. hunger %.2f -> %.2f (%s)",
+                    " with %s. hunger %.2f -> %.2f (%s)%s",
                     itemName, before, after,
-                    engineFed ? "engine" : "credited by plugin");
-        LogInfo("Fed " + name + buf);
+                    engineFed ? "engine" : "credited by plugin",
+                    meals > 0 ? "; meals from the player " : "");
+        std::string line = "Fed " + name + buf;
+        if (meals > 0)
+        {
+            char count[16] = { 0 };
+            _snprintf_s(count, sizeof(count), _TRUNCATE, "%d", meals);
+            line += count;
+        }
+        LogInfo(line);
     }
     if (outMessage)
     {

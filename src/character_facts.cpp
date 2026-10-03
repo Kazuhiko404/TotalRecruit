@@ -15,6 +15,7 @@
 #include "surrender.h"
 #include "route_decisions.h"
 #include "haggle_ledger.h"
+#include "feeding_ledger.h"
 
 #include <kenshi/CharacterAnimal.h>
 #include <kenshi/CharStats.h>
@@ -398,6 +399,13 @@ AnimalExtra GatherAnimal(Character* character, const CoreFacts& core)
     float maturity = 1.0f;
     SafeAnimalMaturity(character, &maturity);
     extra.maturity = maturity;
+    // Meals from the player's hand (feeding.cpp records them). Read without
+    // minting an id: an animal nobody fed has nothing to find.
+    CharKey key;
+    if (SafeFindCharKey(character, &key))
+    {
+        extra.fedByPlayer = PlayerMeals(key);
+    }
     return extra;
 }
 

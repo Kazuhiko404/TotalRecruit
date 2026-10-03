@@ -1,7 +1,7 @@
 #include "common.h"
 #include "character_identity.h"
 #include "identity_registry.h"
-#include "defeats.h"
+#include "saved_ints.h"
 #include "log.h"
 
 #include <rpc.h>
@@ -30,17 +30,20 @@ using identity::Lifetime;
 // The save key. Namespace-scope so a guarded frame can pass it by reference
 // without materialising a std::string there (C2712).
 const std::string kIdentityKey("total_recruit.character_id");
-// The player-defeat count (defeats.h / defeat_ledger.h), saved next to the id so
-// a load restores exactly what that save knew. Always written with the id, 0
-// included: a state that once held a count must not keep a stale one.
-const std::string kDefeatsKey("total_recruit.player_defeats");
+// The per-character ints saved next to the id (saved_ints.h: the defeat count,
+// the meals the player gave) go through the same two hooks; their keys live in
+// that table.
 const std::string kEmptyCategory;
 
 identity::Registry g_registry;
 bool g_ready = false;
 bool g_attempted = false;
 bool g_writeFailureLogged = false;
-bool g_defeatWriteFailureLogged = false;
+// Room for the saved_ints.h rows: one "could not write" flag each, and the
+// values a load captures (more rows than this would share the last flag and
+// lose the overflow on load; the table has two).
+const int kMaxSavedIntFields = 8;
+bool g_fieldWriteFailureLogged[kMaxSavedIntFields] = { false };
 // Diagnostics (the in-game relaunch test reads them): ids read back from the
 // save, written into it and created since the last world reset.
 int g_readFromSave = 0;
@@ -138,39 +141,40 @@ bool SafeWriteId(GameData* state, const char* id)
     return true;
 }
 
-void ReadDefeatsUnguarded(GameData* state, int* count, bool* found)
+void ReadIntUnguarded(GameData* state, const std::string& key, int* value, bool* found)
 {
     typedef boost::unordered::unordered_map<std::string, int,
         boost::hash<std::string>, std::equal_to<std::string>,
         Ogre::STLAllocator<std::pair<std::string const, int>, Ogre::GeneralAllocPolicy> > Ints;
-    const Ints::const_iterator it = state->idata.find(kDefeatsKey);
+    const Ints::const_iterator it = state->idata.find(key);
     if (it != state->idata.end())
     {
-        *count = it->second;
+        *value = it->second;
         *found = true;
     }
 }
 
-// True only when the state holds the key; `count` is 0 otherwise.
-bool SafeReadDefeats(GameData* state, int* count)
+// True only when the state holds the key; `value` is 0 otherwise. The key is
+// built by the caller: this guarded frame holds no C++ object (C2712).
+bool SafeReadInt(GameData* state, const std::string& key, int* value)
 {
-    *count = 0;
+    *value = 0;
     if (state == NULL) return false;
     bool found = false;
-    TR_TRY { ReadDefeatsUnguarded(state, count, &found); }
-    TR_CATCH { *count = 0; return false; }
+    TR_TRY { ReadIntUnguarded(state, key, value, &found); }
+    TR_CATCH { *value = 0; return false; }
     return found;
 }
 
-void WriteDefeatsUnguarded(GameData* state, int count)
+void WriteIntUnguarded(GameData* state, const std::string& key, int value)
 {
-    state->add(kDefeatsKey, count, kEmptyCategory, false);
+    state->add(key, value, kEmptyCategory, false);
 }
 
-bool SafeWriteDefeats(GameData* state, int count)
+bool SafeWriteInt(GameData* state, const std::string& key, int value)
 {
     if (state == NULL) return false;
-    TR_TRY { WriteDefeatsUnguarded(state, count); }
+    TR_TRY { WriteIntUnguarded(state, key, value); }
     TR_CATCH { return false; }
     return true;
 }
@@ -202,28 +206,79 @@ bool WriteSavedId(GameSaveState* save, const std::string& id)
     return stored;
 }
 
-// The defeat count stored in a save state, in the same order as the id. False
-// when neither state holds it (a character saved before this field existed, or
-// never touched by the mod).
-bool ReadSavedDefeats(GameSaveState* save, int* count)
+// A saved int (saved_ints.h) stored in a save state, in the same order as the
+// id. False when neither state holds it (a character saved before that field
+// existed, or never touched by the mod).
+bool ReadSavedInt(GameSaveState* save, const std::string& key, int* value)
 {
-    if (SafeReadDefeats(SafeState(save, false), count)) return true;
-    return SafeReadDefeats(SafeState(save, true), count);
+    if (SafeReadInt(SafeState(save, false), key, value)) return true;
+    return SafeReadInt(SafeState(save, true), key, value);
 }
 
-// Writes the count into both states the id went into; true when at least one
+// Writes the value into both states the id went into; true when at least one
 // of them reads it back.
-bool WriteSavedDefeats(GameSaveState* save, int count)
+bool WriteSavedInt(GameSaveState* save, const std::string& key, int value)
 {
     bool stored = false;
     for (int pass = 0; pass < 2; ++pass)
     {
         GameData* state = SafeState(save, pass == 1);
         int check = 0;
-        if (SafeWriteDefeats(state, count) && SafeReadDefeats(state, &check) && check == count)
+        if (SafeWriteInt(state, key, value) && SafeReadInt(state, key, &check) && check == value)
             stored = true;
     }
     return stored;
+}
+
+// Every saved_ints.h field of the character carrying `id`, into the save state.
+// Outside the registry lock: each module's table has its own. A failed write is
+// logged once per field.
+void WriteSavedInts(GameSaveState* save, const std::string& id)
+{
+    for (int i = 0; i < SavedIntFieldCount(); ++i)
+    {
+        const SavedIntField& field = SavedIntFieldAt(i);
+        const std::string key(field.key);
+        if (WriteSavedInt(save, key, field.saved(id)))
+            continue;
+        const int flag = (i < kMaxSavedIntFields) ? i : kMaxSavedIntFields - 1;
+        bool firstFailure = false;
+        {
+            Guard lock;
+            if (!g_fieldWriteFailureLogged[flag])
+            {
+                g_fieldWriteFailureLogged[flag] = true;
+                firstFailure = true;
+            }
+        }
+        if (firstFailure)
+            Log("could not write " + key + " into a save state; that character's value restarts at 0 "
+                "after a reload.");
+    }
+}
+
+// Captures every saved_ints.h field the loading save state holds, before the
+// native loader runs (it may destroy the state).
+struct LoadedInt
+{
+    int field;
+    int value;
+};
+
+int ReadSavedInts(GameSaveState* save, LoadedInt* out, int capacity)
+{
+    int found = 0;
+    for (int i = 0; i < SavedIntFieldCount() && found < capacity; ++i)
+    {
+        int value = 0;
+        if (ReadSavedInt(save, std::string(SavedIntFieldAt(i).key), &value))
+        {
+            out[found].field = i;
+            out[found].value = value;
+            ++found;
+        }
+    }
+    return found;
 }
 
 // ---------------------------------------------------------------------------
@@ -265,25 +320,14 @@ GameSaveState* Serialise(void* arg1, void* arg2, GameDataContainer* container,
         }
         return out;
     }
-    // Outside the registry lock: the ledger has its own.
-    const int defeats = SavedDefeatCount(id);
-    const bool defeatsStored = WriteSavedDefeats(out, defeats);
+    WriteSavedInts(out, id);
     bool first = false;
-    bool defeatFailureFirst = false;
     {
         Guard lock;
         first = (g_writtenToSave++ == 0);
-        if (!defeatsStored && !g_defeatWriteFailureLogged)
-        {
-            g_defeatWriteFailureLogged = true;
-            defeatFailureFirst = true;
-        }
     }
     if (first)
         Log("first character id written into a save state (" + id + ").");
-    if (defeatFailureFirst)
-        Log("could not write the player-defeat count into a save state; that character's defeats "
-            "restart at 0 after a reload.");
     return out;
 }
 
@@ -295,8 +339,8 @@ void Load(Character* self, GameSaveState* save)
     {
         // The native loader may destroy save; capture and bind beforehand.
         const std::string id = ReadSavedId(save);
-        int defeats = 0;
-        const bool hasDefeats = ReadSavedDefeats(save, &defeats);
+        LoadedInt loaded[kMaxSavedIntFields];
+        const int loadedCount = ReadSavedInts(save, loaded, kMaxSavedIntFields);
         bool conflict = false;
         bool first = false;
         {
@@ -308,10 +352,13 @@ void Load(Character* self, GameSaveState* save)
                     first = (g_readFromSave++ == 0);
             }
         }
-        // The ledger was cleared at load begin (load_boundary); this puts back
-        // exactly what the loaded save held for this character.
-        if (hasDefeats && !id.empty())
-            RestoreSavedDefeatCount(id, defeats);
+        // Every saved-int table was cleared at load begin (load_boundary); this
+        // puts back exactly what the loaded save held for this character.
+        if (!id.empty())
+        {
+            for (int i = 0; i < loadedCount; ++i)
+                SavedIntFieldAt(loaded[i].field).restore(id, loaded[i].value);
+        }
         if (first)
             Log("first character id read back from the save (" + id + ").");
         if (conflict)

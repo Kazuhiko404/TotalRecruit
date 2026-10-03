@@ -43,3 +43,4 @@ void RunHaggleRulesTests();
 void RunCardDismissRulesTests();
 void RunFlatSliderTests();
 void RunCageCommandRulesTests();
+void RunFeedingLedgerTests();

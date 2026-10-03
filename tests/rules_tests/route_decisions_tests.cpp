@@ -438,10 +438,20 @@ void GrudgeAndSurrenderAreFixedAnswers()
 
 // -------------------------------------------------------------------- animal
 
+// An animal the player has fed once: the bar alone decides (cage-animals T2).
 AnimalExtra Beast()
 {
     AnimalExtra a;
     a.maturity = 1.0f;
+    a.fedByPlayer = 1;
+    return a;
+}
+
+// The same animal, never fed from the player's hand.
+AnimalExtra Unfed()
+{
+    AnimalExtra a = Beast();
+    a.fedByPlayer = 0;
     return a;
 }
 
@@ -541,6 +551,54 @@ void TemperamentMovesTheBarOnlyWhenItMatters()
     Config off;
     off.animals.personalityMatters = false;
     CHECK(DecideAnimal(core, Beast(), off).willJoin);
+}
+
+// cage-animals-submission T2: a wild animal sits at a full stomach on its own, so
+// fullness alone handed one to anyone who spoke to it. Only the player's food tames.
+void AFullUnfedWildAnimalRefuses()
+{
+    const char* name = "animal: a full wild animal the player never fed does not join";
+    const Verdict v = DecideAnimal(AnimalCore(3.0f), Unfed(), kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.isAnimal);
+    CHECK(v.currency == Currency_Care);
+    CHECK(v.reasonKey == Reason_TameNotFed);
+    CHECK(v.cats == 0);
+    // The bar is still judged, so the card can show the stomach.
+    CHECK(v.tameFullness >= v.tameNeeded && v.tameNeeded > 0.0f);
+}
+
+void AFedFullAnimalJoins()
+{
+    const char* name = "animal: fed once by the player and past the bar, it joins";
+    AnimalExtra fed = Unfed();
+    fed.fedByPlayer = 3;
+    const Verdict v = DecideAnimal(AnimalCore(3.0f), fed, kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.reasonKey == Reason_TameReady);
+}
+
+void FeedingAFullUnfedAnimalIsOffered()
+{
+    const char* name = "animal: food is wanted from a full animal the player never fed";
+    const Verdict full = DecideAnimal(AnimalCore(3.0f), Unfed(), kConfig);
+    CHECK(full.wantsFood);
+    // Fed and past the bar: nothing more to give.
+    CHECK(!DecideAnimal(AnimalCore(3.0f), Beast(), kConfig).wantsFood);
+    // Fed but short of the bar: still hungry for more.
+    const Verdict shortOfIt = DecideAnimal(AnimalCore(1.5f), Beast(), kConfig);
+    CHECK(shortOfIt.wantsFood);
+    CHECK(shortOfIt.reasonKey == Reason_TameHungry);
+}
+
+void AnUnfedHungryAnimalNamesTheGap()
+{
+    const char* name = "animal: unfed and short of the bar, the missing stomach is still the line";
+    const Verdict v = DecideAnimal(AnimalCore(1.5f), Unfed(), kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.wantsFood);
+    CHECK(v.reasonKey == Reason_TameHungry);
+    CHECK(v.cats == 45);
 }
 
 // --------------------------------------------------------------------- cats
@@ -646,7 +704,9 @@ void AnAnimalLeavesTheHumanPath()
 {
     const char* name = "free world: an animal is tamed with food, never offered a bribe";
     CoreFacts core = AnimalCore(3.0f);
-    const Verdict v = DecideFreeWorld(core, Free(-90.0f), kConfig);
+    FreeExtra extra = Free(-90.0f);
+    extra.animal = Beast();
+    const Verdict v = DecideFreeWorld(core, extra, kConfig);
     CHECK(v.isAnimal);
     CHECK(v.currency == Currency_Care);
     CHECK(v.band.empty());
@@ -941,31 +1001,76 @@ void TheKindAreCaredForAndJoin()
     CHECK(v.reasonKey == Reason_CaredFor);
 }
 
+CoreFacts CagedAnimal(float hunger)
+{
+    CoreFacts core = Prisoner();
+    core.animal = true;
+    core.hunger = hunger;
+    core.starving = hunger < 1.0f;
+    return core;
+}
+
+CageExtra CagedBeast(const AnimalExtra& animal)
+{
+    CageExtra extra = FailingTheRoll(Prisoner());
+    extra.animal = animal;
+    return extra;
+}
+
 void AnAnimalInTheCageIsTamedByTheSameBar()
 {
-    const char* name = "cage: a starving caged animal settles on the taming bar; a healthy wary one does not bond";
-    CoreFacts hungry = Prisoner();
-    hungry.animal = true;
-    hungry.starving = true;
-    hungry.hunger = 0.0f;
-    CageExtra extra = FailingTheRoll(hungry);
-    Verdict v = DecideCage(hungry, extra, kConfig);
+    const char* name = "cage: a caged animal settles on the taming bar, hungry or full";
+    Verdict v = DecideCage(CagedAnimal(0.0f), CagedBeast(Beast()), kConfig);
     CHECK(v.isAnimal);
     CHECK(v.wantsFood);
     CHECK(v.reasonKey == Reason_TameHungry);
 
-    CoreFacts wary = Prisoner();
-    wary.animal = true;
-    v = DecideCage(wary, FailingTheRoll(wary), kConfig);
-    CHECK(!v.willJoin);
-    CHECK(v.currency == Currency_Care);
-    CHECK(v.reasonKey == Reason_AnimalWary);
-
-    // Unless it remembers who saved it.
-    wary.rememberedAsSaviour = true;
-    v = DecideCage(wary, FailingTheRoll(wary), kConfig);
+    // Healthy, fed by the player and full: no "wary" branch any more, it joins.
+    v = DecideCage(CagedAnimal(3.0f), CagedBeast(Beast()), kConfig);
     CHECK(v.willJoin);
-    CHECK(v.reasonKey == Reason_CaredForAnimal);
+    CHECK(v.currency == Currency_Care);
+    CHECK(v.reasonKey == Reason_TameReady);
+}
+
+void ACagedUnfedAnimalIgnoresTheEasyWait()
+{
+    const char* name = "cage: an unfed animal held 24 h is not broken by time";
+    CageExtra extra = CagedBeast(Unfed());
+    extra.hoursHeld = 24.0f;
+    extra.holdKnown = true;
+    const Verdict v = DecideCage(CagedAnimal(3.0f), extra, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.isAnimal);
+    CHECK(v.reasonKey == Reason_TameNotFed);
+    CHECK(v.reasonKey != Reason_EasyWait);
+}
+
+void AnimalsAreNeverIntimidated()
+{
+    const char* name = "cage: an animal is never intimidated into joining";
+    // A key that joins at 1%: any roll the cage made would pass.
+    CageExtra extra = CagedBeast(Beast());
+    extra.roll = KeyRolling(true, 1);
+    const Verdict v = DecideCage(CagedAnimal(1.5f), extra, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(!v.rolled);
+    CHECK(v.reasonKey == Reason_TameHungry);
+
+    CageExtra unfed = CagedBeast(Unfed());
+    unfed.roll = KeyRolling(true, 1);
+    const Verdict full = DecideCage(CagedAnimal(3.0f), unfed, kConfig);
+    CHECK(!full.willJoin);
+    CHECK(full.reasonKey == Reason_TameNotFed);
+}
+
+void ACagedAnimalHasNoSaviourShortcut()
+{
+    const char* name = "cage: remembering the player as its saviour does not tame an unfed animal";
+    CoreFacts core = CagedAnimal(3.0f);
+    core.rememberedAsSaviour = true;
+    const Verdict v = DecideCage(core, CagedBeast(Unfed()), kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.reasonKey == Reason_TameNotFed);
 }
 
 void ASoldierIsBrokenNotBought()
@@ -1190,6 +1295,13 @@ void RunRouteDecisionsTests()
     TheHurtAndHungryWantCare();
     TheKindAreCaredForAndJoin();
     AnAnimalInTheCageIsTamedByTheSameBar();
+    ACagedUnfedAnimalIgnoresTheEasyWait();
+    AnimalsAreNeverIntimidated();
+    ACagedAnimalHasNoSaviourShortcut();
+    AFullUnfedWildAnimalRefuses();
+    AFedFullAnimalJoins();
+    FeedingAFullUnfedAnimalIsOffered();
+    AnUnfedHungryAnimalNamesTheGap();
     ASoldierIsBrokenNotBought();
     AZealotHasNoPrice();
     ABanditKingHasAPrice();

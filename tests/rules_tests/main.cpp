@@ -70,6 +70,7 @@ const Suite kSuites[] = {
     { "card_dismiss_rules", RunCardDismissRulesTests },
     { "flat_slider", RunFlatSliderTests },
     { "cage_command_rules", RunCageCommandRulesTests },
+    { "feeding_ledger", RunFeedingLedgerTests },
 };
 } // namespace
 

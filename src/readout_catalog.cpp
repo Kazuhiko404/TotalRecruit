@@ -51,7 +51,6 @@ const Row kRows[] = {
     { "readout.line.intimidated",            "Intimidado: se somete" },
     { "readout.line.freed",                  "Seguira a quien lo libero" },
     { "readout.line.cared.person",           "Alimentado y curado: se une" },
-    { "readout.line.cared.animal",           "Alimentado y curado: confia en ti" },
     { "readout.line.starving",               "Hambriento: dale de comer" },
     { "readout.line.wounded",                "Herido: curalo" },
     { "readout.line.starvingAndWounded",     "Hambriento y herido: comida y cura" },
@@ -59,10 +58,10 @@ const Row kRows[] = {
     { "readout.line.unique.zealot",          "Solo el hambre y las heridas lo quiebran" },
     { "readout.line.defiant",                "Desafiante: hambre o golpes lo ablandan" },
     { "readout.line.animal.owned",           "Tiene dueno: metelo en una jaula" },
-    { "readout.line.animal.wary",            "Desconfia: buscalo herido o hambriento" },
     { "readout.line.animal.tame.wounded",    "Herido: curalo antes de domarlo" },
     { "readout.line.animal.tame.ready",      "Comio de tu mano: te sigue" },
     { "readout.line.animal.tame.hungry",     "Hambre {food}% / necesita {need}%" },
+    { "readout.line.animal.tame.notFed",     "No comio de tu mano: dale comida" },
     { "readout.line.waitCage",               "Faltan {hours} en la jaula" },
     { "readout.line.rollOpen",               "{chance}%: puede unirse si le hablas" },    // kLineRollOpen
     { "readout.line.fieldYield.beatAgain",   "Aun no cede: vencelo otra vez" },          // kLineFieldYieldBeatAgain

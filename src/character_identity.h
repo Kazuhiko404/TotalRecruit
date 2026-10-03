@@ -27,6 +27,9 @@
 //     proves is saved); loading reads the former first.
 //   - The serialise hook recovers `this` the Kill Counter way: the one of its
 //     first two arguments that is not the returned save-state slot.
+//   - The per-character ints listed in saved_ints.h (defeats, meals the player
+//     gave) are written as idata next to the id and restored on load, one loop
+//     over that table.
 
 #include <string>
 

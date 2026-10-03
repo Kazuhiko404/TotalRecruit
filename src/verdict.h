@@ -85,7 +85,6 @@ enum ReasonKey
     Reason_Intimidated,
     Reason_FreedFollows,
     Reason_CaredFor,
-    Reason_CaredForAnimal,
     Reason_Starving,
     Reason_Wounded,
     Reason_StarvingAndWounded,
@@ -95,10 +94,11 @@ enum ReasonKey
 
     // Animals.
     Reason_AnimalOwned,
-    Reason_AnimalWary,
     Reason_TameWounded,
     Reason_TameReady,
     Reason_TameHungry,
+    // Full or not, it never ate from the player's hand (AnimalExtra::fedByPlayer).
+    Reason_TameNotFed,
 
     // Not a reason: the number of them, for tables indexed by one.
     Reason_Count

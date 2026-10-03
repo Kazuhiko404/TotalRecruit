@@ -653,3 +653,19 @@ Golpear y Noquear son ordenes del propio juego (`BEAT_CAGE_OCCUPANT`, `STEALTH_K
 | C7 | Rechazo en la ventana con remedio **GOLPEARLO** | La ventana se cierra y el seleccionado va a golpearlo (la misma orden que C3); sin seleccionado, el mensaje de C6 | igual que C3 |
 | C8 | Anotar si alguna vez aparece `via fallback` y para que orden | Evidencia: si el juego no toma `BEAT_CAGE_OCCUPANT` / `STEALTH_KNOCKOUT` desde un plugin, el respaldo es lo que se ve; reportar tambien el valor de `checkPlayerOrderForProblems` | `via fallback` |
 | C9 | Dar la orden y cargar un save antes de que se resuelva | Nada queda apuntando a nadie | `load begin: session state cleared (... cage command watch and credits ...)` |
+
+### 12.20 Los animales solo se doman con tu comida (cage-animals-submission T2)
+
+Un animal se une solo si el jugador le dio de comer al menos una vez **y** su barriga llego a la barra. Las comidas se guardan en el save del animal (`total_recruit.fed_by_player`). Con `probeOnClick`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| F1 | Clic derecho y Hablar con un animal salvaje lleno que nunca alimentaste (Cabra, Goat Alpha) | **No** se une: "todavia no ha comido de tu mano"; la ventana ofrece DARLE COMIDA si llevas comida; la tarjeta dice "No comio de tu mano: dale comida" con la barriga llena | `Context menu: <animal> -> refuses (care) todavia no ha comido de tu mano` |
+| F2 | DARLE COMIDA a ese animal | Come; la ventana se reabre y ahora se une ("comio de tu mano y te sigue") si la barriga sigue sobre la barra | `Fed <animal> with <item>. hunger a -> b (...); meals from the player 1` |
+| F3 | Un animal con hambre (barriga bajo la barra) que nunca alimentaste | "todavia tiene hambre: le falta N% de barriga" y DARLE COMIDA; tras comer lo suficiente se une | `meals from the player N` |
+| F4 | Animal en tu jaula, sin alimentar, mas de 6 h (espera facil) | No se une por tiempo: el mismo motivo que F1 | sin `easyWait` para el |
+| F5 | Animal en tu jaula sano y lleno, sin alimentar | No hay "intimidado por tu poder" ni "Desconfia": el motivo es F1 | — |
+| F6 | Animal que rescataste (te recuerda como salvador) y sin alimentar | No entra por rescate ni por "sano gracias a ti": pide comida (F1) | `[route] free-world` o `cage`, nunca `rescue` / `easy-healthy` |
+| F7 | Alimentar un animal, guardar, salir del juego, volver y cargar | Sigue contando como alimentado: si esta lleno se une | `first character id read back from the save` |
+| F8 | Cargar un save **anterior** a la comida | Vuelve a "todavia no ha comido de tu mano" | — |
+| F9 | Dar de comer a una **persona** presa | Igual que antes (el motor la alimenta); no se registra comida del jugador | `Fed <nombre> ... (engine)` sin `meals from the player` |

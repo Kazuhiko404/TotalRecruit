@@ -261,7 +261,7 @@ void AnAnimalShowsItsStomach()
     CHECK(v.primary.need == 80);
     CHECK(!v.showChance);
 
-    ReadoutInput noBar = Input(Route_Cage, Reason_AnimalWary);
+    ReadoutInput noBar = Input(Route_FreeWorld, Reason_AnimalOwned);
     noBar.core.animal = true;
     CHECK(!BuildReadout(noBar, kConfig).showFood);
 }
