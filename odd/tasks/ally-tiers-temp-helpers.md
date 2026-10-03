@@ -68,9 +68,10 @@ The group mapping lives in one pure function and is documented in REQUISITOS.
   - Pure `ally_tier_rules`, `personality_groups`, route integration, popup texts, config and Mod Hub.
   - Route: delegated (writer trigger: 2+ non-trivial files).
   - Commit: `8177ecd feat(allies): level tiers with friendship discounts in Balanced`.
-- [ ] **T2 Temporary member (80+).**
+- [x] **T2 Temporary member (80+).**
   - Persisted expiry and home faction, mistreatment monitor, native leave, head notices, and the popup "por N días".
-  - Route: delegated.
+  - Route: delegated (writer trigger: 2+ non-trivial files).
+  - Commit: `19c1193 feat(allies): temporary members leave on expiry or mistreatment`.
 - [ ] **T3 Free helper (native contract).**
   - Proof of concept first, with a debug trigger.
   - Then the offer event, the popup, and head notices.
@@ -88,5 +89,17 @@ The group mapping lives in one pure function and is documented in REQUISITOS.
 - Plugin: `MSBuild TotalRecruit.vcxproj Release x64` -> exit 0, no warnings from `src/` (only the existing KenshiLib header warnings).
 - In-game: pending (QA.md 12.24).
 
+**T2 (done, 19c1193).**
+- Pure `temp_member_rules`: expiry `ceil(now + days*24)`, days left rounded up; strikes for hunger (`tempMemberHungryHours` in a row under `tempMemberHungerThreshold`, or engine starving), attacked by a squad member, knocked out by a squad member (edge only, not a hunger KO); each kind at most once per `tempMemberStrikeCooldownHours`; warning on the strike reaching max-1; "me ire pronto" `tempMemberExpiryWarningHours` before; mistreated wins over expired. `TempMemberBook` keyed by CharKey with the save bridge.
+- Persistence: saved_ints rows `total_recruit.temp_expiry_hour`, `total_recruit.temp_strikes`; new `saved_strings` table (`total_recruit.temp_home_faction`) looped by `character_identity` through the id's own sdata bridge (no copy). Home faction read in `CompleteOffer` before `PayAndRecruit` (`FactionStringId`).
+- Leave: `squad_leave` ports KEP's dismiss (faction by sid -> `1233-gamedata.base` -> empty faction; unselect; `_NV_setFaction`; `createNewEmptyActivePlatoon("5006-squad.mod")` + `_NV_addActiveObject`; task system cleared via `ai+0x20`; re-think; portrait refresh). Skipped: blackboard clear + `addPackages` (no `AI/Blackboard.h`).
+- Rejoin cooldown reuses the reject cooldown (`SetRejectCooldownUntil`, `tempMemberRejoinCooldownDays` * 24 h).
+- Head notices: `RaiseSquadHeadNotice` keeps a notice over one of the player's own. Readout: a selected temporary member shows only "Temporal: le quedan N dias" (`kLineTempMemberDaysLeft`).
+- RED: rules_tests with a stub `temp_member_rules.cpp` -> readout_catalog and readout_model FAIL, temp_member_rules crashed (NULL record from the stub) after 32 failed checks (exit 139).
+- GREEN: `rules_tests.exe` -> 37/37 suites passed, 0/63121 checks failed.
+- Plugin: `MSBuild TotalRecruit.vcxproj Release x64` -> exit 0, no warnings from `src/` (only the existing KenshiLib header warnings).
+- In-game: pending (QA.md 12.25).
+- Known limits: the FCS-dialogue accept path still recruits a temporary ally permanently; session state (cooldowns, warnings) restarts after a load, so a warning may repeat once.
+
 ## Next step
-T2 (temporary member: fill `OnRecruitedTemporarily`).
+T3 (free helper: proof of concept of the native AI contract with a debug trigger).
