@@ -78,8 +78,13 @@
   color:#222;font:700 12px sans-serif;text-align:center;line-height:18px}
 .ctxmenu{position:absolute;width:122px;background:#1b1713;border:1px solid var(--line);font-size:12px}
 .ctxmenu div{padding:4px 8px;color:var(--muted);border-bottom:1px solid #2a2521}
-.ctxbtn{position:absolute;width:96px;height:26px;background:var(--sumi);border:1px solid var(--golddim);color:var(--text);
-  text-align:center;line-height:24px;font:12px "Trebuchet MS",sans-serif}
+/* The Hablar button (src/button_style.h, shared with TotalSparring and TotalLoot): 160 x 44,
+   brass tint, amber 18 px text with shadow, amber fill with dark text on hover. Its slot beside the
+   menu comes from src/menu_slot.cpp (left, right, then below whatever is already there). The brass
+   tint multiplies the dark Kenshi_Button1 skin in game, so the flat fill here is the darkened result. */
+.ctxbtn{position:absolute;width:160px;height:44px;background:#4a3d29;border:1px solid var(--golddim);color:#ecb860;
+  text-align:center;line-height:42px;font:18px "Trebuchet MS",sans-serif;text-shadow:1px 1px 0 #000}
+.ctxbtn:hover{background:#ecb860;color:#1e1b18}
 .callout{position:absolute;font-size:12px;color:var(--amber);max-width:230px}
 /* The screen is 1280 x 520 here so the 620 px offer window and a 264 px card fit side by side
    at 1:1, as on a real 1080p screen. */

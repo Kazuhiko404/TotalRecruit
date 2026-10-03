@@ -61,6 +61,7 @@
     <ClCompile Include="readout_catalog_tests.cpp" />
     <ClCompile Include="readout_model_tests.cpp" />
     <ClCompile Include="talk_hint_cache_tests.cpp" />
+    <ClCompile Include="menu_slot_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -87,6 +88,7 @@
     <ClCompile Include="..\..\src\readout_catalog.cpp" />
     <ClCompile Include="..\..\src\readout_model.cpp" />
     <ClCompile Include="..\..\src\talk_hint_cache.cpp" />
+    <ClCompile Include="..\..\src\menu_slot.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

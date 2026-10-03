@@ -60,6 +60,7 @@ const Suite kSuites[] = {
     { "readout_catalog", RunReadoutCatalogTests },
     { "readout_model", RunReadoutModelTests },
     { "talk_hint_cache", RunTalkHintCacheTests },
+    { "menu_slot", RunMenuSlotTests },
 };
 } // namespace
 

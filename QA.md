@@ -494,3 +494,17 @@ Por defecto la tarjeta sale **solo** al apretar `Hablar`, al lado de la ventana 
 | H11 | Globo de chat (`showTalkCursor` ON): mirar prisioneros reclutables y NPCs comunes | El globo sigue apareciendo sobre quien vale la pena hablar (incluye rescates con chance > 0); alimentar o golpear a uno cambia su globo en ~2 s | |
 | H12 | **Sin efectos** del globo: mirar un prisionero nuevo en tu jaula sin hacer clic | No aparece `first character id created` ni `[route]`/`[hold]` por solo mirarlo | |
 | H13 | Clic derecho en un NPC con `probeOnClick` OFF y luego ON | Con OFF no hay evaluacion extra al abrir el menu; con ON sigue la linea `Context menu: <nombre> -> ...` | `Context menu: ...` solo con probe |
+
+### 12.10 Boton Hablar en un hueco libre (price-readout-button-tweaks T3)
+
+`Hablar` ya no se pone siempre a la derecha del menu: busca el primer hueco libre (izquierda arriba, derecha arriba, izquierda debajo de lo que haya, derecha debajo) y tiene el tamaño y el look de los botones de TotalSparring y TotalLoot. Con **TotalSparring** y **TotalLoot** instalados.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| B1 | Clic derecho en un NPC reclutable que tambien muestre los botones de TotalSparring (`Sparring`, perfil) y de TotalLoot (`Lootear`, etc.) | `Hablar` no tapa ningun boton, ni siquiera en parte; ninguno de los otros tapa a `Hablar` | |
+| B2 | Comparar `Hablar` con el boton de TotalSparring | Mismo alto (44) y ancho (160, o el del menu si es mas angosto), misma skin, fuente, texto ambar con sombra; al pasar el mouse se rellena ambar con texto oscuro, igual que los otros | |
+| B3 | Con el menu abierto, quedarse quieto unos segundos y mover un poco la camara | `Hablar` no salta de lado ni parpadea entre cuadros | |
+| B4 | Abrir el menu sobre un NPC pegado al borde **izquierdo** de la pantalla | `Hablar` va a la derecha del menu (o debajo de lo que ya este ahi), entero en pantalla | |
+| B5 | Lo mismo pegado al borde **derecho** y al borde **inferior** | Queda entero en pantalla; si no hay hueco libre, se ajusta a la izquierda del menu dentro de la pantalla | |
+| B6 | Solo TotalRecruit (sin los otros mods) | `Hablar` a la izquierda del menu, alineado arriba, 160 x 44 | |
+| B7 | Clic en `Hablar` | Se abre la oferta como antes (con la tarjeta de 12.9) y el boton se va | |

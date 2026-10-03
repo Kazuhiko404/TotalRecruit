@@ -33,3 +33,4 @@ void RunReadoutFormatTests();
 void RunReadoutCatalogTests();
 void RunReadoutModelTests();
 void RunTalkHintCacheTests();
+void RunMenuSlotTests();

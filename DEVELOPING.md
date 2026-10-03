@@ -155,7 +155,11 @@ qué existe — leelo antes que el `.cpp`.
 
 | Archivo | Qué hace |
 |---|---|
-| `recruit_overlay.cpp` | El botón junto al menú contextual (dos hooks). |
+| `recruit_overlay.cpp` | El botón **Hablar** junto al menú contextual (dos hooks). Lee el `OptionsList` del menú y delega el tamaño, el estilo y el lugar en `button_block`. |
+| `button_style.cpp/.h` | El look compartido con TotalSparring y TotalLoot: 44 px de alto, 160 de ancho (o el ancho del menú si es menor), skin `Kenshi_Button1` (respaldo `Button`), capa `Popup`, fuente 18, texto ámbar con sombra y relleno ámbar al pasar el mouse. Port de `TotalLoot/src/button_style`. |
+| `button_block.cpp/.h` | Crea el botón con ese estilo (`CreateContextButton`) y lo ubica (`PlaceButtonBlock`): arma el pedido para `menu_slot` con los obstáculos de `menu_obstacles` y recuerda el lado elegido (`g_previousSide` en el overlay) para no saltar entre cuadros. Port de `TotalLoot/src/button_block`. |
+| `menu_slot.cpp/.h` | **Puro.** Elige un hueco libre al lado del menú: izquierda arriba, derecha arriba, izquierda corrida debajo de lo que haya, derecha corrida, y si nada entra, izquierda ajustada a la pantalla. Si el lado anterior sigue libre, gana (anti-parpadeo). Port verbatim de `TotalLoot/src/menu_slot`; tests en `tests/rules_tests/menu_slot_tests.cpp`. |
+| `menu_obstacles.cpp/.h` | Junta los rectángulos a evitar: widgets raíz visibles de MyGUI más los botones conocidos de otros mods por nombre (`TL_*` de TotalLoot, `TS_*` de TotalSparring, `TP_EatButton` de TotalPredator, `LSE_*` de Loot-Scoot-Execute). Ignora los propios (`TR_`) y lo que `IsPlausibleObstacle` descarta (el menú, capas de pantalla completa). |
 | `offer_popup.cpp` | La ventana de decisión. Acá vive el retrato. |
 | `hail.cpp` | Los cautivos avisan, programado sobre el reloj de juego. |
 | `readout.cpp/.h` | La tarjeta de estres y chance sobre el NPC, de punta a punta. Por defecto la pide el clic en **Hablar** (`RequestReadout`, llamado desde `recruit_overlay.cpp`, no desde `AttemptRecruit`, asi el rescate no la abre): se calcula **una vez** (`EvaluatePeek`, sin efectos), se dibuja al lado de la ventana de oferta y cada cuadro solo se mueve; se cierra cuando la oferta se cierra, a los 8 s si no se abrio oferta, si el NPC muere o sale de pantalla, o con otro pedido. Con `readoutOnHover` (opcional, apagado por defecto) ademas sigue al NPC bajo el mouse, recalculando cada 250 ms. Con `probeOnClick` loguea `[readout] ... [hablar|hover]` lo mismo que se ve. |

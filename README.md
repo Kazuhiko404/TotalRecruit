@@ -108,8 +108,11 @@ DarkUI or PowerModUI; without it the mod still works and falls back to `WhiteSki
 Requires [RE_Kenshi](https://www.nexusmods.com/kenshi/mods/847). Settings live in
 Emkej's Mod Hub (optional: without it the mod
 runs on `config.json`). It coexists with UnlimitedRecruitV2 and with the
-dialogue-based recruitment mods — all widget names are distinct, and the overlay
-anchors beside the context menu rather than below it, where other mods put theirs.
+dialogue-based recruitment mods — all widget names are distinct. The Hablar
+button sits beside the context menu in the first free slot (left, right, then
+below whatever is already there), so it never covers the buttons TotalSparring,
+TotalLoot, TotalPredator or Loot-Scoot-Execute put there, and it has the same
+size and look as theirs (160 x 44, Kenshi_Button1).
 
 It also coexists with **TotalSparring** and **Kill Counter**. TotalRecruit gives
 each character its own id, stored in the save under `total_recruit.character_id`

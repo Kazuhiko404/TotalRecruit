@@ -9,6 +9,7 @@
 #include "rules.h"
 #include "offer_popup.h"
 #include "readout.h"
+#include "button_block.h"
 
 namespace totalrecruit
 {
@@ -20,14 +21,9 @@ namespace
 // the approach that replaced it: a MyGUI button anchored to the native menu's
 // own OptionsList widget, which needs no addresses beyond the two hooks below.
 
+// Size, skin and look come from button_style.h (the set TotalSparring and
+// TotalLoot share); where it goes comes from button_block / menu_slot.
 const char* const kButtonWidgetName = "TR_RecruitButton";
-const char* const kButtonLayer = "Popup";
-const char* const kPreferredSkin = "Kenshi_Button1";
-const char* const kFallbackSkin = "Button";
-
-const int kButtonHeight = 26;
-const int kButtonGap = 2;
-const int kMinButtonWidth = 120;
 
 MyGUI::Button* g_button = NULL;
 MyGUI::delegates::IDelegate4<MyGUI::Widget*, int, int, MyGUI::MouseButton>*
@@ -36,6 +32,10 @@ MyGUI::delegates::IDelegate4<MyGUI::Widget*, int, int, MyGUI::MouseButton>*
 // Target of the currently open menu. Only ever dereferenced behind TR_TRY.
 RootObject* g_targetObject = NULL;
 Character* g_targetCharacter = NULL;
+
+// Side the button took last frame, kept while the menu stays open so it does
+// not hop between sides when another mod's hook runs before or after ours.
+menuslot::Side g_previousSide = menuslot::SIDE_NONE;
 
 void (*g_showContextMenu_orig)(ContextMenu*, bool, RootObject*) = NULL;
 void (*g_contextMenuUpdate_orig)(ContextMenu*) = NULL;
@@ -57,6 +57,7 @@ void ClearTarget()
 {
     g_targetObject = NULL;
     g_targetCharacter = NULL;
+    g_previousSide = menuslot::SIDE_NONE;
 }
 
 void HideButton()
@@ -104,24 +105,6 @@ bool ConfigureButton()
     TR_CATCH { return false; }
 }
 
-// createWidget materialises IntCoord and UString temporaries, so the guard sits
-// in its own frame; C2712 counts every object in the function.
-MyGUI::Button* CreateButtonWidget(MyGUI::Gui* guiManager, const char* skin)
-{
-    return guiManager->createWidget<MyGUI::Button>(
-        skin,
-        MyGUI::IntCoord(0, 0, kMinButtonWidth, kButtonHeight),
-        MyGUI::Align::Default,
-        kButtonLayer,
-        kButtonWidgetName);
-}
-
-MyGUI::Button* SafeCreateButton(MyGUI::Gui* guiManager, const char* skin)
-{
-    TR_TRY { return CreateButtonWidget(guiManager, skin); }
-    TR_CATCH { return NULL; }
-}
-
 bool CreateButton()
 {
     if (g_button != NULL)
@@ -129,18 +112,9 @@ bool CreateButton()
         return true;
     }
 
-    MyGUI::Gui* guiManager = MyGUI::Gui::getInstancePtr();
-    if (guiManager == NULL)
-    {
-        return false;
-    }
-
-    // Skin availability differs between installs, so fall back to the stock one.
-    const char* skins[2] = { kPreferredSkin, kFallbackSkin };
-    for (int i = 0; i < 2 && g_button == NULL; ++i)
-    {
-        g_button = SafeCreateButton(guiManager, skins[i]);
-    }
+    // Styled like the other mods' buttons; tries Kenshi_Button1, then the
+    // stock skin, since skin availability differs between installs.
+    g_button = CreateContextButton(kButtonWidgetName);
 
     if (g_button == NULL)
     {
@@ -202,8 +176,20 @@ void DestroyButton()
     g_buttonDelegate = NULL;
 }
 
-// Places the button beside the native menu's option list, so it reads as part
-// of the menu without competing for the space below it.
+// TotalSparring sits right of the menu top-aligned without avoiding anything,
+// TotalLoot takes a free slot, Loot-Scoot-Execute anchors below: the slot
+// resolver tries left, then right, then each pushed below what is already
+// there, and only then a clamped fallback (menu_slot.h). Its own frame because
+// the block vector needs unwinding, which cannot share a frame with __try.
+bool PlaceBeside(const MyGUI::IntCoord& optionsCoord)
+{
+    std::vector<MyGUI::Button*> block(1, g_button);
+    return PlaceButtonBlock(optionsCoord, block,
+                            MakeBlockStyle(optionsCoord.width), &g_previousSide);
+}
+
+// Places the button in a free slot beside the native menu's option list, so it
+// reads as part of the menu without covering the buttons other mods put there.
 bool AnchorToMenu(ContextMenu* menu)
 {
     if (menu == NULL || g_button == NULL)
@@ -240,51 +226,7 @@ bool AnchorToMenu(ContextMenu* menu)
         return false;
     }
 
-    // The caption is a single word now, so matching the menu's full width would
-    // leave a mostly empty button. Narrower also means less of the world is
-    // covered by it.
-    int width = kMinButtonWidth;
-    if (optionsCoord.width < width)
-    {
-        width = optionsCoord.width;
-    }
-
-    // Sit to the right of the menu rather than below it: other mods
-    // (Loot-Scoot-Execute among them) anchor their own overlay underneath, and
-    // stacking there would cover theirs.
-    int left = optionsCoord.left + optionsCoord.width + kButtonGap;
-    const int top = optionsCoord.top;
-
-    // Flip to the left side when the menu opens near the right screen edge.
-    // getViewSize lives on RenderManager, not on Gui.
-    int viewWidth = 0;
-    TR_TRY
-    {
-        MyGUI::RenderManager* renderManager = MyGUI::RenderManager::getInstancePtr();
-        if (renderManager != NULL)
-        {
-            viewWidth = renderManager->getViewSize().width;
-        }
-    }
-    TR_CATCH { viewWidth = 0; }
-
-    if (viewWidth > 0 && left + width > viewWidth)
-    {
-        left = optionsCoord.left - width - kButtonGap;
-        if (left < 0)
-        {
-            left = 0;
-        }
-    }
-
-    TR_TRY
-    {
-        g_button->setCoord(left, top, width, kButtonHeight);
-        g_button->setVisible(true);
-    }
-    TR_CATCH { return false; }
-
-    return true;
+    return PlaceBeside(optionsCoord);
 }
 
 void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject* what)
@@ -362,6 +304,8 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
 
     g_targetObject = what;
     g_targetCharacter = character;
+    // A freshly opened menu picks its side from scratch.
+    g_previousSide = menuslot::SIDE_NONE;
 
     if (!CreateButton())
     {
@@ -439,11 +383,6 @@ bool InstallRecruitOverlay()
 
     LogInfo("Recruit overlay installed.");
     return true;
-}
-
-Character* OverlayMenuTarget()
-{
-    return g_targetCharacter;
 }
 
 void ForgetOverlayTarget()
