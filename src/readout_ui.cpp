@@ -2,12 +2,12 @@
 #include "readout_ui.h"
 #include "config.h"
 #include "log.h"
+#include "ui_style.h"
 
 #include <cstdio>
 
 #pragma warning(push)
 #pragma warning(disable: 4091)
-#include <ogre/OgreResourceGroupManager.h>
 #include <mygui/MyGUI_ImageBox.h>
 #pragma warning(pop)
 
@@ -15,21 +15,8 @@ namespace totalrecruit
 {
 namespace
 {
-// ------------------------------------------------------------------ Palette
-// Tokens of ui-mockup/css/base.css (TotalSparring ui_palette.h). The foreground
-// ones stay bright on purpose: see the header.
-const MyGUI::Colour kLacquer(20.f / 255.f, 17.f / 255.f, 16.f / 255.f, 1.f);
-const MyGUI::Colour kSumi(42.f / 255.f, 37.f / 255.f, 33.f / 255.f, 1.f);
-const MyGUI::Colour kLine(58.f / 255.f, 51.f / 255.f, 44.f / 255.f, 1.f);
-const MyGUI::Colour kText(238.f / 255.f, 228.f / 255.f, 210.f / 255.f, 1.f);
-const MyGUI::Colour kBrass(214.f / 255.f, 176.f / 255.f, 116.f / 255.f, 1.f);
-const MyGUI::Colour kGoldDim(150.f / 255.f, 120.f / 255.f, 78.f / 255.f, 1.f);
-const MyGUI::Colour kMuted(162.f / 255.f, 150.f / 255.f, 132.f / 255.f, 1.f);
-const MyGUI::Colour kAmber(236.f / 255.f, 184.f / 255.f, 96.f / 255.f, 1.f);
-const MyGUI::Colour kDanger(206.f / 255.f, 74.f / 255.f, 58.f / 255.f, 1.f);
-const MyGUI::Colour kReady(124.f / 255.f, 172.f / 255.f, 116.f / 255.f, 1.f);
-const MyGUI::Colour kIndigo(108.f / 255.f, 146.f / 255.f, 206.f / 255.f, 1.f);
-const MyGUI::Colour kSoftDanger(240.f / 255.f, 138.f / 255.f, 124.f / 255.f, 1.f);
+// Palette, fonts, fills and labels: ui_style.h (shared with the recruit popup).
+using namespace ui;
 
 // ------------------------------------------------------------------- Layout
 // px values of readout.css (--card-w, --card-w-compact, --pad, --bar-h ...).
@@ -56,11 +43,6 @@ const int kScreenMargin = 4;
 const char* const kRootName = "TR_Readout";
 const char* const kRootLayer = "ToolTip";
 const char* const kRootSkin = "Kenshi_TextBoxEmptySkin";
-const char* const kTextSkin = "Kenshi_TextboxStandardText";
-const char* const kBodyFont = "Kenshi_StandardFont_MediumSmall";
-const char* const kSmallFont = "Kenshi_StandardFont_Small";
-const char* const kNameFont = "Kenshi_PaintedTextFont_Small";
-const char* const kFillTexture = "tr_white.png";
 
 // ------------------------------------------------------------------- Widgets
 struct Card
@@ -109,8 +91,6 @@ struct Card
 Card g_card = { 0 };
 bool g_built = false;
 bool g_buildFailed = false;
-bool g_resourcesTried = false;
-bool g_resourcesReady = false;
 int g_width = 0;
 int g_height = 0;
 // What the widgets were last laid out for (LayoutKey). Laying out hides and
@@ -118,98 +98,10 @@ int g_height = 0;
 // unchanged card is only moved.
 std::string g_layoutKey;
 
-// ---------------------------------------------------------------- Resources
-// <mod dir>\gui\images, mapped into Ogre GUI resource group the way TotalSparring
-// and Shutori do (their ui_resources.cpp / ArenaUI.cpp). Optional: without the PNG
-// the fills fall back to the stock WhiteSkin.
-bool EnsureResources()
-{
-    if (g_resourcesTried)
-    {
-        return g_resourcesReady;
-    }
-    g_resourcesTried = true;
-
-    const std::string modDir = GetModDirectory();
-    if (modDir.empty())
-    {
-        return false;
-    }
-    const std::string imagesDir = modDir + "\\gui\\images";
-    const std::string probe = imagesDir + "\\" + kFillTexture;
-    if (GetFileAttributesA(probe.c_str()) == INVALID_FILE_ATTRIBUTES)
-    {
-        LogInfo("[readout] no gui/images/tr_white.png in the mod folder; using the stock WhiteSkin for fills.");
-        return false;
-    }
-
-    try
-    {
-        Ogre::ResourceGroupManager& rgm = Ogre::ResourceGroupManager::getSingleton();
-        if (!rgm.resourceExists("GUI", kFillTexture))
-        {
-            rgm.addResourceLocation(imagesDir, "FileSystem", "GUI", false);
-            // Without this Ogre has not indexed the folder and setImageTexture
-            // resolves nothing (the box stays blank without any error).
-            rgm.initialiseResourceGroup("GUI");
-        }
-        g_resourcesReady = true;
-        LogInfo("[readout] fills use " + probe);
-    }
-    catch (...)
-    {
-        LogError("[readout] could not register the GUI image folder; using the stock WhiteSkin for fills.");
-    }
-    return g_resourcesReady;
-}
-
 // --------------------------------------------------------------- Construction
 // Everything here builds C++ temporaries (IntCoord, UString), so it is unguarded;
-// the POD-frame wrappers at the bottom hold the guards (C2712).
-MyGUI::Widget* MakeFill(MyGUI::Widget* parent, const MyGUI::Colour& colour)
-{
-    MyGUI::Widget* fill = NULL;
-    if (EnsureResources())
-    {
-        MyGUI::ImageBox* box = parent->createWidget<MyGUI::ImageBox>(
-            "ImageBox", 0, 0, 1, 1, MyGUI::Align::Default, "");
-        if (box != NULL)
-        {
-            box->setImageTexture(kFillTexture);
-            fill = box;
-        }
-    }
-    if (fill == NULL)
-    {
-        fill = parent->createWidget<MyGUI::Widget>(
-            "WhiteSkin", MyGUI::IntCoord(0, 0, 1, 1), MyGUI::Align::Default);
-    }
-    if (fill != NULL)
-    {
-        fill->setNeedMouseFocus(false);
-        fill->setNeedKeyFocus(false);
-        fill->setColour(colour);
-        fill->setVisible(false);
-    }
-    return fill;
-}
-
-MyGUI::TextBox* MakeLabel(MyGUI::Widget* parent, const char* font, const MyGUI::Colour& colour)
-{
-    MyGUI::TextBox* text = parent->createWidget<MyGUI::TextBox>(
-        kTextSkin, 0, 0, 1, 1, MyGUI::Align::Default, "");
-    if (text != NULL)
-    {
-        text->setNeedMouseFocus(false);
-        text->setNeedKeyFocus(false);
-        text->setFontName(font);
-        text->setTextColour(colour);
-        text->setTextAlign(MyGUI::Align::Left | MyGUI::Align::VCenter);
-        text->setVisible(false);
-    }
-    return text;
-}
-
+// the POD-frame wrappers at the bottom hold the guards (C2712). MakeFill and
+// MakeLabel are ui_style.cpp.
 bool BuildUnguarded()
 {
     MyGUI::Gui* gui = MyGUI::Gui::getInstancePtr();
@@ -287,27 +179,7 @@ bool BuildUnguarded()
 }
 
 // -------------------------------------------------------------------- Layout
-void Place(MyGUI::Widget* w, int x, int y, int width, int height)
-{
-    if (w == NULL) return;
-    w->setCoord(x, y, width, height);
-    w->setVisible(true);
-}
-
-void Hide(MyGUI::Widget* w)
-{
-    if (w != NULL) w->setVisible(false);
-}
-
-// A 1px frame as four fills.
-void PlaceFrame(MyGUI::Widget* const parts[4], int x, int y, int w, int h)
-{
-    Place(parts[0], x, y, w, 1);
-    Place(parts[1], x, y + h - 1, w, 1);
-    Place(parts[2], x, y, 1, h);
-    Place(parts[3], x + w - 1, y, 1, h);
-}
-
+// Place, Hide and PlaceFrame are ui_style.cpp.
 void HideAll()
 {
     Card& c = g_card;

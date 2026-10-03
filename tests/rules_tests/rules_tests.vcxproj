@@ -65,6 +65,7 @@
     <ClCompile Include="talk_hint_cache_tests.cpp" />
     <ClCompile Include="menu_slot_tests.cpp" />
     <ClCompile Include="menu_button_release_tests.cpp" />
+    <ClCompile Include="offer_view_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -95,6 +96,7 @@
     <ClCompile Include="..\..\src\talk_hint_cache.cpp" />
     <ClCompile Include="..\..\src\menu_slot.cpp" />
     <ClCompile Include="..\..\src\menu_button_release.cpp" />
+    <ClCompile Include="..\..\src\offer_view.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

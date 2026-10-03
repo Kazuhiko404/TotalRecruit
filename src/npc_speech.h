@@ -3,6 +3,7 @@
 #include <string>
 
 #include "verdict.h"
+#include "offer_view.h"
 
 class Character;
 
@@ -19,11 +20,10 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict);
 // agreeing to.
 std::string SpeakAcceptLine(const Verdict& verdict);
 
-// What the offer window says about the situation, in the narrator's voice rather
-// than the NPC's. The NPC already speaks in a bubble over their head, so repeating
-// those words in the window wastes the only line it has -- this states what is
-// happening and why instead.
-std::string DescribeOffer(Character* character, const Verdict& verdict);
+// Every word the recruit popup shows (offer_view.h builds the window's content
+// from them): the messages.json "popup" block, with the built-in Spanish for any
+// key it lacks.
+OfferTexts OfferWording();
 
 // A short line a captive calls out when they are ready to be recruited, so the
 // player learns it without having to right-click on spec. Varies by personality -- a

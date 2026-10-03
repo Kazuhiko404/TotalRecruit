@@ -551,3 +551,23 @@ Con `"probeOnClick": true`. El conteo vive en el save del personaje y un noqueo 
 | Y3 | Vencer 2 veces a un guardia o soldado (no a un bandido) | Tira el dado con 25 menos que un bandido igual; puede unirse | `chance=` 25 por debajo del bandido |
 | Y4 | Hub: `Sumision: lealtad al rendirse` en 0 y repetir Y3 | La misma chance que el bandido | |
 | Y5 | `config.json` con `"submissionFieldYieldLoyaltyPenalty": 500` | Se lee como 100 (tope) | |
+
+### 12.15 Ventana de reclutamiento unica (recruit-gating T4)
+
+Toda salida de Hablar abre la misma ventana; ninguna termina en una notificacion. Comparar con
+`ui-mockup/readout.html`, seccion 5 (los siete estados). Con `"probeOnClick": true`.
+
+| # | Que hacer | Esperado |
+|---|---|---|
+| P1 | Hablar a un prisionero que se une por cats, con plata de sobra | Marco de Kenshi con titulo "Reclutamiento" en bronce; adentro placa oscura, retrato enmarcado, nombre en bronce y etiqueta "Cautiverio" ambar; "se unira a tu grupo por N cats"; caja PRECIO (ambar) / TIENES / PROBABILIDAD si tiro el dado; botones ACEPTAR (ambar) y CANCELAR. ACEPTAR cobra una vez ("pagaste N cats") y lo suma |
+| P2 | El mismo con menos plata que el precio | Misma ventana; TIENES en rojo; linea roja "No te alcanzan los cats (te faltan N)"; **sin** ACEPTAR, solo CANCELAR a la derecha. Ninguna notificacion |
+| P3 | Hablar a un soldado o paladin libre que se niega por lealtad / honor | Etiqueta "Libre"; "no se une todavia."; el motivo en rojo con barra roja; solo CERRAR |
+| P4 | Hablar a un prisionero hambriento llevando comida | Motivo en rojo; DARLE COMIDA + CERRAR. DARLE COMIDA alimenta y reabre la ventana con el nuevo veredicto (Cancelar dice AHORA NO; si sigue con hambre, DARLE MAS COMIDA). Sin comida y con derrota posible: GOLPEARLO |
+| P5 | Dejar a un enemigo lisiado para que pida piedad | Etiqueta "Piedad"; la suplica como cuerpo; ACEPTAR / IGNORAR / RECHAZAR (IGNORAR solo si su temperamento lo permite) |
+| P6 | Rescatar a alguien (curarlo cuando esta tirado) y hablarle | Etiqueta "Rescate"; PRECIO "Gratis" en verde; ACEPTAR / CANCELAR |
+| P7 | Vencer 2 veces a un bandido hasta que se rinda y hablarle | Etiqueta "Rendicion"; PRECIO "Gratis"; PROBABILIDAD con el % tirado; ACEPTAR / CANCELAR |
+| P8 | En P1, la X del titulo | Igual que CANCELAR: "lo dejaste donde estaba", no cobra |
+| P9 | En P1, gastar plata con la ventana abierta hasta quedar corto y apretar ACEPTAR | No lo suma; aviso `money.short` (el unico aviso de dinero que queda: el chequeo de ultimo momento) |
+| P10 | Un nombre largo o un motivo largo | El texto se parte en renglones y la ventana crece; nada queda cortado ni fuera del marco |
+| P11 | Editar `TotalRecruit/messages.json` bloque `popup` (por ejemplo `popup.button.cancel`) y reiniciar | La ventana usa el texto nuevo; borrar la clave vuelve al texto interno |
+| P12 | Con DarkUI o PowerModUI | Los colores se ven igual (rellenos con `tr_white.png`) |

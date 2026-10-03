@@ -154,43 +154,56 @@ std::string SpeakOpeningLine(Character* character, const Verdict& verdict)
     }
 }
 
-// The window's own voice. Short, because the window has one line for it, and
-// factual, because the NPC's own words are already on screen in their bubble.
-std::string DescribeOffer(Character* character, const Verdict& verdict)
+namespace
 {
-    const std::string name = CharacterName(character);
+// One popup key, falling back to the built-in text (offer_view.cpp) when
+// messages.json does not have it.
+void Word(std::string* slot, const char* key)
+{
+    *slot = Say(key, *slot, NULL);
+}
+} // namespace
 
-    if (!verdict.willJoin)
-    {
-        // A refusal only reaches the window when something can be done about
-        // it, so the reason is the useful half.
-        return name + " no se une todav\xc3\xad" "a: " + verdict.reason + ".";
-    }
+// The popup's words: the messages.json "popup" block (route tags reuse the
+// readout's), each defaulting to DefaultOfferTexts. Read on every open, so an
+// edited file is picked up with the next reload of messages.json.
+OfferTexts OfferWording()
+{
+    OfferTexts t = DefaultOfferTexts();
+    Word(&t.title, "popup.title");
 
-    switch (verdict.currency)
-    {
-    case Currency_Cats:
-    {
-        std::ostringstream text;
-        text << name << " se unir\xc3\xa1 a tu grupo por " << verdict.cats << " cats.";
-        return text.str();
-    }
+    Word(&t.accept, "popup.button.accept");
+    Word(&t.cancel, "popup.button.cancel");
+    Word(&t.close, "popup.button.close");
+    Word(&t.notNow, "popup.button.notNow");
+    Word(&t.feed, "popup.button.feed");
+    Word(&t.feedMore, "popup.button.feedMore");
+    Word(&t.beat, "popup.button.beat");
+    Word(&t.ignore, "popup.button.ignore");
+    Word(&t.decline, "popup.button.decline");
 
-    case Currency_Freedom:
-        return name + " se unir\xc3\xa1 a tu grupo si lo liberas.";
+    Word(&t.routeFree, "readout.route.free");
+    Word(&t.routeCaptivity, "readout.route.captivity");
+    Word(&t.routeRescue, "readout.route.rescue");
+    Word(&t.routeSurrender, "readout.route.surrender");
+    Word(&t.routeMercy, "readout.route.mercy");
+    Word(&t.routeAnimal, "readout.route.animal");
 
-    case Currency_Submission:
-        return name + " ya no tiene voluntad de pelear y desea unirse a tu grupo.";
+    Word(&t.priceLabel, "popup.info.price");
+    Word(&t.purseLabel, "popup.info.purse");
+    Word(&t.chanceLabel, "popup.info.chance");
+    Word(&t.free, "popup.info.free");
+    Word(&t.catsValue, "popup.info.cats");
+    Word(&t.shortPurse, "popup.shortPurse");
 
-    case Currency_Care:
-        return name + " te debe la comida y las curas, y desea unirse a tu grupo.";
-
-    case Currency_None:
-    default:
-        return verdict.viaRescue
-                   ? name + " te debe la vida y desea unirse a tu grupo."
-                   : name + " desea unirse a tu grupo.";
-    }
+    Word(&t.bodyRefused, "popup.body.refused");
+    Word(&t.bodyCats, "popup.body.cats");
+    Word(&t.bodyFreedom, "popup.body.freedom");
+    Word(&t.bodySubmission, "popup.body.submission");
+    Word(&t.bodyCare, "popup.body.care");
+    Word(&t.bodyRescue, "popup.body.rescue");
+    Word(&t.bodyJoins, "popup.body.joins");
+    return t;
 }
 
 // Several lines per personality so a prisoner shouting twice does not repeat

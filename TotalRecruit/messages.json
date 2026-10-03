@@ -949,5 +949,37 @@
       },
       "waitCage": "Faltan {hours} en la jaula"
     }
+  },
+  "popup": {
+    "_comment": "Ventana de reclutamiento (Hablar). {name} = nombre del NPC, {cats} = numero con punto de miles. Las etiquetas de ruta salen de readout.route.",
+    "title": "Reclutamiento",
+    "button": {
+      "accept": "ACEPTAR",
+      "cancel": "CANCELAR",
+      "close": "CERRAR",
+      "notNow": "AHORA NO",
+      "feed": "DARLE COMIDA",
+      "feedMore": "DARLE MAS COMIDA",
+      "beat": "GOLPEARLO",
+      "ignore": "IGNORAR",
+      "decline": "RECHAZAR"
+    },
+    "info": {
+      "price": "PRECIO",
+      "purse": "TIENES",
+      "chance": "PROBABILIDAD",
+      "free": "Gratis",
+      "cats": "{cats} cats"
+    },
+    "shortPurse": "No te alcanzan los cats (te faltan {cats})",
+    "body": {
+      "refused": "{name} no se une todavia.",
+      "cats": "{name} se unira a tu grupo por {cats} cats.",
+      "freedom": "{name} se unira a tu grupo si lo liberas.",
+      "submission": "{name} ya no tiene voluntad de pelear y desea unirse a tu grupo.",
+      "care": "{name} te debe la comida y las curas, y desea unirse a tu grupo.",
+      "rescue": "{name} te debe la vida y desea unirse a tu grupo.",
+      "joins": "{name} desea unirse a tu grupo."
+    }
   }
 }

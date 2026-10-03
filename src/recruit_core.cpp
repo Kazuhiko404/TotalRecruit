@@ -264,50 +264,54 @@ Character* OccupantOf(RootObject* target, itemType type)
     return SafeReadOccupant(target);
 }
 
-// Opens the window for a verdict, whether it is a yes or a no. A refusal still
-// gets a window because that is where the player can act on it -- feeding a
-// starving captive turns "no" into "not yet", which is the whole point.
-bool PresentOffer(Character* character, const Verdict& verdict, const std::string& spoken)
+// The remedy the third button offers, when the plugin can actually deliver it.
+// Only one fits, so it is the one that applies: food when they are hungry and
+// you are carrying some, otherwise the beating -- the lever R2.3 gives the
+// player against someone whose price is submission. HelpCaptive dispatches on
+// the same test, so the label and the action cannot disagree.
+OfferRemedy RemedyFor(Character* character, const Verdict& verdict, bool again)
 {
-    // The remedy button appears only when the plugin can actually deliver it.
-    // Only one remedy fits on the window, so it offers the one that applies:
-    // food when they are hungry and you are carrying some, and otherwise the
-    // beating -- which is the lever R2.3 exists to give the player against
-    // someone whose price is submission and who would otherwise only be waited
-    // out.
-    std::string extraLabel;
-    if (!verdict.willJoin && verdict.currency == Currency_Care && verdict.wantsFood && PlayerHasFood())
+    if (verdict.willJoin)
     {
-        extraLabel = "DARLE COMIDA";
+        return OfferRemedy_None;
     }
-    else if (!verdict.willJoin && CanBeatPrisoner(character, NULL))
+    if (verdict.currency == Currency_Care && verdict.wantsFood && PlayerHasFood())
     {
-        extraLabel = "GOLPEARLO";
+        return again ? OfferRemedy_FeedMore : OfferRemedy_Feed;
     }
+    if (CanBeatPrisoner(character, NULL))
+    {
+        return OfferRemedy_Beat;
+    }
+    return OfferRemedy_None;
+}
 
-    // A window only earns its place when there is a choice inside it. If they
-    // will not join and there is no remedy to offer, the speech bubble has
-    // already said everything -- repeating it in a box with a single dismiss
-    // button is noise the player has to click away.
-    // An animal's bubble is a noise, not an explanation, so the window is the
-    // only place a refusal can actually say why. People keep the old rule:
-    // their bubble already said it, and a box with one dismiss button is noise.
-    if (!verdict.willJoin && extraLabel.empty() && !verdict.isAnimal)
+// What the player is carrying: the squad leader's purse (cats_purse.h).
+bool ReadPlayerPurse(int* out)
+{
+    Character* leader = PlayerPurseOwner();
+    if (leader == NULL)
     {
         return false;
     }
+    CharacterPurse purse(leader);
+    return purse.Balance(out);
+}
 
-    // The window narrates the situation; the NPC's own words are already in a
-    // bubble over their head, so repeating them here would waste the one line
-    // the window has.
-    const std::string body = DescribeOffer(character, verdict);
-
-    if (!verdict.willJoin)
-    {
-        return ShowOffer(character, body, "", "CERRAR", extraLabel);
-    }
-
-    return ShowOffer(character, body, SpeakAcceptLine(verdict), "RECHAZAR", extraLabel);
+// Opens the popup for a verdict, whatever it says. A yes carries its price and
+// the purse it is checked against; a price the purse cannot meet and every
+// refusal carry their reason in red with ACEPTAR hidden; a refusal the player
+// can act on carries its remedy (offer_view.cpp decides all of that). Nothing
+// ends in a notification: the popup is where the player reads the answer.
+bool PresentOffer(Character* character, const Verdict& verdict, bool afterRemedy)
+{
+    OfferInput in;
+    in.name = CharacterName(character);
+    in.verdict = verdict;
+    in.purseKnown = ReadPlayerPurse(&in.purse);
+    in.remedy = RemedyFor(character, verdict, afterRemedy);
+    in.afterRemedy = afterRemedy;
+    return ShowOffer(character, BuildOfferView(in, OfferWording()));
 }
 } // namespace
 
@@ -512,9 +516,8 @@ void AttemptRecruit(Character* character)
     const Verdict verdict = Evaluate(character);
 
     // A refusal is not the end of the interaction -- it is the moment the
-    // player most needs somewhere to act. So it goes through the same window as
-    // an acceptance, carrying whatever remedy applies, rather than ending in
-    // the message roller with nothing to click.
+    // player most needs somewhere to act. So it goes through the same popup as
+    // an acceptance, with its reason and whatever remedy applies.
     if (!verdict.willJoin)
     {
         LogInfo("Refused " + name + " (" + CurrencyName(verdict.currency) + "): " +
@@ -556,25 +559,11 @@ void AttemptRecruit(Character* character)
         return;
     }
 
-    if (PresentOffer(character, verdict, spoken))
+    // Never recruit without the popup: a yes nobody confirmed is a squad
+    // change the player never agreed to.
+    if (!PresentOffer(character, verdict, false))
     {
-        return;
-    }
-
-    // No window. This used to recruit outright when the verdict was yes, which
-    // is the same defect the rescue route had: the squad changed with nobody
-    // agreeing to it, and from the player's side it looks like the popup simply
-    // never appeared. Say what happened instead, and log why the window failed
-    // -- silence here is what made this hard to see.
-    if (verdict.willJoin)
-    {
-        LogError("Offer window would not open for " + name +
-                 "; not recruiting without a confirmation.");
-        TellPlayer(name + ": " + verdict.reason, false);
-    }
-    else
-    {
-        TellPlayer(name + ": " + verdict.reason, true);
+        LogError("Offer window would not open for " + name + "; nothing was decided.");
     }
 }
 
@@ -590,8 +579,8 @@ void HelpCaptive(Character* character)
     // The same button carries whichever remedy the window offered, so the
     // dispatch has to agree with the label PresentOffer chose.
     const Verdict before = Evaluate(character);
-    const bool feeding = (before.currency == Currency_Care && before.wantsFood &&
-                          PlayerHasFood());
+    const OfferRemedy remedy = RemedyFor(character, before, false);
+    const bool feeding = (remedy == OfferRemedy_Feed);
 
     std::string message;
     if (feeding)
@@ -624,17 +613,7 @@ void HelpCaptive(Character* character)
         SpeakAloud(character, spoken);
     }
 
-    std::string extraLabel;
-    if (!after.willJoin && after.currency == Currency_Care && after.wantsFood && PlayerHasFood())
-    {
-        extraLabel = "Darle mas comida";
-    }
-    else if (!after.willJoin && CanBeatPrisoner(character, NULL))
-    {
-        extraLabel = "GOLPEARLO";
-    }
-
-    ShowOffer(character, spoken, SpeakAcceptLine(after), "Ahora no.", extraLabel);
+    PresentOffer(character, after, true);
 }
 
 void CompleteOffer(Character* character, bool accepted)

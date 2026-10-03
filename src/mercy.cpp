@@ -8,6 +8,7 @@
 #include "config.h"
 #include "recruit_core.h"
 #include "offer_popup.h"
+#include "npc_speech.h"
 #include "dialogue_authoring.h"
 #include "log.h"
 #include "mercy_rules.h"
@@ -291,9 +292,10 @@ void OfferMercy(Character* npc)
 
     // Ignoring is only a third option when there is something to ignore. An
     // honourable NPC has made this a two-answer question: take them or fight.
-    const char* thirdLabel = CanBuyTheirLife(ReadTemperament(npc)) ? "IGNORAR" : "";
+    const bool canIgnore = CanBuyTheirLife(ReadTemperament(npc));
+    const OfferView view = BuildMercyOfferView(CharacterName(npc), line, canIgnore, OfferWording());
 
-    if (!ShowOffer(npc, line, "ACEPTAR", "RECHAZAR", thirdLabel))
+    if (!ShowOffer(npc, view))
     {
         // No window means no choice, and silently recruiting or silently
         // sparing would both be decisions the player never made.

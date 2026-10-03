@@ -126,10 +126,20 @@ their stable roll is recast once.
 | | |
 |---|---|
 | Right-click an NPC | The recruit button, labelled with what they want |
-| Press the recruit button (Hablar): click it, or hold right click on the NPC, slide onto it and release, as with the game's own menu options | The offer window, with the stress and join-chance card beside it (see below) |
+| Press the recruit button (Hablar): click it, or hold right click on the NPC, slide onto it and release, as with the game's own menu options | The recruit popup, with the stress and join-chance card beside it (see below) |
 | **Shift+K** | Spawn panel |
 
 Settings are in the Mod Hub panel, not in a window of this mod.
+
+### The recruit popup
+
+Every Hablar opens the same window, whatever the answer: the NPC's portrait,
+name and route, one line on what is happening, and a small box with the price,
+what you carry and the odds when they apply. A price you cannot pay turns red,
+says how many cats you are short, and hides Accept. A refusal shows its reason
+in red, plus the one thing you can do about it when there is one (feed them,
+beat them). Money only moves when you press Accept. The text is the `popup`
+block of `messages.json`.
 
 ### The readout card
 

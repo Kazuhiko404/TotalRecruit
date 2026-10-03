@@ -76,6 +76,8 @@
     <ClCompile Include="src\surrender.cpp" />
     <ClCompile Include="src\dialogue_authoring.cpp" />
     <ClCompile Include="src\offer_popup.cpp" />
+    <ClCompile Include="src\offer_view.cpp" />
+    <ClCompile Include="src\ui_style.cpp" />
     <ClCompile Include="src\feeding.cpp" />
     <ClCompile Include="src\cursor_hint.cpp" />
     <ClCompile Include="src\talk_hint_cache.cpp" />
@@ -150,6 +152,8 @@
     <ClInclude Include="src\surrender.h" />
     <ClInclude Include="src\dialogue_authoring.h" />
     <ClInclude Include="src\offer_popup.h" />
+    <ClInclude Include="src\offer_view.h" />
+    <ClInclude Include="src\ui_style.h" />
     <ClInclude Include="src\feeding.h" />
     <ClInclude Include="src\cursor_hint.h" />
     <ClInclude Include="src\talk_hint_cache.h" />

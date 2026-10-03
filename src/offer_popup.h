@@ -2,29 +2,30 @@
 
 #include <string>
 
+#include "offer_view.h"
+
 class Character;
 
 namespace totalrecruit
 {
-// The decision window.
+// The recruit popup: every Hablar outcome opens it.
 //
 // Kenshi's own dialogue window can only show a conversation that exists as FCS
 // data, which is exactly the dependency this mod is built to avoid -- an NPC
 // from a mod nobody patched has no such data. So the window is built here, at
-// runtime, out of MyGUI widgets wearing Kenshi's own skins. It reads as native
-// because the skins are native.
+// runtime: Kenshi's Kenshi_WindowCX frame with the mockup's flat art inside
+// (ui-mockup/readout.html, section 5).
+//
+// It draws an OfferView (offer_view.h) and decides nothing: which buttons exist,
+// the price, the purse, the red line all come from the view. An empty accept or
+// extra label hides that button; Cancel is always there, and so is the title-bar
+// X, which means the same.
 //
 // The NPC still speaks in a real speech bubble over their head; this window
-// only carries the choice.
+// carries the decision.
 //
-// Returns false when the window could not be created, so the caller can fall
-// back to acting directly rather than leaving the player with nothing.
-// extraLabel adds a third button when there is something the player can DO
-// about the refusal -- feeding a starving captive, say. Pass an empty string
-// for the usual two-button form.
-bool ShowOffer(Character* npc, const std::string& npcLine,
-               const std::string& acceptLabel, const std::string& declineLabel,
-               const std::string& extraLabel);
+// Returns false when the window could not be created (logged).
+bool ShowOffer(Character* npc, const OfferView& view);
 
 // True while the offer is on screen. The context-menu overlay hides itself
 // during that time so the two do not fight for the same corner.

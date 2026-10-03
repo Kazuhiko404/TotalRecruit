@@ -7,45 +7,99 @@
 #include "feeding.h"
 #include "log.h"
 #include "mercy.h"
+#include "ui_style.h"
 
 #include <kenshi/gui/PortraitManager.h>
 #include <mygui/MyGUI_ImageBox.h>
+
+// The recruit popup, drawn from an OfferView (offer_view.h).
+//
+// Built from the mockup (ui-mockup/readout.html, section 5; js/popup.js
+// layoutOffer is LayoutUnguarded below, line for line). The frame is Kenshi's own
+// Kenshi_WindowCX on the Info layer -- title bar, X and dragging come from the
+// engine -- and the client area gets the mockup's flat art over a lacquer plate,
+// as TotalSparring's duel popup does. Every widget is built once; an open only
+// sets captions, colours, visibility and coordinates. Fills are created (and
+// textured) before anything drawn over them (ui_style.h).
 
 namespace totalrecruit
 {
 namespace
 {
+using namespace ui;
+
 // Distinct names so this window can coexist with the context-menu overlay and
 // with other mods' widgets.
-const char* const kRootName    = "TR_OfferRoot";
-const char* const kTextName    = "TR_OfferText";
-const char* const kAcceptName  = "TR_OfferAccept";
-const char* const kDeclineName = "TR_OfferDecline";
-const char* const kExtraName   = "TR_OfferExtra";
+const char* const kRootName     = "TR_OfferRoot";
+const char* const kBodyName     = "TR_OfferBody";
+const char* const kReasonName   = "TR_OfferReason";
+const char* const kAcceptName   = "TR_OfferAccept";
+const char* const kDeclineName  = "TR_OfferDecline";
+const char* const kExtraName    = "TR_OfferExtra";
 const char* const kPortraitName = "TR_OfferPortrait";
 
 // The native context menu sits on the Popup layer, so this goes above it.
 const char* const kLayer = "Info";
 
-const int kBaseWidth = 620;
-const int kBaseHeightNoExtra = 260;
-const int kBaseHeightWithExtra = 310;
-const int kMargin = 16;
-const int kButtonHeight = 32;
+// ------------------------------------------------------------------- Layout
+// POPUP_LAYOUT in ui-mockup/js/popup_data.js.
+const int kClientWidth  = 540;
+const int kMargin       = 14;
 const int kPortraitSide = 110;
+const int kColumnGap    = 14;
+const int kNameH        = 22;
+const int kTagW         = 84;
+const int kTagH         = 18;
+const int kRuleGap      = 3;
+const int kBodyGap      = 6;
+const int kInfoGap      = 8;
+const int kInfoRowH     = 22;
+const int kInfoPad      = 4;
+const int kInfoLabelW   = 120;
+const int kSectionGap   = 12;
+const int kReasonBarW   = 3;
+const int kReasonPadX   = 10;
+const int kReasonPadY   = 7;
+const int kButtonHeight = 32;
+const int kButtonGap    = 8;
+const int kAloneButtonW = 150;
+const int kInfoRows     = 3;
 
-int g_windowWidth = kBaseWidth;
-int g_windowHeight = kBaseHeightNoExtra;
+// The frame the skin adds around the client area, measured once at build.
+int g_frameW = 16;
+int g_frameH = 40;
 
-MyGUI::Window* g_root = NULL;
+struct Popup
+{
+    MyGUI::Window* root;
+    MyGUI::Widget* client;
+
+    // Fills, in paint order.
+    MyGUI::Widget* plate;
+    MyGUI::Widget* portraitFrame[4];
+    MyGUI::Widget* tagFrame[4];
+    MyGUI::Widget* rule;
+    MyGUI::Widget* infoFrame;
+    MyGUI::Widget* infoPlate;
+    MyGUI::Widget* reasonPlate;
+    MyGUI::Widget* reasonBar;
+    FlatButton accept;
+    FlatButton extra;
+    FlatButton cancel;
+
+    // Over the fills.
+    MyGUI::ImageBox* portrait;
+    MyGUI::TextBox* name;
+    MyGUI::TextBox* tag;
+    MyGUI::TextBox* infoLabel[kInfoRows];
+    MyGUI::TextBox* infoValue[kInfoRows];
+    MyGUI::EditBox* body;
+    MyGUI::EditBox* reason;
+};
+
+Popup g_ui = { 0 };
+
 MyGUI::delegates::IDelegate2<MyGUI::Window*, const std::string&>* g_closeDelegate = NULL;
-MyGUI::Widget* g_client = NULL;
-MyGUI::EditBox* g_text = NULL;
-MyGUI::ImageBox* g_portrait = NULL;
-MyGUI::Button* g_accept = NULL;
-MyGUI::Button* g_decline = NULL;
-MyGUI::Button* g_extra = NULL;
-
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_acceptDelegate = NULL;
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_declineDelegate = NULL;
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_extraDelegate = NULL;
@@ -57,137 +111,24 @@ bool g_open = false;
 // work lives in plain functions and only the call crosses the guard. C2712
 // counts every C++ object in the whole frame, not just those inside __try.
 
-// setCaption lives on TextBox, not Widget; Button derives from it.
-void ApplyCaption(MyGUI::TextBox* widget, const char* text)
+// A TextBox caption parses '#' as a colour code; a name carrying one would lose
+// characters. "##" draws a single '#'.
+std::string Literal(const std::string& text)
 {
-    widget->setCaption(text);
-}
-
-void SafeSetCaption(MyGUI::TextBox* widget, const char* text)
-{
-    if (widget == NULL) return;
-    TR_TRY { ApplyCaption(widget, text); }
-    TR_CATCH { }
-}
-
-void ApplyCoord(MyGUI::Widget* widget, int left, int top, int width, int height)
-{
-    widget->setCoord(left, top, width, height);
-}
-
-void SafeSetCoord(MyGUI::Widget* widget, int left, int top, int width, int height)
-{
-    if (widget == NULL) return;
-    TR_TRY { ApplyCoord(widget, left, top, width, height); }
-    TR_CATCH { }
-}
-
-
-
-// setOnlyText avoids the caption's markup parsing, which would swallow any
-// stray formatting characters in a character name.
-void ApplyOnlyText(MyGUI::EditBox* box, const char* text)
-{
-    box->setOnlyText(text);
-}
-
-void SafeSetOnlyText(MyGUI::EditBox* box, const char* text)
-{
-    if (box == NULL) return;
-    TR_TRY { ApplyOnlyText(box, text); }
-    TR_CATCH { }
-}
-
-void SafeSetVisible(MyGUI::Widget* widget, bool visible)
-{
-    if (widget == NULL) return;
-    TR_TRY { widget->setVisible(visible); }
-    TR_CATCH { }
-}
-
-// Kenshi_WindowCX is a real MyGUI::Window with title-bar chrome, so it has to
-// be created as one and its children parented to getClientWidget() -- placing
-// them on the frame itself puts them behind the caption bar and off the edges.
-MyGUI::Window* CreateRoot(MyGUI::Gui* guiManager, const char* skin, int left, int top)
-{
-    return guiManager->createWidget<MyGUI::Window>(
-        skin,
-        MyGUI::IntCoord(left, top, g_windowWidth, g_windowHeight),
-        MyGUI::Align::Default,
-        kLayer,
-        kRootName);
-}
-
-MyGUI::Window* SafeCreateRoot(MyGUI::Gui* guiManager, const char* skin, int left, int top)
-{
-    TR_TRY { return CreateRoot(guiManager, skin, left, top); }
-    TR_CATCH { return NULL; }
-}
-
-// The client area excludes the title bar, so children laid out inside it land
-// where they look like they should.
-MyGUI::Widget* SafeGetClient(MyGUI::Window* window)
-{
-    TR_TRY
+    std::string out;
+    for (size_t i = 0; i < text.size(); ++i)
     {
-        MyGUI::Widget* client = window->getClientWidget();
-        return (client != NULL) ? client : window;
+        out += text[i];
+        if (text[i] == '#') out += '#';
     }
-    TR_CATCH { return NULL; }
+    return out;
 }
 
-// Width and height of the client area, which is smaller than the window.
-bool SafeClientSize(MyGUI::Widget* client, int* outWidth, int* outHeight)
-{
-    TR_TRY
-    {
-        *outWidth = client->getWidth();
-        *outHeight = client->getHeight();
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-// An EditBox rather than a TextBox, because only EditBox can word-wrap: a
-// TextBox draws one line and clips whatever does not fit, which is how the
-// message ended up cut off mid-sentence. Its editing behaviour is switched off
-// below so it still reads as a label.
-MyGUI::EditBox* CreateText(MyGUI::Widget* parent, const char* skin,
-                           int left, int top, int width, int height)
-{
-    return parent->createWidget<MyGUI::EditBox>(
-        skin,
-        MyGUI::IntCoord(left, top, width, height),
-        MyGUI::Align::Default,
-        kTextName);
-}
-
-MyGUI::EditBox* SafeCreateText(MyGUI::Widget* parent, const char* skin,
-                               int left, int top, int width, int height)
-{
-    TR_TRY { return CreateText(parent, skin, left, top, width, height); }
-    TR_CATCH { return NULL; }
-}
-
+// --------------------------------------------------------------- Portrait
 // The portrait uses the engine's own PortraitManager, so the face in this
 // window is the same one the squad bar and the vanilla dialogue draw -- no
 // second rendering path to keep in step.
-MyGUI::ImageBox* CreatePortrait(MyGUI::Widget* parent, int left, int top, int side)
-{
-    return parent->createWidget<MyGUI::ImageBox>(
-        "ImageBox",
-        MyGUI::IntCoord(left, top, side, side),
-        MyGUI::Align::Default,
-        kPortraitName);
-}
-
-MyGUI::ImageBox* SafeCreatePortrait(MyGUI::Widget* parent, int left, int top, int side)
-{
-    TR_TRY { return CreatePortrait(parent, left, top, side); }
-    TR_CATCH { return NULL; }
-}
-
-
+//
 // PortraitManager has two paths, and the difference is the whole bug.
 // setImageWidget/createPortraitImage go through characterPortraits, a map keyed
 // by hand that only holds the player's own people -- so for anyone else they
@@ -205,7 +146,7 @@ void LoadPortrait(Character* npc, int* outStage)
     // The NPC path returns void, so it cannot report failure; reaching the
     // next line is all the success signal the engine gives us.
     *outStage = 2;
-    manager->setImageWidgetNPC(npc, g_portrait);
+    manager->setImageWidgetNPC(npc, g_ui.portrait);
     *outStage = 5;
 }
 
@@ -234,7 +175,7 @@ void LoadPortraitFromMap(Character* npc, int* outStage)
         return;
     }
 
-    image->updateImageWidget(g_portrait, true);
+    image->updateImageWidget(g_ui.portrait, true);
     *outStage = 4;
 }
 
@@ -256,7 +197,7 @@ int GuardedLoadPortraitFromMap(Character* npc)
 
 void SafeLoadPortrait(Character* npc)
 {
-    if (g_portrait == NULL || npc == NULL)
+    if (g_ui.portrait == NULL || npc == NULL)
     {
         return;
     }
@@ -284,146 +225,98 @@ void SafeLoadPortrait(Character* npc)
 
     // A missing portrait is not worth failing the window over; the frame just
     // stays empty.
-    SafeSetVisible(g_portrait, loaded);
+    SafeSetVisible(g_ui.portrait, loaded);
 }
 
-MyGUI::Button* CreateButton(MyGUI::Widget* parent, const char* skin, const char* name,
-                            int left, int top, int width)
+// ------------------------------------------------------------------ Build
+// Kenshi_WindowCX is a real MyGUI::Window with title-bar chrome, so it has to
+// be created as one and its children parented to getClientWidget() -- placing
+// them on the frame itself puts them behind the caption bar and off the edges.
+MyGUI::Window* CreateRoot(MyGUI::Gui* gui, const char* skin)
 {
-    return parent->createWidget<MyGUI::Button>(
-        skin,
-        MyGUI::IntCoord(left, top, width, kButtonHeight),
-        MyGUI::Align::Default,
-        name);
+    return gui->createWidget<MyGUI::Window>(
+        skin, MyGUI::IntCoord(40, 40, kClientWidth + g_frameW, 300),
+        MyGUI::Align::Default, kLayer, kRootName);
 }
 
-MyGUI::Button* SafeCreateButton(MyGUI::Widget* parent, const char* skin, const char* name,
-                                int left, int top, int width)
+MyGUI::Window* SafeCreateRoot(MyGUI::Gui* gui, const char* skin)
 {
-    TR_TRY { return CreateButton(parent, skin, name, left, top, width); }
+    TR_TRY { return CreateRoot(gui, skin); }
     TR_CATCH { return NULL; }
 }
 
-// Layout the buttons and text dynamically according to the actual client area
-// and whether accept or extra buttons are visible.
-void LayoutComponents(bool haveAccept, bool haveExtra)
-{
-    if (g_client == NULL) return;
-
-    int clientWidth = g_windowWidth;
-    int clientHeight = g_windowHeight;
-    SafeClientSize(g_client, &clientWidth, &clientHeight);
-
-    // Calculate vertical space from the bottom up:
-    // Bottom row: Aceptar / Rechazar (or Cerrar)
-    const int mainButtonTop = clientHeight - kMargin - kButtonHeight;
-
-    // Extra row (e.g. DARLE COMIDA): sits above the bottom row
-    int extraTop = mainButtonTop;
-    if (haveExtra)
-    {
-        extraTop = mainButtonTop - kButtonHeight - 8;
-        if (g_extra != NULL)
-        {
-            g_extra->setCoord(kMargin, extraTop, clientWidth - kMargin * 2, kButtonHeight);
-        }
-    }
-
-    // Bottom action buttons:
-    const int buttonWidth = (clientWidth - kMargin * 3) / 2;
-    if (haveAccept)
-    {
-        if (g_accept != NULL)
-        {
-            g_accept->setCoord(kMargin, mainButtonTop, buttonWidth, kButtonHeight);
-        }
-        if (g_decline != NULL)
-        {
-            g_decline->setCoord(kMargin * 2 + buttonWidth, mainButtonTop, buttonWidth, kButtonHeight);
-        }
-    }
-    else
-    {
-        if (g_decline != NULL)
-        {
-            g_decline->setCoord(kMargin, mainButtonTop, clientWidth - kMargin * 2, kButtonHeight);
-        }
-    }
-
-    // Top area: Portrait on left, text on right
-    // The available height for the top section is up to the uppermost button row:
-    const int topLimit = (haveExtra ? extraTop : mainButtonTop) - 10;
-    const int textTop = kMargin;
-    const int textHeight = (topLimit > textTop) ? (topLimit - textTop) : 80;
-
-    if (g_portrait != NULL)
-    {
-        g_portrait->setCoord(kMargin, textTop, kPortraitSide, kPortraitSide);
-    }
-
-    if (g_text != NULL)
-    {
-        const int textLeft = kMargin + kPortraitSide + kMargin;
-        const int textWidth = clientWidth - textLeft - kMargin;
-        g_text->setCoord(textLeft, textTop, textWidth, textHeight);
-    }
-}
-
-void SafeLayoutComponents(bool haveAccept, bool haveExtra)
-{
-    TR_TRY { LayoutComponents(haveAccept, haveExtra); }
-    TR_CATCH { }
-}
-
-// How tall the wrapped text actually is, asked of MyGUI instead of estimated.
-//
-// The estimate it replaces assumed a character width and counted 48 to a line.
-// That is a guess about a font this code never sees, and it was wrong in the
-// generous direction: "Guard Fremp te debe la comida y las curas, y desea
-// unirse a tu grupo." came out as two lines and was drawn as one and a bit,
-// with the rest below the box. Measuring costs one call and cannot be wrong
-// about the font, because it is the font doing the measuring.
-// setCaption builds a UString, so the work sits in a plain function and only
-// the call crosses the guard -- C2712 counts every object in the frame.
-int MeasureText(MyGUI::EditBox* box, const char* text, int width)
-{
-    // Width first: wrapping depends on it, so the size is only meaningful once
-    // the box is as wide as it will be on screen.
-    box->setSize(width, box->getHeight());
-    box->setCaption(text);
-    return box->getTextSize().height;
-}
-
-bool SafeMeasureText(MyGUI::EditBox* box, const char* text, int width, int* outHeight)
+// The client area excludes the title bar, so children laid out inside it land
+// where they look like they should. Also measures what the frame adds.
+bool SafeTakeClient(MyGUI::Window* window)
 {
     TR_TRY
     {
-        *outHeight = MeasureText(box, text, width);
+        MyGUI::Widget* client = window->getClientWidget();
+        g_ui.client = (client != NULL) ? client : window;
+        const int fw = window->getWidth() - g_ui.client->getWidth();
+        const int fh = window->getHeight() - g_ui.client->getHeight();
+        if (fw >= 0 && fw < 200) g_frameW = fw;
+        if (fh >= 0 && fh < 200) g_frameH = fh;
         return true;
     }
     TR_CATCH { return false; }
 }
 
-// Word-wrapped, read-only, and never taking focus: a label that happens to be
-// an EditBox because that is the only widget here that wraps.
-bool ConfigureText()
+// Fills first, in the order they paint; then everything drawn over them.
+bool BuildBodyUnguarded()
 {
-    TR_TRY
+    Popup& p = g_ui;
+    MyGUI::Widget* c = p.client;
+
+    p.plate = MakeFill(c, kLacquer);
+    for (int i = 0; i < 4; ++i) p.portraitFrame[i] = MakeFill(c, kLine);
+    for (int i = 0; i < 4; ++i) p.tagFrame[i] = MakeFill(c, kText);
+    p.rule = MakeFill(c, kGoldDim);
+    p.infoFrame = MakeFill(c, kLine);
+    p.infoPlate = MakeFill(c, kBgDark);
+    p.reasonPlate = MakeFill(c, kBgDark);
+    p.reasonBar = MakeFill(c, kDanger);
+    MakeFlatButtonPlates(c, kAmber, NULL, &p.accept);
+    MakeFlatButtonPlates(c, kSumi, &kAmber, &p.extra);
+    MakeFlatButtonPlates(c, kLine, &kGoldDim, &p.cancel);
+
+    p.portrait = c->createWidget<MyGUI::ImageBox>(
+        "ImageBox", MyGUI::IntCoord(kMargin + 1, kMargin + 1, kPortraitSide, kPortraitSide),
+        MyGUI::Align::Default, kPortraitName);
+    if (p.portrait != NULL)
     {
-        g_text->setEditStatic(true);
-        g_text->setEditReadOnly(true);
-        g_text->setEditMultiLine(true);
-        g_text->setEditWordWrap(true);
-        g_text->setTextAlign(MyGUI::Align::Left | MyGUI::Align::Top);
-        g_text->setNeedKeyFocus(false);
-        // The scrollbar below is useless without mouse focus: it draws, and no
-        // click ever reaches it. Text that overflows the tallest allowed window
-        // has to stay reachable rather than silently disappear.
-        g_text->setNeedMouseFocus(true);
-        g_text->setVisibleVScroll(true);
-        g_text->setVisibleHScroll(false);
-        return true;
+        p.portrait->setNeedMouseFocus(false);
     }
+
+    p.name = MakeLabel(c, kNameFont, kBrass);
+    p.tag = MakeLabel(c, kSmallFont, kText);
+    if (p.tag != NULL) p.tag->setTextAlign(MyGUI::Align::Center);
+    for (int i = 0; i < kInfoRows; ++i)
+    {
+        p.infoLabel[i] = MakeLabel(c, kBodyFont, kMuted);
+        p.infoValue[i] = MakeLabel(c, kMediumFont, kText);
+    }
+    p.body = MakeWrapText(c, kBodyName, kMediumFont, kText);
+    p.reason = MakeWrapText(c, kReasonName, kMediumFont, kSoftDanger);
+
+    MakeFlatButtonCaption(c, kAcceptName, kMediumFont, kLacquer, &p.accept);
+    MakeFlatButtonCaption(c, kExtraName, kMediumFont, kAmber, &p.extra);
+    MakeFlatButtonCaption(c, kDeclineName, kMediumFont, kText, &p.cancel);
+
+    // The caption is the engine's title bar; only its colour is the mockup's.
+    MyGUI::TextBox* caption = p.root->getCaptionWidget();
+    if (caption != NULL)
+    {
+        caption->setTextColour(kBrass);
+    }
+
+    return p.plate != NULL && p.body != NULL && p.accept.button != NULL &&
+           p.extra.button != NULL && p.cancel.button != NULL;
+}
+
+bool SafeBuildBody()
+{
+    TR_TRY { return BuildBodyUnguarded(); }
     TR_CATCH { return false; }
 }
 
@@ -436,22 +329,17 @@ bool BindButtons()
 {
     TR_TRY
     {
-        g_acceptDelegate = MyGUI::newDelegate(&OnAccept);
-        // Kenshi_WindowCX draws a close cross in its title bar, and nothing was
-        // listening to it: clicking the X did nothing at all, leaving a window
-        // that could only be dismissed by answering it. The cross means the
-        // same as declining -- the player walked away without deciding.
+        // Kenshi_WindowCX draws a close cross in its title bar; it means the
+        // same as Cancel -- the player walked away without deciding.
         g_closeDelegate = MyGUI::newDelegate(&OnWindowButton);
-        g_root->eventWindowButtonPressed += g_closeDelegate;
+        g_ui.root->eventWindowButtonPressed += g_closeDelegate;
 
+        g_acceptDelegate = MyGUI::newDelegate(&OnAccept);
         g_declineDelegate = MyGUI::newDelegate(&OnDecline);
-        g_accept->eventMouseButtonClick += g_acceptDelegate;
-        g_decline->eventMouseButtonClick += g_declineDelegate;
-        if (g_extra != NULL)
-        {
-            g_extraDelegate = MyGUI::newDelegate(&OnExtra);
-            g_extra->eventMouseButtonClick += g_extraDelegate;
-        }
+        g_extraDelegate = MyGUI::newDelegate(&OnExtra);
+        g_ui.accept.button->eventMouseButtonClick += g_acceptDelegate;
+        g_ui.cancel.button->eventMouseButtonClick += g_declineDelegate;
+        g_ui.extra.button->eventMouseButtonClick += g_extraDelegate;
         return true;
     }
     TR_CATCH { return false; }
@@ -459,21 +347,21 @@ bool BindButtons()
 
 void Unbind()
 {
-    if (g_accept != NULL && g_acceptDelegate != NULL)
+    if (g_ui.accept.button != NULL && g_acceptDelegate != NULL)
     {
-        g_accept->eventMouseButtonClick -= g_acceptDelegate;
+        g_ui.accept.button->eventMouseButtonClick -= g_acceptDelegate;
     }
-    if (g_decline != NULL && g_declineDelegate != NULL)
+    if (g_ui.cancel.button != NULL && g_declineDelegate != NULL)
     {
-        g_decline->eventMouseButtonClick -= g_declineDelegate;
+        g_ui.cancel.button->eventMouseButtonClick -= g_declineDelegate;
     }
-    if (g_extra != NULL && g_extraDelegate != NULL)
+    if (g_ui.extra.button != NULL && g_extraDelegate != NULL)
     {
-        g_extra->eventMouseButtonClick -= g_extraDelegate;
+        g_ui.extra.button->eventMouseButtonClick -= g_extraDelegate;
     }
-    if (g_root != NULL && g_closeDelegate != NULL)
+    if (g_ui.root != NULL && g_closeDelegate != NULL)
     {
-        g_root->eventWindowButtonPressed -= g_closeDelegate;
+        g_ui.root->eventWindowButtonPressed -= g_closeDelegate;
     }
 }
 
@@ -499,8 +387,231 @@ void SafeDestroyWidget(MyGUI::Widget* widget)
     TR_CATCH { }
 }
 
-// Centred horizontally, a little above centre vertically, so it does not sit on
-// top of whatever the player just clicked. Responsive to current render view size.
+bool Build()
+{
+    if (g_ui.root != NULL)
+    {
+        return true;
+    }
+
+    MyGUI::Gui* gui = MyGUI::Gui::getInstancePtr();
+    if (gui == NULL)
+    {
+        return false;
+    }
+
+    // Skin availability differs between installs, so fall back to stock ones.
+    const char* panelSkins[3] = { "Kenshi_WindowCX", "WindowCSX", "WindowC" };
+    for (int i = 0; i < 3 && g_ui.root == NULL; ++i)
+    {
+        g_ui.root = SafeCreateRoot(gui, panelSkins[i]);
+    }
+    if (g_ui.root == NULL)
+    {
+        LogError("Could not create the offer window (no usable window skin).");
+        return false;
+    }
+
+    if (!SafeTakeClient(g_ui.root))
+    {
+        LogError("Offer window has no client area.");
+        return false;
+    }
+
+    if (!SafeBuildBody())
+    {
+        LogError("Could not create the offer window's contents.");
+        return false;
+    }
+
+    BindButtons();
+    SafeSetVisible(g_ui.root, false);
+    return true;
+}
+
+// ----------------------------------------------------------------- Layout
+// js/popup.js layoutOffer, in client coordinates. Returns the client height.
+void HideAllUnguarded()
+{
+    Popup& p = g_ui;
+    MyGUI::Widget* fills[] = { p.rule, p.infoFrame, p.infoPlate, p.reasonPlate, p.reasonBar,
+                               p.name, p.tag, p.body, p.reason };
+    for (size_t i = 0; i < sizeof(fills) / sizeof(fills[0]); ++i) Hide(fills[i]);
+    for (int i = 0; i < 4; ++i) { Hide(p.portraitFrame[i]); Hide(p.tagFrame[i]); }
+    for (int i = 0; i < kInfoRows; ++i) { Hide(p.infoLabel[i]); Hide(p.infoValue[i]); }
+    ShowButton(p.accept, false);
+    ShowButton(p.extra, false);
+    ShowButton(p.cancel, false);
+}
+
+MyGUI::Colour TagColour(ReadoutRoute route)
+{
+    switch (route)
+    {
+    case ReadoutRoute_Captivity: return kAmber;
+    case ReadoutRoute_Surrender: return kSoftDanger;
+    case ReadoutRoute_Rescue:    return kReady;
+    case ReadoutRoute_Animal:    return kIndigo;
+    case ReadoutRoute_Mercy:     return kBrass;
+    case ReadoutRoute_Free:
+    default:                     return kText;
+    }
+}
+
+int LayoutUnguarded(const OfferView& view)
+{
+    Popup& p = g_ui;
+    HideAllUnguarded();
+
+    const int W = kClientWidth;
+    const int m = kMargin;
+    const int P = kPortraitSide;
+    const int x0 = m + P + 2 + kColumnGap;
+    const int colW = W - x0 - m;
+
+    // Portrait framed in line.
+    PlaceFrame(p.portraitFrame, m, m, P + 2, P + 2);
+    if (p.portrait != NULL) p.portrait->setCoord(m + 1, m + 1, P, P);
+
+    // Name in brass, the route as a framed tag, a golddim rule under them.
+    int y = m;
+    const int tagY = y + (kNameH - kTagH) / 2;
+    const MyGUI::Colour tagColour = TagColour(view.route);
+    p.name->setCaption(Literal(view.name));
+    Place(p.name, x0, y, colW - kTagW - 6, kNameH);
+    for (int i = 0; i < 4; ++i) p.tagFrame[i]->setColour(tagColour);
+    PlaceFrame(p.tagFrame, x0 + colW - kTagW, tagY, kTagW, kTagH);
+    p.tag->setCaption(Literal(view.routeTag));
+    p.tag->setTextColour(tagColour);
+    Place(p.tag, x0 + colW - kTagW, tagY, kTagW, kTagH);
+    y += kNameH + kRuleGap;
+    Place(p.rule, x0, y, colW, 1);
+    y += 1 + kBodyGap;
+
+    // The body line, wrapped and measured.
+    const int bodyH = MeasureWrapText(p.body, view.bodyLine, colW);
+    Place(p.body, x0, y, colW, bodyH);
+    y += bodyH;
+
+    // Info box: only the rows that apply.
+    int rows = 0;
+    const std::string* labels[kInfoRows] = { NULL, NULL, NULL };
+    const std::string* values[kInfoRows] = { NULL, NULL, NULL };
+    MyGUI::Colour inks[kInfoRows] = { kText, kText, kText };
+    if (view.showPrice)
+    {
+        labels[rows] = &view.priceLabel;
+        values[rows] = &view.priceText;
+        inks[rows] = view.priceFree ? kReady : kAmber;
+        ++rows;
+    }
+    if (view.showPurse)
+    {
+        labels[rows] = &view.purseLabel;
+        values[rows] = &view.purseText;
+        inks[rows] = view.affordable ? kText : kSoftDanger;
+        ++rows;
+    }
+    if (view.showChance)
+    {
+        labels[rows] = &view.chanceLabel;
+        values[rows] = &view.chanceText;
+        inks[rows] = kText;
+        ++rows;
+    }
+    if (rows > 0)
+    {
+        y += kInfoGap;
+        const int infoH = rows * kInfoRowH + 2 * kInfoPad;
+        Place(p.infoFrame, x0, y, colW, infoH);
+        Place(p.infoPlate, x0 + 1, y + 1, colW - 2, infoH - 2);
+        for (int i = 0; i < rows; ++i)
+        {
+            const int ry = y + kInfoPad + i * kInfoRowH;
+            p.infoLabel[i]->setCaption(*labels[i]);
+            Place(p.infoLabel[i], x0 + 10, ry, kInfoLabelW, kInfoRowH);
+            p.infoValue[i]->setCaption(*values[i]);
+            p.infoValue[i]->setTextColour(inks[i]);
+            Place(p.infoValue[i], x0 + 10 + kInfoLabelW, ry, colW - 20 - kInfoLabelW, kInfoRowH);
+        }
+        y += infoH;
+    }
+
+    if (y < m + P + 2) y = m + P + 2;
+
+    // The reason: a dark plate across the window, a red bar when it is a no.
+    if (!view.reasonText.empty())
+    {
+        y += kSectionGap;
+        const int textX = m + kReasonBarW + kReasonPadX;
+        const int textW = W - 2 * m - kReasonBarW - 2 * kReasonPadX;
+        p.reason->setTextColour(view.reasonRefused ? kSoftDanger : kText);
+        const int textH = MeasureWrapText(p.reason, view.reasonText, textW);
+        const int plateH = textH + 2 * kReasonPadY;
+        Place(p.reasonPlate, m, y, W - 2 * m, plateH);
+        if (view.reasonRefused) Place(p.reasonBar, m, y, kReasonBarW, plateH);
+        Place(p.reason, textX, y + kReasonPadY, textW, textH);
+        y += plateH;
+    }
+
+    // Buttons: Accept, Extra, Cancel share the row; Cancel alone sits right.
+    y += kSectionGap;
+    const FlatButton* order[3] = { NULL, NULL, NULL };
+    const std::string* captions[3] = { NULL, NULL, NULL };
+    int count = 0;
+    if (!view.acceptLabel.empty()) { order[count] = &p.accept; captions[count] = &view.acceptLabel; ++count; }
+    if (!view.extraLabel.empty())  { order[count] = &p.extra;  captions[count] = &view.extraLabel;  ++count; }
+    order[count] = &p.cancel;
+    captions[count] = &view.cancelLabel;
+    ++count;
+    if (count == 1)
+    {
+        SetButtonCaption(p.cancel, view.cancelLabel);
+        PlaceButton(p.cancel, W - m - kAloneButtonW, y, kAloneButtonW, kButtonHeight);
+    }
+    else
+    {
+        const int bw = (W - 2 * m - (count - 1) * kButtonGap) / count;
+        for (int i = 0; i < count; ++i)
+        {
+            SetButtonCaption(*order[i], *captions[i]);
+            PlaceButton(*order[i], m + i * (bw + kButtonGap), y, bw, kButtonHeight);
+        }
+    }
+    const int H = y + kButtonHeight + m;
+
+    // The plate last to be sized, first in paint order (created first).
+    Place(p.plate, 0, 0, W, H);
+    return H;
+}
+
+bool SafeLayout(const OfferView* view, int* outHeight)
+{
+    TR_TRY
+    {
+        *outHeight = LayoutUnguarded(*view);
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+void ApplyFrame(const char* title, int left, int top, int width, int height)
+{
+    g_ui.root->setCaption(title);
+    g_ui.root->setCoord(left, top, width, height);
+}
+
+bool SafeApplyFrame(const char* title, int left, int top, int width, int height)
+{
+    TR_TRY
+    {
+        ApplyFrame(title, left, top, width, height);
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// Centred on the screen; never above the top 30 px. Responsive to the view size.
 void ChoosePosition(int width, int height, int* outLeft, int* outTop)
 {
     int viewWidth = 0;
@@ -524,101 +635,12 @@ void ChoosePosition(int width, int height, int* outLeft, int* outTop)
     }
 }
 
-bool Build()
-{
-    if (g_root != NULL)
-    {
-        return true;
-    }
-
-    MyGUI::Gui* guiManager = MyGUI::Gui::getInstancePtr();
-    if (guiManager == NULL)
-    {
-        return false;
-    }
-
-    int left = 0;
-    int top = 0;
-    ChoosePosition(g_windowWidth, g_windowHeight, &left, &top);
-
-    const char* panelSkins[3] = { "Kenshi_WindowCX", "WindowCSX", "WindowC" };
-    for (int i = 0; i < 3 && g_root == NULL; ++i)
-    {
-        g_root = SafeCreateRoot(guiManager, panelSkins[i], left, top);
-    }
-    if (g_root == NULL)
-    {
-        LogError("Could not create the offer window (no usable window skin).");
-        return false;
-    }
-
-    g_client = SafeGetClient(g_root);
-    if (g_client == NULL)
-    {
-        LogError("Offer window has no client area.");
-        return false;
-    }
-
-    int clientWidth = g_windowWidth;
-    int clientHeight = g_windowHeight;
-    SafeClientSize(g_client, &clientWidth, &clientHeight);
-
-    const int portraitSide = kPortraitSide;
-    const int textLeft = kMargin + portraitSide + kMargin;
-    const int textWidth = clientWidth - textLeft - kMargin;
-    const int buttonTop = clientHeight - kMargin - kButtonHeight;
-    const int textHeight = buttonTop - kMargin * 2;
-    const int buttonWidth = (clientWidth - kMargin * 3) / 2;
-
-    const char* textSkins[3] = { "Kenshi_EditBox", "EditBox", "TextBox" };
-    for (int i = 0; i < 3 && g_text == NULL; ++i)
-    {
-        g_text = SafeCreateText(g_client, textSkins[i], textLeft, kMargin,
-                                textWidth, textHeight);
-    }
-
-    g_portrait = SafeCreatePortrait(g_client, kMargin, kMargin, portraitSide);
-
-    const char* buttonSkins[2] = { "Kenshi_Button1", "Button" };
-    for (int i = 0; i < 2 && g_accept == NULL; ++i)
-    {
-        g_accept = SafeCreateButton(g_client, buttonSkins[i], kAcceptName,
-                                    kMargin, buttonTop, buttonWidth);
-    }
-    for (int i = 0; i < 2 && g_decline == NULL; ++i)
-    {
-        g_decline = SafeCreateButton(g_client, buttonSkins[i], kDeclineName,
-                                     kMargin * 2 + buttonWidth, buttonTop, buttonWidth);
-    }
-
-    const int extraTop = buttonTop - kButtonHeight - 8;
-    for (int i = 0; i < 2 && g_extra == NULL; ++i)
-    {
-        g_extra = SafeCreateButton(g_client, buttonSkins[i], kExtraName,
-                                   kMargin, extraTop, clientWidth - kMargin * 2);
-    }
-
-    if (g_accept == NULL || g_decline == NULL)
-    {
-        LogError("Could not create the offer buttons.");
-        return false;
-    }
-
-    if (g_text != NULL)
-    {
-        ConfigureText();
-    }
-    BindButtons();
-
-    SafeSetVisible(g_root, false);
-    return true;
-}
-
+// ---------------------------------------------------------------- Answers
 void Close()
 {
     g_open = false;
     g_subject = NULL;
-    SafeSetVisible(g_root, false);
+    SafeSetVisible(g_ui.root, false);
     // Whatever way the window ends -- an answer, the title-bar cross, the HUD
     // hiding it, shutdown -- no plea is on screen any more. A pending plea
     // blocks every later one, so leaving it set meant no one could beg again
@@ -670,7 +692,7 @@ void OnDecline(MyGUI::Widget* /*sender*/)
         // which only reports that they were left where they are.
         if (plea)
         {
-            TellPlayer(CharacterName(npc) + ": ignoraste su súplica.", false);
+            TellPlayer(CharacterName(npc) + ": ignoraste su s\xc3\xbaplica.", false);
         }
         else
         {
@@ -703,23 +725,31 @@ void OnExtra(MyGUI::Widget* /*sender*/)
         }
     }
 }
+
 // The window's screen rectangle as drawn now (the player may have dragged it).
 // POD-only frame: the coord is read field by field inside the guard.
 bool SafeWindowRect(int* left, int* top, int* width, int* height)
 {
     TR_TRY
     {
-        if (g_root == NULL)
+        if (g_ui.root == NULL)
         {
             return false;
         }
-        *left = g_root->getAbsoluteLeft();
-        *top = g_root->getAbsoluteTop();
-        *width = g_root->getWidth();
-        *height = g_root->getHeight();
+        *left = g_ui.root->getAbsoluteLeft();
+        *top = g_ui.root->getAbsoluteTop();
+        *width = g_ui.root->getWidth();
+        *height = g_ui.root->getHeight();
         return *width > 0 && *height > 0;
     }
     TR_CATCH { return false; }
+}
+
+void SafePlayChime()
+{
+    if (ou == NULL) return;
+    TR_TRY { ou->playNotification(NULL); }
+    TR_CATCH { }
 }
 } // namespace
 
@@ -738,9 +768,7 @@ void HideOffer()
     Close();
 }
 
-bool ShowOffer(Character* npc, const std::string& npcLine,
-               const std::string& acceptLabel, const std::string& declineLabel,
-               const std::string& extraLabel)
+bool ShowOffer(Character* npc, const OfferView& view)
 {
     if (npc == NULL)
     {
@@ -753,94 +781,34 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
     // marks its plea AFTER this call succeeds, for the same reason.
     ForgetMercy(NULL);
 
-    const bool haveAccept = !acceptLabel.empty();
-    const bool haveExtra = !extraLabel.empty();
-
-    // Responsive dimensions: give more vertical room if there is an extra button
-    g_windowWidth = kBaseWidth;
-    g_windowHeight = haveExtra ? kBaseHeightWithExtra : kBaseHeightNoExtra;
-    
-    // Grow with the text instead of guessing once. The line runs beside the
-    // portrait, so it is much narrower than the window: about 48 characters,
-    // not 60. A long name -- "Iridescent Beak Thing" eats a fifth of a line on
-    // its own -- was pushing the last sentence below the frame and clipping it.
-    {
-        const int kCharsPerLine = 48;
-        const int kLineHeight = 22;
-        const int kLinesThatFit = 4;
-
-        int lines = (int)(npcLine.length() / kCharsPerLine) + 1;
-        // Author-written newlines cost a line each on top of the wrapping.
-        for (size_t i = 0; i < npcLine.size(); ++i)
-        {
-            if (npcLine[i] == '\n')
-            {
-                ++lines;
-            }
-        }
-
-        if (lines > kLinesThatFit)
-        {
-            g_windowHeight += (lines - kLinesThatFit) * kLineHeight;
-        }
-
-        // A window taller than the screen is its own kind of clipped.
-        const int kMaxHeight = 620;
-        if (g_windowHeight > kMaxHeight)
-        {
-            g_windowHeight = kMaxHeight;
-        }
-    }
-
     if (!Build())
     {
         return false;
     }
 
-    // Reposition and resize window to fit content cleanly
+    int clientHeight = 0;
+    if (!SafeLayout(&view, &clientHeight))
+    {
+        LogError("Could not lay out the offer window.");
+        return false;
+    }
+
+    const int width = kClientWidth + g_frameW;
+    const int height = clientHeight + g_frameH;
     int left = 0;
     int top = 0;
-    ChoosePosition(g_windowWidth, g_windowHeight, &left, &top);
-    SafeSetCoord(g_root, left, top, g_windowWidth, g_windowHeight);
+    ChoosePosition(width, height, &left, &top);
+    if (!SafeApplyFrame(view.title.c_str(), left, top, width, height))
+    {
+        return false;
+    }
 
     g_subject = npc;
     g_open = true;
 
-    // A fixed title says what kind of window this is; who it is about is in
-    // the body, where there is room for a full name.
-    SafeSetCaption(g_root, "Reclutamiento");
     SafeLoadPortrait(npc);
-    // The Kenshi_EditBox skin draws a caption as well as its text, and a stale
-    // caption showed through behind the body. Both are set every time.
-    SafeSetCaption(g_text, "");
-
-    // Play standard Kenshi notification chime when offer popup appears
-    if (ou != NULL)
-    {
-        TR_TRY { ou->playNotification(NULL); }
-        TR_CATCH { }
-    }
-    SafeSetOnlyText(g_text, npcLine.c_str());
-
-    if (haveAccept)
-    {
-        SafeSetCaption(g_accept, acceptLabel.c_str());
-    }
-    SafeSetVisible(g_accept, haveAccept);
-
-    SafeSetCaption(g_decline, declineLabel.c_str());
-
-    if (haveExtra)
-    {
-        SafeSetCaption(g_extra, extraLabel.c_str());
-    }
-    SafeSetVisible(g_extra, haveExtra);
-
-    // Dynamic layout coordinates for all child widgets
-    SafeLayoutComponents(haveAccept, haveExtra);
-
-    SafeSetVisible(g_root, true);
-
+    SafePlayChime();
+    SafeSetVisible(g_ui.root, true);
     return true;
 }
 
@@ -850,14 +818,10 @@ void ShutdownOfferPopup()
     SafeUnbind();
 
     // Children go with the root, so only the root is destroyed.
-    SafeDestroyWidget(g_root);
+    SafeDestroyWidget(g_ui.root);
 
-    g_root = NULL;
-    g_text = NULL;
-    g_portrait = NULL;
-    g_accept = NULL;
-    g_decline = NULL;
-    g_extra = NULL;
+    Popup empty = { 0 };
+    g_ui = empty;
     g_acceptDelegate = NULL;
     g_declineDelegate = NULL;
     g_extraDelegate = NULL;
