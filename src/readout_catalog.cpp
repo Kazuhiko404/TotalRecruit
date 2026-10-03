@@ -4,8 +4,8 @@ namespace totalrecruit
 {
 namespace
 {
-// One row per id, in ReasonKey order and then the cage wait (the test checks the
-// count). Text is plain ASCII like the rest of messages.json, and short: the card
+// One row per id, in ReasonKey order and then the card's own lines: the cage wait,
+// the open roll and the field-yield beat-again (the test checks the count). Text is plain ASCII like the rest of messages.json, and short: the card
 // does not wrap. A row with empty text is a verdict the card is hidden for.
 struct Row
 {
@@ -64,7 +64,29 @@ const Row kRows[] = {
     { "readout.line.animal.tame.ready",      "Comio de tu mano: te sigue" },
     { "readout.line.animal.tame.hungry",     "Hambre {food}% / necesita {need}%" },
     { "readout.line.waitCage",               "Faltan {hours} en la jaula" },
+    { "readout.line.rollOpen",               "{chance}%: puede unirse si le hablas" },    // kLineRollOpen
+    { "readout.line.fieldYield.beatAgain",   "Aun no cede: vencelo otra vez" },          // kLineFieldYieldBeatAgain
 };
+
+// One label per ReadoutRoute, in enum order.
+const Row kRoutes[] = {
+    { "readout.route.free",       "Libre" },
+    { "readout.route.captivity",  "Cautiverio" },
+    { "readout.route.rescue",     "Rescate" },
+    { "readout.route.surrender",  "Rendicion" },
+    { "readout.route.mercy",      "Piedad" },
+    { "readout.route.animal",     "Animal" },
+    { "readout.route.fieldYield", "Sometido" },
+};
+
+const int kRouteCount = (int)(sizeof(kRoutes) / sizeof(kRoutes[0]));
+
+// An unknown route reads as the open world, like the card always did.
+int RouteRow(ReadoutRoute route)
+{
+    const int i = (int)route;
+    return (i >= 0 && i < kRouteCount) ? i : 0;
+}
 
 const int kRowCount = (int)(sizeof(kRows) / sizeof(kRows[0]));
 } // namespace
@@ -82,5 +104,15 @@ const char* ReadoutLineMessageKey(int id)
 const char* ReadoutLineDefaultText(int id)
 {
     return (id >= 0 && id < kRowCount) ? kRows[id].text : "";
+}
+
+const char* ReadoutRouteMessageKey(ReadoutRoute route)
+{
+    return kRoutes[RouteRow(route)].key;
+}
+
+const char* ReadoutRouteDefaultText(ReadoutRoute route)
+{
+    return kRoutes[RouteRow(route)].text;
 }
 } // namespace totalrecruit

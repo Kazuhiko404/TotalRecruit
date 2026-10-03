@@ -1,4 +1,5 @@
 #include "offer_view.h"
+#include "readout_catalog.h"
 #include "readout_format.h"
 
 #include <cstdio>
@@ -55,6 +56,10 @@ std::string RouteTag(ReadoutRoute route, const OfferTexts& t)
     case ReadoutRoute_Surrender: return t.routeSurrender;
     case ReadoutRoute_Mercy:     return t.routeMercy;
     case ReadoutRoute_Animal:    return t.routeAnimal;
+    // OfferTexts carries no slot for it yet (offer_view.h / npc_speech.cpp were
+    // outside T5's edit surface): the shared label table's text, which is also
+    // what messages.json ships for readout.route.fieldYield.
+    case ReadoutRoute_FieldYield: return ReadoutRouteDefaultText(ReadoutRoute_FieldYield);
     case ReadoutRoute_Free:
     default:                     return t.routeFree;
     }
@@ -157,6 +162,7 @@ ReadoutRoute OfferRouteOf(const Verdict& verdict)
     {
     case Reason_FieldYieldJoins:
     case Reason_FieldYieldNotYet:
+        return ReadoutRoute_FieldYield;
     case Reason_Surrendered:
         return ReadoutRoute_Surrender;
     default:

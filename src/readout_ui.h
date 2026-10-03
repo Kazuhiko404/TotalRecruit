@@ -14,29 +14,33 @@
 
 #include "readout_model.h"
 #include "readout_text.h"
+#include "screen_projection.h"
 
 namespace totalrecruit
 {
-// A screen rectangle the card must not cover (the offer window).
-struct ReadoutRect
+// Where the card went: over the head, beside the window, or hidden for want of a
+// side (screen_projection.h PlaceCard), and its rectangle on the screen.
+struct ReadoutPlacement
 {
-    int left;
-    int top;
-    int width;
-    int height;
+    CardPlacement placement;
+    ScreenRect card;
+
+    ReadoutPlacement() : placement(Placement_NoRoom), card() {}
 };
 
-// Lays out and shows the card with its bottom edge just above (anchorX, anchorY),
-// clamped inside the screen. Builds the widgets on first use. False when they could
-// not be built (the card stays hidden; the rest of the mod is untouched). The
-// widgets are only laid out again when the view or its texts differ from the last
-// call; an identical card is just moved.
+// Lays out and places the card with its bottom edge just above (anchorX, anchorY),
+// clamped inside the screen sideways. With `avoid` (the offer window), a card that
+// would cover it steps sideways beside it at the same height, and is hidden when
+// neither side has room. Builds the widgets on first use. False when they could not
+// be built (the card stays hidden; the rest of the mod is untouched). The widgets
+// are only laid out again when the view or its texts differ from the last call; an
+// identical card is just placed.
 bool ReadoutUiShow(const ReadoutView& view, const ReadoutTexts& texts, bool compact,
-                   int anchorX, int anchorY);
+                   int anchorX, int anchorY, const ScreenRect* avoid, ReadoutPlacement* out);
 
-// Moves a card that is already showing, keeping its size. Cheap enough for every
-// frame. With `avoid`, a card that would cover that rectangle steps beside it.
-void ReadoutUiMove(int anchorX, int anchorY, const ReadoutRect* avoid = 0);
+// Places a card that is already built, keeping its size, by the same rule. Cheap
+// enough for every frame.
+void ReadoutUiMove(int anchorX, int anchorY, const ScreenRect* avoid, ReadoutPlacement* out);
 
 void ReadoutUiHide();
 bool ReadoutUiVisible();

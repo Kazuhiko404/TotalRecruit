@@ -21,8 +21,10 @@
 
 namespace totalrecruit
 {
-// The six names the player is told. Mercy is not one of the entry routes: it is the
+// The seven names the player is told. Mercy is not one of the entry routes: it is the
 // plea of a squad member, so it comes from the mercy state rather than the route.
+// FieldYield (beaten in the open, breaking) is its own name: it is not the "rather
+// than die" surrender, and calling it that told the player the wrong story.
 enum ReadoutRoute
 {
     ReadoutRoute_Free,
@@ -30,7 +32,8 @@ enum ReadoutRoute
     ReadoutRoute_Rescue,
     ReadoutRoute_Surrender,
     ReadoutRoute_Mercy,
-    ReadoutRoute_Animal
+    ReadoutRoute_Animal,
+    ReadoutRoute_FieldYield
 };
 
 enum ReadoutTone
@@ -52,10 +55,11 @@ struct ReadoutLineView
     float hours;
     int food;
     int need;
+    int chance;
     ReadoutTone tone;
 
     ReadoutLineView()
-        : id(-1), cats(0), purse(0), hours(0.0f), food(0), need(0),
+        : id(-1), cats(0), purse(0), hours(0.0f), food(0), need(0), chance(0),
           tone(ReadoutTone_Plain)
     {
     }
@@ -75,10 +79,14 @@ struct ReadoutInput
     float hoursHeld;
     // This NPC's plea is the one on screen.
     bool mercyPending;
+    // The evaluation had the roll key, so a rolled verdict is the click's own
+    // outcome. False for the card's peek (EvaluatePeek mints no id): a roll it
+    // could not make is shown as odds, never as a "not yet".
+    bool rollKeyed;
 
     ReadoutInput()
         : route(Route_FreeWorld), haveCore(true), core(), verdict(),
-          holdKnown(false), hoursHeld(0.0f), mercyPending(false)
+          holdKnown(false), hoursHeld(0.0f), mercyPending(false), rollKeyed(false)
     {
     }
 };

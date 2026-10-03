@@ -34,7 +34,7 @@ void QuestionsThatAreNotAboutAPersonHideTheCard()
 
 void EachEntryRouteHasItsName()
 {
-    const char* name = "route: the entry routes map onto the six names the player is told";
+    const char* name = "route: the entry routes map onto the names the player is told";
     CHECK(BuildReadout(Input(Route_Cage, Reason_CatsAsk), kConfig).route == ReadoutRoute_Captivity);
     CHECK(BuildReadout(Input(Route_FreeWorld, Reason_CatsAsk), kConfig).route == ReadoutRoute_Free);
     CHECK(BuildReadout(Input(Route_GrudgeRefusal, Reason_GrudgeNever), kConfig).route == ReadoutRoute_Free);
@@ -42,8 +42,67 @@ void EachEntryRouteHasItsName()
     CHECK(BuildReadout(Input(Route_Dying, Reason_Dying), kConfig).route == ReadoutRoute_Rescue);
     CHECK(BuildReadout(Input(Route_Unconscious, Reason_UnconsciousWait), kConfig).route == ReadoutRoute_Rescue);
     CHECK(BuildReadout(Input(Route_EasyHealthy, Reason_EasyHealthy), kConfig).route == ReadoutRoute_Rescue);
-    CHECK(BuildReadout(Input(Route_FieldYield, Reason_FieldYieldNotYet), kConfig).route == ReadoutRoute_Surrender);
+    CHECK(BuildReadout(Input(Route_FieldYield, Reason_FieldYieldNotYet), kConfig).route == ReadoutRoute_FieldYield);
+    CHECK(BuildReadout(Input(Route_FieldYield, Reason_FieldYieldJoins), kConfig).route == ReadoutRoute_FieldYield);
     CHECK(BuildReadout(Input(Route_Surrendered, Reason_Surrendered), kConfig).route == ReadoutRoute_Surrender);
+}
+
+// The card's peek has no roll key: a route that rolled could not say yes, so its
+// "not yet" is only the absence of the dice, not the answer a click would get.
+ReadoutInput Unrolled(Route route, ReasonKey reason, int chance)
+{
+    ReadoutInput in = Input(route, reason);
+    in.verdict.rolled = true;
+    in.verdict.chancePercent = chance;
+    in.rollKeyed = false;
+    return in;
+}
+
+void ARollThePeekCouldNotMakeShowsTheOdds()
+{
+    const char* name = "open roll: a rolled 'not yet' without the roll key is the odds, not a no";
+    ReadoutView v = BuildReadout(Unrolled(Route_FieldYield, Reason_FieldYieldNotYet, 41), kConfig);
+    CHECK(v.primary.id == kLineRollOpen);
+    CHECK(v.primary.chance == 41);
+    CHECK(v.primary.tone == ReadoutTone_Plain);
+    CHECK(v.showChance);
+    CHECK(v.chancePct == 41);
+
+    ReadoutInput ally = Unrolled(Route_FreeWorld, Reason_AllyMaybe, 23);
+    ally.verdict.currency = Currency_Refused;
+    v = BuildReadout(ally, kConfig);
+    CHECK(v.primary.id == kLineRollOpen);
+    CHECK(v.primary.chance == 23);
+    CHECK(v.primary.tone == ReadoutTone_Plain);
+}
+
+void AKeyedRollKeepsItsOwnAnswer()
+{
+    const char* name = "open roll: with the roll key the verdict is the click's own, shown as it is";
+    ReadoutInput keyed = Unrolled(Route_FreeWorld, Reason_AllyMaybe, 23);
+    keyed.rollKeyed = true;
+    CHECK(BuildReadout(keyed, kConfig).primary.id == (int)Reason_AllyMaybe);
+
+    // A route that did not roll is never turned into odds.
+    ReadoutInput price = Input(Route_FreeWorld, Reason_CatsAsk);
+    CHECK(BuildReadout(price, kConfig).primary.id == (int)Reason_CatsAsk);
+
+    // A rolled cage verdict that fell through to a real way in (a price) keeps it.
+    ReadoutInput cage = Unrolled(Route_Cage, Reason_CatsAsk, 30);
+    CHECK(BuildReadout(cage, kConfig).primary.id == (int)Reason_CatsAsk);
+}
+
+void StarvingIsOnlyAdvisedInYourOwnCage()
+{
+    const char* name = "field yield: 'dejalo sin comer' only in your cage, 'vencelo otra vez' outside it";
+    ReadoutInput open = Unrolled(Route_FieldYield, Reason_FieldYieldNotYet, 41);
+    open.rollKeyed = true;
+    open.core.inMyCage = false;
+    CHECK(BuildReadout(open, kConfig).primary.id == kLineFieldYieldBeatAgain);
+
+    ReadoutInput caged = open;
+    caged.core.inMyCage = true;
+    CHECK(BuildReadout(caged, kConfig).primary.id == (int)Reason_FieldYieldNotYet);
 }
 
 void AnimalsAndPleasOverrideTheRoute()
@@ -319,6 +378,9 @@ void RunReadoutModelTests()
 {
     QuestionsThatAreNotAboutAPersonHideTheCard();
     EachEntryRouteHasItsName();
+    ARollThePeekCouldNotMakeShowsTheOdds();
+    AKeyedRollKeepsItsOwnAnswer();
+    StarvingIsOnlyAdvisedInYourOwnCage();
     AnimalsAndPleasOverrideTheRoute();
     StressIsShownWhereTheRollReadsIt();
     StressPartsAlwaysAddUp();

@@ -76,6 +76,7 @@ std::string FillLine(const std::string& text, const LineArgs& args)
     ReplaceAll(&out, "{hours}", FormatHoursLeft(args.hours));
     ReplaceAll(&out, "{food}", Number(args.food));
     ReplaceAll(&out, "{need}", Number(args.need));
+    ReplaceAll(&out, "{chance}", Number(args.chance));
     return out;
 }
 } // namespace totalrecruit

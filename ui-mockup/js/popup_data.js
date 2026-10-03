@@ -119,11 +119,11 @@ var POPUP_STATES = [
   },
   {
     id: 'yield',
-    title: 'Joins free (field-yield / surrender)',
-    note: 'Rendicion: beaten enough times and the roll passed (<code>Reason_FieldYieldJoins</code>). Free, and the odds that were rolled.',
+    title: 'Joins free (field-yield)',
+    note: 'Sometido: beaten enough times in the open and the roll passed (<code>Reason_FieldYieldJoins</code>). Its own tag (<code>readout.route.fieldYield</code>), not Rendicion, which is the "rather than die" surrender. Free, and the odds that were rolled.',
     // facts: verdict willJoin, Currency_Submission, rolled 41%
     vm: {
-      title: 'Reclutamiento', name: 'Soldado Holy Nation', route: 'rendicion', routeTag: 'Rendicion',
+      title: 'Reclutamiento', name: 'Soldado Holy Nation', route: 'sometido', routeTag: 'Sometido',
       body: 'Soldado Holy Nation ya no tiene voluntad de pelear y desea unirse a tu grupo.',
       showPrice: true, priceText: 'Gratis', priceFree: true,
       showPurse: false, purseText: '', affordable: true,

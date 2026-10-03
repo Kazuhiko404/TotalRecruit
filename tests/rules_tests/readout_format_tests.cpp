@@ -43,6 +43,8 @@ void PlaceholdersAreFilled()
     a.hours = 3.0f;
     a.food = 56;
     a.need = 80;
+    a.chance = 41;
+    CHECK(FillLine("{chance}%: puede unirse si le hablas", a) == "41%: puede unirse si le hablas");
     CHECK(FillLine("Precio {cats} cats (tienes {purse})", a) == "Precio 9.570 cats (tienes 12.000)");
     CHECK(FillLine("Faltan {hours} en la jaula", a) == "Faltan 3h en la jaula");
     CHECK(FillLine("Hambre {food}% / necesita {need}%", a) == "Hambre 56% / necesita 80%");

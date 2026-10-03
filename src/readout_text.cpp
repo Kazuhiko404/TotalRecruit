@@ -29,36 +29,9 @@ std::string Line(const ReadoutLineView& line, Character* who)
     args.hours = line.hours;
     args.food = line.food;
     args.need = line.need;
+    args.chance = line.chance;
     return FillLine(Say(ReadoutLineMessageKey(line.id), ReadoutLineDefaultText(line.id), who),
                     args);
-}
-
-const char* RouteKey(ReadoutRoute route)
-{
-    switch (route)
-    {
-    case ReadoutRoute_Captivity: return "readout.route.captivity";
-    case ReadoutRoute_Rescue:    return "readout.route.rescue";
-    case ReadoutRoute_Surrender: return "readout.route.surrender";
-    case ReadoutRoute_Mercy:     return "readout.route.mercy";
-    case ReadoutRoute_Animal:    return "readout.route.animal";
-    case ReadoutRoute_Free:
-    default:                     return "readout.route.free";
-    }
-}
-
-const char* RouteDefault(ReadoutRoute route)
-{
-    switch (route)
-    {
-    case ReadoutRoute_Captivity: return "Cautiverio";
-    case ReadoutRoute_Rescue:    return "Rescate";
-    case ReadoutRoute_Surrender: return "Rendicion";
-    case ReadoutRoute_Mercy:     return "Piedad";
-    case ReadoutRoute_Animal:    return "Animal";
-    case ReadoutRoute_Free:
-    default:                     return "Libre";
-    }
 }
 
 std::string WithNumber(const std::string& label, int value)
@@ -74,7 +47,7 @@ ReadoutTexts BuildReadoutTexts(const ReadoutView& view, const std::string& name,
 {
     ReadoutTexts t;
     t.name = name;
-    t.route = Say(RouteKey(view.route), RouteDefault(view.route), NULL);
+    t.route = Say(ReadoutRouteMessageKey(view.route), ReadoutRouteDefaultText(view.route), NULL);
 
     t.stressLabel = Say("readout.stress", "ESTRES", NULL);
     t.stressValue = Pct(view.stressPct);

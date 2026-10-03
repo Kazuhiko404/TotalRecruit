@@ -449,7 +449,8 @@ MyGUI::Colour TagColour(ReadoutRoute route)
     switch (route)
     {
     case ReadoutRoute_Captivity: return kAmber;
-    case ReadoutRoute_Surrender: return kSoftDanger;
+    case ReadoutRoute_Surrender:
+    case ReadoutRoute_FieldYield: return kSoftDanger;
     case ReadoutRoute_Rescue:    return kReady;
     case ReadoutRoute_Animal:    return kIndigo;
     case ReadoutRoute_Mercy:     return kBrass;

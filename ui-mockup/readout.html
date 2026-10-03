@@ -29,11 +29,14 @@ click's), and showing it never starts a hold clock, records an interaction or mi
 
 <h2 class="sec">2. Where it sits</h2>
 <p class="lead">The card follows the <b>selection</b>: left-click an NPC that is not yours and it appears over their head
-(anchored above the head, clamped inside the view); deselect and it goes, select someone else and it switches. It is
-worked out when the selection changes and again every 2 s, so price and stress stay current; every frame in between it
-only follows the NPC. Pressing <i>Hablar</i> places it beside the offer window that click opens, never on top of it; when
-the offer closes it stays only if that NPC is still selected. It hides while a right-click menu is open (other mods'
-buttons flank the menu on both sides) and while the NPC is off the screen. Nothing is shown on hover.</p>
+(the point 20 world units over their feet, projected through the camera after taking out the scene's relative origin,
+clamped inside the view sideways); deselect and it goes, select someone else and it switches. It is worked out when the
+selection changes and again every 2 s, so price and stress stay current; every frame in between it only follows the NPC.
+Pressing <i>Hablar</i> keeps it over the head while the offer window is up; only when it would cover the window does it
+step <b>sideways</b> to the window's nearer side, at the head's height (never up, never to the top of the screen), and it
+hides when neither side has room. When the offer closes it stays only if that NPC is still selected. It hides while a
+right-click menu is open (other mods' buttons flank the menu on both sides) and while the NPC is off the screen. Nothing
+is shown on hover.</p>
 <div class="bar" id="sceneBar">
   <button class="tab" data-s="select" aria-pressed="true">Selected NPC (default)</button>
   <button class="tab" data-s="menu" aria-pressed="false">Right-click menu open</button>
@@ -47,12 +50,12 @@ asked as a bystander and remembered per NPC for 2 s (<code>src/talk_hint_cache.h
 <h2 class="sec">3. What each route shows</h2>
 <table class="spec">
   <tr><th>Block</th><th>Shown for</th><th>Source</th></tr>
-  <tr><td>Route tag</td><td>always</td><td>Rescate: out cold, dying, saved, healed up. Cautiverio: your cage. Rendicion: field yield, surrender, the grudge refusal outside the cage is Libre. Piedad: the plea on screen. Animal: any animal. Libre: the open world.</td></tr>
+  <tr><td>Route tag</td><td>always</td><td>Rescate: out cold, dying, saved, healed up. Cautiverio: your cage. Sometido: field yield (beaten in the open). Rendicion: surrender rather than die. The grudge refusal outside the cage is Libre. Piedad: the plea on screen. Animal: any animal. Libre: the open world.</td></tr>
   <tr><td>Estres bar + Hambre / Heridas / Cansancio</td><td>Cautiverio, Rendicion (the routes whose roll reads stress)</td><td><code>StressFromState</code>; the three parts are its three terms and add up to the bar</td></tr>
   <tr><td>Chance bar</td><td>any route that rolled</td><td><code>Verdict::chancePercent</code> (JoinChance)</td></tr>
   <tr><td>Barriga bar + notch</td><td>animals</td><td>fullness and the fullness the animal needs (<code>TamingFullnessNeeded</code>)</td></tr>
   <tr><td>Derrotas pips</td><td>Cautiverio and Rendicion, or any NPC you have beaten</td><td>defeat count against <code>defeatsToBreak</code></td></tr>
-  <tr><td>Main line</td><td>always</td><td>the verdict's reason key, with the number it carries (price, hours, stomach)</td></tr>
+  <tr><td>Main line</td><td>always</td><td>the verdict's reason key, with the number it carries (price, hours, stomach). A rolled "not yet" the card could not roll (no roll key: field yield, ally) is the odds instead: "41%: puede unirse si le hablas". A field-yield "not yet" says "dejalo sin comer" only in your own cage, "vencelo otra vez" anywhere else.</td></tr>
   <tr><td>Second line (expanded only)</td><td>a caged cats-prisoner while the easy wait still runs</td><td>hours left of <code>easyHoursCaged</code></td></tr>
 </table>
 
@@ -111,10 +114,11 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
   var scene = document.getElementById('scene');
   var VIEW = { w: 1280, h: 520 };
   // An NPC drawn at `left` (34 px wide, 120 tall, standing 70 px above the bottom): the
-  // card's anchor is their projected body centre lifted by kAnchorLiftPx.
+  // card's anchor is the projected point headHeightUnits over their feet (the top of the
+  // figure here), lifted by kAnchorLiftPx.
   function anchorOf(left) {
     var top = VIEW.h - 70 - 120;
-    return { x: left + 17, y: top + 60 - PLACEMENT.anchorLift };
+    return { x: left + 17, y: top - PLACEMENT.anchorLift };
   }
   // Draws the card, measures it as the C++ does after the layout, and places it.
   function placeInto(html, anchor, avoid) {
@@ -127,7 +131,9 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
     var p = placeCard(anchor, { w: Math.round(box.width), h: Math.round(box.height) }, VIEW, avoid);
     holder.style.left = p.left + 'px';
     holder.style.top = p.top + 'px';
-    holder.style.visibility = '';
+    // Placement 'none': it would cover the window and no side has room, so it is not shown.
+    holder.style.visibility = p.placement === 'none' ? 'hidden' : '';
+    return p;
   }
   function drawScene(mode) {
     var cage = stateById('cage').vm;
@@ -165,8 +171,10 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
     h += '<div class="cage" style="left:605px"></div><div class="npc" style="left:623px"></div>';
     h += '<div class="npc" style="left:200px"></div><div class="npc" style="left:1180px"></div>';
     h += '<div class="callout" style="left:16px;top:16px;max-width:300px">Pressing Hablar opens the offer and pins the card ' +
-         'beside it. It would cover the offer above his head, so it steps to the right of the window. When the offer closes ' +
-         '(or after ' + (PLACEMENT.pinTimeoutMs / 1000) + ' s when none opened) it stays only if he is still selected.</div>';
+         'over his head. Over his head it would cover the offer, so it steps sideways to the nearer side of the window, at ' +
+         'the height of his head: never up, never to the top of the screen. With no room on either side it hides. When the ' +
+         'offer closes (or after ' + (PLACEMENT.pinTimeoutMs / 1000) + ' s when none opened) it stays only if he is still ' +
+         'selected.</div>';
     h += '<div class="callout" style="left:16px;top:' + (VIEW.h - 64) + 'px;max-width:300px">No card for the other NPCs: ' +
          'only the selected one (or the one Hablar was pressed on) gets a card.</div>';
     scene.innerHTML = h;

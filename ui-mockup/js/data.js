@@ -23,15 +23,15 @@ var STATES = [
   {
     id: 'yield',
     title: 'Field-yield candidate',
-    note: 'Rendicion: beaten enough times in the open. Defeats reached the threshold, stress is whatever state they are in now, and the single line says what would change it.',
-    // facts: route FieldYield, defeats 2/2, stress .35, chance 41, roll not passed
+    note: 'Sometido (its own tag, not Rendicion): beaten enough times in the open. The card asks as a bystander with no roll key, so it cannot know whether the roll passes: instead of a "not yet" that the click may contradict, the line states the odds (<code>kLineRollOpen</code>). With the key and a failed roll the line is "Aun no cede: vencelo otra vez" in the open, and "dejalo sin comer" only for someone in your own cage.',
+    // facts: route FieldYield, defeats 2/2, stress .35, chance 41, peek (no roll key), not in your cage
     vm: {
-      name: 'Soldado Holy Nation', route: 'rendicion', routeLabel: 'Rendicion',
+      name: 'Soldado Holy Nation', route: 'sometido', routeLabel: 'Sometido',
       showStress: true, stressPct: 35, stress: { hunger: 5, wounds: 25, tired: 5 },
       showChance: true, chancePct: 41, ready: false,
       showDefeats: true, defeats: 2, defeatsNeeded: 2,
       showFood: false,
-      why:  { text: 'Aun no cede: dejalo sin comer', tone: '' },
+      why:  { text: '41%: puede unirse si le hablas', tone: '' },
       alt:  null
     }
   },
@@ -97,15 +97,18 @@ var STATES = [
   }
 ];
 
-// Where the card goes and when (src/readout.cpp, src/readout_ui.cpp, src/offer_popup.cpp).
-// By default the card follows the selected NPC: worked out when the selection changes and
-// again every selectionRefreshMs. The Hablar click pins it beside the offer window that click
-// opened; when that window closes (or after pinTimeoutMs when none opened) it stays only if
-// the NPC is still selected.
+// Where the card goes and when (src/readout.cpp, src/readout_ui.cpp, src/screen_projection.cpp,
+// src/offer_popup.cpp). By default the card follows the selected NPC: worked out when the selection
+// changes and again every selectionRefreshMs. The Hablar click pins it: it stays over the head
+// while the offer window that click opened is up, and only steps sideways beside that window when
+// it would cover it. When the window closes (or after pinTimeoutMs when none opened) it stays only
+// if the NPC is still selected.
 var PLACEMENT = {
-  arrowGap: 8,          // kArrowGap
-  screenMargin: 4,      // kScreenMargin
-  anchorLift: 70,       // kAnchorLiftPx (readout_target.cpp)
+  arrowGap: 8,          // kArrowGap (CardMetrics.gap)
+  screenMargin: 4,      // kScreenMargin (CardMetrics.margin)
+  belowGap: 32,         // kArrowGap * 4 (CardMetrics.belowGap): under the head when no room above
+  headHeightUnits: 20,  // kHeadHeightUnits (readout_target.cpp): world units over the feet
+  anchorLift: 6,        // kAnchorLiftPx (readout_target.cpp): pixels over the projected head
   pinTimeoutMs: 8000,   // kPinTimeoutMs
   selectionRefreshMs: 2000 // kSelectionRefreshMs
 };

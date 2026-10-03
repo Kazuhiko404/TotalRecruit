@@ -26,6 +26,7 @@
   padding:1px 6px;border:1px solid var(--golddim);color:var(--text);background:var(--sumi)}
 .tag.r-cautiverio{border-color:var(--amber);color:var(--amber)}
 .tag.r-rendicion{border-color:var(--danger);color:#f08a7c}
+.tag.r-sometido{border-color:var(--danger);color:#f08a7c}
 .tag.r-rescate{border-color:var(--ready);color:var(--ready)}
 .tag.r-animal{border-color:var(--suggested);color:#9db8e6}
 .tag.r-libre{border-color:var(--golddim);color:var(--text)}

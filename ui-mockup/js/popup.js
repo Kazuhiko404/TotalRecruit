@@ -37,7 +37,8 @@ function ppFrame(x, y, w, h, colour) {
 
 // The route tag colour, as readout_ui.cpp colours the card's tag.
 function ppTagColour(route) {
-  return { cautiverio: 'var(--amber)', rendicion: 'var(--soft-danger)', rescate: 'var(--ready)',
+  return { cautiverio: 'var(--amber)', rendicion: 'var(--soft-danger)', sometido: 'var(--soft-danger)',
+           rescate: 'var(--ready)',
            animal: '#9db8e6', piedad: 'var(--brass)', libre: 'var(--text)' }[route] || 'var(--text)';
 }
 

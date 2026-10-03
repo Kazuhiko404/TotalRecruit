@@ -344,7 +344,8 @@ void LayoutUnguarded(const ReadoutView& view, const ReadoutTexts& texts, bool co
     switch (view.route)
     {
     case ReadoutRoute_Captivity: tagColour = kAmber; break;
-    case ReadoutRoute_Surrender: tagColour = kSoftDanger; break;
+    case ReadoutRoute_Surrender:
+    case ReadoutRoute_FieldYield: tagColour = kSoftDanger; break;
     case ReadoutRoute_Rescue:    tagColour = kReady; break;
     case ReadoutRoute_Animal:    tagColour = kIndigo; break;
     case ReadoutRoute_Mercy:     tagColour = kBrass; break;
@@ -364,49 +365,10 @@ void LayoutUnguarded(const ReadoutView& view, const ReadoutTexts& texts, bool co
     c.root->setSize(width, y);
 }
 
-bool Intersects(int left, int top, int width, int height, const ReadoutRect& r)
-{
-    return left < r.left + r.width && r.left < left + width &&
-           top < r.top + r.height && r.top < top + height;
-}
-
-// The card would cover `avoid` (the offer window): it steps to the window's right,
-// or its left when the right has no room, or above / below it when neither side
-// does. Clamped to the screen either way.
-void StepAside(const ReadoutRect& avoid, int viewW, int viewH, int* left, int* top)
-{
-    if (!Intersects(*left, *top, g_width, g_height, avoid))
-    {
-        return;
-    }
-
-    const int right = avoid.left + avoid.width + kArrowGap;
-    const int leftSide = avoid.left - kArrowGap - g_width;
-    if (viewW <= 0 || right + g_width <= viewW - kScreenMargin)
-    {
-        *left = right;
-    }
-    else if (leftSide >= kScreenMargin)
-    {
-        *left = leftSide;
-    }
-    else
-    {
-        const int above = avoid.top - kArrowGap - g_height;
-        *top = (above >= kScreenMargin) ? above : avoid.top + avoid.height + kArrowGap;
-    }
-
-    if (viewH > 0 && *top + g_height > viewH - kScreenMargin)
-    {
-        *top = viewH - kScreenMargin - g_height;
-    }
-    if (*top < kScreenMargin)
-    {
-        *top = kScreenMargin;
-    }
-}
-
-void MoveUnguarded(int anchorX, int anchorY, const ReadoutRect* avoid)
+// Where the card goes (screen_projection.h PlaceCard: over the head, sideways
+// beside the offer window, never vertical), then shown there or hidden when no
+// side of the window has room.
+void PlaceUnguarded(int anchorX, int anchorY, const ScreenRect* avoid, ReadoutPlacement* out)
 {
     int viewW = 0, viewH = 0;
     MyGUI::RenderManager* render = MyGUI::RenderManager::getInstancePtr();
@@ -416,31 +378,28 @@ void MoveUnguarded(int anchorX, int anchorY, const ReadoutRect* avoid)
         viewH = render->getViewSize().height;
     }
 
-    int left = anchorX - g_width / 2;
-    int top = anchorY - g_height - kArrowGap;
-    if (viewW > 0)
+    CardMetrics metrics;
+    metrics.gap = kArrowGap;
+    metrics.margin = kScreenMargin;
+    metrics.belowGap = kArrowGap * 4;
+
+    int left = 0, top = 0;
+    const CardPlacement placement =
+        PlaceCard(anchorX, anchorY, g_width, g_height, viewW, viewH, avoid, metrics, &left, &top);
+    out->placement = placement;
+    out->card = ScreenRect(left, top, g_width, g_height);
+    if (placement == Placement_NoRoom)
     {
-        if (left + g_width > viewW - kScreenMargin) left = viewW - kScreenMargin - g_width;
-        if (left < kScreenMargin) left = kScreenMargin;
-    }
-    // No room above the head: hang the card below them instead of off the screen.
-    if (top < kScreenMargin)
-    {
-        top = anchorY + kArrowGap * 4;
-    }
-    if (viewH > 0 && top + g_height > viewH - kScreenMargin)
-    {
-        top = viewH - kScreenMargin - g_height;
-    }
-    if (avoid != NULL)
-    {
-        StepAside(*avoid, viewW, viewH, &left, &top);
+        g_card.root->setVisible(false);
+        return;
     }
     g_card.root->setPosition(left, top);
+    g_card.root->setVisible(true);
 }
 
 bool ShowUnguarded(const ReadoutView* view, const ReadoutTexts* texts, bool compact,
-                   int anchorX, int anchorY, bool relayout)
+                   int anchorX, int anchorY, bool relayout, const ScreenRect* avoid,
+                   ReadoutPlacement* out)
 {
     if (!g_built)
     {
@@ -460,23 +419,26 @@ bool ShowUnguarded(const ReadoutView* view, const ReadoutTexts* texts, bool comp
     {
         LayoutUnguarded(*view, *texts, compact);
     }
-    MoveUnguarded(anchorX, anchorY, NULL);
-    g_card.root->setVisible(true);
+    PlaceUnguarded(anchorX, anchorY, avoid, out);
     return true;
 }
 
 // -------------------------------------------------------------------- Guards
 // POD-only frames; each calls the unguarded work above.
 bool SafeShow(const ReadoutView* view, const ReadoutTexts* texts, bool compact,
-              int anchorX, int anchorY, bool relayout)
+              int anchorX, int anchorY, bool relayout, const ScreenRect* avoid,
+              ReadoutPlacement* out)
 {
-    TR_TRY { return ShowUnguarded(view, texts, compact, anchorX, anchorY, relayout); }
+    TR_TRY
+    {
+        return ShowUnguarded(view, texts, compact, anchorX, anchorY, relayout, avoid, out);
+    }
     TR_CATCH { return false; }
 }
 
-void SafeMove(int anchorX, int anchorY, const ReadoutRect* avoid)
+void SafeMove(int anchorX, int anchorY, const ScreenRect* avoid, ReadoutPlacement* out)
 {
-    TR_TRY { if (g_built) MoveUnguarded(anchorX, anchorY, avoid); }
+    TR_TRY { if (g_built) PlaceUnguarded(anchorX, anchorY, avoid, out); }
     TR_CATCH { }
 }
 
@@ -536,10 +498,11 @@ std::string LayoutKey(const ReadoutView& v, const ReadoutTexts& t, bool compact)
 } // namespace
 
 bool ReadoutUiShow(const ReadoutView& view, const ReadoutTexts& texts, bool compact,
-                   int anchorX, int anchorY)
+                   int anchorX, int anchorY, const ScreenRect* avoid, ReadoutPlacement* out)
 {
     const std::string key = LayoutKey(view, texts, compact);
-    const bool shown = SafeShow(&view, &texts, compact, anchorX, anchorY, key != g_layoutKey);
+    const bool shown = SafeShow(&view, &texts, compact, anchorX, anchorY, key != g_layoutKey,
+                                avoid, out);
     g_layoutKey = shown ? key : std::string();
     if (!shown && g_buildFailed)
     {
@@ -553,9 +516,9 @@ bool ReadoutUiShow(const ReadoutView& view, const ReadoutTexts& texts, bool comp
     return shown;
 }
 
-void ReadoutUiMove(int anchorX, int anchorY, const ReadoutRect* avoid)
+void ReadoutUiMove(int anchorX, int anchorY, const ScreenRect* avoid, ReadoutPlacement* out)
 {
-    SafeMove(anchorX, anchorY, avoid);
+    SafeMove(anchorX, anchorY, avoid, out);
 }
 
 void ReadoutUiHide()

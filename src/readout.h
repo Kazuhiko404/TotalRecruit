@@ -13,9 +13,12 @@
 //     stay roughly current without an evaluation per frame. Deselecting hides it,
 //     selecting someone else switches it.
 //   - Pinned: pressing Hablar calls RequestReadout. The card is worked out at the
-//     click and stands beside the offer window that the same click opened. When that
-//     window closes (or after kPinTimeoutMs when none opened) the pin ends: the card
-//     stays only if that NPC is still the selection.
+//     click and stays over the NPC's head while the offer window that the same click
+//     opened is up; only when it would cover that window does it step sideways to
+//     the window's nearer side at the head's height (hidden when no side has room,
+//     never moved up to the top of the screen). When that window closes (or after
+//     kPinTimeoutMs when none opened) the pin ends: the card stays only if that NPC
+//     is still the selection.
 // Either way the card follows the NPC every frame, is hidden while they are off the
 // screen and while a right-click menu is open (other mods' buttons flank the menu on
 // both sides, so there is no side to step to), and goes when they die. It never takes
@@ -24,7 +27,9 @@
 // With probeOnClick on, a line is logged whenever what is drawn changes:
 //   [readout] <name> route=<r> chance=<n> stress=<s> ... [hablar|select]
 // and it states the numbers the card shows, so a screenshot and the log can be
-// compared.
+// compared. And once per outcome per target, where the card went:
+//   [readout-anchor] <name> [select|hablar] <outcome> head=(x,y) view=WxH
+//       world=(x,y,z) origin=(x,y,z) [card=(l,t wxh)] [offer=(l,t wxh)]
 
 class Character;
 

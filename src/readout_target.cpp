@@ -4,15 +4,20 @@
 #include "log.h"
 
 #include <kenshi/CameraClass.h>
+#include <ogre/OgreCamera.h>
+#include <ogre/OgreSceneManager.h>
 
 namespace totalrecruit
 {
 namespace
 {
-// The card hangs this many pixels above the projected body centre, about a head
-// above. Pixels rather than world units: the unit scale of the world is not
-// something this mod has measured.
-const int kAnchorLiftPx = 70;
+// How far over the character's position (their feet) the card hangs, in world
+// units. Kenshi's units are about 10 cm (TotalSparring challenge/world_scale.h:
+// shoulder to shoulder reads 7.5), so 20 is just over a standing head. World units
+// rather than pixels: the gap then shrinks and grows with the zoom like the body.
+const float kHeadHeightUnits = 20.0f;
+// A few pixels more between the head and the card's arrow gap.
+const int kAnchorLiftPx = 6;
 
 bool SafeSelectedObjectCharacter(Character** out)
 {
@@ -24,20 +29,6 @@ bool SafeSelectedObjectCharacter(Character** out)
         }
         *out = ou->player->selectedObject.getCharacter();
         return *out != NULL;
-    }
-    TR_CATCH { return false; }
-}
-
-bool SafeCamera(CameraClass** out)
-{
-    TR_TRY
-    {
-        if (ou == NULL || ou->player == NULL || ou->player->camera == NULL)
-        {
-            return false;
-        }
-        *out = ou->player->camera;
-        return true;
     }
     TR_CATCH { return false; }
 }
@@ -58,34 +49,58 @@ bool SafeViewSize(int* w, int* h)
     TR_CATCH { return false; }
 }
 
-// World point to screen pixels through the camera, with no engine-side helper: the
-// plain view-projection transform. False behind the camera or well off the screen.
-bool SafeProject(Character* character, int viewW, int viewH, int* x, int* y)
+void CopyMatrix(const Ogre::Matrix4& from, Mat4* to)
+{
+    for (int r = 0; r < 4; ++r)
+    {
+        for (int c = 0; c < 4; ++c)
+        {
+            to->m[r][c] = from[r][c];
+        }
+    }
+}
+
+// The player camera's matrices and the scene's relative origin, the three things
+// the engine's own world-to-screen reads. getViewMatrix(true): the camera's own
+// frustum, never a culling stand-in.
+bool SafeCameraState(Mat4* view, Mat4* proj, Vec3* origin)
 {
     TR_TRY
     {
-        CameraClass* cam = NULL;
-        if (!SafeCamera(&cam) || cam->camera == NULL)
+        if (ou == NULL || ou->player == NULL || ou->player->camera == NULL)
         {
             return false;
         }
+        Ogre::Camera* camera = ou->player->camera->camera;
+        if (camera == NULL)
+        {
+            return false;
+        }
+        Ogre::SceneManager* scene = camera->getSceneManager();
+        if (scene == NULL)
+        {
+            return false;
+        }
+        const Ogre::Vector3 o = scene->getRelativeOrigin();
+        origin->x = o.x;
+        origin->y = o.y;
+        origin->z = o.z;
+        CopyMatrix(camera->getViewMatrix(true), view);
+        CopyMatrix(camera->getProjectionMatrix(), proj);
+        return true;
+    }
+    TR_CATCH { return false; }
+}
 
-        const Ogre::Vector3 p = character->getPositionBip01();
-        const Ogre::Matrix4 vp = cam->camera->getProjectionMatrix() * cam->camera->getViewMatrix();
-
-        const float w = vp[3][0] * p.x + vp[3][1] * p.y + vp[3][2] * p.z + vp[3][3];
-        if (w <= 0.0001f)
-        {
-            return false;
-        }
-        const float nx = (vp[0][0] * p.x + vp[0][1] * p.y + vp[0][2] * p.z + vp[0][3]) / w;
-        const float ny = (vp[1][0] * p.x + vp[1][1] * p.y + vp[1][2] * p.z + vp[1][3]) / w;
-        if (nx < -1.2f || nx > 1.2f || ny < -1.2f || ny > 1.2f)
-        {
-            return false;
-        }
-        *x = (int)((nx * 0.5f + 0.5f) * (float)viewW);
-        *y = (int)((1.0f - (ny * 0.5f + 0.5f)) * (float)viewH);
+// Game space, the same space the AI and the physics use.
+bool SafeHeadPoint(Character* character, Vec3* out)
+{
+    TR_TRY
+    {
+        const Ogre::Vector3 p = character->getPosition();
+        out->x = p.x;
+        out->y = p.y + kHeadHeightUnits;
+        out->z = p.z;
         return true;
     }
     TR_CATCH { return false; }
@@ -107,18 +122,53 @@ Character* SelectedNpc()
     return selected;
 }
 
-bool ReadoutAnchorFor(Character* character, int* x, int* y)
+AnchorReading ReadoutAnchorFor(Character* character)
 {
-    int viewW = 0, viewH = 0;
-    if (character == NULL || !SafeViewSize(&viewW, &viewH))
+    AnchorReading a;
+    Mat4 view;
+    Mat4 proj;
+    if (character == NULL || !SafeViewSize(&a.viewW, &a.viewH) ||
+        !SafeCameraState(&view, &proj, &a.origin))
     {
-        return false;
+        a.result = Anchor_NoCamera;
+        return a;
     }
-    if (!SafeProject(character, viewW, viewH, x, y))
+    if (!SafeHeadPoint(character, &a.head))
     {
-        return false;
+        a.result = Anchor_NoPosition;
+        return a;
     }
-    *y -= kAnchorLiftPx;
-    return true;
+
+    switch (ProjectToScreen(view, proj, a.head, a.origin, a.viewW, a.viewH, &a.x, &a.y))
+    {
+    case Projection_Ok:
+        a.result = Anchor_Ok;
+        a.y -= kAnchorLiftPx;
+        break;
+    case Projection_Behind:
+        a.result = Anchor_Behind;
+        break;
+    case Projection_OffScreen:
+        a.result = Anchor_OffScreen;
+        break;
+    case Projection_NoView:
+    default:
+        a.result = Anchor_NoCamera;
+        break;
+    }
+    return a;
+}
+
+const char* AnchorResultWord(AnchorResult result)
+{
+    switch (result)
+    {
+    case Anchor_Ok:         return "ok";
+    case Anchor_NoPosition: return "no position";
+    case Anchor_Behind:     return "behind the camera";
+    case Anchor_OffScreen:  return "off the screen";
+    case Anchor_NoCamera:
+    default:                return "no camera";
+    }
 }
 } // namespace totalrecruit

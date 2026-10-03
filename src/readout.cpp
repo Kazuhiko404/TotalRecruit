@@ -51,6 +51,25 @@ DWORD g_pinnedAt = 0;
 bool g_offerSeen = false;
 std::string g_lastLogged;
 
+// What Present did with the card, for the probeOnClick log: each outcome is
+// logged once per target (and again once the card is about someone else), so a
+// log states where the card went without a line per frame.
+enum PresentOutcome
+{
+    Present_DeadReadFailed,
+    Present_Dead,
+    Present_MenuOpen,
+    Present_AnchorFailed,
+    Present_OverHead,
+    Present_BesideOffer,
+    Present_NoRoom,
+    Present_OutcomeCount
+};
+// The target the outcomes below were logged for. Raw, never dereferenced.
+Character* g_anchorLogTarget = NULL;
+// One bit per PresentOutcome, plus one per AnchorResult for the failures.
+unsigned int g_anchorLogged = 0;
+
 const char* RouteWord(ReadoutRoute route)
 {
     switch (route)
@@ -58,6 +77,7 @@ const char* RouteWord(ReadoutRoute route)
     case ReadoutRoute_Captivity: return "captivity";
     case ReadoutRoute_Rescue:    return "rescue";
     case ReadoutRoute_Surrender: return "surrender";
+    case ReadoutRoute_FieldYield: return "field-yield";
     case ReadoutRoute_Mercy:     return "mercy";
     case ReadoutRoute_Animal:    return "animal";
     case ReadoutRoute_Free:
@@ -134,6 +154,9 @@ bool WorkOut(Character* character, const char* source)
     input.holdKnown = detail.holdKnown;
     input.hoursHeld = detail.hoursHeld;
     input.mercyPending = IsMercyPending(character);
+    // The peek mints no id, so it has no roll key: a roll it could not make is
+    // shown as odds (readout_model.h).
+    input.rollKeyed = false;
 
     const ReadoutView view = BuildReadout(input, config);
     if (!view.visible)
@@ -157,36 +180,151 @@ bool WorkOut(Character* character, const char* source)
     return true;
 }
 
-// Draws the card that was worked out, over its NPC: no evaluation. Hidden (but kept)
-// while the NPC is off the screen or, unless it stands beside a window, while a
-// right-click menu is open. `avoid` is the window the card steps beside (the offer).
-// False when the NPC died: the card is over.
-bool Present(const ReadoutRect* avoid)
+// True the first time this outcome is seen for the card's current target.
+bool FirstTimeFor(PresentOutcome outcome, AnchorResult anchor)
 {
-    bool dead = false;
-    if (!SafeIsDead(g_shown, &dead) || dead)
+    if (g_anchorLogTarget != g_shown)
+    {
+        g_anchorLogTarget = g_shown;
+        g_anchorLogged = 0;
+    }
+    unsigned int bit = 1u << (unsigned int)outcome;
+    if (outcome == Present_AnchorFailed)
+    {
+        bit = 1u << ((unsigned int)Present_OutcomeCount + (unsigned int)anchor);
+    }
+    if ((g_anchorLogged & bit) != 0)
     {
         return false;
     }
+    g_anchorLogged |= bit;
+    return true;
+}
 
-    int ax = 0, ay = 0;
-    const bool underMenu = avoid == NULL && IsContextMenuOpen();
-    if (underMenu || !ReadoutAnchorFor(g_shown, &ax, &ay))
+// One probeOnClick line per outcome per target. The format:
+//   [readout-anchor] <name> [select|hablar] <outcome> head=(x,y) view=WxH
+//       world=(x,y,z) origin=(x,y,z) [card=(l,t wxh)] [offer=(l,t wxh)]
+// head is the projected point over the head (the card's bottom hangs above it),
+// world the game-space point that was projected, origin the scene's relative
+// origin taken out first.
+void LogPresent(PresentOutcome outcome, const AnchorReading* anchor,
+                const ReadoutPlacement* placed, const ScreenRect* offer, const char* source)
+{
+    if (!GetConfig().probeOnClick ||
+        !FirstTimeFor(outcome, anchor != NULL ? anchor->result : Anchor_Ok))
     {
-        if (ReadoutUiVisible())
-        {
-            ReadoutUiHide();
-        }
+        return;
+    }
+
+    const char* what = "";
+    switch (outcome)
+    {
+    case Present_DeadReadFailed: what = "over: the dead-read failed"; break;
+    case Present_Dead:           what = "over: dead"; break;
+    case Present_MenuOpen:       what = "hidden: right-click menu open"; break;
+    case Present_AnchorFailed:   what = "hidden: anchor failed"; break;
+    case Present_OverHead:       what = "shown over the head"; break;
+    case Present_BesideOffer:    what = "shown beside the offer"; break;
+    case Present_NoRoom:         what = "hidden: no side of the offer has room"; break;
+    default:                     break;
+    }
+
+    char buf[512] = { 0 };
+    int used = _snprintf_s(buf, sizeof(buf), _TRUNCATE, " [%s] %s", source, what);
+    if (anchor != NULL && used >= 0)
+    {
+        const int more = _snprintf_s(
+            buf + used, sizeof(buf) - used, _TRUNCATE,
+            "%s%s%s head=(%d,%d) view=%dx%d world=(%.1f,%.1f,%.1f) origin=(%.1f,%.1f,%.1f)",
+            anchor->result == Anchor_Ok ? "" : " (",
+            anchor->result == Anchor_Ok ? "" : AnchorResultWord(anchor->result),
+            anchor->result == Anchor_Ok ? "" : ")", anchor->x, anchor->y, anchor->viewW,
+            anchor->viewH, anchor->head.x, anchor->head.y, anchor->head.z, anchor->origin.x,
+            anchor->origin.y, anchor->origin.z);
+        used = more >= 0 ? used + more : used;
+    }
+    if (placed != NULL && used >= 0)
+    {
+        const int more = _snprintf_s(buf + used, sizeof(buf) - used, _TRUNCATE,
+                                     " card=(%d,%d %dx%d)", placed->card.left, placed->card.top,
+                                     placed->card.width, placed->card.height);
+        used = more >= 0 ? used + more : used;
+    }
+    if (offer != NULL && used >= 0)
+    {
+        _snprintf_s(buf + used, sizeof(buf) - used, _TRUNCATE, " offer=(%d,%d %dx%d)",
+                    offer->left, offer->top, offer->width, offer->height);
+    }
+    LogInfo("[readout-anchor] " + CharacterName(g_shown) + buf);
+}
+
+void HideUi()
+{
+    if (ReadoutUiVisible())
+    {
+        ReadoutUiHide();
+    }
+}
+
+// Draws the card that was worked out, over its NPC: no evaluation. Hidden (but kept)
+// while the NPC is off the screen or, unless it stands beside a window, while a
+// right-click menu is open. `avoid` is the window the card steps beside (the offer):
+// sideways only, at the head's height, and hidden when neither side has room.
+// False when the NPC died: the card is over.
+bool Present(const ScreenRect* avoid, const char* source)
+{
+    bool dead = false;
+    if (!SafeIsDead(g_shown, &dead))
+    {
+        LogPresent(Present_DeadReadFailed, NULL, NULL, NULL, source);
+        return false;
+    }
+    if (dead)
+    {
+        LogPresent(Present_Dead, NULL, NULL, NULL, source);
+        return false;
+    }
+
+    if (avoid == NULL && IsContextMenuOpen())
+    {
+        LogPresent(Present_MenuOpen, NULL, NULL, NULL, source);
+        HideUi();
         return true;
     }
 
-    // Re-showing an unchanged card does not lay it out again (LayoutKey): it is a move.
-    if (!ReadoutUiVisible() &&
-        !ReadoutUiShow(g_view, g_texts, GetConfig().readoutCompact, ax, ay))
+    const AnchorReading anchor = ReadoutAnchorFor(g_shown);
+    if (anchor.result != Anchor_Ok)
+    {
+        LogPresent(Present_AnchorFailed, &anchor, NULL, avoid, source);
+        HideUi();
+        return true;
+    }
+
+    // Re-placing an unchanged card does not lay it out again (LayoutKey).
+    ReadoutPlacement placed;
+    if (ReadoutUiVisible())
+    {
+        ReadoutUiMove(anchor.x, anchor.y, avoid, &placed);
+    }
+    else if (!ReadoutUiShow(g_view, g_texts, GetConfig().readoutCompact, anchor.x, anchor.y,
+                            avoid, &placed))
     {
         return true;
     }
-    ReadoutUiMove(ax, ay, avoid);
+
+    switch (placed.placement)
+    {
+    case Placement_BesideWindow:
+        LogPresent(Present_BesideOffer, &anchor, &placed, avoid, source);
+        break;
+    case Placement_NoRoom:
+        LogPresent(Present_NoRoom, &anchor, &placed, avoid, source);
+        break;
+    case Placement_OverHead:
+    default:
+        LogPresent(Present_OverHead, &anchor, &placed, avoid, source);
+        break;
+    }
     return true;
 }
 
@@ -206,10 +344,10 @@ bool TickPinned(Character* selected)
         return false;
     }
 
-    ReadoutRect offer;
+    ScreenRect offer;
     const bool haveOffer =
         offerOpen && OfferWindowRect(&offer.left, &offer.top, &offer.width, &offer.height);
-    if (!Present(haveOffer ? &offer : NULL))
+    if (!Present(haveOffer ? &offer : NULL, "hablar"))
     {
         HideCard();
     }
@@ -245,7 +383,7 @@ void TickSelection(Character* selected)
         g_mode = Card_Selected;
     }
 
-    if (g_mode == Card_Selected && !Present(NULL))
+    if (g_mode == Card_Selected && !Present(NULL, "select"))
     {
         HideCard();
     }
@@ -314,6 +452,8 @@ void ForgetReadout()
     g_lastSelection = NULL;
     g_nextRefresh = 0;
     g_lastLogged.clear();
+    g_anchorLogTarget = NULL;
+    g_anchorLogged = 0;
 }
 
 void ShutdownReadout()

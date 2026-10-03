@@ -11,23 +11,30 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 | `css/base.css` | palette tokens | `ui_style.h` / `ui_style.cpp` colours |
 | `css/readout.css` | the card: widths, padding, bar heights, segment colours | `kCardWidth`, `kCardWidthCompact`, `kPad`, `kBarH` ... |
 | `js/data.js` | one view-model per state (the facts that produce it are in a comment above each); `PLACEMENT` timings and gaps; `HUB` rows | `readout_model.cpp` output (`ReadoutView`); `readout.cpp` / `readout_ui.cpp` constants; `mod_hub_integration.cpp` |
-| `js/readout.js` | draws a view-model as the card; `placeCard` (beside the offer); `offerRect` (the popup centred) | `readout_ui.cpp` (`MoveUnguarded`, `StepAside`); `offer_popup.cpp` (`ChoosePosition`) |
+| `js/readout.js` | draws a view-model as the card; `placeCard` (over the head, sideways beside the offer); `offerRect` (the popup centred) | `screen_projection.cpp` (`PlaceCard`, called by `readout_ui.cpp` `PlaceUnguarded`); `offer_popup.cpp` (`ChoosePosition`) |
 | `css/popup.css` | the recruit popup: fonts and colours of each slot, flat buttons | `offer_popup.cpp` (widgets from `ui_style.cpp`) |
 | `js/popup_data.js` | `POPUP_LAYOUT` (every px of the popup) and one `OfferView` per state, the facts above each | `offer_popup.cpp` constants; `offer_view.cpp` output (`OfferView`) |
 | `js/popup.js` | `layoutOffer`: every rectangle of the popup, text measured first | `offer_popup.cpp` (`LayoutOffer`, `MeasureWrapped`) |
 
 ## Design decisions
 
-1. **One card, anchored above the NPC.** The NPC's world position is projected to the screen and the card sits
-   centred over their head, clamped inside the view; if the projection fails it falls back to the cursor. Not
-   anchored to the cursor hint (the vanilla speech bubble is drawn by the engine and has no widget to anchor to)
-   and not to the context menu (the Hablar button already lives beside it).
+1. **One card, anchored above the NPC.** The point 20 world units over the NPC's feet (`getPosition`, game space)
+   has the scene's relative origin taken out (`SceneManager::getRelativeOrigin`, as the engine's own world-to-screen
+   does) and is projected through the player camera (`screen_projection.cpp` `ProjectToScreen`); the card sits
+   centred over that point, 6 px higher, clamped inside the view sideways, under the head when the top of the screen
+   leaves no room. If the projection fails (behind the camera, off the screen) the card hides; there is no cursor
+   fallback. Without the origin step the game-space point went through the render-space camera and landed on the
+   horizon: the card "flying at the top of the screen" (2026-10-03). Not anchored to the cursor hint (the vanilla
+   speech bubble is drawn by the engine and has no widget to anchor to) and not to the context menu (the Hablar
+   button already lives beside it).
 2. **Shown while the NPC is selected; Hablar places it beside the offer.** (User request 2026-10-03: "que se
    enable y disable al dar click en el NPC, no hover".) A left click on an NPC that is not yours shows the card;
    deselecting hides it and selecting someone else switches it. Each frame only compares the selection with the
    last one; the card is worked out when it changes and every 2 s after that (`kSelectionRefreshMs`), so price
-   and stress stay current without an evaluation per frame. Pressing Hablar pins it beside the offer window that
-   click opened (right, else left, else above / below); when the offer closes (or after 8 s when none opened) it
+   and stress stay current without an evaluation per frame. Pressing Hablar pins it: it stays over the head while the
+   offer window that click opened is up, and only when it would cover that window does it step SIDEWAYS to the
+   window's nearer side at the head's height (else the far side; hidden when neither has room). Never moved up or
+   down to dodge the window, never clamped to the top of the screen. When the offer closes (or after 8 s when none opened) it
    stays only if that NPC is still selected. It hides while a right-click menu is open (the Hablar, TotalSparring
    and TotalLoot buttons take the free slots on either side, so no side is left to step to) and while the NPC is
    off the screen, and goes when they die and at a load. Hover is gone: polling the cursor and re-evaluating four
@@ -35,9 +42,12 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 3. **It shows the engine's numbers, never its own.** Chance = `Verdict::chancePercent`; price = `Verdict::cats`;
    stress = `StressFromState`, split into the three terms it is made of (hunger, wounds, exhaustion) which add up
    to the bar; defeats against `defeatsToBreak`; animal bar = fullness against `TamingFullnessNeeded`.
-4. **The card never reveals whether the roll passes.** The roll is stable and seeded from the character's id; showing
-   its outcome would make the percent meaningless, and reading the id would mint one for a bystander. The readout is
-   computed with no roll key, so it shows the odds and what is needed if luck does not carry them.
+4. **The card never reveals whether the roll passes, and never claims it failed.** The roll is stable and seeded from
+   the character's id; showing its outcome would make the percent meaningless, and reading the id would mint one for
+   a bystander. The readout is computed with no roll key (`EvaluatePeek`), so a route that rolled cannot say yes and
+   would read "not yet" even when the click joins them. Those lines (field yield, ally) become the odds instead:
+   "41%: puede unirse si le hablas" (`readout.line.rollOpen`). With a key, a failed field yield says "Aun no cede:
+   vencelo otra vez" in the open, and "dejalo sin comer" only for someone in the player's own cage.
 5. **Only what applies.** Stress bar for Cautiverio / Rendicion (the routes whose roll reads stress); chance bar when
    the route rolled; stomach bar for animals; defeats pips when defeats matter. A refused NPC shows just the route
    tag and the reason, because showing a 0% bar would suggest a roll that does not exist.
@@ -70,7 +80,9 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     on the right at 150 px.
 14. **Short purse = no ACEPTAR.** A cats price above the purse turns TIENES red, adds "No te alcanzan los cats
     (te faltan N)" and hides ACEPTAR. Any refusal hides ACEPTAR and shows its reason in red.
-15. **Text** is the `popup` block of `messages.json`; the route tag reuses `readout.route.*`.
+15. **Text** is the `popup` block of `messages.json`; the route tag reuses `readout.route.*`. Field yield has its own
+    tag, **Sometido** (`readout.route.fieldYield`), on the card and the popup alike: Rendicion is the "rather than
+    die" surrender.
 
 ## Checking a change
 

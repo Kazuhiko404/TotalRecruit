@@ -65,6 +65,7 @@ const Suite kSuites[] = {
     { "menu_slot", RunMenuSlotTests },
     { "menu_button_release", RunMenuButtonReleaseTests },
     { "offer_view", RunOfferViewTests },
+    { "screen_projection", RunScreenProjectionTests },
 };
 } // namespace
 

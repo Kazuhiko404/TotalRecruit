@@ -874,7 +874,8 @@
       "surrender": "Rendicion",
       "mercy": "Piedad",
       "animal": "Animal",
-      "free": "Libre"
+      "free": "Libre",
+      "fieldYield": "Sometido"
     },
     "line": {
       "unreadable": "Se une",
@@ -897,7 +898,8 @@
       "easyHealthy": "Sano gracias a ti: se une",
       "fieldYield": {
         "joins": "Se rinde y te sigue",
-        "notYet": "Aun no cede: dejalo sin comer"
+        "notYet": "Aun no cede: dejalo sin comer",
+        "beatAgain": "Aun no cede: vencelo otra vez"
       },
       "surrendered": "Se rinde antes que morir",
       "grudge": {
@@ -947,7 +949,8 @@
           "hungry": "Hambre {food}% / necesita {need}%"
         }
       },
-      "waitCage": "Faltan {hours} en la jaula"
+      "waitCage": "Faltan {hours} en la jaula",
+      "rollOpen": "{chance}%: puede unirse si le hablas"
     }
   },
   "popup": {

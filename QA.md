@@ -464,7 +464,7 @@ Por defecto la tarjeta sale **solo** al apretar `Hablar`, al lado de la ventana 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
 | H1 | Config por defecto. Pasar el mouse por NPCs reclutables **sin** seleccionarlos | **Ninguna** tarjeta (seleccionar uno: ver 12.11) | (sin `[readout]`) |
-| H2 | Clic derecho en un prisionero, apretar `Hablar` | Se abre la oferta y la tarjeta aparece sobre su cabeza; si taparia la ventana, se pone a su derecha (o izquierda, o arriba/abajo si no entra), nunca encima | `[readout] ... [hablar]` una sola vez |
+| H2 | Clic derecho en un prisionero, apretar `Hablar` | Se abre la oferta y la tarjeta aparece sobre su cabeza; si taparia la ventana, se corre **de costado** al lado mas cercano de la ventana, a la altura de su cabeza (nunca arriba ni abajo; ver 12.16) | `[readout] ... [hablar]` una sola vez |
 | H3 | Con la oferta abierta, mover la camara | La tarjeta sigue al NPC cada cuadro y sigue sin tapar la oferta; su contenido no cambia (se calculo al clic) | (sin linea nueva) |
 | H4 | Cerrar la oferta (ACEPTAR, RECHAZAR, la X) | La tarjeta se va con ella | |
 | H5 | `Hablar` en alguien que se une sin ventana, o donde no se abre oferta | Sin tarjeta, o la tarjeta se va sola a los 8 s | |
@@ -565,9 +565,36 @@ Toda salida de Hablar abre la misma ventana; ninguna termina en una notificacion
 | P4 | Hablar a un prisionero hambriento llevando comida | Motivo en rojo; DARLE COMIDA + CERRAR. DARLE COMIDA alimenta y reabre la ventana con el nuevo veredicto (Cancelar dice AHORA NO; si sigue con hambre, DARLE MAS COMIDA). Sin comida y con derrota posible: GOLPEARLO |
 | P5 | Dejar a un enemigo lisiado para que pida piedad | Etiqueta "Piedad"; la suplica como cuerpo; ACEPTAR / IGNORAR / RECHAZAR (IGNORAR solo si su temperamento lo permite) |
 | P6 | Rescatar a alguien (curarlo cuando esta tirado) y hablarle | Etiqueta "Rescate"; PRECIO "Gratis" en verde; ACEPTAR / CANCELAR |
-| P7 | Vencer 2 veces a un bandido hasta que se rinda y hablarle | Etiqueta "Rendicion"; PRECIO "Gratis"; PROBABILIDAD con el % tirado; ACEPTAR / CANCELAR |
+| P7 | Vencer 2 veces a un bandido hasta que se rinda y hablarle | Etiqueta "Sometido" (desde 12.16; "Rendicion" queda para el que se rinde antes que morir); PRECIO "Gratis"; PROBABILIDAD con el % tirado; ACEPTAR / CANCELAR |
 | P8 | En P1, la X del titulo | Igual que CANCELAR: "lo dejaste donde estaba", no cobra |
 | P9 | En P1, gastar plata con la ventana abierta hasta quedar corto y apretar ACEPTAR | No lo suma; aviso `money.short` (el unico aviso de dinero que queda: el chequeo de ultimo momento) |
 | P10 | Un nombre largo o un motivo largo | El texto se parte en renglones y la ventana crece; nada queda cortado ni fuera del marco |
 | P11 | Editar `TotalRecruit/messages.json` bloque `popup` (por ejemplo `popup.button.cancel`) y reiniciar | La ventana usa el texto nuevo; borrar la clave vuelve al texto interno |
 | P12 | Con DarkUI o PowerModUI | Los colores se ven igual (rellenos con `tr_white.png`) |
+
+### 12.16 La tarjeta sobre la cabeza y lineas que no mienten (recruit-gating T5)
+
+Antes la tarjeta salia "volando arriba de la pantalla": el punto del NPC (espacio del juego) pasaba por la
+camara (espacio de render, corrido por el origen relativo de la escena) sin restar ese origen, y caia en el
+horizonte. Ahora se resta como lo hace el propio motor. Con `"probeOnClick": true`: cada resultado se loguea
+**una vez** por NPC:
+
+`[readout-anchor] <nombre> [select|hablar] <resultado> head=(x,y) view=WxH world=(x,y,z) origin=(x,y,z) [card=(l,t wxh)] [offer=(l,t wxh)]`
+
+`head` es el punto proyectado sobre la cabeza (el borde de abajo de la tarjeta queda 8 px encima),
+`card` donde quedo la tarjeta, `offer` la ventana. Resultados: `shown over the head`, `shown beside the offer`,
+`hidden: no side of the offer has room`, `hidden: anchor failed (behind the camera|off the screen|no camera|no position)`,
+`hidden: right-click menu open`, `over: dead`, `over: the dead-read failed`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| A1 | Seleccionar (clic izquierdo) un NPC ajeno en el centro de la pantalla | La tarjeta aparece **justo sobre su cabeza**, centrada en el | `[readout-anchor] ... [select] shown over the head head=(x,y) ...` con `x,y` cerca de la cabeza en la captura |
+| A2 | Con A1 a la vista, mover la camara, hacer zoom y dejar que el NPC camine | La tarjeta lo sigue cada cuadro sobre la cabeza; con zoom lejano baja junto con la cabeza; nunca se va al borde de arriba | (sin linea nueva: ya se logueo) |
+| A3 | Llevar al NPC al borde de arriba de la pantalla | La tarjeta cuelga **debajo** de la cabeza, no pegada arriba | |
+| A4 | Girar la camara hasta que el NPC quede detras o fuera de pantalla | La tarjeta se oculta; vuelve al verlo | `hidden: anchor failed (behind the camera)` o `(off the screen)` |
+| A5 | Clic derecho en un prisionero, `Hablar` | Se abre la ventana; la tarjeta queda sobre la cabeza si no la tapa; si la tapa, se corre al costado mas cercano de la ventana **a la altura de la cabeza**. **Nunca** arriba de la pantalla | `[hablar] shown beside the offer ... card=(l,t ...) offer=(...)`: `t` igual a la altura sobre la cabeza, `l` al lado de `offer` |
+| A6 | A5 con resolucion chica (o NPC justo en el centro con la ventana ancha) hasta que no haya lugar a ningun lado | La tarjeta se oculta mientras la ventana esta abierta; vuelve al cerrarla si sigue seleccionado | `hidden: no side of the offer has room` |
+| A7 | Vencer 2 veces a un NPC en campo abierto y seleccionarlo | Etiqueta **Sometido**; la linea dice `NN%: puede unirse si le hablas` con el mismo % que la barra, **nunca** "Aun no cede" (la tarjeta no puede tirar el dado) | `[readout] ... route=field-yield chance=NN% ... line="NN%: puede unirse si le hablas"` |
+| A8 | A7 y apretar `Hablar` | La ventana dice lo que sale del dado; si se une, la tarjeta no lo habia negado | `[chance] ... -> NN%` con el mismo `NN` |
+| A9 | Aliado (reputacion >= 20) en campo abierto, seleccionarlo | `NN%: puede unirse si le hablas` en vez de "Quiza te siga" | `route=free ... line="NN%: ..."` |
+| A10 | Cualquier NPC **libre** (fuera de tu jaula) en cualquier ruta | Ninguna linea dice "dejalo sin comer" | (buscar `sin comer` en el log: solo para presos en tu jaula) |

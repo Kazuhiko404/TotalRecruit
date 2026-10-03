@@ -18,11 +18,44 @@ bool IsHidden(int id)
            id == Reason_Pretending || id == Reason_Dead;
 }
 
-void EveryReasonHasARowPlusTheWait()
+void EveryReasonHasARowPlusTheCardsOwnLines()
 {
-    const char* name = "catalog: one row per ReasonKey plus the cage wait";
-    CHECK(ReadoutLineCount() == (int)Reason_Count + 1);
+    const char* name = "catalog: one row per ReasonKey plus the wait, the open roll and beat-again";
+    CHECK(ReadoutLineCount() == (int)Reason_Count + 3);
     CHECK(kLineWaitCage == (int)Reason_Count);
+    CHECK(kLineRollOpen == (int)Reason_Count + 1);
+    CHECK(kLineFieldYieldBeatAgain == (int)Reason_Count + 2);
+}
+
+void TheCardsOwnLinesSayWhatTheyMean()
+{
+    const char* name = "catalog: the open roll states the odds, beat-again never says to starve them";
+    CHECK(std::string(ReadoutLineMessageKey(kLineRollOpen)) == "readout.line.rollOpen");
+    CHECK(std::string(ReadoutLineDefaultText(kLineRollOpen)).find("{chance}%") == 0);
+    CHECK(std::string(ReadoutLineMessageKey(kLineFieldYieldBeatAgain)) ==
+          "readout.line.fieldYield.beatAgain");
+    const std::string beat = ReadoutLineDefaultText(kLineFieldYieldBeatAgain);
+    CHECK(beat.find("sin comer") == std::string::npos);
+    CHECK(beat.find("vencelo") != std::string::npos);
+}
+
+void EveryRouteHasALabel()
+{
+    const char* name = "catalog: each route the player is told has a readout.route key and a label";
+    const ReadoutRoute routes[] = { ReadoutRoute_Free, ReadoutRoute_Captivity, ReadoutRoute_Rescue,
+                                    ReadoutRoute_Surrender, ReadoutRoute_Mercy, ReadoutRoute_Animal,
+                                    ReadoutRoute_FieldYield };
+    std::set<std::string> keys;
+    for (int i = 0; i < 7; ++i)
+    {
+        const std::string key = ReadoutRouteMessageKey(routes[i]);
+        CHECK(key.compare(0, 14, "readout.route.") == 0);
+        CHECK(keys.insert(key).second);
+        CHECK(std::strlen(ReadoutRouteDefaultText(routes[i])) > 0);
+    }
+    CHECK(std::string(ReadoutRouteMessageKey(ReadoutRoute_FieldYield)) == "readout.route.fieldYield");
+    CHECK(std::string(ReadoutRouteDefaultText(ReadoutRoute_FieldYield)) == "Sometido");
+    CHECK(std::string(ReadoutRouteDefaultText(ReadoutRoute_Surrender)) == "Rendicion");
 }
 
 void VisibleReasonsHaveShortAsciiText()
@@ -40,8 +73,9 @@ void VisibleReasonsHaveShortAsciiText()
         // at their widest fill (a 6 digit price, a 3 digit percent, "59min").
         std::string widest = text;
         const char* tokens[][2] = { { "{cats}", "150.000" }, { "{purse}", "100.000" },
-                                    { "{hours}", "59min" }, { "{food}", "100" }, { "{need}", "100" } };
-        for (int t = 0; t < 5; ++t)
+                                    { "{hours}", "59min" }, { "{food}", "100" }, { "{need}", "100" },
+                                    { "{chance}", "100" } };
+        for (int t = 0; t < 6; ++t)
         {
             std::string::size_type at;
             while ((at = widest.find(tokens[t][0])) != std::string::npos)
@@ -87,7 +121,9 @@ void OutOfRangeIsEmpty()
 
 void RunReadoutCatalogTests()
 {
-    EveryReasonHasARowPlusTheWait();
+    EveryReasonHasARowPlusTheCardsOwnLines();
+    TheCardsOwnLinesSayWhatTheyMean();
+    EveryRouteHasALabel();
     VisibleReasonsHaveShortAsciiText();
     KeysAreUniqueAndNamespaced();
     OutOfRangeIsEmpty();

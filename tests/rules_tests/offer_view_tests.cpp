@@ -219,7 +219,7 @@ void RescueIsFree()
 
 void FieldYieldJoinsFreeWithOdds()
 {
-    const char* name = "field-yield yes: Rendicion, free, the rolled odds";
+    const char* name = "field-yield yes: Sometido (its own tag, not Rendicion), free, the rolled odds";
     OfferInput in;
     in.name = "Soldado";
     in.verdict.willJoin = true;
@@ -228,9 +228,14 @@ void FieldYieldJoinsFreeWithOdds()
     in.verdict.rolled = true;
     in.verdict.chancePercent = 41;
     const OfferView v = BuildOfferView(in, Texts());
-    CHECK(v.route == ReadoutRoute_Surrender);
+    CHECK(v.route == ReadoutRoute_FieldYield);
+    CHECK(v.routeTag == "Sometido");
     CHECK(v.priceFree);
     CHECK(v.showChance && v.chanceText == "41%");
+
+    OfferInput surrendered = in;
+    surrendered.verdict.reasonKey = Reason_Surrendered;
+    CHECK(BuildOfferView(surrendered, Texts()).route == ReadoutRoute_Surrender);
 }
 
 void GiftIsNotRed()

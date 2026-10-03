@@ -40,6 +40,7 @@ ReadoutRoute NameRoute(const ReadoutInput& in)
     case Route_EasyHealthy:
         return ReadoutRoute_Rescue;
     case Route_FieldYield:
+        return ReadoutRoute_FieldYield;
     case Route_Surrendered:
         return ReadoutRoute_Surrender;
     case Route_GrudgeRefusal:
@@ -92,6 +93,34 @@ ReadoutLineView LineFor(int id, const ReadoutInput& in)
     }
     return line;
 }
+
+// The "not yet" a roll gives when it fails. Without the roll key it did not fail:
+// RollsToJoin has no stable answer and says no, so the click (keyed) may still
+// say yes. Other rolled routes fall through to a real way in (a price) instead.
+bool IsLostRoll(ReasonKey key)
+{
+    return key == Reason_FieldYieldNotYet || key == Reason_AllyMaybe;
+}
+
+// The main line, told truthfully for what the card could and could not know.
+ReadoutLineView PrimaryLine(const ReadoutInput& in)
+{
+    const ReasonKey key = in.verdict.reasonKey;
+    if (in.verdict.rolled && !in.rollKeyed && !in.verdict.willJoin && IsLostRoll(key))
+    {
+        // The odds, with no promise either way.
+        ReadoutLineView odds;
+        odds.id = kLineRollOpen;
+        odds.chance = in.verdict.chancePercent;
+        return odds;
+    }
+    if (key == Reason_FieldYieldNotYet && !(in.haveCore && in.core.inMyCage))
+    {
+        // Starving them is only on offer for someone in the player's own cage.
+        return LineFor(kLineFieldYieldBeatAgain, in);
+    }
+    return LineFor((int)key, in);
+}
 } // namespace
 
 ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
@@ -141,7 +170,7 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
         v.foodNeededPct = Percent(in.verdict.tameNeeded);
     }
 
-    v.primary = LineFor((int)in.verdict.reasonKey, in);
+    v.primary = PrimaryLine(in);
     v.primary.food = v.foodPct;
     v.primary.need = v.foodNeededPct;
 

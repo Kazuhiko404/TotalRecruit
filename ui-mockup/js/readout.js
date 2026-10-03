@@ -67,31 +67,34 @@ function stateById(id) {
   return STATES[0];
 }
 
-// Where the card's top-left goes. C++ twin: MoveUnguarded + StepAside in src/readout_ui.cpp.
-// Centred above the anchor and clamped to the view; below the head when there is no room
-// above; then, when it would cover `avoid` (the offer window), beside it: right, else left,
-// else above / below it.
+// Where the card's top-left goes. C++ twin: PlaceCard in src/screen_projection.cpp (called by
+// readout_ui.cpp PlaceUnguarded). Centred over the anchor (the projected point over the head),
+// clamped to the view sideways; under the head when there is no room above. When it would cover
+// `avoid` (the offer window) it steps SIDEWAYS to the window's nearer side at the same height,
+// else the far side; with no room on either side it is not shown (placement 'none'). Never
+// moved up or down to dodge the window, never pinned to the top of the screen.
 function placeCard(anchor, size, view, avoid) {
   var g = PLACEMENT.arrowGap, m = PLACEMENT.screenMargin;
   var left = anchor.x - Math.floor(size.w / 2);
   var top = anchor.y - size.h - g;
   if (left + size.w > view.w - m) left = view.w - m - size.w;
   if (left < m) left = m;
-  if (top < m) top = anchor.y + g * 4;
+  if (top < m) top = anchor.y + PLACEMENT.belowGap;
   if (top + size.h > view.h - m) top = view.h - m - size.h;
-  if (avoid && left < avoid.left + avoid.width && avoid.left < left + size.w &&
-      top < avoid.top + avoid.height && avoid.top < top + size.h) {
-    var right = avoid.left + avoid.width + g, leftSide = avoid.left - g - size.w;
-    if (right + size.w <= view.w - m) left = right;
-    else if (leftSide >= m) left = leftSide;
-    else {
-      var above = avoid.top - g - size.h;
-      top = above >= m ? above : avoid.top + avoid.height + g;
-    }
-    if (top + size.h > view.h - m) top = view.h - m - size.h;
-    if (top < m) top = m;
+  if (!avoid || !(left < avoid.left + avoid.width && avoid.left < left + size.w &&
+                  top < avoid.top + avoid.height && avoid.top < top + size.h)) {
+    return { left: left, top: top, placement: 'overHead' };
   }
-  return { left: left, top: top };
+  var right = avoid.left + avoid.width + g, leftSide = avoid.left - g - size.w;
+  var rightFits = right + size.w <= view.w - m, leftFits = leftSide >= m;
+  var nearerIsRight = 2 * anchor.x >= 2 * avoid.left + avoid.width;
+  if (nearerIsRight ? rightFits : leftFits) {
+    return { left: nearerIsRight ? right : leftSide, top: top, placement: 'beside' };
+  }
+  if (nearerIsRight ? leftFits : rightFits) {
+    return { left: nearerIsRight ? leftSide : right, top: top, placement: 'beside' };
+  }
+  return { left: left, top: top, placement: 'none' };
 }
 
 // The recruit popup as src/offer_popup.cpp centres it (ChoosePosition), given its
