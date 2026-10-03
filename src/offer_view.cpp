@@ -59,7 +59,7 @@ std::string RouteTag(ReadoutRoute route, const OfferTexts& t)
     // OfferTexts carries no slot for it yet (offer_view.h / npc_speech.cpp were
     // outside T5's edit surface): the shared label table's text, which is also
     // what messages.json ships for readout.route.fieldYield.
-    case ReadoutRoute_FieldYield: return ReadoutRouteDefaultText(ReadoutRoute_FieldYield);
+    case ReadoutRoute_FieldYield: return t.routeFieldYield;
     case ReadoutRoute_Free:
     default:                     return t.routeFree;
     }
@@ -133,6 +133,7 @@ OfferTexts DefaultOfferTexts()
     t.routeCaptivity = "Cautiverio";
     t.routeRescue = "Rescate";
     t.routeSurrender = "Rendicion";
+    t.routeFieldYield = ReadoutRouteDefaultText(ReadoutRoute_FieldYield);
     t.routeMercy = "Piedad";
     t.routeAnimal = "Animal";
 

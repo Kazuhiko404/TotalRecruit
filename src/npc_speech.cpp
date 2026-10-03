@@ -186,6 +186,7 @@ OfferTexts OfferWording()
     Word(&t.routeCaptivity, "readout.route.captivity");
     Word(&t.routeRescue, "readout.route.rescue");
     Word(&t.routeSurrender, "readout.route.surrender");
+    Word(&t.routeFieldYield, "readout.route.fieldYield");
     Word(&t.routeMercy, "readout.route.mercy");
     Word(&t.routeAnimal, "readout.route.animal");
 

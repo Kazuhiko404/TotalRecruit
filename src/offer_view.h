@@ -56,6 +56,7 @@ struct OfferTexts
     std::string routeCaptivity;
     std::string routeRescue;
     std::string routeSurrender;
+    std::string routeFieldYield;
     std::string routeMercy;
     std::string routeAnimal;
 
