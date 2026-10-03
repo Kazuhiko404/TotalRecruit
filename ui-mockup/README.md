@@ -39,6 +39,9 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
    and TotalLoot buttons take the free slots on either side, so no side is left to step to) and while the NPC is
    off the screen, and goes when they die and at a load. Hover is gone: polling the cursor and re-evaluating four
    times a second was slow and covered the screen. `readoutOnSelect` (on) off leaves only the Hablar card.
+   A left or right press anywhere that is not a MyGUI widget nor the NPC's body puts it away (Kenshi keeps the
+   selection on a right-click to walk); it comes back on a left click on that NPC, a new selection or Hablar, and a
+   Hablar card beside an open offer ignores outside clicks (`card_dismiss_rules.cpp`, user report 2026-10-03).
 3. **It shows the engine's numbers, never its own.** Chance = `Verdict::chancePercent`; price = `Verdict::cats`;
    stress = `StressFromState`, split into the three terms it is made of (hunger, wounds, exhaustion) which add up
    to the bar; defeats against `defeatsToBreak`; animal bar = fullness against `TamingFullnessNeeded`.

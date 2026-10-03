@@ -16,6 +16,7 @@
 // relative origin and projected through the player camera (screen_projection.h has
 // the math and the evidence for the origin step).
 
+#include "card_dismiss_rules.h"
 #include "screen_projection.h"
 
 class Character;
@@ -56,6 +57,12 @@ struct AnchorReading
 
 // The screen point the card hangs above for this character (just over their head).
 AnchorReading ReadoutAnchorFor(Character* character);
+
+// Where this character stands on the screen: their feet and the point over their
+// head (the anchor's height, without its pixel lift), projected the same way. Off
+// the screen still reads (the pixels are kept); false when behind the camera or
+// unreadable. Only asked on a mouse press, never per frame.
+bool ReadoutBodySpanFor(Character* character, BodySpan* out);
 
 const char* AnchorResultWord(AnchorResult result);
 } // namespace totalrecruit

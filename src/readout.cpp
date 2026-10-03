@@ -1,10 +1,12 @@
 #include "common.h"
 #include "readout.h"
+#include "card_dismiss_rules.h"
 #include "config.h"
 #include "defeats.h"
 #include "engine_reads.h"
 #include "log.h"
 #include "mercy.h"
+#include "mouse_input.h"
 #include "offer_popup.h"
 #include "readout_model.h"
 #include "readout_target.h"
@@ -50,6 +52,15 @@ DWORD g_pinnedAt = 0;
 // The offer window has been seen open since the pin: its closing ends the pin.
 bool g_offerSeen = false;
 std::string g_lastLogged;
+
+// A click elsewhere put the card away (card_dismiss_rules.h). Kept apart from the
+// mode: the card is still worked out for its NPC, only not drawn.
+bool g_dismissed = false;
+PressEdgeState g_pressEdges;
+// The selection as the dismissal last saw it. Separate from g_lastSelection, which
+// the end of a pin clears to re-decide the card: that is not a new selection. Raw,
+// never dereferenced, cleared at a load.
+Character* g_dismissSelection = NULL;
 
 // What Present did with the card, for the probeOnClick log: each outcome is
 // logged once per target (and again once the card is about someone else), so a
@@ -285,6 +296,13 @@ bool Present(const ScreenRect* avoid, const char* source)
         return false;
     }
 
+    // Put away by a click elsewhere: kept, not drawn.
+    if (g_dismissed)
+    {
+        HideUi();
+        return true;
+    }
+
     if (avoid == NULL && IsContextMenuOpen())
     {
         LogPresent(Present_MenuOpen, NULL, NULL, NULL, source);
@@ -369,6 +387,13 @@ void TickSelection(Character* selected)
     {
         return;
     }
+    // A dismissed card costs nothing: no evaluation until it is shown again (which
+    // schedules a refresh at once).
+    if (g_dismissed)
+    {
+        HideUi();
+        return;
+    }
 
     if (TimeReached(now, g_nextRefresh))
     {
@@ -388,6 +413,92 @@ void TickSelection(Character* selected)
         HideCard();
     }
 }
+
+const char* PressWord(MousePress press)
+{
+    return press == Press_Left ? "left" : (press == Press_Right ? "right" : "no");
+}
+
+// Takes the rules' answer. A card shown again is worked out at once, since nothing
+// was evaluated while it was away.
+void ApplyDismissal(const CardDismissInput& input, Character* npc)
+{
+    const bool was = g_dismissed;
+    g_dismissed = NextCardDismissed(g_dismissed, input);
+    if (was == g_dismissed)
+    {
+        return;
+    }
+    if (!g_dismissed)
+    {
+        g_nextRefresh = GetTickCount();
+    }
+    if (GetConfig().probeOnClick)
+    {
+        LogInfo("[readout] " + CharacterName(npc) +
+                (g_dismissed ? " dismissed: " : " shown again: ") + PressWord(input.press) +
+                (input.pinRequested ? " (hablar)" : (input.selectionChanged ? " (selection)" : "")));
+    }
+}
+
+// Whether the press at the cursor is on this NPC's body. Projected only here, at a
+// press, never per frame.
+bool PressOnNpc(Character* npc)
+{
+    int x = 0;
+    int y = 0;
+    BodySpan body;
+    return npc != NULL && ReadMousePosition(&x, &y) && ReadoutBodySpanFor(npc, &body) &&
+           PointOnBody(x, y, body);
+}
+
+// Once per frame, before the card is drawn: a fresh press elsewhere dismisses it.
+// The mouse is only read while there is a card (shown or put away); otherwise the
+// edge reader is reset, so a button held as a card appears is not a press.
+void UpdateDismissal(Character* selected)
+{
+    CardDismissInput input;
+    input.selectionChanged = selected != g_dismissSelection;
+    g_dismissSelection = selected;
+
+    if (g_mode == Card_None && selected == NULL)
+    {
+        // No card and no NPC one could come back for: nothing to put away.
+        g_dismissed = false;
+    }
+    if (g_mode == Card_None && !g_dismissed)
+    {
+        ResetPressEdges(&g_pressEdges);
+    }
+    else
+    {
+        bool left = false;
+        bool right = false;
+        ReadMouseButtons(&left, &right);
+        input.press = NextPressEdge(&g_pressEdges, left, right);
+    }
+
+    // The card's NPC: the pinned one, else the selection (a put-away card may hold
+    // no target while its NPC stays selected).
+    Character* npc = g_shown != NULL ? g_shown : selected;
+    if (input.press != Press_None && !input.selectionChanged)
+    {
+        input.overMyGui = IsMouseOverMyGui();
+        input.pinnedWithOffer = g_mode == Card_Pinned && IsOfferOpen();
+        if (!input.overMyGui && !input.pinnedWithOffer)
+        {
+            input.onNpc = PressOnNpc(npc);
+        }
+    }
+    ApplyDismissal(input, npc);
+}
+
+void ForgetDismissal()
+{
+    g_dismissed = false;
+    ResetPressEdges(&g_pressEdges);
+    g_dismissSelection = NULL;
+}
 } // namespace
 
 void RequestReadout(Character* character)
@@ -404,6 +515,10 @@ void RequestReadout(Character* character)
         HideCard();
         return;
     }
+    // Hablar shows a card that a click had put away.
+    CardDismissInput pin;
+    pin.pinRequested = true;
+    ApplyDismissal(pin, character);
     g_mode = Card_Pinned;
     g_pinnedAt = GetTickCount();
     g_offerSeen = false;
@@ -425,10 +540,12 @@ void ReadoutTick()
             HideCard();
         }
         g_lastSelection = NULL;
+        ForgetDismissal();
         return;
     }
 
     Character* selected = config.readoutOnSelect ? SelectedNpc() : NULL;
+    UpdateDismissal(selected);
 
     if (g_mode == Card_Pinned)
     {
@@ -454,6 +571,7 @@ void ForgetReadout()
     g_lastLogged.clear();
     g_anchorLogTarget = NULL;
     g_anchorLogged = 0;
+    ForgetDismissal();
 }
 
 void ShutdownReadout()

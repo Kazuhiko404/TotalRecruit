@@ -68,6 +68,7 @@
     <ClCompile Include="offer_view_tests.cpp" />
     <ClCompile Include="screen_projection_tests.cpp" />
     <ClCompile Include="haggle_rules_tests.cpp" />
+    <ClCompile Include="card_dismiss_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -102,6 +103,7 @@
     <ClCompile Include="..\..\src\menu_button_release.cpp" />
     <ClCompile Include="..\..\src\offer_view.cpp" />
     <ClCompile Include="..\..\src\screen_projection.cpp" />
+    <ClCompile Include="..\..\src\card_dismiss_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

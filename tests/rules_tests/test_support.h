@@ -40,3 +40,4 @@ void RunMenuButtonReleaseTests();
 void RunOfferViewTests();
 void RunScreenProjectionTests();
 void RunHaggleRulesTests();
+void RunCardDismissRulesTests();
