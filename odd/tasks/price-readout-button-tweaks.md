@@ -56,7 +56,7 @@ Three in-game tweaks requested by the user on 2026-10-03 after the first deploy 
   cursor hint gets a per-character TTL cache module. Mockup updated.
   - Route: delegated.
   - Check: Release build; rules_tests green; QA.md steps.
-- [ ] **T3 Hablar button placement and size.** Port TotalLoot `menu_slot` (+ tests),
+- [x] **T3 Hablar button placement and size.** Port TotalLoot `menu_slot` (+ tests),
   `menu_obstacles` (prefix `TR_`) and button style; button 44 x 160, styled like the others.
   - Route: delegated.
   - Check: rules_tests green (slot tests); Release build; QA.md steps.
@@ -65,6 +65,7 @@ Three in-game tweaks requested by the user on 2026-10-03 after the first deploy 
 ## Progress / evidence
 - T1: rules_tests 19/19 suites, 0/36673 checks failed (RED observed first: 23 failing checks); Release DLL builds; Soman case 2580 cats; commit 21f4b69. Deployed config NOT edited (Kenshi running): T4 must add catsPerLevel 90->32 / catsCeiling 28000->10000 set-if and the premiumMaxMultiplier key.
 - T2: rules_tests 20/20 suites, 0/36721 checks failed (RED first: 114 failing talk_hint_cache checks); Release DLL rebuilds with no warnings outside SDK headers; mockup scene measured in Chrome (card 8 px right of the offer); commit 1401c1f. In-game QA pending: QA.md 12.9 H1-H13. readoutOnHover not added to deployed config (shipped config has no readout keys).
+- T3: rules_tests 21/21 suites, 0/36796 checks failed (menu_slot suite: verbatim port of TotalLoot's tested resolver, no RED possible; added Hablar-vs-TS/TL characterization case, green on first run); Release DLL builds, warnings only in SDK headers; OverlayMenuTarget removed (no callers); commit d0a4a7f. In-game QA pending: QA.md 12.10 B1-B7.
 
 ## Next step
-T3.
+T4.
