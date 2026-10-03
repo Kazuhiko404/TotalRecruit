@@ -98,6 +98,8 @@
     <ClCompile Include="src\mercy_rules.cpp" />
     <ClCompile Include="src\plea_tracker.cpp" />
     <ClCompile Include="src\hold_clock.cpp" />
+    <ClCompile Include="src\haggle_rules.cpp" />
+    <ClCompile Include="src\haggle_ledger.cpp" />
     <ClCompile Include="src\character_identity.cpp" />
     <ClCompile Include="src\char_key_reader.cpp" />
     <ClCompile Include="src\load_boundary.cpp" />
@@ -181,6 +183,8 @@
     <ClInclude Include="src\mercy_rules.h" />
     <ClInclude Include="src\plea_tracker.h" />
     <ClInclude Include="src\hold_clock.h" />
+    <ClInclude Include="src\haggle_rules.h" />
+    <ClInclude Include="src\haggle_ledger.h" />
     <ClInclude Include="src\identity_registry.h" />
     <ClInclude Include="src\character_identity.h" />
     <ClInclude Include="src\char_key_reader.h" />

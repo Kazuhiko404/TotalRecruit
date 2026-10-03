@@ -82,7 +82,9 @@ Currency ChooseCurrency(const CoreFacts& core);
 bool UniqueTakesMoney(Temperament temperament, Archetype archetype);
 
 // route_cats: the quote, and whether the player can meet it. Fills currency, cats,
-// purse, the reason and willJoin of `verdict`.
+// purse, the reason and willJoin of `verdict`. An NPC offended by a lowball today
+// quotes the marked-up ask (OffendedAsk, haggle_rules.h), and the purse is held
+// against that.
 void ApplyCatsOffer(Verdict* verdict, const PriceInputs& price, const PurseFact& purse,
-                    const Prices& prices);
+                    const HaggleFact& haggle, const Prices& prices);
 } // namespace totalrecruit

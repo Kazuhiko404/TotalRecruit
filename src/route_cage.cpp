@@ -249,7 +249,7 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
 
     case Currency_Cats:
     default:
-        ApplyCatsOffer(&v, extra.price, extra.purse, config.prices);
+        ApplyCatsOffer(&v, extra.price, extra.purse, extra.haggle, config.prices);
         break;
     }
 

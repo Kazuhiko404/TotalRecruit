@@ -37,6 +37,11 @@
   "uniqueMultiplier": 2.0,
   "talentMaxMultiplier": 1.5,
   "premiumMaxMultiplier": 1.6,
+  "haggleEnabled": true,
+  "haggleMinFraction": 0.5,
+  "haggleDiscountWeight": 2.0,
+  "haggleLeverageWeight": 0.5,
+  "haggleOffenceMarkup": 0.2,
 
   "dialoguePackage": "",
   "dialogueRescue": "",

@@ -61,6 +61,11 @@ FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core,
 CageExtra GatherCageExtra(Character* character, const CoreFacts& core,
                           GatherMode mode = Gather_Decide);
 
+// The haggling speaker's weight: the best of Strength, MeleeAttack and Toughness of
+// the player character doing the talking, truncated to a whole point. False when the
+// stats cannot be read; the leverage math itself is HaggleLeverage (haggle_rules.h).
+bool SafeSpeakerBestStat(Character* speaker, int* out);
+
 // Why a character was judged out cold, in the log. Written whenever a verdict
 // turns on medical state, because those are the calls that have been wrong before
 // and the headers cannot say which flag lied.

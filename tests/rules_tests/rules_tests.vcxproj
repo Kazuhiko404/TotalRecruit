@@ -67,6 +67,7 @@
     <ClCompile Include="menu_button_release_tests.cpp" />
     <ClCompile Include="offer_view_tests.cpp" />
     <ClCompile Include="screen_projection_tests.cpp" />
+    <ClCompile Include="haggle_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -76,6 +77,8 @@
     <ClCompile Include="..\..\src\mercy_rules.cpp" />
     <ClCompile Include="..\..\src\plea_tracker.cpp" />
     <ClCompile Include="..\..\src\hold_clock.cpp" />
+    <ClCompile Include="..\..\src\haggle_rules.cpp" />
+    <ClCompile Include="..\..\src\haggle_ledger.cpp" />
     <ClCompile Include="..\..\src\money_rules.cpp" />
     <ClCompile Include="..\..\src\json_merge.cpp" />
     <ClCompile Include="..\..\src\atomic_file.cpp" />

@@ -12,6 +12,7 @@
 #include "readout.h"
 #include "hold_tracking.h"
 #include "insistence.h"
+#include "haggle_ledger.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4091)
@@ -57,11 +58,12 @@ void ResetSessionState()
     ResetHoldClock();
     ResetTalkStates();
     ForgetAllDefeats();
+    SessionHaggleLedger().Clear();
 
     // Last: the ids the keys above were made from.
     CharacterIdentity::AbandonWorldState();
     LogInfo("[identity] load begin: session state cleared (offer window, overlay, readout and cursor targets, "
-            "conversation, mercy, hails, hold clock, insistence, defeats, identity registry).");
+            "conversation, mercy, hails, hold clock, insistence, defeats, haggle offences, identity registry).");
 }
 
 bool Install()

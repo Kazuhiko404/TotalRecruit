@@ -159,7 +159,7 @@ Verdict DecideFreeWorld(const CoreFacts& core, const FreeExtra& extra, const Con
     }
 
     // Everyone else takes a bribe, at a price.
-    ApplyCatsOffer(&v, extra.price, extra.purse, config.prices);
+    ApplyCatsOffer(&v, extra.price, extra.purse, extra.haggle, config.prices);
     return v;
 }
 } // namespace totalrecruit

@@ -257,6 +257,11 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "uniqueMultiplier", &c.prices.uniqueMultiplier);
     AddFloat(f, "talentCraftWeight", &c.prices.craftFamilyWeight);
     AddFloat(f, "talentShadowWeight", &c.prices.shadowFamilyWeight);
+    AddBool(f, "haggleEnabled", &c.prices.haggleEnabled);
+    AddFloat(f, "haggleMinFraction", &c.prices.haggleMinFraction);
+    AddFloat(f, "haggleDiscountWeight", &c.prices.haggleDiscountWeight);
+    AddFloat(f, "haggleLeverageWeight", &c.prices.haggleLeverageWeight);
+    AddFloat(f, "haggleOffenceMarkup", &c.prices.haggleOffenceMarkup);
 
     AddFloat(f, "friendlyRelation", &c.friendlyRelation);
     AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
@@ -431,6 +436,12 @@ void LoadConfig(const std::string& modDirectory)
     // clamp) is pulled back into a range the rules were written for.
     ClampFloat(&g_config.prices.craftFamilyWeight, 0.0f, 10.0f);
     ClampFloat(&g_config.prices.shadowFamilyWeight, 0.0f, 10.0f);
+    // Haggling: a floor above the ask or a negative weight would invert the slider
+    // or the odds.
+    ClampFloat(&g_config.prices.haggleMinFraction, 0.1f, 1.0f);
+    ClampFloat(&g_config.prices.haggleDiscountWeight, 0.0f, 10.0f);
+    ClampFloat(&g_config.prices.haggleLeverageWeight, 0.0f, 5.0f);
+    ClampFloat(&g_config.prices.haggleOffenceMarkup, 0.0f, 2.0f);
     ClampFloat(&g_config.chance.relationWeight, 0.0f, 2.0f);
     ClampInt(&g_config.chance.alliedBonus, 0, 100);
     ClampInt(&g_config.submission.fieldYieldLoyaltyPenalty, 0, 100);

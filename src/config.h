@@ -109,6 +109,22 @@ struct Prices
     float craftFamilyWeight;
     float shadowFamilyWeight;
 
+    // Haggling over a cats price (haggle_rules.h). Off, the quote is take it or
+    // leave it, as before.
+    bool haggleEnabled;
+    // The lowest offer the slider allows, as a fraction of the asking price
+    // (rounded up to 10 cats).
+    float haggleMinFraction;
+    // How many points of acceptance each percent of discount costs: at 2.0 a 20%
+    // lowball starts at 60%.
+    float haggleDiscountWeight;
+    // How much each point of the speaker's best fighting stat over the NPC's
+    // level adds to the acceptance chance (held within +-20).
+    float haggleLeverageWeight;
+    // What a refused lowball adds to the asking price for the rest of that
+    // in-game day, as a fraction: 0.2 is +20%.
+    float haggleOffenceMarkup;
+
     Prices()
         : easyHoursCaged(6.0f),
           catsPerLevel(32),
@@ -127,7 +143,12 @@ struct Prices
           talentMaxMultiplier(1.5f),
           premiumMaxMultiplier(1.6f),
           craftFamilyWeight(1.6f),
-          shadowFamilyWeight(1.3f)
+          shadowFamilyWeight(1.3f),
+          haggleEnabled(true),
+          haggleMinFraction(0.5f),
+          haggleDiscountWeight(2.0f),
+          haggleLeverageWeight(0.5f),
+          haggleOffenceMarkup(0.2f)
     {
     }
 };

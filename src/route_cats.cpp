@@ -1,4 +1,5 @@
 #include "route_decisions.h"
+#include "haggle_rules.h"
 
 namespace totalrecruit
 {
@@ -10,10 +11,10 @@ namespace totalrecruit
 // refusing on the strength of a pointer that would not resolve is the worse
 // failure; the charge itself is all-or-nothing (money_rules.cpp).
 void ApplyCatsOffer(Verdict* verdict, const PriceInputs& price, const PurseFact& purse,
-                    const Prices& prices)
+                    const HaggleFact& haggle, const Prices& prices)
 {
     verdict->currency = Currency_Cats;
-    verdict->cats = FinalPriceInCats(price, prices);
+    verdict->cats = OffendedAsk(FinalPriceInCats(price, prices), haggle.offended, prices);
     verdict->purse = purse.cats;
 
     if (purse.known && purse.cats < verdict->cats)

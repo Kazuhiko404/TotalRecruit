@@ -39,3 +39,4 @@ void RunMenuSlotTests();
 void RunMenuButtonReleaseTests();
 void RunOfferViewTests();
 void RunScreenProjectionTests();
+void RunHaggleRulesTests();

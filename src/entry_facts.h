@@ -104,6 +104,15 @@ struct RollFact
     RollFact() : haveKey(false), key(), dayIndex(0) {}
 };
 
+// Whether this NPC was offended by a lowball today (haggle_ledger.h). Read
+// without minting an id, so a peek sees the raised price too.
+struct HaggleFact
+{
+    bool offended;
+
+    HaggleFact() : offended(false) {}
+};
+
 // What the animal route needs beyond the core.
 struct AnimalExtra
 {
@@ -160,6 +169,7 @@ struct FreeExtra
     RollFact roll;
     PurseFact purse;
     PriceInputs price;
+    HaggleFact haggle;
     AnimalExtra animal;
 };
 
@@ -172,6 +182,7 @@ struct CageExtra
     RollFact roll;
     PurseFact purse;
     PriceInputs price;
+    HaggleFact haggle;
     AnimalExtra animal;
 
     CageExtra() : hoursHeld(0.0f), holdKnown(false) {}

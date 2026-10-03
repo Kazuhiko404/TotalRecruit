@@ -217,6 +217,13 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "unique_multiplier", "Precio de unicos", "Cuanto multiplican su precio los personajes con nombre", 1.0f, 5.0f, 0.25f, 2, &c.prices.uniqueMultiplier);
     regFloat(api, mod, "faction_weight", "Peso de Facción", "Impacto de rep en el precio (0..2)", 0.0f, 2.0f, 0.1f, 1, &c.prices.factionWeight);
 
+    // Regateo: ofrecer menos cats que el precio pedido
+    regBool(api, mod, "haggle_enabled", "Regateo: activo", "Permite ofrecer menos cats que el precio pedido. Apagado, el precio es el que es", &c.prices.haggleEnabled);
+    regFloat(api, mod, "haggle_min_fraction", "Regateo: oferta mínima", "Lo menos que se puede ofrecer, como fraccion del precio pedido", 0.1f, 1.0f, 0.05f, 2, &c.prices.haggleMinFraction);
+    regFloat(api, mod, "haggle_discount_weight", "Regateo: peso del descuento", "Puntos de probabilidad que cuesta cada 1% de descuento", 0.0f, 10.0f, 0.25f, 2, &c.prices.haggleDiscountWeight);
+    regFloat(api, mod, "haggle_leverage_weight", "Regateo: peso de la fuerza", "Cuanto suma cada punto de tu mejor stat de combate sobre el nivel del NPC (tope +-20)", 0.0f, 5.0f, 0.1f, 1, &c.prices.haggleLeverageWeight);
+    regFloat(api, mod, "haggle_offence_markup", "Regateo: recargo por ofensa", "Cuanto sube el precio el resto del dia si el NPC se ofende (0.2 = +20%)", 0.0f, 2.0f, 0.05f, 2, &c.prices.haggleOffenceMarkup);
+
     // Animales: domesticacion por barra de hambre. Cada valor es una fraccion
     // del estomago lleno, asi que lo que se escribe aqui es lo que la barra
     // tiene que alcanzar.

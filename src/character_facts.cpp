@@ -14,6 +14,7 @@
 #include "rescue_memory.h"
 #include "surrender.h"
 #include "route_decisions.h"
+#include "haggle_ledger.h"
 
 #include <kenshi/CharacterAnimal.h>
 #include <kenshi/CharStats.h>
@@ -328,6 +329,21 @@ RollFact MintRollKey(Character* character)
     return fact;
 }
 
+// Whether this NPC was offended by a lowball today. Uses the existing id only
+// (SafeFindCharKey), so a peek or a bystander never mints one; without a key or a
+// clock nobody can have been offended, which reads as the plain price.
+HaggleFact ReadHaggle(Character* character)
+{
+    HaggleFact fact;
+    CharKey key;
+    double nowHours = 0.0;
+    if (SafeFindCharKey(character, &key) && SafeGameHours(&nowHours))
+    {
+        fact.offended = SessionHaggleLedger().IsHaggleLocked(key, DayIndexFromHours(nowHours));
+    }
+    return fact;
+}
+
 // Faction relation only ever shifts the price, and only in Vanilla+: as a gate it
 // would make half the world unrecruitable, which is exactly the problem this mod
 // exists to solve. The arithmetic (and its clamps) is price_rules.cpp.
@@ -392,6 +408,33 @@ Faction* PlayerFaction()
     return faction;
 }
 } // namespace
+
+// Declared in character_facts.h: read by the haggle popup for the speaker.
+bool SafeSpeakerBestStat(Character* speaker, int* out)
+{
+    TR_TRY
+    {
+        if (speaker == NULL)
+        {
+            return false;
+        }
+        CharStats* stats = speaker->getStats();
+        if (stats == NULL)
+        {
+            return false;
+        }
+        const StatsEnumerated weight[3] = { STAT_STRENGTH, STAT_MELEE_ATTACK, STAT_TOUGHNESS };
+        float best = 0.0f;
+        for (int i = 0; i < 3; ++i)
+        {
+            const float v = stats->getStat(weight[i], false);
+            if (v > best) best = v;
+        }
+        *out = (int)best;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
 
 bool SafeReadTraits(Character* character, Traits* out)
 {
@@ -569,6 +612,7 @@ FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core, GatherMod
     extra.relation = ReadRelation(character, PlayerFaction());
     extra.purse = ReadPurse();
     extra.price = GatherPrice(character, core, extra.relation);
+    extra.haggle = ReadHaggle(character);
 
     // The roll's key is only minted when the route can roll at all, so asking
     // about a bystander does not give them an id.
@@ -606,6 +650,7 @@ CageExtra GatherCageExtra(Character* character, const CoreFacts& core, GatherMod
     extra.purse = ReadPurse();
     // The relation is only a price factor here (the cage chance ignores standing).
     extra.price = GatherPrice(character, core, ReadRelation(character, PlayerFaction()));
+    extra.haggle = ReadHaggle(character);
     if (core.animal)
     {
         extra.animal = GatherAnimal(character, core);

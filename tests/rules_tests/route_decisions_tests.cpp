@@ -17,6 +17,7 @@
 #include "chance_rules.h"
 #include "animal_rules.h"
 #include "price_rules.h"
+#include "haggle_rules.h"
 
 using namespace totalrecruit;
 
@@ -558,14 +559,14 @@ void ACatsOfferFollowsThePurse()
     const int quote = FinalPriceInCats(price, kConfig.prices);
 
     Verdict rich;
-    ApplyCatsOffer(&rich, price, Purse(quote), kConfig.prices);
+    ApplyCatsOffer(&rich, price, Purse(quote), HaggleFact(), kConfig.prices);
     CHECK(rich.currency == Currency_Cats);
     CHECK(rich.cats == quote);
     CHECK(rich.willJoin);
     CHECK(rich.reasonKey == Reason_CatsJoin);
 
     Verdict poor;
-    ApplyCatsOffer(&poor, price, Purse(quote - 1), kConfig.prices);
+    ApplyCatsOffer(&poor, price, Purse(quote - 1), HaggleFact(), kConfig.prices);
     CHECK(poor.currency == Currency_Cats);
     CHECK(poor.cats == quote);
     CHECK(poor.purse == quote - 1);
@@ -573,11 +574,36 @@ void ACatsOfferFollowsThePurse()
     CHECK(poor.reasonKey == Reason_CatsAsk);
 }
 
+// haggle-and-daily-roll T2: an NPC offended by a lowball asks more for the rest
+// of that day, and the purse is checked against the raised price.
+void AnOffendedNpcQuotesTheMarkedUpAsk()
+{
+    const char* name = "cats: an offended NPC quotes the asking price plus the offence markup";
+    const PriceInputs price = PriceAtLevel(20);
+    const int quote = FinalPriceInCats(price, kConfig.prices);
+    const int raised = OffendedAsk(quote, true, kConfig.prices);
+    CHECK(raised > quote);
+
+    HaggleFact offended;
+    offended.offended = true;
+
+    Verdict v;
+    ApplyCatsOffer(&v, price, Purse(raised), offended, kConfig.prices);
+    CHECK(v.cats == raised);
+    CHECK(v.willJoin);
+
+    Verdict shortOfIt;
+    ApplyCatsOffer(&shortOfIt, price, Purse(quote), offended, kConfig.prices);
+    CHECK(shortOfIt.cats == raised);
+    CHECK(!shortOfIt.willJoin);
+    CHECK(shortOfIt.reasonKey == Reason_CatsAsk);
+}
+
 void AnUnknownPurseDoesNotBlockTheOffer()
 {
     const char* name = "cats: when the purse cannot be read the offer stands";
     Verdict v;
-    ApplyCatsOffer(&v, PriceAtLevel(20), PurseFact(), kConfig.prices);
+    ApplyCatsOffer(&v, PriceAtLevel(20), PurseFact(), HaggleFact(), kConfig.prices);
     CHECK(v.willJoin);
     CHECK(v.reasonKey == Reason_CatsJoin);
 }
@@ -770,6 +796,16 @@ void EveryoneElseHasAPrice()
     CHECK(!v.willJoin);
     CHECK(v.reasonKey == Reason_CatsAsk);
     CHECK(v.purse == 1);
+}
+
+void AnOffendedBribeCostsMore()
+{
+    const char* name = "free world: an NPC offended today quotes the marked-up bribe";
+    FreeExtra extra = Free(0.0f);
+    extra.haggle.offended = true;
+    const Verdict v = DecideFreeWorld(Core(), extra, kConfig);
+    CHECK(v.currency == Currency_Cats);
+    CHECK(v.cats == OffendedAsk(FinalPriceInCats(extra.price, kConfig.prices), true, kConfig.prices));
 }
 
 // --------------------------------------------------------------------- cage
@@ -969,6 +1005,17 @@ void ABanditKingHasAPrice()
     CHECK(v.willJoin);
 }
 
+void AnOffendedPrisonerCostsMore()
+{
+    const char* name = "cage: a prisoner offended today quotes the marked-up price";
+    CoreFacts core = Prisoner();
+    CageExtra extra = FailingTheRoll(core);
+    extra.haggle.offended = true;
+    const Verdict v = DecideCage(core, extra, kConfig);
+    CHECK(v.currency == Currency_Cats);
+    CHECK(v.cats == OffendedAsk(FinalPriceInCats(extra.price, kConfig.prices), true, kConfig.prices));
+}
+
 void AnOrdinaryPrisonerIsQuotedCats()
 {
     const char* name = "cage: a bandit in a cage is quoted cats and joins when the purse covers it";
@@ -1150,4 +1197,7 @@ void RunRouteDecisionsTests()
     TheCurrencyTable();
     WhoTradesAmongTheNamed();
     RouteFactsAreBuiltFromTheCoreAndTheConfig();
+    AnOffendedNpcQuotesTheMarkedUpAsk();
+    AnOffendedBribeCostsMore();
+    AnOffendedPrisonerCostsMore();
 }
