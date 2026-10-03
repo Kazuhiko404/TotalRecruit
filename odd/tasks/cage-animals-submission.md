@@ -42,7 +42,12 @@ Three requests from the user on 2026-10-03:
 - Food can be offered to an animal that has not been fed by the player, even when it is full.
 - The text is truthful: "no ha comido de tu mano".
 
-**Submission event:** designed after the TotalSparring event exploration (pending).
+**Submission event** (port of TotalSparring's NPC challenge, `src/duel/challenge/`)
+- States `Idle -> Approaching -> Holding (popup) -> Forgiven (fleeing, calm) -> Done`, one event at a time, on a paused-aware real-seconds clock.
+- A sweep every 2 s finds a nearby NPC that newly yields (field-yield or surrender) with a peek, and draws an open field-yield roll once with the key.
+- Calm is per character (end combat, clear temp-enemy marks toward the squad, re-asserted every second), never a faction change.
+- The NPC walks to the squad leader (repath 1 s, arrive at 3 m, timeout = `submissionApproachSeconds`) and opens the popup: ACEPTAR / PERDONAR / RECHAZAR.
+- Accept recruits. Forgive runs 80 m away, calm for `submissionForgiveSeconds`, then restores. Reject wipes defeats, starts a saved reject cooldown (`submissionRejectCooldownHours`) that blocks every route, and marks the leader as an enemy again. The X is no answer: calm in place for the forgive window.
 
 ## Constraints
 - Isolated SOLID modules, no patch-on-patch.
@@ -60,8 +65,9 @@ Three requests from the user on 2026-10-03:
 - [x] **T2 Animals need the player's food.**
   - Route: delegated (writer trigger: routes, ledger, identity bridge, facts, feeding, docs).
   - Evidence: `a13f51e` -- RED observed (18 checks in route_rules / route_decisions), then rules_tests 31/31 suites, 0/61418 failed; TotalRecruit.dll builds with no new warnings. In-game QA pending (`QA.md` 12.20).
-- [ ] **T3 Submitted-NPC join event.** Port TotalSparring's event system.
-  - Route: delegated, after the exploration.
+- [x] **T3 Submitted-NPC join event.** Port TotalSparring's event system.
+  - Route: delegated (writer trigger: new pure rules + tracker, engine director, motion, pacify, popup dispatch, config, docs, mockup).
+  - Evidence: `43f16f0` -- RED observed (28/33 suites, 106 failing checks in submission_rules / submission_tracker / offer_view / reason and readout catalogs), then rules_tests 33/33 suites, 0/61580 failed; TotalRecruit.dll builds with no new warnings. In-game QA pending (`QA.md` 12.21).
 - [ ] **T4 Docs + deploy (with haggle).**
 
 ## Progress / evidence
@@ -71,5 +77,9 @@ Three requests from the user on 2026-10-03:
   - `Tasker.h` and `AI/AITaskSystem.h` both define `taskPriority`: the current-task read moved to `engine_reads.cpp` (`SafeCurrentTask`).
 - **T2** (`a13f51e`). `saved_ints.{h,cpp}`: one table of per-character idata ints (key + `saved(id)` + `restore(id, value)`); `character_identity` loops over it instead of the defeat-only bridge. `feeding_ledger.{h,cpp}`: meals per CharKey (unit: one per successful `FeedCaptive` on an animal), saved as `total_recruit.fed_by_player`. `DecideAnimal` joins only with `fedByPlayer > 0` and fullness at the bar; new `Reason_TameNotFed`. Caged animals go to `DecideAnimal` first in `DecideCage`; `CareVerdict` lost its animal branches (`Reason_AnimalWary`, `Reason_CaredForAnimal` removed); `ChooseEntryRoute` never gives an animal rescue or easy-healthy.
 
+- **T3** (`43f16f0`). Pure: `approach_rules` (TS `ApproachStep`; a busy window waits instead of aborting), `submission_rules` (clock, candidate screen, peek, ask-once-per-beating, calm strikes, hold, forgiven, restore plans, flee point, reject cooldown and its one route predicate), `submission_tracker` (asked / failed roll today / cooldown, saved as `total_recruit.reject_cooldown_until`). Engine: `submission_director` (sweep, walk-up, hold, answers, load reset), `npc_motion` (TS `IssueMoveGuarded`, `StopWalkingGuarded`, stance, `ChallengeRun`), `pacify` calm / hostility, `defeats::ClearDefeats`, `offer_popup` single `Answer` dispatch (X = no decision for a submission). `Reason_RejectCooldown` is checked once at the top of `rules.cpp` Run (cheat included) and in `OfferMercy`.
+  - Surface note: the new reason key needed one row in `src/readout_catalog.cpp` (outside the listed surfaces; its test requires one row per ReasonKey).
+  - Choices: approach walks at the NPC's own pace (only the forgive flight runs); while the forgive window runs no other NPC starts an event.
+
 ## Next step
-T3 -- submitted-NPC join event, after the TotalSparring event exploration. Then T4 (docs + deploy, with haggle). In-game QA of `QA.md` 12.19 and 12.20 is still owed.
+T4 -- docs + deploy (with haggle). In-game QA of `QA.md` 12.19, 12.20 and 12.21 is still owed.
