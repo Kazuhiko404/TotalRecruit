@@ -30,10 +30,12 @@
 // failures always.
 //
 // This module never tells the player anything itself: the callers (the context
-// menu buttons, the popup's GOLPEARLO remedy) do, with CageCommandProblem. That
-// keeps it below recruit_core instead of in a ring with it.
+// menu buttons, the popup's GOLPEAR / NOQUEAR buttons) do, with
+// CageCommandProblem. That keeps it below recruit_core instead of in a ring with it.
 
 #include <string>
+
+#include "cage_command_rules.h"
 
 class Character;
 
@@ -46,9 +48,19 @@ enum CageCommandResult
     CageCommand_Failed     // the order could not be given at all (logged)
 };
 
+// The facts CageCommandsAllowed judges, read for this character now: in the
+// player's cage, down (unconscious or dead), submission.allowBeating. The popup
+// (offer_view.h OfferInput::cage) and the context menu read the same facts.
+CageCommandFacts ReadCageCommandFacts(Character* target);
+
 // Whether Golpear and Noquear apply to this character now: in the player's cage,
 // awake and alive, and submission.allowBeating on (CageCommandsAllowed).
 bool CageCommandsAvailable(Character* target);
+
+// The engine's knockout odds for the selected characters against `target`
+// (PlayerInterface::getPlayerTaskProbability, STEALTH_KNOCKOUT), as the engine
+// reports them (KnockoutPercent reads either scale). False when it gives none.
+bool ReadKnockoutOdds(Character* target, float* out);
 
 // The player's selected character, awake and not the target. NULL when nobody
 // usable is selected.

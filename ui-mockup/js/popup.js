@@ -160,19 +160,29 @@ function layoutOffer(vm) {
     y += plateH;
   }
 
-  // Buttons: Accept, Extra, Cancel share the row; Cancel alone sits on the right.
+  // Buttons: Accept, Extra, Golpear, Noquear, Cancel share the row; Cancel alone sits on
+  // the right. More than buttonsPerRow: the others share the first row and Cancel sits
+  // alone on the right of a second one (LayoutButtonsUnguarded).
   y += L.sectionGap;
-  var buttons = [];
-  if (vm.accept) buttons.push([vm.accept, 'accept']);
-  if (vm.extra) buttons.push([vm.extra, 'extra']);
-  buttons.push([vm.cancel, 'cancel']);
-  if (buttons.length === 1) {
-    front += ppButton(vm.cancel, 'cancel', W - m - L.aloneW, y, L.aloneW, L.buttonH);
-  } else {
+  var actions = [];
+  if (vm.accept) actions.push([vm.accept, 'accept']);
+  if (vm.extra) actions.push([vm.extra, 'extra']);
+  if (vm.beat) actions.push([vm.beat, 'extra']);
+  if (vm.knockout) actions.push([vm.knockout, 'extra']);
+  function row(buttons) {
     var bw = Math.floor((W - 2 * m - (buttons.length - 1) * L.buttonGap) / buttons.length);
     buttons.forEach(function (b, i) {
       front += ppButton(b[0], b[1], m + i * (bw + L.buttonGap), y, bw, L.buttonH);
     });
+  }
+  if (actions.length > 0 && actions.length + 1 <= L.buttonsPerRow) {
+    row(actions.concat([[vm.cancel, 'cancel']]));
+  } else {
+    if (actions.length > 0) {
+      row(actions);
+      y += L.buttonH + L.buttonGap;
+    }
+    front += ppButton(vm.cancel, 'cancel', W - m - L.aloneW, y, L.aloneW, L.buttonH);
   }
   var H = y + L.buttonH + m;
 

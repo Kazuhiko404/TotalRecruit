@@ -169,10 +169,8 @@ void RefusalWithRemedyOffersIt()
     CHECK(v.acceptLabel.empty());
     CHECK(v.cancelLabel == t.close);
     CHECK(v.reasonText == "Hambriento: dale de comer");
-
-    in.remedy = OfferRemedy_Beat;
-    v = BuildOfferView(in, t);
-    CHECK(v.extraLabel == t.beat);
+    // Not in the player's cage: the cage commands are not on offer.
+    CHECK(v.beatLabel.empty() && v.knockoutLabel.empty());
 
     in.remedy = OfferRemedy_FeedMore;
     in.afterRemedy = true;
@@ -272,7 +270,7 @@ void MercyHasThreeAnswers()
 {
     const char* name = "mercy plea: plea as body, Accept / Ignore / Decline";
     const OfferTexts t = Texts();
-    OfferView v = BuildMercyOfferView("Bandido", "Bandido: Piedad.", true, t);
+    OfferView v = BuildMercyOfferView("Bandido", "Bandido: Piedad.", true, false, t);
     CHECK(v.route == ReadoutRoute_Mercy);
     CHECK(v.routeTag == t.routeMercy);
     CHECK(v.bodyLine == "Bandido: Piedad.");
@@ -281,8 +279,146 @@ void MercyHasThreeAnswers()
     CHECK(v.cancelLabel == t.decline);
     CHECK(!v.showPrice && v.reasonText.empty());
 
-    v = BuildMercyOfferView("Bandido", "Bandido: Piedad.", false, t);
+    v = BuildMercyOfferView("Bandido", "Bandido: Piedad.", false, false, t);
     CHECK(v.extraLabel.empty());
+}
+
+// User report 2026-10-03: "if he is in a cage, don't allow ignore or forgive,
+// since he can't leave". A caged plea is take them or refuse; never IGNORAR.
+void CagedPleaHasNoIgnore()
+{
+    const char* name = "mercy plea in a cage: Accept / Decline, no IGNORAR";
+    const OfferTexts t = Texts();
+    const OfferView v = BuildMercyOfferView("Bandido", "Bandido: Piedad.", true, true, t);
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(v.extraLabel.empty());
+    CHECK(v.cancelLabel == t.decline);
+    CHECK(v.beatLabel.empty() && v.knockoutLabel.empty());
+}
+
+// The defiant Holy Warden of the report: Cautiverio, 87%, in the player's cage,
+// awake, beating allowed. The popup gives the native cage commands.
+OfferInput CagedDefiant()
+{
+    OfferInput in;
+    in.name = "Holy Warden";
+    in.verdict.viaCaptivity = true;
+    in.verdict.currency = Currency_Submission;
+    in.verdict.reasonKey = Reason_Defiant;
+    in.verdict.reason = "sigue desafiante: d\xc3\xa9jalo con hambre o h\xc3\xa9relo";
+    in.verdict.rolled = true;
+    in.verdict.chancePercent = 87;
+    in.cage.allowBeating = true;
+    in.cage.inPlayerCage = true;
+    in.cage.down = false;
+    return in;
+}
+
+void CagedRefusalOffersTheCageCommands()
+{
+    const char* name = "caged refusal: GOLPEAR and NOQUEAR <odds> beside CERRAR";
+    const OfferTexts t = Texts();
+    OfferInput in = CagedDefiant();
+    in.knockoutOddsKnown = true;
+    in.knockoutOdds = 0.72f;
+    OfferView v = BuildOfferView(in, t);
+    CHECK(v.route == ReadoutRoute_Captivity);
+    CHECK(v.reasonRefused);
+    CHECK(v.reasonText == "Sigue desafiante: d\xc3\xa9jalo con hambre o h\xc3\xa9relo");
+    CHECK(v.acceptLabel.empty());
+    CHECK(v.extraLabel.empty());
+    CHECK(v.beatLabel == t.beat);
+    CHECK(v.knockoutLabel == t.knockout + " 72%");
+    CHECK(v.cancelLabel == t.close);
+
+    // No odds from the engine: the plain label, as in the context menu.
+    in.knockoutOddsKnown = false;
+    v = BuildOfferView(in, t);
+    CHECK(v.knockoutLabel == t.knockout);
+}
+
+void CagedHungryOffersFoodAndTheCageCommands()
+{
+    const char* name = "caged and hungry with food: DARLE COMIDA + GOLPEAR + NOQUEAR + CERRAR";
+    const OfferTexts t = Texts();
+    OfferInput in = CagedDefiant();
+    in.verdict.currency = Currency_Care;
+    in.verdict.wantsFood = true;
+    in.verdict.reasonKey = Reason_Starving;
+    in.verdict.reason = "hambriento: dale de comer";
+    in.remedy = OfferRemedy_Feed;
+    const OfferView v = BuildOfferView(in, t);
+    CHECK(v.extraLabel == t.feed);
+    CHECK(v.beatLabel == t.beat);
+    CHECK(v.knockoutLabel == t.knockout);
+    CHECK(v.cancelLabel == t.close);
+    CHECK(v.acceptLabel.empty());
+}
+
+void CageCommandsFollowTheContextMenuRule()
+{
+    const char* name = "caged refusal: cage commands only where the context menu has them";
+    const OfferTexts t = Texts();
+
+    OfferInput outside = CagedDefiant();
+    outside.cage.inPlayerCage = false;
+    OfferView v = BuildOfferView(outside, t);
+    CHECK(v.beatLabel.empty() && v.knockoutLabel.empty());
+
+    OfferInput down = CagedDefiant();
+    down.cage.down = true;
+    v = BuildOfferView(down, t);
+    CHECK(v.beatLabel.empty() && v.knockoutLabel.empty());
+
+    // allowBeating off: no commands, and the reason no longer says to hurt them.
+    OfferInput gentle = CagedDefiant();
+    gentle.cage.allowBeating = false;
+    v = BuildOfferView(gentle, t);
+    CHECK(v.beatLabel.empty() && v.knockoutLabel.empty());
+    CHECK(v.reasonText == t.reasonDefiantNoBeat);
+    CHECK(v.reasonText.find("h\xc3\xa9relo") == std::string::npos);
+    CHECK(v.reasonRefused);
+    CHECK(v.cancelLabel == t.close);
+}
+
+void CagedYesKeepsAcceptAndCancel()
+{
+    const char* name = "caged yes: ACEPTAR / CANCELAR only, no cage commands";
+    const OfferTexts t = Texts();
+    OfferInput in = CagedDefiant();
+    in.verdict.willJoin = true;
+    in.verdict.reasonKey = Reason_Intimidated;
+    const OfferView v = BuildOfferView(in, t);
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(v.cancelLabel == t.cancel);
+    CHECK(v.extraLabel.empty());
+    CHECK(v.beatLabel.empty() && v.knockoutLabel.empty());
+}
+
+void CageCommandsNeverRideTheSlider()
+{
+    const char* name = "caged cats haggle: the slider's row, no cage commands";
+    const OfferTexts t = Texts();
+    OfferInput in;
+    in.name = "Kareem";
+    in.verdict = CatsVerdict(false, 9570, 3200);
+    in.verdict.viaCaptivity = true;
+    in.purseKnown = true;
+    in.purse = 12000;
+    in.haggle.enabled = true;
+    in.haggle.leverage = 8;
+    in.cage.inPlayerCage = true;
+    OfferView v = BuildOfferView(in, t);
+    CHECK(v.showSlider);
+    CHECK(v.beatLabel.empty() && v.knockoutLabel.empty());
+
+    // Haggling off, the purse short: a plain refusal, so the commands are there.
+    in.haggle.enabled = false;
+    in.purse = 3200;
+    v = BuildOfferView(in, t);
+    CHECK(!v.showSlider);
+    CHECK(v.acceptLabel.empty());
+    CHECK(v.beatLabel == t.beat && v.knockoutLabel == t.knockout);
 }
 
 void DefaultsAreComplete()
@@ -290,7 +426,9 @@ void DefaultsAreComplete()
     const char* name = "every built-in text is present";
     const OfferTexts t = Texts();
     CHECK(!t.title.empty() && !t.accept.empty() && !t.cancel.empty() && !t.close.empty());
-    CHECK(!t.notNow.empty() && !t.feed.empty() && !t.feedMore.empty() && !t.beat.empty());
+    CHECK(!t.notNow.empty() && !t.feed.empty() && !t.feedMore.empty());
+    CHECK(t.beat == "GOLPEAR" && t.knockout == "NOQUEAR");
+    CHECK(!t.reasonDefiantNoBeat.empty());
     CHECK(!t.ignore.empty() && !t.decline.empty() && !t.free.empty());
     CHECK(!t.priceLabel.empty() && !t.purseLabel.empty() && !t.chanceLabel.empty());
     CHECK(t.catsValue.find("{cats}") != std::string::npos);
@@ -501,10 +639,10 @@ void FreeRoutesNeverHaggle()
     v = BuildOfferView(animal, t);
     CHECK(!v.showSlider && v.haggleLine.empty());
 
-    v = BuildMercyOfferView("Bandido", "Bandido: Piedad.", true, t);
+    v = BuildMercyOfferView("Bandido", "Bandido: Piedad.", true, false, t);
     CHECK(!v.showSlider && v.haggleLine.empty() && !v.acceptIsOffer);
 
-    v = BuildSubmissionOfferView("Bandido", t);
+    v = BuildSubmissionOfferView("Bandido", false, t);
     CHECK(!v.showSlider && v.haggleLine.empty() && !v.acceptIsOffer);
 }
 
@@ -514,7 +652,7 @@ void SubmissionHasAcceptForgiveReject()
 {
     const char* name = "submission event: kneeling body, free, Accept / Forgive / Reject";
     const OfferTexts t = Texts();
-    const OfferView v = BuildSubmissionOfferView("Bandido", t);
+    const OfferView v = BuildSubmissionOfferView("Bandido", false, t);
     CHECK(v.route == ReadoutRoute_FieldYield);
     CHECK(v.routeTag == t.routeFieldYield);
     CHECK(v.name == "Bandido");
@@ -527,6 +665,18 @@ void SubmissionHasAcceptForgiveReject()
     CHECK(v.cancelLabel == t.decline);
     CHECK(t.forgive == "PERDONAR");
     CHECK(t.bodySubmitted.find("{name}") != std::string::npos);
+}
+
+// The director screens out the caged (ScreenCandidate), but the player can pick
+// the NPC up on the way: whoever cannot leave is never offered PERDONAR.
+void CagedSubmissionHasNoForgive()
+{
+    const char* name = "submission event, not free to leave: Accept / Reject, no PERDONAR";
+    const OfferTexts t = Texts();
+    const OfferView v = BuildSubmissionOfferView("Bandido", true, t);
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(v.extraLabel.empty());
+    CHECK(v.cancelLabel == t.decline);
 }
 } // namespace
 
@@ -545,6 +695,12 @@ void RunOfferViewTests()
     GiftIsNotRed();
     AnimalStomachIsNotMoney();
     MercyHasThreeAnswers();
+    CagedPleaHasNoIgnore();
+    CagedRefusalOffersTheCageCommands();
+    CagedHungryOffersFoodAndTheCageCommands();
+    CageCommandsFollowTheContextMenuRule();
+    CagedYesKeepsAcceptAndCancel();
+    CageCommandsNeverRideTheSlider();
     DefaultsAreComplete();
     OddsTonesSplitAtSeventyAndThirty();
     HaggleOffKeepsTheTakeItOrLeaveItWindow();
@@ -555,4 +711,5 @@ void RunOfferViewTests()
     OffendedTodayShowsTheLockNotTheSlider();
     FreeRoutesNeverHaggle();
     SubmissionHasAcceptForgiveReject();
+    CagedSubmissionHasNoForgive();
 }

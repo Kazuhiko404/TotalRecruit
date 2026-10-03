@@ -145,6 +145,8 @@ Con `chancePerDefeat=12`, la derrota suma `12 / resolve`:
 
 ## 4. Golpear al prisionero (R2.3)
 
+> Superado por 12.19 y 12.22: GOLPEARLO (desmayo forzado con enfriamiento) ya no existe; la ventana ofrece GOLPEAR / NOQUEAR, las ordenes nativas.
+
 | # | Qué hacer | Esperado | Falla si |
 |---|---|---|---|
 | B1 | Click a un prisionero **tuyo** despierto que se niega | Aparece el botón **GOLPEARLO** | No aparece |
@@ -566,8 +568,8 @@ Toda salida de Hablar abre la misma ventana; ninguna termina en una notificacion
 | P1 | Hablar a un prisionero que se une por cats, con plata de sobra | Marco de Kenshi con titulo "Reclutamiento" en bronce; adentro placa oscura, retrato enmarcado, nombre en bronce y etiqueta "Cautiverio" ambar; "se unira a tu grupo por N cats"; caja PRECIO (ambar) / TIENES / PROBABILIDAD si tiro el dado; botones ACEPTAR (ambar) y CANCELAR. ACEPTAR cobra una vez ("pagaste N cats") y lo suma |
 | P2 | El mismo con menos plata que el precio | Misma ventana; TIENES en rojo; linea roja "No te alcanzan los cats (te faltan N)"; **sin** ACEPTAR, solo CANCELAR a la derecha. Ninguna notificacion |
 | P3 | Hablar a un soldado o paladin libre que se niega por lealtad / honor | Etiqueta "Libre"; "no se une todavia."; el motivo en rojo con barra roja; solo CERRAR |
-| P4 | Hablar a un prisionero hambriento llevando comida | Motivo en rojo; DARLE COMIDA + CERRAR. DARLE COMIDA alimenta y reabre la ventana con el nuevo veredicto (Cancelar dice AHORA NO; si sigue con hambre, DARLE MAS COMIDA). Sin comida y con derrota posible: GOLPEARLO |
-| P5 | Dejar a un enemigo lisiado para que pida piedad | Etiqueta "Piedad"; la suplica como cuerpo; ACEPTAR / IGNORAR / RECHAZAR (IGNORAR solo si su temperamento lo permite) |
+| P4 | Hablar a un prisionero hambriento llevando comida | Motivo en rojo; DARLE COMIDA + CERRAR. DARLE COMIDA alimenta y reabre la ventana con el nuevo veredicto (Cancelar dice AHORA NO; si sigue con hambre, DARLE MAS COMIDA). En tu jaula, despierto y con `allowBeating`: ademas GOLPEAR y NOQUEAR (12.22) |
+| P5 | Dejar a un enemigo lisiado para que pida piedad | Etiqueta "Piedad"; la suplica como cuerpo; ACEPTAR / IGNORAR / RECHAZAR (IGNORAR solo si su temperamento lo permite y no esta enjaulado, encadenado ni cargado) |
 | P6 | Rescatar a alguien (curarlo cuando esta tirado) y hablarle | Etiqueta "Rescate"; PRECIO "Gratis" en verde; ACEPTAR / CANCELAR |
 | P7 | Vencer 2 veces a un bandido hasta que se rinda y hablarle | Etiqueta "Sometido" (desde 12.16; "Rendicion" queda para el que se rinde antes que morir); PRECIO "Gratis"; PROBABILIDAD con el % tirado; ACEPTAR / CANCELAR |
 | P8 | En P1, la X del titulo | Igual que CANCELAR: "lo dejaste donde estaba", no cobra |
@@ -650,7 +652,7 @@ Golpear y Noquear son ordenes del propio juego (`BEAT_CAGE_OCCUPANT`, `STEALTH_K
 | C4 | Noquear | El seleccionado intenta el noqueo sigiloso; sale o no segun su habilidad (el % del boton) | `[cage] ... knockout ordered (task 507, ...)` y `... knockout via task` o `via fallback` |
 | C5 | Cuando el preso cae por C3 o C4 | La derrota cuenta para el jugador aunque el juego no nombre a nadie como ganador | `[defeat-hook] knockout fired for <preso>`, `[defeat] credited to the player explicitly (cage command): <preso>` (o un `defeated by the player` normal) |
 | C6 | Golpear o Noquear sin nadie de tu grupo seleccionado | "Selecciona a alguien de tu grupo para hacerlo"; no pasa nada mas | — |
-| C7 | Rechazo en la ventana con remedio **GOLPEARLO** | La ventana se cierra y el seleccionado va a golpearlo (la misma orden que C3); sin seleccionado, el mensaje de C6 | igual que C3 |
+| C7 | Rechazo en la ventana de un preso de tu jaula: **GOLPEAR** o **NOQUEAR** (ver 12.22) | La ventana se cierra y el seleccionado va a golpearlo / noquearlo (la misma orden que C3 / C4); sin seleccionado, el mensaje de C6 | igual que C3 / C4 |
 | C8 | Anotar si alguna vez aparece `via fallback` y para que orden | Evidencia: si el juego no toma `BEAT_CAGE_OCCUPANT` / `STEALTH_KNOCKOUT` desde un plugin, el respaldo es lo que se ve; reportar tambien el valor de `checkPlayerOrderForProblems` | `via fallback` |
 | C9 | Dar la orden y cargar un save antes de que se resuelva | Nada queda apuntando a nadie | `load begin: session state cleared (... cage command watch and credits ...)` |
 
@@ -692,3 +694,20 @@ Un NPC vencido que se rinde (derrotas >= `submissionDefeatsToBreak` y la tirada 
 | S14 | Cargar un save mientras camina o con la ventana abierta | Nada queda colgado; el NPC del mundo cargado no recuerda el evento | `load begin: session state cleared (... submission event ... reject cooldowns ...)` |
 | S15 | Vencer al mismo NPC otra vez despues de PERDONAR | Vuelve a acercarse (una vez por paliza, no una vez por sesion) | `submitted (...)` de nuevo |
 | S16 | `submissionEventEnabled` apagado en Mod Hub | Ningun NPC viene; Hablar sigue igual | sin `[submission]` |
+
+### 12.22 La ventana de un preso: GOLPEAR / NOQUEAR, nunca IGNORAR / PERDONAR (fix tras T3)
+
+Reporte del usuario (2026-10-03): un "Holy Warden" en tu jaula, Cautiverio 87%, "Sigue desafiante: dejalo con hambre o hierelo", y solo CERRAR. Regla: todo rechazo de un preso para el que el menu contextual ofreceria Golpear / Noquear (en tu jaula, despierto, `allowBeating`; `CageCommandsAllowed`) lleva GOLPEAR y NOQUEAR en la ventana. Quien no puede irse (jaula, cadenas, cargado) nunca ve IGNORAR ni PERDONAR. Mockup: `ui-mockup/readout.html` seccion 5, "Caged and defiant", "Caged and hungry", "Mercy plea from someone who cannot leave".
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| W1 | Hablar con un preso **despierto** y desafiante en tu jaula, con uno de los tuyos seleccionado | Motivo en rojo "...dejalo con hambre o hierelo"; botones GOLPEAR, "NOQUEAR NN%" (el mismo % que el menu contextual) y CERRAR, en una fila | — |
+| W2 | GOLPEAR en W1 | La ventana se cierra; el seleccionado va a golpearlo (como C3) | `[cage] ... beat ordered ...` |
+| W3 | NOQUEAR en W1 | La ventana se cierra; el seleccionado intenta el noqueo (como C4) | `[cage] ... knockout ordered ...` |
+| W4 | W2 / W3 sin nadie seleccionado | "Selecciona a alguien de tu grupo para hacerlo" | — |
+| W5 | El mismo preso con hambre, llevando comida | DARLE COMIDA, GOLPEAR, NOQUEAR en la primera fila y CERRAR solo a la derecha en una segunda | — |
+| W6 | Un preso de tu jaula que **si** se une (intimidado, alimentado y curado...) | Solo ACEPTAR / CANCELAR | — |
+| W7 | `allowBeating` apagado (Mod Hub "Sumision: permitir golpear") y W1 | Sin GOLPEAR ni NOQUEAR; el motivo dice "Sigue desafiante: dejalo con hambre" (no pide herirlo) | — |
+| W8 | Preso inconsciente en tu jaula, o un preso en la jaula de otro | Sin GOLPEAR ni NOQUEAR (como C2) | — |
+| W9 | Un preso de tu jaula lisiado que pide piedad (si llega a pasar) | ACEPTAR / RECHAZAR, **nunca** IGNORAR | — |
+| W10 | Durante el evento de 12.21, levantar (cargar) al NPC antes de que llegue | Si la ventana se abre, ACEPTAR / RECHAZAR, **nunca** PERDONAR | — |

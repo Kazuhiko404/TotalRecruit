@@ -7,6 +7,7 @@
 #include "feeding.h"
 #include "log.h"
 #include "mercy.h"
+#include "cage_commands.h"
 #include "submission_director.h"
 #include "ui_style.h"
 #include "flat_slider.h"
@@ -39,6 +40,8 @@ const char* const kReasonName   = "TR_OfferReason";
 const char* const kAcceptName   = "TR_OfferAccept";
 const char* const kDeclineName  = "TR_OfferDecline";
 const char* const kExtraName    = "TR_OfferExtra";
+const char* const kBeatName     = "TR_OfferBeat";
+const char* const kKnockoutName = "TR_OfferKnockout";
 const char* const kPortraitName = "TR_OfferPortrait";
 const char* const kSliderName   = "TR_OfferSlider";
 
@@ -67,6 +70,9 @@ const int kReasonPadY   = 7;
 const int kButtonHeight = 32;
 const int kButtonGap    = 8;
 const int kAloneButtonW = 150;
+// More buttons than this and the closing one wraps alone to a second row, on the
+// right (POPUP_LAYOUT buttonsPerRow): five across would not hold DARLE COMIDA.
+const int kButtonsPerRow = 3;
 const int kInfoRows     = 3;
 // The haggle section (POPUP_LAYOUT haggle*).
 const int kHaggleRowH   = 24;
@@ -96,6 +102,8 @@ struct Popup
     MyGUI::Widget* reasonBar;
     FlatButton accept;
     FlatButton extra;
+    FlatButton beat;
+    FlatButton knockout;
     FlatButton cancel;
 
     // Over the fills.
@@ -134,6 +142,8 @@ MyGUI::delegates::IDelegate2<MyGUI::Window*, const std::string&>* g_closeDelegat
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_acceptDelegate = NULL;
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_declineDelegate = NULL;
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_extraDelegate = NULL;
+MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_beatDelegate = NULL;
+MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_knockoutDelegate = NULL;
 
 Character* g_subject = NULL;
 bool g_open = false;
@@ -309,6 +319,8 @@ bool BuildBodyUnguarded()
     p.reasonBar = MakeFill(c, kDanger);
     MakeFlatButtonPlates(c, kAmber, NULL, &p.accept);
     MakeFlatButtonPlates(c, kSumi, &kAmber, &p.extra);
+    MakeFlatButtonPlates(c, kSumi, &kAmber, &p.beat);
+    MakeFlatButtonPlates(c, kSumi, &kAmber, &p.knockout);
     MakeFlatButtonPlates(c, kLine, &kGoldDim, &p.cancel);
     g_slider.MakeFills(c);
 
@@ -340,6 +352,8 @@ bool BuildBodyUnguarded()
 
     MakeFlatButtonCaption(c, kAcceptName, kMediumFont, kLacquer, &p.accept);
     MakeFlatButtonCaption(c, kExtraName, kMediumFont, kAmber, &p.extra);
+    MakeFlatButtonCaption(c, kBeatName, kMediumFont, kAmber, &p.beat);
+    MakeFlatButtonCaption(c, kKnockoutName, kMediumFont, kAmber, &p.knockout);
     MakeFlatButtonCaption(c, kDeclineName, kMediumFont, kText, &p.cancel);
     g_slider.MakeSurface(c, kSliderName);
 
@@ -351,7 +365,8 @@ bool BuildBodyUnguarded()
     }
 
     return p.plate != NULL && p.body != NULL && p.accept.button != NULL &&
-           p.extra.button != NULL && p.cancel.button != NULL;
+           p.extra.button != NULL && p.beat.button != NULL && p.knockout.button != NULL &&
+           p.cancel.button != NULL;
 }
 
 bool SafeBuildBody()
@@ -364,6 +379,8 @@ void OnAccept(MyGUI::Widget* sender);
 void OnDecline(MyGUI::Widget* sender);
 void OnWindowButton(MyGUI::Window* sender, const std::string& button);
 void OnExtra(MyGUI::Widget* sender);
+void OnBeat(MyGUI::Widget* sender);
+void OnKnockout(MyGUI::Widget* sender);
 void OnSliderChange(int step);
 
 bool BindButtons()
@@ -379,9 +396,13 @@ bool BindButtons()
         g_acceptDelegate = MyGUI::newDelegate(&OnAccept);
         g_declineDelegate = MyGUI::newDelegate(&OnDecline);
         g_extraDelegate = MyGUI::newDelegate(&OnExtra);
+        g_beatDelegate = MyGUI::newDelegate(&OnBeat);
+        g_knockoutDelegate = MyGUI::newDelegate(&OnKnockout);
         g_ui.accept.button->eventMouseButtonClick += g_acceptDelegate;
         g_ui.cancel.button->eventMouseButtonClick += g_declineDelegate;
         g_ui.extra.button->eventMouseButtonClick += g_extraDelegate;
+        g_ui.beat.button->eventMouseButtonClick += g_beatDelegate;
+        g_ui.knockout.button->eventMouseButtonClick += g_knockoutDelegate;
         return true;
     }
     TR_CATCH { return false; }
@@ -400,6 +421,14 @@ void Unbind()
     if (g_ui.extra.button != NULL && g_extraDelegate != NULL)
     {
         g_ui.extra.button->eventMouseButtonClick -= g_extraDelegate;
+    }
+    if (g_ui.beat.button != NULL && g_beatDelegate != NULL)
+    {
+        g_ui.beat.button->eventMouseButtonClick -= g_beatDelegate;
+    }
+    if (g_ui.knockout.button != NULL && g_knockoutDelegate != NULL)
+    {
+        g_ui.knockout.button->eventMouseButtonClick -= g_knockoutDelegate;
     }
     if (g_ui.root != NULL && g_closeDelegate != NULL)
     {
@@ -485,6 +514,8 @@ void HideAllUnguarded()
     for (int i = 0; i < kInfoRows; ++i) { Hide(p.infoLabel[i]); Hide(p.infoValue[i]); }
     ShowButton(p.accept, false);
     ShowButton(p.extra, false);
+    ShowButton(p.beat, false);
+    ShowButton(p.knockout, false);
     ShowButton(p.cancel, false);
     g_slider.Hide();
 }
@@ -550,36 +581,59 @@ int LayoutHaggleUnguarded(const OfferView& view, int y)
     return y;
 }
 
-// Accept (or OFRECER), Extra, Cancel share the row; Cancel alone sits on the right.
-void LayoutButtonsUnguarded(const OfferView& view, int y)
+// `count` buttons share one row across the window, in order.
+void PlaceButtonRow(const FlatButton* const* order, const std::string* const* captions,
+                    int count, int y)
 {
-    Popup& p = g_ui;
     const int W = kClientWidth;
     const int m = kMargin;
-    ShowButton(p.accept, false);
-    ShowButton(p.extra, false);
-    ShowButton(p.cancel, false);
-
-    const FlatButton* order[3] = { NULL, NULL, NULL };
-    const std::string* captions[3] = { NULL, NULL, NULL };
-    int count = 0;
-    if (!view.acceptLabel.empty()) { order[count] = &p.accept; captions[count] = &view.acceptLabel; ++count; }
-    if (!view.extraLabel.empty())  { order[count] = &p.extra;  captions[count] = &view.extraLabel;  ++count; }
-    order[count] = &p.cancel;
-    captions[count] = &view.cancelLabel;
-    ++count;
-    if (count == 1)
-    {
-        SetButtonCaption(p.cancel, view.cancelLabel);
-        PlaceButton(p.cancel, W - m - kAloneButtonW, y, kAloneButtonW, kButtonHeight);
-        return;
-    }
     const int bw = (W - 2 * m - (count - 1) * kButtonGap) / count;
     for (int i = 0; i < count; ++i)
     {
         SetButtonCaption(*order[i], *captions[i]);
         PlaceButton(*order[i], m + i * (bw + kButtonGap), y, bw, kButtonHeight);
     }
+}
+
+// Accept (or OFRECER), Extra, Golpear, Noquear, Cancel share the row; Cancel alone
+// sits on the right. More than kButtonsPerRow: the others share the first row and
+// Cancel sits alone on the right of a second one. Returns the y under the buttons.
+int LayoutButtonsUnguarded(const OfferView& view, int y)
+{
+    Popup& p = g_ui;
+    const int W = kClientWidth;
+    const int m = kMargin;
+    ShowButton(p.accept, false);
+    ShowButton(p.extra, false);
+    ShowButton(p.beat, false);
+    ShowButton(p.knockout, false);
+    ShowButton(p.cancel, false);
+
+    const FlatButton* order[5] = { NULL, NULL, NULL, NULL, NULL };
+    const std::string* captions[5] = { NULL, NULL, NULL, NULL, NULL };
+    int count = 0;
+    if (!view.acceptLabel.empty())   { order[count] = &p.accept;   captions[count] = &view.acceptLabel;   ++count; }
+    if (!view.extraLabel.empty())    { order[count] = &p.extra;    captions[count] = &view.extraLabel;    ++count; }
+    if (!view.beatLabel.empty())     { order[count] = &p.beat;     captions[count] = &view.beatLabel;     ++count; }
+    if (!view.knockoutLabel.empty()) { order[count] = &p.knockout; captions[count] = &view.knockoutLabel; ++count; }
+    const int actions = count;
+    order[count] = &p.cancel;
+    captions[count] = &view.cancelLabel;
+    ++count;
+
+    if (count <= kButtonsPerRow && actions > 0)
+    {
+        PlaceButtonRow(order, captions, count, y);
+        return y + kButtonHeight;
+    }
+    if (actions > 0)
+    {
+        PlaceButtonRow(order, captions, actions, y);
+        y += kButtonHeight + kButtonGap;
+    }
+    SetButtonCaption(p.cancel, view.cancelLabel);
+    PlaceButton(p.cancel, W - m - kAloneButtonW, y, kAloneButtonW, kButtonHeight);
+    return y + kButtonHeight;
 }
 
 MyGUI::Colour TagColour(ReadoutRoute route)
@@ -697,11 +751,10 @@ int LayoutUnguarded(const OfferView& view)
         y += plateH;
     }
 
-    // Buttons: Accept, Extra, Cancel share the row; Cancel alone sits right.
+    // Buttons: one row, or two when there are more than kButtonsPerRow.
     y += kSectionGap;
     g_buttonY = y;
-    LayoutButtonsUnguarded(view, y);
-    const int H = y + kButtonHeight + m;
+    const int H = LayoutButtonsUnguarded(view, y) + m;
 
     // The plate last to be sized, first in paint order (created first).
     Place(p.plate, 0, 0, W, H);
@@ -790,6 +843,9 @@ enum OfferAnswer
     Answer_Accept,
     Answer_Extra,
     Answer_Decline,
+    // The cage commands (an ordinary offer only: BuildOfferView alone sets them).
+    Answer_Beat,
+    Answer_Knockout,
     // The title-bar X. The same as Decline, except for a submission, where it
     // is no decision at all (submission_director.h).
     Answer_Close
@@ -832,6 +888,21 @@ void AnswerSubmission(Character* npc, OfferAnswer answer)
     case Answer_Extra:   ForgiveSubmission(npc); return;
     case Answer_Decline: RejectSubmission(npc); return;
     case Answer_Close:   DismissSubmission(npc); return;
+    default:             return;
+    }
+}
+
+// GOLPEAR / NOQUEAR: the very orders of the context menu's Golpear / Noquear,
+// given to the selected character; the engine decides how it goes. The window
+// is already closed: the order is the answer. Nobody selected says so.
+void OrderCageCommand(Character* npc, OfferAnswer answer)
+{
+    const CageCommandResult result = (answer == Answer_Knockout)
+                                         ? OrderSelectedToKnockout(npc)
+                                         : OrderSelectedToBeat(npc);
+    if (result != CageCommand_Issued)
+    {
+        TellPlayer(CageCommandProblem(result), true);
     }
 }
 
@@ -854,6 +925,10 @@ void AnswerPlain(Character* npc, OfferAnswer answer, bool offering, int offer)
         return;
     case Answer_Extra:
         HelpCaptive(npc);
+        return;
+    case Answer_Beat:
+    case Answer_Knockout:
+        OrderCageCommand(npc, answer);
         return;
     default:
         CompleteOffer(npc, false);
@@ -904,6 +979,16 @@ void OnDecline(MyGUI::Widget* /*sender*/)
 void OnExtra(MyGUI::Widget* /*sender*/)
 {
     Answer(Answer_Extra);
+}
+
+void OnBeat(MyGUI::Widget* /*sender*/)
+{
+    Answer(Answer_Beat);
+}
+
+void OnKnockout(MyGUI::Widget* /*sender*/)
+{
+    Answer(Answer_Knockout);
 }
 
 // The window's screen rectangle as drawn now (the player may have dragged it).
@@ -1073,6 +1158,8 @@ void ShutdownOfferPopup()
     g_acceptDelegate = NULL;
     g_declineDelegate = NULL;
     g_extraDelegate = NULL;
+    g_beatDelegate = NULL;
+    g_knockoutDelegate = NULL;
     g_closeDelegate = NULL;
 }
 } // namespace totalrecruit

@@ -73,8 +73,12 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
 <div class="note"><b>Rules the view applies.</b><ul>
   <li>A cats price is always shown with the purse it is checked against. Purse below price: the purse turns red, the red
     line says how much is missing, and ACEPTAR is hidden (only CANCELAR).</li>
-  <li>Any refusal: the reason in red, ACEPTAR hidden. A remedy the player can act on adds its button (DARLE COMIDA /
-    GOLPEARLO).</li>
+  <li>Any refusal: the reason in red, ACEPTAR hidden. Food the player carries for a hungry captive adds DARLE COMIDA.</li>
+  <li>A refusal from a prisoner awake in your cage with beating allowed (the context menu's own rule,
+    <code>CageCommandsAllowed</code>) adds GOLPEAR and NOQUEAR (with the game's odds): the same orders as the menu. A yes
+    and the haggle slider never carry them. More than three buttons: CERRAR wraps alone to a second row, right. Beating
+    off: no buttons, and a defiant prisoner's reason no longer says to hurt them.</li>
+  <li>Someone who cannot leave (caged, shackled, carried) is never offered IGNORAR or PERDONAR.</li>
   <li>A free join says <i>Gratis</i> in green; <i>Probabilidad</i> appears only when the verdict rolled.</li>
   <li>The X in the title bar is Cancel. Money only moves on ACEPTAR, and the price is re-checked at that moment
     (<code>money.short</code> is now only that last-second check).</li>
@@ -199,7 +203,7 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
            'no damage and no odds of its own: the 72% is the game\'s.</div>';
       h += '<div class="callout" style="left:860px;top:16px;max-width:400px">Anyone else -- not caged, already down, ' +
            'or beating switched off -- gets the block of one, [Hablar], as in "Right-click menu open". The popup\'s ' +
-           'GOLPEARLO remedy gives the same native Golpear order and closes the window.</div>';
+           'GOLPEAR and NOQUEAR (section 5) give the same native orders and close the window.</div>';
       scene.innerHTML = h;
       return;
     }

@@ -268,12 +268,12 @@ Character* OccupantOf(RootObject* target, itemType type)
     return SafeReadOccupant(target);
 }
 
-// The remedy the third button offers, when the plugin can actually deliver it.
-// Only one fits, so it is the one that applies: food when they are hungry and
-// you are carrying some, otherwise the beating -- the lever R2.3 gives the
-// player against someone whose price is submission. HelpCaptive dispatches on
-// the same test, so the label and the action cannot disagree.
-OfferRemedy RemedyFor(Character* character, const Verdict& verdict, bool again)
+// The remedy button: food, when they are hungry and you are carrying some.
+// HelpCaptive dispatches on the same test, so the label and the action cannot
+// disagree. The beating is not a remedy any more: the popup offers the cage
+// commands by their own rule (offer_view.cpp ApplyCageCommands, fed by
+// CageInputFor below).
+OfferRemedy RemedyFor(const Verdict& verdict, bool again)
 {
     if (verdict.willJoin)
     {
@@ -283,11 +283,18 @@ OfferRemedy RemedyFor(Character* character, const Verdict& verdict, bool again)
     {
         return again ? OfferRemedy_FeedMore : OfferRemedy_Feed;
     }
-    if (CanBeatPrisoner(character, NULL))
-    {
-        return OfferRemedy_Beat;
-    }
     return OfferRemedy_None;
+}
+
+// What the popup needs to decide GOLPEAR / NOQUEAR: the context menu's facts and,
+// only when they apply, the engine's knockout odds for NOQUEAR's label.
+void CageInputFor(Character* character, OfferInput* in)
+{
+    in->cage = ReadCageCommandFacts(character);
+    if (CageCommandsAllowed(in->cage))
+    {
+        in->knockoutOddsKnown = ReadKnockoutOdds(character, &in->knockoutOdds);
+    }
 }
 
 // A cats quote: the only kind of verdict a haggle can be about (a yes with a
@@ -352,9 +359,10 @@ bool PresentOffer(Character* character, const Verdict& verdict, bool afterRemedy
     in.name = CharacterName(character);
     in.verdict = verdict;
     in.purseKnown = ReadPlayerPurse(&in.purse);
-    in.remedy = RemedyFor(character, verdict, afterRemedy);
+    in.remedy = RemedyFor(verdict, afterRemedy);
     in.afterRemedy = afterRemedy;
     in.haggle = HaggleInputFor(character, verdict, NULL);
+    CageInputFor(character, &in);
     return ShowPricedOffer(character, in, OfferWording());
 }
 
@@ -644,34 +652,21 @@ void HelpCaptive(Character* character)
 
     const std::string name = CharacterName(character);
 
-    // The same button carries whichever remedy the window offered, so the
-    // dispatch has to agree with the label PresentOffer chose.
+    // The remedy button is only ever food; the dispatch re-checks the same test
+    // PresentOffer labelled it with, so a stale window cannot feed for nothing.
     const Verdict before = Evaluate(character);
-    const OfferRemedy remedy = RemedyFor(character, before, false);
-    const bool feeding = (remedy == OfferRemedy_Feed);
-
-    std::string message;
-    if (feeding)
+    if (RemedyFor(before, false) != OfferRemedy_Feed)
     {
-        if (!FeedCaptive(character, &message))
-        {
-            TellPlayer(name + ": " + message, true);
-            return;
-        }
-        TellPlayer(name + ": " + message, false);
-    }
-    else
-    {
-        // GOLPEARLO is the same native order as the context menu's Golpear: the
-        // selected character walks in and beats them, and the engine decides how
-        // it goes. The popup is already closed; the beating is the answer.
-        const CageCommandResult result = OrderSelectedToBeat(character);
-        if (result != CageCommand_Issued)
-        {
-            TellPlayer(CageCommandProblem(result), true);
-        }
         return;
     }
+
+    std::string message;
+    if (!FeedCaptive(character, &message))
+    {
+        TellPlayer(name + ": " + message, true);
+        return;
+    }
+    TellPlayer(name + ": " + message, false);
 
     // Show where that leaves them, so the player learns whether one meal was
     // enough or there is more to do.

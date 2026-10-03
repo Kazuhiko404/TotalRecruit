@@ -24,6 +24,7 @@ var POPUP_LAYOUT = {
   buttonH: 32,       // kButtonHeight
   buttonGap: 8,      // kButtonGap
   aloneW: 150,       // kAloneButtonW: Cancel / Close when it is the only button
+  buttonsPerRow: 3,  // kButtonsPerRow: more and Cancel wraps alone to a second row, right
   // The haggle section (cats prices only), between the top block and the reason.
   haggleRowH: 24,    // kHaggleRowH: label | slider | value (the 22 px thumb fits)
   haggleLabelW: 84,  // kHaggleLabelW: "OFERTA"
@@ -131,8 +132,8 @@ var POPUP_STATES = [
   {
     id: 'remedy',
     title: 'Refusal with a remedy',
-    note: 'Cautiverio, hungry and you carry food: <code>Reason_Starving</code> with the feed remedy. The reason in red and the button that acts on it; DARLE COMIDA feeds and reopens the popup with the new verdict (its Cancel then reads AHORA NO). GOLPEARLO takes this slot when the remedy is the beating.',
-    // facts: verdict refused, Currency_Care, wantsFood, player has food
+    note: 'Hungry and you carry food, but not in your cage (or beating switched off): <code>Reason_Starving</code> with the feed remedy. The reason in red and the button that acts on it; DARLE COMIDA feeds and reopens the popup with the new verdict (its Cancel then reads AHORA NO). The beating is not a remedy any more: in your cage it is GOLPEAR and NOQUEAR (the next two states).',
+    // facts: verdict refused, Currency_Care, wantsFood, player has food; cage commands not allowed
     vm: {
       title: 'Reclutamiento', name: 'Hambriento Fremp', route: 'cautiverio', routeTag: 'Cautiverio',
       body: 'Hambriento Fremp no se une todavia.',
@@ -141,6 +142,36 @@ var POPUP_STATES = [
       showChance: false, chanceText: '',
       reason: 'Hambriento: dale de comer', reasonRed: true,
       accept: '', extra: 'DARLE COMIDA', cancel: 'CERRAR'
+    }
+  },
+  {
+    id: 'cagedDefiant',
+    title: 'Caged and defiant: GOLPEAR / NOQUEAR',
+    note: 'The user\'s Holy Warden (2026-10-03): Cautiverio, 87%, still defiant (<code>Reason_Defiant</code>), awake in your cage with <code>allowBeating</code> on. Any refusal from a prisoner the context menu would offer Golpear and Noquear for gets them here too: one predicate, <code>CageCommandsAllowed</code>. Same orders, same actor (the selected character; nobody selected says "Selecciona a alguien de tu grupo para hacerlo"), NOQUEAR with the game\'s odds. The window closes: the order is the answer. A yes never carries them (ACEPTAR / CANCELAR only), nor does the haggle slider. With beating off the buttons go and the reason reads "Sigue desafiante: dejalo con hambre".',
+    // facts: verdict refused, viaCaptivity, Reason_Defiant, rolled 87%; cage {inPlayerCage, awake, allowBeating}; knockout odds 0.72
+    vm: {
+      title: 'Reclutamiento', name: 'Holy Warden', route: 'cautiverio', routeTag: 'Cautiverio',
+      body: 'Holy Warden no se une todavia.',
+      showPrice: false, priceText: '', priceFree: false,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: true, chanceText: '87%',
+      reason: 'Sigue desafiante: dejalo con hambre o hierelo', reasonRed: true,
+      accept: '', extra: '', beat: 'GOLPEAR', knockout: 'NOQUEAR 72%', cancel: 'CERRAR'
+    }
+  },
+  {
+    id: 'cagedHungry',
+    title: 'Caged and hungry: four buttons, two rows',
+    note: 'The same prisoner starving, and you carry food: DARLE COMIDA plus the cage commands. Four buttons do not fit one row (DARLE COMIDA would not hold), so the actions share the first row and CERRAR wraps alone to the right of a second one (<code>kButtonsPerRow</code> = 3).',
+    // facts: verdict refused, Reason_Starving, wantsFood, player has food; cage commands allowed; no odds read
+    vm: {
+      title: 'Reclutamiento', name: 'Holy Warden', route: 'cautiverio', routeTag: 'Cautiverio',
+      body: 'Holy Warden no se une todavia.',
+      showPrice: false, priceText: '', priceFree: false,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: true, chanceText: '87%',
+      reason: 'Hambriento: dale de comer', reasonRed: true,
+      accept: '', extra: 'DARLE COMIDA', beat: 'GOLPEAR', knockout: 'NOQUEAR 72%', cancel: 'CERRAR'
     }
   },
   {
@@ -156,6 +187,21 @@ var POPUP_STATES = [
       showChance: false, chanceText: '',
       reason: '', reasonRed: false,
       accept: 'ACEPTAR', extra: 'IGNORAR', cancel: 'RECHAZAR'
+    }
+  },
+  {
+    id: 'mercyCaged',
+    title: 'Mercy plea from someone who cannot leave',
+    note: 'The same plea from someone in a cage, shackled or carried (<code>SafeInPrison</code>): there is nowhere to let them go, so IGNORAR is never offered, whatever their temperament. Take them or leave them where they are. The submission event follows the same rule: no PERDONAR for anyone who cannot leave (the director already skips the caged; this covers one picked up on the way).',
+    // facts: mercy plea, CanBuyTheirLife true, inCage true
+    vm: {
+      title: 'Reclutamiento', name: 'Bandido Hambriento', route: 'piedad', routeTag: 'Piedad',
+      body: 'Bandido Hambriento: Piedad. Ya no puedo pelear. Hare lo que me pidas.',
+      showPrice: false, priceText: '', priceFree: false,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: '', cancel: 'RECHAZAR'
     }
   },
   {

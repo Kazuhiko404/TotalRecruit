@@ -1023,6 +1023,8 @@
       "feed": "DARLE COMIDA",
       "feedMore": "DARLE MAS COMIDA",
       "beat": "GOLPEARLO",
+      "cageBeat": "GOLPEAR",
+      "cageKnockout": "NOQUEAR",
       "ignore": "IGNORAR",
       "decline": "RECHAZAR",
       "forgive": "PERDONAR"
@@ -1044,6 +1046,10 @@
       "rescue": "{name} te debe la vida y desea unirse a tu grupo.",
       "joins": "{name} desea unirse a tu grupo.",
       "submitted": "{name} se arrodilla y te pide unirse a tu grupo."
+    },
+    "reason": {
+      "_comment": "Motivo en rojo cuando GOLPEAR / NOQUEAR no estan en la ventana (submissionAllowBeating apagado): no le pide al jugador que lo hiera.",
+      "defiantNoBeat": "Sigue desafiante: dejalo con hambre"
     },
     "haggle": {
       "_comment": "Regateo (solo precios en cats). {pct} = probabilidad de que acepte la oferta, {cats} = lo que falta para esa oferta.",

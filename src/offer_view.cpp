@@ -101,7 +101,6 @@ std::string RemedyLabel(OfferRemedy remedy, const OfferTexts& t)
     {
     case OfferRemedy_Feed:     return t.feed;
     case OfferRemedy_FeedMore: return t.feedMore;
-    case OfferRemedy_Beat:     return t.beat;
     case OfferRemedy_None:
     default:                   return std::string();
     }
@@ -153,6 +152,34 @@ bool ApplyHaggle(const OfferInput& in, const OfferTexts& t, OfferView* view)
     return true;
 }
 
+// The cage commands step of BuildOfferView (ui-mockup/js/popup_data.js, the caged
+// states): a refusal from a prisoner the context menu would offer Golpear and
+// Noquear for gets them in the popup too -- the same predicate, so the two never
+// disagree. A yes needs no beating; a haggle's row belongs to the slider.
+// Without them, a defiant prisoner is not told to hurt someone they cannot.
+void ApplyCageCommands(const OfferInput& in, const OfferTexts& t, OfferView* view)
+{
+    const bool offered = !in.verdict.willJoin && !view->showSlider &&
+                         CageCommandsAllowed(in.cage);
+    if (offered)
+    {
+        view->beatLabel = t.beat;
+        view->knockoutLabel = KnockoutLabel(t.knockout, in.knockoutOddsKnown, in.knockoutOdds);
+        return;
+    }
+    if (in.verdict.reasonKey == Reason_Defiant && view->reasonRefused)
+    {
+        view->reasonText = t.reasonDefiantNoBeat;
+    }
+}
+
+// The answers that let someone go (IGNORAR on a plea, PERDONAR on a submission)
+// mean nothing to someone who cannot leave: a cage, shackles, a shoulder.
+std::string LetGoLabel(bool inCage, const std::string& label)
+{
+    return inCage ? std::string() : label;
+}
+
 OfferView Frame(const std::string& name, ReadoutRoute route, const OfferTexts& t)
 {
     OfferView view;
@@ -165,6 +192,10 @@ OfferView Frame(const std::string& name, ReadoutRoute route, const OfferTexts& t
     view.chanceLabel = t.chanceLabel;
     return view;
 }
+
+// What the verdict alone puts in the window: price, purse, haggle, reason and
+// the accept / remedy / cancel buttons.
+OfferView BuildVerdictView(const OfferInput& in, const OfferTexts& t);
 } // namespace
 
 OfferTexts DefaultOfferTexts()
@@ -178,7 +209,8 @@ OfferTexts DefaultOfferTexts()
     t.notNow = "AHORA NO";
     t.feed = "DARLE COMIDA";
     t.feedMore = "DARLE M\xc3\x81S COMIDA";
-    t.beat = "GOLPEARLO";
+    t.beat = "GOLPEAR";
+    t.knockout = "NOQUEAR";
     t.ignore = "IGNORAR";
     t.decline = "RECHAZAR";
     t.forgive = "PERDONAR";
@@ -206,6 +238,7 @@ OfferTexts DefaultOfferTexts()
     t.bodyRescue = "{name} te debe la vida y desea unirse a tu grupo.";
     t.bodyJoins = "{name} desea unirse a tu grupo.";
     t.bodySubmitted = "{name} se arrodilla y te pide unirse a tu grupo.";
+    t.reasonDefiantNoBeat = "Sigue desafiante: d\xc3\xa9jalo con hambre";
 
     t.haggleLabel = "OFERTA";
     t.haggleOdds = "Probabilidad de aceptar: {pct}%";
@@ -240,6 +273,15 @@ ReadoutRoute OfferRouteOf(const Verdict& verdict)
 }
 
 OfferView BuildOfferView(const OfferInput& in, const OfferTexts& t)
+{
+    OfferView view = BuildVerdictView(in, t);
+    ApplyCageCommands(in, t, &view);
+    return view;
+}
+
+namespace
+{
+OfferView BuildVerdictView(const OfferInput& in, const OfferTexts& t)
 {
     const Verdict& v = in.verdict;
     OfferView view = Frame(in.name, OfferRouteOf(v), t);
@@ -335,19 +377,20 @@ OfferView BuildOfferView(const OfferInput& in, const OfferTexts& t)
     view.cancelLabel = in.afterRemedy ? t.notNow : t.close;
     return view;
 }
+} // namespace
 
 OfferView BuildMercyOfferView(const std::string& name, const std::string& pleaLine,
-                              bool canIgnore, const OfferTexts& t)
+                              bool canIgnore, bool inCage, const OfferTexts& t)
 {
     OfferView view = Frame(name, ReadoutRoute_Mercy, t);
     view.bodyLine = pleaLine;
     view.acceptLabel = t.accept;
-    view.extraLabel = canIgnore ? t.ignore : std::string();
+    view.extraLabel = canIgnore ? LetGoLabel(inCage, t.ignore) : std::string();
     view.cancelLabel = t.decline;
     return view;
 }
 
-OfferView BuildSubmissionOfferView(const std::string& name, const OfferTexts& t)
+OfferView BuildSubmissionOfferView(const std::string& name, bool inCage, const OfferTexts& t)
 {
     OfferView view = Frame(name, ReadoutRoute_FieldYield, t);
     view.bodyLine = Fill(t.bodySubmitted, name, 0);
@@ -355,7 +398,7 @@ OfferView BuildSubmissionOfferView(const std::string& name, const OfferTexts& t)
     view.priceFree = true;
     view.priceText = t.free;
     view.acceptLabel = t.accept;
-    view.extraLabel = t.forgive;
+    view.extraLabel = LetGoLabel(inCage, t.forgive);
     view.cancelLabel = t.decline;
     return view;
 }

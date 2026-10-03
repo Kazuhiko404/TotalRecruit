@@ -12,8 +12,15 @@
 //  - A cats price is shown with the purse it is checked against. A purse below
 //    the price makes the purse red, adds the shortfall as the red line and hides
 //    ACEPTAR: there is nothing to accept.
-//  - Any refusal shows its reason in red and hides ACEPTAR. A remedy the player
-//    can deliver (food, a beating) adds its button.
+//  - Any refusal shows its reason in red and hides ACEPTAR. Food the player can
+//    deliver adds its button.
+//  - A refusal from a prisoner the cage commands apply to (cage_command_rules.h
+//    CageCommandsAllowed, the same predicate as the context-menu block) adds
+//    GOLPEAR and NOQUEAR (with the engine's odds), whatever the route said. A yes
+//    never carries them, and neither does a haggle (the slider owns that row).
+//    Without them a defiant prisoner's reason drops "hurt them".
+//  - Someone who cannot leave (in a cage, shackled, carried) is never offered the
+//    answers that let them go: no IGNORAR on a plea, no PERDONAR on a submission.
 //  - A free join says so; the odds appear only when the verdict rolled.
 //  - A cats price can be haggled (OfferHaggleInput): a slider from the floor to
 //    the ask, the live odds of AcceptOdds, the purse checked against the offer,
@@ -25,21 +32,22 @@
 
 #include <string>
 
+#include "cage_command_rules.h"
 #include "haggle_rules.h"
 #include "readout_model.h"
 #include "verdict.h"
 
 namespace totalrecruit
 {
-// What the third button does, when the plugin can actually deliver it. Chosen by
-// the caller, which knows whether the player carries food or can beat them.
+// What the remedy button does, when the plugin can actually deliver it. Chosen by
+// the caller, which knows whether the player carries food. The beating is not a
+// remedy: it is the cage commands (OfferInput::cage), offered by their own rule.
 enum OfferRemedy
 {
     OfferRemedy_None,
     OfferRemedy_Feed,
     // The popup reopened after a meal and they still want more.
-    OfferRemedy_FeedMore,
-    OfferRemedy_Beat
+    OfferRemedy_FeedMore
 };
 
 // Every word the popup can show. Templates take {name} and {cats}.
@@ -53,7 +61,9 @@ struct OfferTexts
     std::string notNow;
     std::string feed;
     std::string feedMore;
+    // The cage commands as popup buttons: "GOLPEAR", "NOQUEAR" (+ " 72%").
     std::string beat;
+    std::string knockout;
     std::string ignore;
     std::string decline;
     // The submission event's third answer: let them go (submission_director.h).
@@ -83,6 +93,10 @@ struct OfferTexts
     std::string bodyJoins;
     // The submission event: "{name} se arrodilla y te pide unirse a tu grupo."
     std::string bodySubmitted;
+
+    // Reason_Defiant when the cage commands are not offered: the half of "hunger
+    // or hurt them" the player can still act on (popup.reason.defiantNoBeat).
+    std::string reasonDefiantNoBeat;
 
     // The haggle section (popup.haggle.*).
     std::string haggleLabel;    // "OFERTA"
@@ -139,9 +153,17 @@ struct OfferInput
     // Reopened after a remedy: Cancel reads "not now" instead.
     bool afterRemedy;
     OfferHaggleInput haggle;
+    // What decides the cage commands, read the way the context menu reads it
+    // (cage_commands.h ReadCageCommandFacts). The default (not in the player's
+    // cage) offers none.
+    CageCommandFacts cage;
+    // The engine's knockout odds for the selected character, for NOQUEAR's label.
+    bool knockoutOddsKnown;
+    float knockoutOdds;
 
     OfferInput() : name(), verdict(), purseKnown(false), purse(0),
-                   remedy(OfferRemedy_None), afterRemedy(false), haggle()
+                   remedy(OfferRemedy_None), afterRemedy(false), haggle(), cage(),
+                   knockoutOddsKnown(false), knockoutOdds(0.0f)
     {
     }
 };
@@ -181,9 +203,12 @@ struct OfferView
     std::string reasonText;
     bool reasonRefused;
 
-    // Empty = the button is hidden. Cancel is always there.
+    // Empty = the button is hidden. Cancel is always there. In the row: accept,
+    // extra (the remedy / IGNORAR / PERDONAR), beat, knockout, cancel.
     std::string acceptLabel;
     std::string extraLabel;
+    std::string beatLabel;
+    std::string knockoutLabel;
     std::string cancelLabel;
 
     // The haggle section (cats prices only, ui-mockup section 5 states 2-4). With
@@ -225,13 +250,15 @@ ReadoutRoute OfferRouteOf(const Verdict& verdict);
 OfferView BuildOfferView(const OfferInput& in, const OfferTexts& texts);
 
 // A crippled enemy begging (mercy.cpp): the plea is the body, the answers are
-// take them / let them go (only when `canIgnore`) / refuse.
+// take them / let them go (only when `canIgnore` and they are not `inCage`) /
+// refuse. `inCage` is engine_reads SafeInPrison: a cage, shackles, carried.
 OfferView BuildMercyOfferView(const std::string& name, const std::string& pleaLine,
-                              bool canIgnore, const OfferTexts& texts);
+                              bool canIgnore, bool inCage, const OfferTexts& texts);
 
 // A beaten NPC that walked up to ask (submission_director.cpp): the Sometido
 // tag, the kneeling line as the body, a free join, and three answers --
-// ACEPTAR (they join), PERDONAR (they go, calm for a while), RECHAZAR (defeats
-// wiped, no recruiting for the cooldown, hostile again).
-OfferView BuildSubmissionOfferView(const std::string& name, const OfferTexts& texts);
+// ACEPTAR (they join), PERDONAR (they go, calm for a while; never when `inCage`),
+// RECHAZAR (defeats wiped, no recruiting for the cooldown, hostile again).
+OfferView BuildSubmissionOfferView(const std::string& name, bool inCage,
+                                   const OfferTexts& texts);
 } // namespace totalrecruit

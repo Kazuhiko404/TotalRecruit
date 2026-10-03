@@ -318,19 +318,30 @@ bool SafeKnockoutOdds(Character* target, float* out)
 }
 } // namespace
 
-bool CageCommandsAvailable(Character* target)
+CageCommandFacts ReadCageCommandFacts(Character* target)
 {
-    if (target == NULL)
-    {
-        return false;
-    }
     CageCommandFacts facts;
     facts.allowBeating = GetConfig().submission.allowBeating;
+    if (target == NULL)
+    {
+        facts.inPlayerCage = false;
+        return facts;
+    }
     facts.inPlayerCage = IsInPlayerCage(target);
     bool down = false;
     bool dead = false;
     facts.down = (SafeIsDown(target, &down) && down) || (SafeIsDead(target, &dead) && dead);
-    return CageCommandsAllowed(facts);
+    return facts;
+}
+
+bool CageCommandsAvailable(Character* target)
+{
+    return CageCommandsAllowed(ReadCageCommandFacts(target));
+}
+
+bool ReadKnockoutOdds(Character* target, float* out)
+{
+    return target != NULL && out != NULL && SafeKnockoutOdds(target, out);
 }
 
 Character* SelectedSquadActor(Character* target)
@@ -395,7 +406,7 @@ std::string BeatButtonLabel()
 std::string KnockoutButtonLabel(Character* target)
 {
     float probability = 0.0f;
-    const bool haveOdds = target != NULL && SafeKnockoutOdds(target, &probability);
+    const bool haveOdds = ReadKnockoutOdds(target, &probability);
     return KnockoutLabel(Say("cage.button.knockout", "Noquear", NULL), haveOdds, probability);
 }
 

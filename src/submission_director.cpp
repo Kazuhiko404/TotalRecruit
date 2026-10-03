@@ -284,7 +284,11 @@ void Apply(SubmissionOutcome outcome)
 // --------------------------------------------------------------- Approach
 bool OpenPopup(Character* npc)
 {
-    const OfferView view = BuildSubmissionOfferView(g_event.name, OfferWording());
+    // ScreenCandidate kept the caged out, but the player can pick the NPC up on
+    // the way: read it again, so someone who cannot leave is never offered PERDONAR.
+    bool caged = false;
+    const bool inCage = SafeInPrison(npc, &caged) && caged;
+    const OfferView view = BuildSubmissionOfferView(g_event.name, inCage, OfferWording());
     if (!ShowOffer(npc, view))
     {
         return false;

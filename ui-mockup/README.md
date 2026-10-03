@@ -79,9 +79,11 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     rule, the body line (wrapped and measured, never guessed), then an info box with only the rows that apply:
     PRECIO (amber, or `Gratis` in green), TIENES (red when short), PROBABILIDAD (when the verdict rolled). Under
     that, full width, the reason on a dark plate with a red bar, then the buttons. The window height is the sum.
-13. **Buttons.** ACEPTAR = amber plate, dark text; the remedy / IGNORAR = amber edge, amber text; CANCELAR /
-    CERRAR / RECHAZAR = line plate, golddim edge. Visible buttons share the row in that order; Cancel alone sits
-    on the right at 150 px.
+13. **Buttons.** ACEPTAR = amber plate, dark text; the remedy / IGNORAR / PERDONAR / GOLPEAR / NOQUEAR = amber
+    edge, amber text; CANCELAR / CERRAR / RECHAZAR = line plate, golddim edge. Visible buttons share the row in the
+    order ACEPTAR, extra, GOLPEAR, NOQUEAR, Cancel; Cancel alone sits on the right at 150 px. More than three
+    (`kButtonsPerRow`): the others share the first row and Cancel wraps alone to the right of a second row, 8 px
+    under it (DARLE COMIDA would not hold at a quarter of the row).
 14. **Short purse = no ACEPTAR.** A cats price above the purse turns TIENES red, adds "No te alcanzan los cats
     (te faltan N)" and hides ACEPTAR. Any refusal hides ACEPTAR and shows its reason in red.
 15. **Text** is the `popup` block of `messages.json`; the route tag reuses `readout.route.*`. Field yield has its own
@@ -108,10 +110,19 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     outcome is the game's. Noquear shows the game's own odds ("Noquear 72%", `getPlayerTaskProbability`), plain
     "Noquear" when there are none. Labels are title case like Hablar (`cage.button.*` in `messages.json`). Each
     button arms its own press-and-release gesture.
+18. **The same commands in the popup** (user report 2026-10-03: a caged, defiant Holy Warden got only CERRAR). Any
+    refusal from a prisoner the block above would offer Golpear and Noquear for (one predicate,
+    `CageCommandsAllowed`) carries GOLPEAR and NOQUEAR (the game's odds, `KnockoutLabel`) beside the remedy and
+    CERRAR; same orders, same selected actor, the same "Selecciona a alguien" line; the window closes. A yes keeps
+    ACEPTAR / CANCELAR only, and the haggle slider owns its row, so neither carries them. Beating off: no buttons,
+    and a defiant prisoner reads "Sigue desafiante: dejalo con hambre" (`popup.reason.defiantNoBeat`). The old
+    cooldown-gated GOLPEARLO remedy is gone. Someone who cannot leave (caged, shackled, carried) never gets IGNORAR
+    (mercy) or PERDONAR (submission). States "Caged and defiant", "Caged and hungry", "Mercy plea from someone who
+    cannot leave".
 
 ### Submission event (section 5, "Submitted NPC asks to join")
 
-18. **A beaten NPC asks; the window is the same popup** (user request 2026-10-03: "it should walk up to me
+19. **A beaten NPC asks; the window is the same popup** (user request 2026-10-03: "it should walk up to me
     automatically and ask to join ... Accept, Forgive, Reject"). Nothing new is drawn: `BuildSubmissionOfferView`
     fills the recruit popup with the Sometido tag, the kneeling line ("se arrodilla y te pide unirse a tu grupo"),
     PRECIO Gratis and three buttons in the usual order and styles -- ACEPTAR (amber plate), PERDONAR (amber edge,

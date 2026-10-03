@@ -300,8 +300,13 @@ void OfferMercy(Character* npc)
 
     // Ignoring is only a third option when there is something to ignore. An
     // honourable NPC has made this a two-answer question: take them or fight.
+    // Someone caged, shackled or carried cannot walk away either, so for them it
+    // is take them or leave them where they are (offer_view.h decides).
     const bool canIgnore = CanBuyTheirLife(ReadTemperament(npc));
-    const OfferView view = BuildMercyOfferView(CharacterName(npc), line, canIgnore, OfferWording());
+    bool caged = false;
+    const bool inCage = SafeInPrison(npc, &caged) && caged;
+    const OfferView view = BuildMercyOfferView(CharacterName(npc), line, canIgnore, inCage,
+                                               OfferWording());
 
     if (!ShowOffer(npc, view))
     {
