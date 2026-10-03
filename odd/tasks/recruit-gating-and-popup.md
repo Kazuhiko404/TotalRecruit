@@ -83,12 +83,12 @@ Fix the user's 2026-10-03 in-game feedback:
   - Always open the popup; remove the `TellPlayer` fallbacks.
   - Move the popup text into `messages.json`.
   - Route: delegated.
-- [ ] **T5 Card fixes.**
-  - Anchor via `UtilityT::nPX`, with a log line once per exit reason.
-  - Remove the Hablar pin, since the popup now carries the info.
+- [x] **T5 Card fixes.** (Rescoped 2026-10-03 after the user's report on f21474e: "the card works on Hablar but flies at the top of the screen". The Hablar pin stays; `UtilityT::nPX` was rejected, see evidence.)
+  - Anchor = game position + head height, relative origin removed, projected through the player camera; log line once per outcome per target.
+  - Keep the Hablar pin: over the head; beside the popup only sideways at head height; hidden when no side has room.
   - Neutral line when a rolled route has no peek key.
   - "dejalo sin comer" only when the NPC is in the player's cage.
-  - Field-yield gets its own label.
+  - Field-yield gets its own label ("Sometido") on the card and the popup.
   - Route: delegated.
 - [ ] **T6 Docs + deploy.** README, DEVELOPING, QA, then `bash scripts/deploy.sh`.
 
@@ -105,7 +105,14 @@ Fix the user's 2026-10-03 in-game feedback:
   - New `ui_style` (palette, `EnsureResources`, fills, labels, wrap text, TotalSparring `FlatButton`); `readout_ui` uses it (no visual change).
   - New pure `offer_view` (`BuildOfferView`, `BuildMercyOfferView`); `offer_popup` rebuilt from it (Kenshi_WindowCX frame, mockup content, measured text). Stock `Kenshi_EditBox` / `Kenshi_Button1` chains and the 48-char height guess deleted.
   - `PresentOffer` always opens the popup; the no-window branch and the `TellPlayer` fallbacks in `AttemptRecruit` are gone. `money.short` stays only for the re-check in `SettlePrice`. `DescribeOffer` replaced by `OfferWording` + `messages.json` `popup` block (added only).
-- In-game QA still pending: QA.md 3.2, 12.13 (K1-K7), 12.14 (Y1-Y5) and 12.15 (P1-P12).
+- **T5** (delegated; writer trigger: 2+ non-trivial files) -- `c04c884`. RED: 72 failing checks in 5 suites (`readout_catalog`, `readout_model`, `readout_format`, `offer_view`, new `screen_projection`). GREEN: 26/26 suites, 0/37067 failed. `TotalRecruit.vcxproj` Release x64: builds, no warnings in `src/`.
+  - Root cause (from `kenshi_x64.exe`, GOG 1.0.65 layout under `RE_Kenshi/`): Kenshi renders on an Ogre relative origin. `CameraClass::getCameraPos` (0x1008B0) = camera node `_getDerivedPosition()` + `SceneManager::getRelativeOrigin()`; the engine's world-to-screen (0x9B12C0) does `pos - getRelativeOrigin()` before the view matrix. The old `SafeProject` fed a game-space point to the render-space matrix, so it aimed at the horizon: the top of the screen.
+  - `UtilityT::worldToScreenPX` rejected: non-static (reads `this->cachedViewMatrix`, no known instance), and its header RVA 0x9B1C40 lands mid-function in that binary.
+  - New pure `screen_projection` (`ProjectToScreen`, `PlaceCard`); `readout_target` returns an `AnchorReading`; `readout_ui` places through `PlaceCard` (the vertical "above / below the offer" step and the top clamp are gone); `readout.cpp` logs `[readout-anchor]` once per outcome per target.
+  - `readout_model`: `ReadoutRoute_FieldYield`, `kLineRollOpen`, `kLineFieldYieldBeatAgain`; `readout_catalog` owns the route labels for the card and the popup. `messages.json`: added `readout.route.fieldYield`, `readout.line.rollOpen`, `readout.line.fieldYield.beatAgain` (no existing value touched).
+  - Gap: the popup's field-yield tag uses the built-in "Sometido" (`ReadoutRouteDefaultText`), not a `messages.json` override, because `offer_view.h` / `npc_speech.cpp` (the `OfferTexts` slot) were outside T5's edit surface. Two-line follow-up.
+  - Mockup: card over the head in the selection and Hablar scenes, sideways step beside the popup at head height, Sometido tag, neutral line; checked in Chrome (select card bottom 317 px over a head at 329, Hablar card at the popup's right edge + 8 px with the same top; no page h-scroll; `node --check` OK).
+- In-game QA still pending: QA.md 3.2, 12.13 (K1-K7), 12.14 (Y1-Y5), 12.15 (P1-P12) and 12.16 (A1-A10).
 
 ## Next step
-T5.
+T6 (docs + deploy).
