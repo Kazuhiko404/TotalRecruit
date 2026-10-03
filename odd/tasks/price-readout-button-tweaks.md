@@ -50,7 +50,7 @@ Three in-game tweaks requested by the user on 2026-10-03 after the first deploy 
   Config key + Mod Hub control; deployed config updated per the constraint above.
   - Route: delegated (price_rules, config, hub, tests, docs).
   - Check: rules_tests green; level 13 unique talented quote in 2000-3000.
-- [ ] **T2 Readout on click + cheap cursor hint.** Readout card pinned by the Hablar click
+- [x] **T2 Readout on click + cheap cursor hint.** Readout card pinned by the Hablar click
   (computed once, shown alongside the offer, closes with it or on timeout); hover polling only
   when `readoutOnHover` is explicitly enabled (default off); right-click `Evaluate` probe-only;
   cursor hint gets a per-character TTL cache module. Mockup updated.
@@ -64,6 +64,7 @@ Three in-game tweaks requested by the user on 2026-10-03 after the first deploy 
 
 ## Progress / evidence
 - T1: rules_tests 19/19 suites, 0/36673 checks failed (RED observed first: 23 failing checks); Release DLL builds; Soman case 2580 cats; commit 21f4b69. Deployed config NOT edited (Kenshi running): T4 must add catsPerLevel 90->32 / catsCeiling 28000->10000 set-if and the premiumMaxMultiplier key.
+- T2: rules_tests 20/20 suites, 0/36721 checks failed (RED first: 114 failing talk_hint_cache checks); Release DLL rebuilds with no warnings outside SDK headers; mockup scene measured in Chrome (card 8 px right of the offer); commit 1401c1f. In-game QA pending: QA.md 12.9 H1-H13. readoutOnHover not added to deployed config (shipped config has no readout keys).
 
 ## Next step
-T1.
+T3.
