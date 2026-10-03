@@ -68,7 +68,7 @@ Fix the user's 2026-10-03 in-game feedback:
   - Military/law loyalty becomes a chance penalty.
   - Tests first.
   - Route: delegated.
-- [ ] **T3 Mockup of the unified recruit popup.** States to cover:
+- [x] **T3 Mockup of the unified recruit popup.** States to cover:
   - joins;
   - can't afford (red, no Accept);
   - loyalty/honour refusal;
@@ -76,7 +76,7 @@ Fix the user's 2026-10-03 in-game feedback:
   - mercy;
   - rescue.
   - Route: delegated.
-- [ ] **T4 Shared ui_style + recruit popup.**
+- [x] **T4 Shared ui_style + recruit popup.**
   - Extract the palette and fills from `readout_ui.cpp` into `ui_style`.
   - Port the TotalSparring flat button and red reason widgets.
   - Rebuild `offer_popup` from an `OfferView`.
@@ -100,7 +100,12 @@ Fix the user's 2026-10-03 in-game feedback:
 - **T2** (delegated) -- `a4595d8`. RED: 8 failing checks in `route_decisions`. GREEN: 24/24 suites, 0/36877 failed. DLL build is clean.
   - Shared `DecideAccessRefusal` / `ServesStandingOrganisation` in `route_free`, plus an `AccessFact` used by both extras.
   - New `submissionFieldYieldLoyaltyPenalty` (default 25, clamped 0..100) with its Mod Hub control.
-- In-game QA still pending: QA.md 3.2, 12.13 (K1-K7) and 12.14 (Y1-Y5).
+- **T3** (delegated) -- `126db79`. `ui-mockup/readout.html` section 5 (`css/popup.css`, `js/popup_data.js`, `js/popup.js`): seven states (cats, can't afford, loyalty refusal, remedy, mercy, rescue, free join). Checked in Chrome: 540 px client, no child outside the client, no clipped label, no page h-scroll; the Hablar scene centres the popup and the card steps beside it. `node --check` OK on every JS file.
+- **T4** (delegated; writer trigger: 2+ non-trivial files) -- `324a27b`. RED: 53 failing checks in `offer_view` (stub). GREEN: 25/25 suites, 0/36973 failed. `TotalRecruit.vcxproj` Release x64: builds, no warnings in `src/`.
+  - New `ui_style` (palette, `EnsureResources`, fills, labels, wrap text, TotalSparring `FlatButton`); `readout_ui` uses it (no visual change).
+  - New pure `offer_view` (`BuildOfferView`, `BuildMercyOfferView`); `offer_popup` rebuilt from it (Kenshi_WindowCX frame, mockup content, measured text). Stock `Kenshi_EditBox` / `Kenshi_Button1` chains and the 48-char height guess deleted.
+  - `PresentOffer` always opens the popup; the no-window branch and the `TellPlayer` fallbacks in `AttemptRecruit` are gone. `money.short` stays only for the re-check in `SettlePrice`. `DescribeOffer` replaced by `OfferWording` + `messages.json` `popup` block (added only).
+- In-game QA still pending: QA.md 3.2, 12.13 (K1-K7), 12.14 (Y1-Y5) and 12.15 (P1-P12).
 
 ## Next step
-T3.
+T5.
