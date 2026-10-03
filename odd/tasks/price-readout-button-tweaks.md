@@ -60,7 +60,7 @@ Three in-game tweaks requested by the user on 2026-10-03 after the first deploy 
   `menu_obstacles` (prefix `TR_`) and button style; button 44 x 160, styled like the others.
   - Route: delegated.
   - Check: rules_tests green (slot tests); Release build; QA.md steps.
-- [ ] **T4 Deploy.** `scripts/deploy.sh` (never-overwrite merge).
+- [ ] **T4 Deploy.** `scripts/deploy.sh` (never-overwrite merge). deploy.sh now migrates catsPerLevel 90->32 and catsCeiling 28000->10000 only when untouched (3deddb5); dry run OK. Real deploy pending: Kenshi was running.
 
 ## Progress / evidence
 - T1: rules_tests 19/19 suites, 0/36673 checks failed (RED observed first: 23 failing checks); Release DLL builds; Soman case 2580 cats; commit 21f4b69. Deployed config NOT edited (Kenshi running): T4 must add catsPerLevel 90->32 / catsCeiling 28000->10000 set-if and the premiumMaxMultiplier key.
@@ -68,4 +68,4 @@ Three in-game tweaks requested by the user on 2026-10-03 after the first deploy 
 - T3: rules_tests 21/21 suites, 0/36796 checks failed (menu_slot suite: verbatim port of TotalLoot's tested resolver, no RED possible; added Hablar-vs-TS/TL characterization case, green on first run); Release DLL builds, warnings only in SDK headers; OverlayMenuTarget removed (no callers); commit d0a4a7f. In-game QA pending: QA.md 12.10 B1-B7.
 
 ## Next step
-T4.
+Close Kenshi, run `bash scripts/deploy.sh`, then in-game QA (QA.md 12.9 H1-H13, 12.10 B1-B7).
