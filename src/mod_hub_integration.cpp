@@ -251,6 +251,13 @@ static bool DoRegisterModHub()
     regInt(api, mod, "ally_tier_close_gap", "Aliados: distancia de nivel", "Cuantos niveles mas que tu lider puede tener un aliado temporal", 0, 100, 1, &c.allyTiers.closeLevelGap);
     regInt(api, mod, "ally_tier_temp_min_days", "Aliados: dias minimos", "Lo minimo que se queda un miembro temporal", 1, 60, 1, &c.allyTiers.tempMemberMinDays);
     regInt(api, mod, "ally_tier_temp_max_days", "Aliados: dias maximos", "Lo maximo que se queda un miembro temporal", 1, 120, 1, &c.allyTiers.tempMemberMaxDays);
+    // El miembro temporal ya en el grupo: maltrato, avisos y partida.
+    regInt(api, mod, "temp_member_max_strikes", "Temporal: faltas para irse", "Cuantas faltas (hambre, golpes o noqueos del grupo) aguanta antes de irse", 1, 10, 1, &c.tempMembers.maxStrikes);
+    regFloat(api, mod, "temp_member_hunger_threshold", "Temporal: umbral de hambre", "Por debajo de esta fraccion de estomago lleno cuenta como hambriento (0 = solo el motor)", 0.0f, 1.0f, 0.05f, 2, &c.tempMembers.hungerThreshold);
+    regFloat(api, mod, "temp_member_hungry_hours", "Temporal: horas de hambre", "Horas seguidas con hambre que cuentan como una falta", 0.0f, 168.0f, 1.0f, 0, &c.tempMembers.hungryHours);
+    regFloat(api, mod, "temp_member_strike_cooldown", "Temporal: horas entre faltas", "Cada tipo de falta cuenta como mucho una vez en estas horas", 0.0f, 168.0f, 1.0f, 0, &c.tempMembers.strikeCooldownHours);
+    regFloat(api, mod, "temp_member_expiry_warning", "Temporal: aviso antes de irse", "Cuantas horas antes de irse avisa que se va pronto", 0.0f, 72.0f, 1.0f, 0, &c.tempMembers.expiryWarningHours);
+    regInt(api, mod, "temp_member_rejoin_days", "Temporal: dias sin volver", "Dias que no quiere saber nada de ti despues de irse", 0, 30, 1, &c.tempMembers.rejoinCooldownDays);
     regBool(api, mod, "cheat_needs_cage","Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
     regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame (0.02 = un minuto)", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
     regInt(api, mod, "rescue_base_bonus", "Rescate: peso de la deuda", "Cuanto pesa haberle salvado la vida, antes de contar la cura", 0, 90, 5, &c.rescueBaseBonus);

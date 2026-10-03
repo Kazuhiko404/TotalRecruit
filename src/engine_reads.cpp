@@ -400,6 +400,134 @@ bool CharactersNear(const Ogre::Vector3& centre, float radius, std::vector<Chara
     return true;
 }
 
+bool SafeDefeatedByPlayer(Character* character, bool* out)
+{
+    TR_TRY
+    {
+        *out = false;
+        Character* winner = character->lastGuyWhoDefeatedMe.getCharacter();
+        if (winner == NULL)
+        {
+            return false;
+        }
+        *out = winner->isPlayerCharacter();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+namespace
+{
+// lektor<hand> is an engine-owned buffer: filled and released in POD-only frames.
+bool SafeGatherAttackers(Character* character, lektor<hand>* out)
+{
+    TR_TRY
+    {
+        character->getAllAttackers(*out);
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+void SafeFreeHands(lektor<hand>* list)
+{
+    TR_TRY
+    {
+        if (list->stuff != NULL)
+        {
+            free(list->stuff);
+            list->stuff = NULL;
+        }
+    }
+    TR_CATCH { }
+}
+
+bool SafeIsOtherPlayerCharacter(Character* character, hand* attacker, bool* out)
+{
+    TR_TRY
+    {
+        Character* other = attacker->getCharacter();
+        *out = other != NULL && other != character && other->isPlayerCharacter();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+bool SafeFactionSid(Character* character, char* buffer, std::size_t size)
+{
+    TR_TRY
+    {
+        Faction* faction = character->getFaction();
+        if (faction == NULL || faction->data == NULL)
+        {
+            return false;
+        }
+        strncpy_s(buffer, size, faction->data->stringID.c_str(), _TRUNCATE);
+        return buffer[0] != 0;
+    }
+    TR_CATCH { buffer[0] = 0; return false; }
+}
+} // namespace
+
+bool SafeAttackedByPlayer(Character* character, bool* out)
+{
+    *out = false;
+    if (character == NULL)
+    {
+        return false;
+    }
+    lektor<hand> attackers;
+    if (!SafeGatherAttackers(character, &attackers))
+    {
+        return false;
+    }
+    for (unsigned int i = 0; i < attackers.size() && !*out; ++i)
+    {
+        SafeIsOtherPlayerCharacter(character, &attackers.stuff[i], out);
+    }
+    SafeFreeHands(&attackers);
+    return true;
+}
+
+bool SafeHunger(Character* character, float* rawHunger, bool* starving)
+{
+    TR_TRY
+    {
+        MedicalSystem* medical = character->getMedical();
+        if (medical == NULL)
+        {
+            return false;
+        }
+        *rawHunger = medical->hunger;
+        *starving = medical->isReallyHungry() || medical->isHungerKO();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+std::string FactionStringId(Character* character)
+{
+    char buffer[128] = { 0 };
+    if (character == NULL || !SafeFactionSid(character, buffer, sizeof(buffer)))
+    {
+        return std::string();
+    }
+    return std::string(buffer);
+}
+
+Character* SafeSelectedCharacter()
+{
+    TR_TRY
+    {
+        if (ou == NULL || ou->player == NULL)
+        {
+            return NULL;
+        }
+        return ou->player->selectedObject.getCharacter();
+    }
+    TR_CATCH { return NULL; }
+}
+
 std::string CharacterName(Character* character)
 {
     if (character == NULL)

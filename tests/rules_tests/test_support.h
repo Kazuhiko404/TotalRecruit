@@ -49,3 +49,4 @@ void RunSubmissionTrackerTests();
 void RunHeadNoticeRulesTests();
 void RunPersonalityGroupsTests();
 void RunAllyTierRulesTests();
+void RunTempMemberRulesTests();

@@ -28,8 +28,9 @@
 //   - The serialise hook recovers `this` the Kill Counter way: the one of its
 //     first two arguments that is not the returned save-state slot.
 //   - The per-character ints listed in saved_ints.h (defeats, meals the player
-//     gave) are written as idata next to the id and restored on load, one loop
-//     over that table.
+//     gave, ...) are written as idata next to the id and restored on load, one
+//     loop over that table; the strings listed in saved_strings.h (a temporary
+//     member's home faction) the same way as sdata, through the id's own bridge.
 
 #include <string>
 

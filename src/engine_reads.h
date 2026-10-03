@@ -80,6 +80,24 @@ bool IsInPlayerCage(Character* character);
 // query returns any object; non-characters are dropped). Reads only.
 bool CharactersNear(const Ogre::Vector3& centre, float radius, std::vector<Character*>* out);
 
+// Whether the one who last put this character down (Character::lastGuyWhoDefeatedMe,
+// the engine's own answer) is one of the player's characters. False when there is
+// no readable winner. The defeat count (defeats.cpp) and a temporary member's
+// knockout strike (temp_member.cpp) both ask it.
+bool SafeDefeatedByPlayer(Character* character, bool* out);
+// Whether any of the player's characters (other than this one) is attacking this
+// character right now (Character::getAllAttackers).
+bool SafeAttackedByPlayer(Character* character, bool* out);
+// The raw hunger value (MedicalSystem::hunger: about 3 when fed, see
+// chance_rules HungerToFullness01) and the engine's own "starving" (isReallyHungry
+// or isHungerKO).
+bool SafeHunger(Character* character, float* rawHunger, bool* starving);
+// The string id of the faction this character belongs to (its GameData sid, the
+// key FactionManager::getFactionByStringID takes); "" when it cannot be read.
+std::string FactionStringId(Character* character);
+// The character the player has selected (PlayerInterface::selectedObject), the
+// player's own included. NULL when nothing, or not a character, is selected.
+Character* SafeSelectedCharacter();
 // The raw-pointer answer to "is this object a character?" for one RootObject.
 bool SafeAsCharacter(RootObject* object, Character** out);
 

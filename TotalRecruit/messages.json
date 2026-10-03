@@ -819,6 +819,38 @@
       "Se acerca para hablar contigo"
     ]
   },
+  "tempMember": {
+    "_comment": "Miembro temporal (aliado 80+). notice.* va sobre su cabeza: una linea corta y sin acentos. {days} = dias que se queda, {name} = su nombre (solo en left / leftMistreated, el mensaje del costado).",
+    "notice": {
+      "join": [
+        "Te acompanare {days} dias"
+      ],
+      "hungry": [
+        "Tengo hambre... no me trates asi"
+      ],
+      "mistreated": [
+        "No me trates asi"
+      ],
+      "warning": [
+        "Si sigues asi me voy"
+      ],
+      "expiring": [
+        "Me ire pronto"
+      ],
+      "farewell": [
+        "Me voy. Fue un honor"
+      ],
+      "farewellMistreated": [
+        "Me largo"
+      ]
+    },
+    "left": [
+      "{name} cumplio su tiempo y se fue de tu grupo."
+    ],
+    "leftMistreated": [
+      "{name} se harto del maltrato y se fue de tu grupo."
+    ]
+  },
   "_razones": [
     "Los motivos que el jugador lee cuando un NPC no se une todavia, o por que si.",
     "{cats} es el precio (o el % de estomago que falta) y {purse} lo que llevas encima.",
@@ -999,6 +1031,9 @@
         "greedy": "Ambicioso: no hay precio para el",
         "paidJoin": "Aliado: {cats} cats con descuento",
         "paidAsk": "Aliado: {cats} cats (tienes {purse})"
+      },
+      "temp": {
+        "daysLeft": "Temporal: le quedan {need} dias"
       },
       "faction": {
         "honour": "Su honor no trata con tu reputacion",

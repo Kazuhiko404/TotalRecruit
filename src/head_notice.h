@@ -18,9 +18,15 @@
 // (screen_projection.h PlaceCard), and is dropped when the NPC dies or joins the
 // squad. At most kHeadNoticeCap at once, one per NPC (head_notice_rules.h).
 //
-// Callers today: hail.cpp (a ready captive calls out) and submission_director.cpp (a
-// beaten NPC walks up to ask to join). Any future "X wants to talk to you" event
-// raises one with RaiseHeadNotice.
+// Callers today: hail.cpp (a ready captive calls out), submission_director.cpp (a
+// beaten NPC walks up to ask to join) and temp_member.cpp (a temporary member's
+// warnings and farewell). Any future "X wants to talk to you" event raises one with
+// RaiseHeadNotice.
+//
+// A squad notice (RaiseSquadHeadNotice) is the one exception to "dropped when they
+// join": it is about one of the player's own (a temporary member), so it stays while
+// they are in the squad. Selecting a squad member never dismisses it either (the
+// selection that dismisses is the readout's SelectedNpc, never one of the player's).
 
 #include <string>
 
@@ -33,6 +39,12 @@ namespace totalrecruit
 // line and restarts the time. Does nothing when the mod is off or the NPC cannot be
 // identified.
 void RaiseHeadNotice(Character* npc, const std::string& text);
+
+// The same notice for one of the player's own characters (a temporary member,
+// temp_member.h): kept while they stay in the squad, where an ordinary notice is
+// dropped the moment its NPC joins. Raising an ordinary notice for them again makes
+// it ordinary.
+void RaiseSquadHeadNotice(Character* member, const std::string& text);
 
 // Takes this NPC's notice down now: the conversation it announced has happened or
 // was called off. Safe for an NPC without one.

@@ -83,10 +83,16 @@ struct ReadoutInput
     // outcome. False for the card's peek (EvaluatePeek mints no id): a roll it
     // could not make is shown as odds, never as a "not yet".
     bool rollKeyed;
+    // A temporary member of the player's squad (temp_member.h): the card is not about
+    // joining any more, only how many days they have left (`tempDaysLeft`). Nothing
+    // else above is read.
+    bool tempMember;
+    int tempDaysLeft;
 
     ReadoutInput()
         : route(Route_FreeWorld), haveCore(true), core(), verdict(),
-          holdKnown(false), hoursHeld(0.0f), mercyPending(false), rollKeyed(false)
+          holdKnown(false), hoursHeld(0.0f), mercyPending(false), rollKeyed(false),
+          tempMember(false), tempDaysLeft(0)
     {
     }
 };

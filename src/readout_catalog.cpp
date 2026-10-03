@@ -5,8 +5,8 @@ namespace totalrecruit
 namespace
 {
 // One row per id, in ReasonKey order and then the card's own lines: the cage wait,
-// the open roll, the field-yield beat-again and a Balanced ally's discounted price
-// (join / short) (the test checks the count). Text is plain ASCII like the rest of messages.json, and short: the card
+// the open roll, the field-yield beat-again, a Balanced ally's discounted price
+// (join / short) and a temporary member's days left (the test checks the count). Text is plain ASCII like the rest of messages.json, and short: the card
 // does not wrap. A row with empty text is a verdict the card is hidden for.
 struct Row
 {
@@ -73,6 +73,7 @@ const Row kRows[] = {
     { "readout.line.fieldYield.beatAgain",   "Aun no cede: vencelo otra vez" },          // kLineFieldYieldBeatAgain
     { "readout.line.ally.paidJoin",          "Aliado: {cats} cats con descuento" },      // kLineAllyPaidJoin
     { "readout.line.ally.paidAsk",           "Aliado: {cats} cats (tienes {purse})" },   // kLineAllyPaidAsk
+    { "readout.line.temp.daysLeft",          "Temporal: le quedan {need} dias" },        // kLineTempMemberDaysLeft
 };
 
 // One label per ReadoutRoute, in enum order.

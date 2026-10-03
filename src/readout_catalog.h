@@ -29,6 +29,9 @@ const int kLineFieldYieldBeatAgain = Reason_Count + 2;
 // any other price; the card names the friendship on top.
 const int kLineAllyPaidJoin = Reason_Count + 3;
 const int kLineAllyPaidAsk = Reason_Count + 4;
+// The id of "Temporal: le quedan {need} dias": a temporary squad member's card
+// (temp_member.h). The days travel in the line's `need`.
+const int kLineTempMemberDaysLeft = Reason_Count + 5;
 
 int ReadoutLineCount();
 // messages.json path ("readout.line.cats.ask") and the built-in text used when the

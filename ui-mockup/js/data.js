@@ -116,11 +116,26 @@ var PLACEMENT = {
 // The "wants to talk" notice over the head (src/head_notice.cpp, src/head_notice_rules.h). Raised by
 // hail.cpp (a ready captive calls out) and submission_director.cpp (a beaten NPC walks up); gone
 // after headNoticeSeconds, when that NPC is selected, when they die or join, or at a load.
+// temp_member.cpp raises squad notices (RaiseSquadHeadNotice) over a temporary member: kept while
+// they are in the squad, never dismissed by selecting them.
 var HEAD_NOTICE = {
   seconds: 300,          // headNoticeSeconds default (config.h), clamp 10..3600
   cap: 8,                // kHeadNoticeCap: one per NPC, the oldest goes when full
   wantsToTalk: 'Quiere hablar contigo',          // messages.json headNotice.wantsToTalk
   approaching: 'Se acerca para hablar contigo'   // messages.json headNotice.approaching
+};
+
+// What a temporary member (80+ ally, src/temp_member.h) says over their head: messages.json
+// tempMember.notice.*. {days} is filled in.
+var TEMP_MEMBER = {
+  join: 'Te acompanare 6 dias',                       // on joining
+  hungry: 'Tengo hambre... no me trates asi',         // a hunger strike
+  mistreated: 'No me trates asi',                     // attacked / knocked out by the squad
+  warning: 'Si sigues asi me voy',                    // the strike before the last
+  expiring: 'Me ire pronto',                          // tempMemberExpiryWarningHours before the end
+  farewell: 'Me voy. Fue un honor',                   // time up
+  farewellMistreated: 'Me largo',                     // tempMemberMaxStrikes reached
+  card: 'Temporal: le quedan 4 dias'                  // readout.line.temp.daysLeft on their card
 };
 
 // Mod Hub rows, word for word as src/mod_hub_integration.cpp registers them, with the

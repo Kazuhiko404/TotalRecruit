@@ -15,6 +15,7 @@
 #include "recruit_core.h"
 #include "recruit_overlay.h"
 #include "rules.h"
+#include "temp_member.h"
 
 #include <cstdio>
 
@@ -144,30 +145,40 @@ void LogReadout(Character* character, const ReadoutView& view, const ReadoutText
 bool WorkOut(Character* character, const char* source)
 {
     const Config& config = GetConfig();
-    if (!IsRecruitable(character, NULL))
-    {
-        return false;
-    }
-
-    // The card is looking at them anyway: standing again re-arms the next
-    // knockout (defeat_episode_rules). Never counts, never mints an id.
-    NoteSeenStanding(character);
-
-    // The same decision a click would run, asked as a bystander.
-    EvaluationDetail detail;
-    const Verdict verdict = EvaluatePeek(character, &detail);
-
     ReadoutInput input;
-    input.route = detail.route;
-    input.haveCore = detail.haveCore;
-    input.core = detail.core;
-    input.verdict = verdict;
-    input.holdKnown = detail.holdKnown;
-    input.hoursHeld = detail.hoursHeld;
-    input.mercyPending = IsMercyPending(character);
-    // The peek mints no id, so it has no roll key: a roll it could not make is
-    // shown as odds (readout_model.h).
-    input.rollKeyed = false;
+    int daysLeft = 0;
+    if (TempMemberDaysLeft(character, &daysLeft))
+    {
+        // One of the squad for a few days (temp_member.h): the card only counts them.
+        input.tempMember = true;
+        input.tempDaysLeft = daysLeft;
+    }
+    else
+    {
+        if (!IsRecruitable(character, NULL))
+        {
+            return false;
+        }
+
+        // The card is looking at them anyway: standing again re-arms the next
+        // knockout (defeat_episode_rules). Never counts, never mints an id.
+        NoteSeenStanding(character);
+
+        // The same decision a click would run, asked as a bystander.
+        EvaluationDetail detail;
+        const Verdict verdict = EvaluatePeek(character, &detail);
+
+        input.route = detail.route;
+        input.haveCore = detail.haveCore;
+        input.core = detail.core;
+        input.verdict = verdict;
+        input.holdKnown = detail.holdKnown;
+        input.hoursHeld = detail.hoursHeld;
+        input.mercyPending = IsMercyPending(character);
+        // The peek mints no id, so it has no roll key: a roll it could not make is
+        // shown as odds (readout_model.h).
+        input.rollKeyed = false;
+    }
 
     const ReadoutView view = BuildReadout(input, config);
     if (!view.visible)
@@ -374,6 +385,14 @@ bool TickPinned(Character* selected)
 
 // The card follows the selection: worked out when it changes and every
 // kSelectionRefreshMs after that, only moved in between.
+// Who the selection card is about: the selected NPC, or the selected temporary
+// member of the squad (temp_member.h), whose card counts the days they have left.
+Character* CardSubject()
+{
+    Character* npc = SelectedNpc();
+    return npc != NULL ? npc : SelectedTempMember();
+}
+
 void TickSelection(Character* selected)
 {
     const DWORD now = GetTickCount();
@@ -524,7 +543,7 @@ void RequestReadout(Character* character)
     g_offerSeen = false;
     // The pin outlives whatever was selected at the click; only a later change of
     // selection (with no offer open) ends it.
-    Character* selected = config.readoutOnSelect ? SelectedNpc() : NULL;
+    Character* selected = config.readoutOnSelect ? CardSubject() : NULL;
     g_lastSelection = selected;
     // Placed beside the offer at once, not one frame late.
     TickPinned(selected);
@@ -544,7 +563,7 @@ void ReadoutTick()
         return;
     }
 
-    Character* selected = config.readoutOnSelect ? SelectedNpc() : NULL;
+    Character* selected = config.readoutOnSelect ? CardSubject() : NULL;
     UpdateDismissal(selected);
 
     if (g_mode == Card_Pinned)

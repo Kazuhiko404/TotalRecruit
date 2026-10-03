@@ -45,6 +45,7 @@ is shown on hover.</p>
   <button class="tab" data-s="compact" aria-pressed="false">Press Hablar, compact</button>
   <button class="tab" data-s="notice" aria-pressed="false">Someone wants to talk (head notice)</button>
   <button class="tab" data-s="noticeselect" aria-pressed="false">Select the one who called</button>
+  <button class="tab" data-s="tempmember" aria-pressed="false">Temporary member (squad notices)</button>
 </div>
 <div class="scene-wrap"><div class="scene wide" id="scene"></div></div>
 <p class="hint">Who is worth talking to is still marked by the vanilla talk marker (<code>hasDialogue_Fast</code>); that answer is
@@ -234,6 +235,28 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
         placeInto(readoutHTML(stateById('ally').vm, false), anchorOf(640), null);
       }
       placeInto(headNoticeHTML('Bandido Hambriento', HEAD_NOTICE.approaching), anchorOf(1040), null);
+      return;
+    }
+    if (mode === 'tempmember') {
+      // Three temporary members of the squad (src/temp_member.cpp). The left one is selected:
+      // his card only counts the days left. The middle one was hit by the squad (a strike and
+      // the warning that comes with the one before the last); the right one's time is nearly up.
+      // The farewell notices ("Me voy. Fue un honor", "Me largo") go up once they left the squad.
+      h += '<div class="npc" style="left:200px"></div><div class="npc" style="left:640px"></div>' +
+           '<div class="npc" style="left:1040px"></div>';
+      h += '<div class="selring" style="left:189px"></div>';
+      h += '<div class="callout" style="left:300px;top:16px;max-width:560px">Temporary members are yours, so ' +
+           'their notices are squad notices: kept while they are in the squad and never dismissed by selecting ' +
+           'them. On joining: "' + TEMP_MEMBER.join + '". Each strike: "' + TEMP_MEMBER.mistreated + '" (hunger: "' +
+           TEMP_MEMBER.hungry + '"). Leaving: "' + TEMP_MEMBER.farewell + '" or "' + TEMP_MEMBER.farewellMistreated +
+           '", plus a roller line with the name.</div>';
+      scene.innerHTML = h;
+      var temp = { name: 'Kira la Errante', route: 'libre', routeLabel: 'Libre', showStress: false,
+                   showChance: false, showDefeats: false, showFood: false,
+                   why: { text: TEMP_MEMBER.card, tone: 'ok' }, alt: null };
+      placeInto(readoutHTML(temp, false), anchorOf(200), null);
+      placeInto(headNoticeHTML('Gor el Viejo', TEMP_MEMBER.warning), anchorOf(640), null);
+      placeInto(headNoticeHTML('Sana Roja', TEMP_MEMBER.expiring), anchorOf(1040), null);
       return;
     }
     // Default: the player pressed Hablar on the caged bandit in the middle of the screen.

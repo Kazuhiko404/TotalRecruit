@@ -743,7 +743,7 @@ Pedido del usuario (2026-10-03): en Balanced, el nivel y la personalidad de un a
 | A3 | El mismo aliado sin cats suficientes | TIENES en rojo, "No te alcanzan..." (o la linea del slider), sin ACEPTAR; la tarjeta dice "Aliado: X cats (tienes Y)" | — |
 | A4 | Aliado de nivel 50-79 con relacion alta | Descuento tope 10% ("-10%") | `faction=x0.90` |
 | A5 | Aliado Traicionero o Astuto de nivel 80-99 | Paga con hasta 10% de descuento | — |
-| A6 | Aliado Bueno o Neutral de nivel 80+ y tu lider a 15 niveles o menos | PRECIO Gratis, "Aliado (nivel N): <nombre> te acompanara D dias como miembro temporal." (D entre 3 y 10, el mismo todo el dia); ACEPTAR lo recluta | `<nombre> [temp] joined for D days` |
+| A6 | Aliado Bueno o Neutral de nivel 80+ y tu lider a 15 niveles o menos | PRECIO Gratis, "Aliado (nivel N): <nombre> te acompanara D dias como miembro temporal." (D entre 3 y 10, el mismo todo el dia); ACEPTAR lo recluta | `<nombre> [temp] joined for D days (until hour H), home <sid>` |
 | A7 | El mismo con el lider a mas de 15 niveles | Rechazo en rojo "Eres demasiado debil para que te acompane", CERRAR | — |
 | A8 | Aliado Frio y cruel o Maniaco de nivel 80+ | Rechazo "no camina al lado de nadie: su crueldad no se pone a tus ordenes" | — |
 | A9 | Aliado Traicionero o Astuto de nivel 100+ | Rechazo "vale mas de lo que podrias pagarle nunca" | — |
@@ -752,3 +752,21 @@ Pedido del usuario (2026-10-03): en Balanced, el nivel y la personalidad de un a
 | A12 | Preset 0 (Cheat) | Sin cambios: jaula y un momento | — |
 | A13 | Mod Hub "Aliados por nivel: activo" apagado, preset 1 | Todos los aliados vuelven a la tirada diaria | — |
 | A14 | Mod Hub: bajar "Aliados: peso de la amistad" a 0.5 con relacion 28 | El descuento pasa a 14% | — |
+
+### 12.25 El miembro temporal: avisos, maltrato y partida (ally-tiers-temp-helpers T2)
+
+Un aliado Bueno o Neutral de nivel 80+ reclutado como en 12.24 A6. Preset 1 (Balanced). Defaults: 3 faltas, hambre 12 h seguidas bajo 25%, 12 h entre faltas del mismo tipo, aviso 12 h antes, 7 dias sin volver. Para no esperar dias de juego: Mod Hub "Temporal: horas de hambre" = 1, "Temporal: horas entre faltas" = 1, `allyTierTempMinDays` = `allyTierTempMaxDays` = 1, y la velocidad del juego al maximo. Mockup: `ui-mockup/readout.html` seccion 2, "Temporary member (squad notices)". Las faltas se loguean siempre (`[temp] strikes N (...)`).
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| T1 | Reclutar el aliado 80+ (popup "te acompanara D dias", ACEPTAR) | Se une; cartel sobre su cabeza "Te acompanare D dias" que se queda aunque ya es de tu grupo y aunque lo selecciones | `[temp] joined for D days (until hour H), home <sid>` y `[notice] ... (squad)` |
+| T2 | Seleccionarlo | Su tarjeta: ruta Libre y una sola linea verde "Temporal: le quedan D dias", nada mas | — |
+| T3 | Dejarlo sin comer hasta que el estomago baje del 25% y pasen las horas de hambre | Cartel "Tengo hambre... no me trates asi" | `[temp] strikes 1 (hunger 1, ...)` |
+| T4 | Ordenarle a otro de tu grupo que lo ataque | Cartel "Si sigues asi me voy" (es la falta 2 de 3); un segundo golpe enseguida no suma otra | `[temp] strikes 2 (... attacked 1 ...) warned` |
+| T5 | Seguir hasta que alguien de tu grupo lo noquee (pasada la espera entre faltas si fue el mismo tipo) | Falta 3: se va. Cartel "Me largo", roller "<nombre> se harto del maltrato y se fue de tu grupo."; desaparece de los retratos, vuelve a su faccion y se aleja caminando | `[temp] <nombre> left the squad for faction <sid>.` y `left: mistreated.` |
+| T6 | Otro miembro temporal, bien tratado, hasta 12 h antes de su fin | Cartel "Me ire pronto" | `[temp] strikes 0 (...) expiry soon` |
+| T7 | Dejar pasar su hora de vencimiento | Cartel "Me voy. Fue un honor", roller "<nombre> cumplio su tiempo y se fue de tu grupo."; vuelve a su faccion (la de antes de reclutarlo) en un pelotón propio y camina lejos; ya no es controlable | `left the squad for faction <sid>`, `left: time up.` |
+| T8 | Guardar con un miembro temporal a mitad de su estadia, salir del juego, volver a cargar | Su tarjeta dice los mismos dias que antes (menos el tiempo pasado); las faltas que tenia siguen contando (con 2, una falta mas lo hace irse) | — |
+| T9 | Despues de T5 o T7, Hablar con el mismo NPC | "no quiere saber nada de ti" durante 7 dias de juego; no se lo puede volver a tomar como temporal | — |
+| T10 | Un miembro temporal golpeado por enemigos (no tu grupo) o noqueado por hambre | No suma falta | — |
+| T11 | Faccion de origen que no existe o es del jugador (raro) | Se va igual a "1233-gamedata.base" o a la faccion vacia | `left the squad for faction 1233-gamedata.base` |

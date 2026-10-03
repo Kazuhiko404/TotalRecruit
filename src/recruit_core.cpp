@@ -706,12 +706,14 @@ void CompleteOffer(Character* character, bool accepted)
         return;
     }
 
+    // An 80+ ally comes for a few days only, and goes back to the faction they came
+    // from: read now, while the recruit has not changed it yet.
+    const std::string homeFaction = verdict.temporary ? FactionStringId(character) : std::string();
     const bool joined = PayAndRecruit(character, CatsDue(verdict), name,
                                       name + ": " + verdict.reason);
-    // An 80+ ally comes for a few days only: the one hook that learns it.
     if (joined && verdict.temporary)
     {
-        OnRecruitedTemporarily(character, verdict.temporaryDays);
+        OnRecruitedTemporarily(character, verdict.temporaryDays, homeFaction);
     }
 }
 

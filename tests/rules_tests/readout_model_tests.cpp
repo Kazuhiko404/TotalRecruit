@@ -341,6 +341,25 @@ void ATemporaryOrRefusingAllyShowsItsTierLine()
     }
 }
 
+void ATemporaryMemberShowsTheDaysLeft()
+{
+    const char* name = "temporary member: one good line with the days left, nothing else on the card";
+    ReadoutInput in = Input(Route_FreeWorld, Reason_None);
+    in.tempMember = true;
+    in.tempDaysLeft = 4;
+    const ReadoutView v = BuildReadout(in, kConfig);
+    CHECK(v.visible);
+    CHECK(v.route == ReadoutRoute_Free);
+    CHECK(v.primary.id == kLineTempMemberDaysLeft);
+    CHECK(v.primary.need == 4);
+    CHECK(v.primary.tone == ReadoutTone_Good);
+    CHECK(!v.secondary.Present());
+    CHECK(!v.showStress);
+    CHECK(!v.showChance);
+    CHECK(!v.showDefeats);
+    CHECK(!v.showFood);
+}
+
 void TheEasyWaitIsASecondLineWhileItRuns()
 {
     const char* name = "easy wait: second line beside another way in, with the hours left";
@@ -442,6 +461,7 @@ void RunReadoutModelTests()
     ThePrimaryLineIsTheVerdictsReason();
     ABalancedAllysPriceNamesTheFriendship();
     ATemporaryOrRefusingAllyShowsItsTierLine();
+    ATemporaryMemberShowsTheDaysLeft();
     TheEasyWaitIsASecondLineWhileItRuns();
     TheWaitIsPromotedWhenTheReasonNamesNoNumber();
     StressTermsMakeStressFromState();

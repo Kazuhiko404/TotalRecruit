@@ -7,6 +7,7 @@
 #include "readout.h"
 #include "cage_commands.h"
 #include "submission_director.h"
+#include "temp_member.h"
 #include "log.h"
 
 #include <kenshi/gui/ForgottenGUI.h>
@@ -22,7 +23,7 @@ void (*g_forgottenGuiUpdate_orig)(ForgottenGUI*) = NULL;
 void SafeTick()
 {
     // HeadNoticeTick after ReadoutTick: it reads where the normal card is this frame.
-    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); HeadNoticeTick(); TickCageCommands(); SubmissionTick(); ModHubTick(); }
+    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); HeadNoticeTick(); TickCageCommands(); SubmissionTick(); TempMemberTick(); ModHubTick(); }
     TR_CATCH { }
 }
 

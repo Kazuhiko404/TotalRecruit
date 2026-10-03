@@ -76,6 +76,7 @@ const Suite kSuites[] = {
     { "head_notice_rules", RunHeadNoticeRulesTests },
     { "personality_groups", RunPersonalityGroupsTests },
     { "ally_tier_rules", RunAllyTierRulesTests },
+    { "temp_member_rules", RunTempMemberRulesTests },
 };
 } // namespace
 

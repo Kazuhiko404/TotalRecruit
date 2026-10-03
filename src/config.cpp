@@ -126,6 +126,19 @@ void ClampAllyTiers(AllyTiers* t)
     ClampInt(&t->tempMemberMaxDays, t->tempMemberMinDays, 120);
 }
 
+// A temporary member's stay (temp_member_rules.h): at least one strike to leave,
+// thresholds inside their range, and no wait longer than a month (the rejoin
+// cooldown rides the reject cooldown, itself at most 720 hours).
+void ClampTempMembers(TempMembers* t)
+{
+    ClampInt(&t->maxStrikes, 1, 10);
+    ClampFloat(&t->hungerThreshold, 0.0f, 1.0f);
+    ClampFloat(&t->hungryHours, 0.0f, 168.0f);
+    ClampFloat(&t->strikeCooldownHours, 0.0f, 168.0f);
+    ClampFloat(&t->expiryWarningHours, 0.0f, 72.0f);
+    ClampInt(&t->rejoinCooldownDays, 0, 30);
+}
+
 void ReadFloat(const std::string& text, const std::string& key, float* target)
 {
     size_t valueStart = 0;
@@ -299,6 +312,12 @@ std::vector<Field> ConfigFields(Config& c)
     AddInt(f, "allyTierCloseLevelGap", &c.allyTiers.closeLevelGap);
     AddInt(f, "allyTierTempMinDays", &c.allyTiers.tempMemberMinDays);
     AddInt(f, "allyTierTempMaxDays", &c.allyTiers.tempMemberMaxDays);
+    AddInt(f, "tempMemberMaxStrikes", &c.tempMembers.maxStrikes);
+    AddFloat(f, "tempMemberHungerThreshold", &c.tempMembers.hungerThreshold);
+    AddFloat(f, "tempMemberHungryHours", &c.tempMembers.hungryHours);
+    AddFloat(f, "tempMemberStrikeCooldownHours", &c.tempMembers.strikeCooldownHours);
+    AddFloat(f, "tempMemberExpiryWarningHours", &c.tempMembers.expiryWarningHours);
+    AddInt(f, "tempMemberRejoinCooldownDays", &c.tempMembers.rejoinCooldownDays);
     AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
     AddFloat(f, "relationRefuseAll", &c.relationRefuseAll);
     AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);
@@ -500,6 +519,7 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.animals.temperamentBase, 0.0f, 2.0f);
     ClampFloat(&g_config.animals.temperamentWeight, 0.0f, 2.0f);
     ClampAllyTiers(&g_config.allyTiers);
+    ClampTempMembers(&g_config.tempMembers);
 
     g_modDirectory = modDirectory;
     LogInfo("Loaded config from " + path);

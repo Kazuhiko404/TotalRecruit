@@ -13,6 +13,7 @@
 #include "submission_rules.h"
 #include "ui_style.h"
 
+#include <set>
 #include <vector>
 
 namespace totalrecruit
@@ -34,6 +35,10 @@ DWORD g_nextCheck = 0;
 // The selection as last seen, to catch the frame it changes. Raw, never
 // dereferenced here, cleared at a load.
 Character* g_lastSelection = NULL;
+// The notices raised with RaiseSquadHeadNotice: their NPC being one of the player's
+// is not a reason to drop them. A key outlives its notice harmlessly (an ordinary
+// raise for that NPC takes it out).
+std::set<CharKey> g_squadNotices;
 
 // --------------------------------------------------------------- Widgets
 // The readout card's look (readout_ui.cpp), compact: px values of the
@@ -278,7 +283,7 @@ bool SubjectGone(const HeadNotice& notice)
         return true;
     }
     bool mine = false;
-    if (!SafeIsPlayerCharacter(npc, &mine) || mine)
+    if (!SafeIsPlayerCharacter(npc, &mine) || (mine && g_squadNotices.count(notice.who) == 0))
     {
         return true;
     }
@@ -383,9 +388,8 @@ void DrawNotices(bool haveSelected, const CharKey& selectedKey)
         }
     }
 }
-} // namespace
 
-void RaiseHeadNotice(Character* npc, const std::string& text)
+void Raise(Character* npc, const std::string& text, bool squad)
 {
     const Config& config = GetConfig();
     if (npc == NULL || !config.enabled)
@@ -397,9 +401,29 @@ void RaiseHeadNotice(Character* npc, const std::string& text)
     {
         return;
     }
+    if (squad)
+    {
+        g_squadNotices.insert(key);
+    }
+    else
+    {
+        g_squadNotices.erase(key);
+    }
     const std::string name = CharacterName(npc);
     g_board.Raise(key, npc, name, text, g_clock, ClampHeadNoticeSeconds(config.headNoticeSeconds));
-    LogInfo("[notice] " + name + ": \"" + text + "\" over the head [key " + key.ToString() + "]");
+    LogInfo("[notice] " + name + ": \"" + text + "\" over the head [key " + key.ToString() + "]" +
+            (squad ? " (squad)" : ""));
+}
+} // namespace
+
+void RaiseHeadNotice(Character* npc, const std::string& text)
+{
+    Raise(npc, text, false);
+}
+
+void RaiseSquadHeadNotice(Character* member, const std::string& text)
+{
+    Raise(member, text, true);
 }
 
 void DismissHeadNotice(Character* npc)
@@ -442,6 +466,7 @@ void HeadNoticeTick()
 void ForgetHeadNotices()
 {
     g_board.Clear();
+    g_squadNotices.clear();
     g_lastSelection = NULL;
     g_nextCheck = 0;
     HideSlotsFrom(0);

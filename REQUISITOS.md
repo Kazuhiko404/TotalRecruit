@@ -255,13 +255,34 @@ aliados de Balanced en el mundo abierto (`character_facts.cpp`); en Balanced ese
 multiplicador vale 1.0 para todo lo demás, así que nada se cuenta dos veces. El
 regateo, la bolsa y el recargo por ofensa trabajan sobre el precio ya rebajado.
 
-**R4b.3 — Miembro temporal (80+).** *(P1, T1 hecho; T2 pendiente)* Bueno o
-Neutral, de nivel 80 o más, y a lo sumo `allyTierCloseLevelGap` (15) niveles por
-encima del líder; si no, "eres demasiado débil para que te acompañe". Se queda
-entre `allyTierTempMinDays` y `allyTierTempMaxDays` días (3..10), sorteados una
-vez por día con la semilla del NPC. T1 lo recluta como siempre y avisa a
-`OnRecruitedTemporarily` (`src/temp_member.h`); la duración, el maltrato y la
-partida son T2.
+**R4b.3 — Miembro temporal (80+).** *(P1, T1 y T2 hechos; prueba en juego
+pendiente)* Bueno o Neutral, de nivel 80 o más, y a lo sumo `allyTierCloseLevelGap`
+(15) niveles por encima del líder; si no, "eres demasiado débil para que te
+acompañe". Se queda entre `allyTierTempMinDays` y `allyTierTempMaxDays` días
+(3..10), sorteados una vez por día con la semilla del NPC.
+
+- **Lo que se guarda.** Al unirse: la hora de vencimiento (ahora + días × 24) y
+  las faltas, como enteros en el save del personaje, y la facción de la que vino
+  (leída antes de reclutarlo) como texto. Sobreviven a recargar.
+- **Maltrato.** Una falta por cada una de estas, cada tipo a lo sumo una vez cada
+  `tempMemberStrikeCooldownHours` (12): hambre seguida `tempMemberHungryHours`
+  (12 h) bajo `tempMemberHungerThreshold` (25% de estómago, o el motor dice
+  hambriento); alguien de tu grupo lo ataca; alguien de tu grupo lo noquea. Con
+  `tempMemberMaxStrikes` (3) faltas se va antes de tiempo.
+- **Siempre avisa, sobre su cabeza.** Al unirse "Te acompañaré N días"; en cada
+  falta "No me trates así" (hambre: "Tengo hambre…"); en la falta anterior a la
+  última "Si sigues así me voy"; `tempMemberExpiryWarningHours` (12 h) antes del
+  final "Me iré pronto"; al irse "Me voy. Fue un honor" o, maltratado, "Me largo",
+  más una línea en el roller con su nombre. La tarjeta del miembro seleccionado
+  dice "Temporal: le quedan N días".
+- **La partida.** La secuencia de despido de KEP: vuelve a su facción (si no se
+  puede, la de KEP por defecto o la vacía), en un pelotón propio ("Wandering
+  Squad" vanilla) que se lo lleva caminando. Después no quiere saber nada de ti
+  por `tempMemberRejoinCooldownDays` (7) días (el mismo enfriamiento del rechazo
+  del sometido), así que no se lo puede volver a tomar enseguida.
+- **Límites.** Si lo reclutas por un diálogo FCS (vacío por defecto), entra como
+  miembro permanente. El blackboard de KEP no se limpia (no hay
+  `AI/Blackboard.h`): la rutina la da el pelotón nuevo.
 
 **R4b.4 — Siempre se explica.** *(P1, hecho)* El popup nombra el tramo ("Aliado
 (nivel 34): te cobra 1.840 cats, con 14% de descuento por amistad", PRECIO con
@@ -270,7 +291,9 @@ también ("Aliado: 1.840 cats con descuento"). Las negativas llevan su motivo.
 
 **R4b.5 — Todo configurable.** *(P1, hecho)* Claves `allyTier*` en
 `config.json` y en el Mod Hub: los niveles de corte, los máximos de cada tramo,
-la escala, la distancia de nivel y los días.
+la escala, la distancia de nivel y los días. El miembro temporal, `tempMember*`:
+faltas para irse, umbral y horas de hambre, horas entre faltas, aviso antes de
+irse y días sin volver.
 
 ---
 

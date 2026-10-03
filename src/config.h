@@ -467,6 +467,38 @@ struct AllyTiers
     }
 };
 
+// A temporary squad member once they joined (temp_member_rules.h): what counts as
+// mistreatment, how many strikes they take before leaving, and the warnings they
+// give. Hours are in-game hours. config.json keys "tempMember*".
+struct TempMembers
+{
+    // Strikes that make them leave before their time is up.
+    int maxStrikes;
+    // Hungry: their stomach under this 0..1 fraction of full (or the engine says
+    // they are starving) ...
+    float hungerThreshold;
+    // ... for at least this many hours in a row is one strike.
+    float hungryHours;
+    // Each kind of strike (hunger, attacked by the squad, knocked out by the
+    // squad) counts at most once per this many hours.
+    float strikeCooldownHours;
+    // They say "me ire pronto" this many hours before their time is up.
+    float expiryWarningHours;
+    // After leaving, they want nothing to do with the player for this many days
+    // (the reject cooldown, submission_tracker.h).
+    int rejoinCooldownDays;
+
+    TempMembers()
+        : maxStrikes(3),
+          hungerThreshold(0.25f),
+          hungryHours(12.0f),
+          strikeCooldownHours(12.0f),
+          expiryWarningHours(12.0f),
+          rejoinCooldownDays(7)
+    {
+    }
+};
+
 // Which dialogue records the plugin fires. Empty means "no FCS package
 // installed" -- the plugin then falls back to acting directly, so the mod still
 // works as a code-only install.
@@ -577,6 +609,7 @@ struct Config
     Submission submission;
     Animals animals;
     AllyTiers allyTiers;
+    TempMembers tempMembers;
     DialogueIds dialogue;
     Exclusions exclude;
 

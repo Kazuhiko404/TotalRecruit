@@ -127,10 +127,27 @@ ReadoutLineView PrimaryLine(const ReadoutInput& in)
     }
     return LineFor((int)key, in);
 }
+
+
+// A temporary member's card: they already joined, so only the days they have left.
+ReadoutView TempMemberReadout(const ReadoutInput& in)
+{
+    ReadoutView v;
+    v.visible = true;
+    v.route = ReadoutRoute_Free;
+    v.primary.id = kLineTempMemberDaysLeft;
+    v.primary.need = in.tempDaysLeft;
+    v.primary.tone = ReadoutTone_Good;
+    return v;
+}
 } // namespace
 
 ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
 {
+    if (in.tempMember)
+    {
+        return TempMemberReadout(in);
+    }
     ReadoutView v;
     if (IsHiddenReason(in.verdict.reasonKey))
     {

@@ -14,6 +14,10 @@
 //   total_recruit.fed_by_player    feeding_ledger  meals the player gave (animals)
 //   total_recruit.reject_cooldown_until
 //                                  submission_tracker  game hour the reject cooldown ends
+//   total_recruit.temp_expiry_hour temp_member.h   game hour a temporary member's stay ends
+//   total_recruit.temp_strikes     temp_member.h   a temporary member's mistreatment strikes
+//
+// Strings ride the same hooks through saved_strings.h.
 //
 // Contract for each row:
 //   saved(id)          the value to write for the character carrying `id`. Always

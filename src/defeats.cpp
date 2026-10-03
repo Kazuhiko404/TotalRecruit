@@ -123,26 +123,6 @@ bool SafeNearDeath(Character* character, bool* out, float* outFraction, bool* ou
     TR_CATCH { return false; }
 }
 
-// The engine calls knockout for every character it puts down, including the
-// player's own and including deaths in the field the player never saw. Only a
-// knockout the player was responsible for should count towards yielding to
-// them, and lastGuyWhoDefeatedMe is the engine's own answer to who that was.
-bool SafeBeatenByPlayer(Character* character, bool* out)
-{
-    TR_TRY
-    {
-        *out = false;
-        Character* winner = character->lastGuyWhoDefeatedMe.getCharacter();
-        if (winner == NULL)
-        {
-            return false;
-        }
-        *out = winner->isPlayerCharacter();
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
 // Its own POD-only frame: C2712 counts the std::string the logging below
 // builds, even though it never enters the guard.
 Character* ReadVictim(MedicalSystem* medical)
@@ -198,8 +178,11 @@ void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Si
 
     bool mine = false;
     const bool readMine = SafeIsPlayerCharacter(character, &mine);
+    // The engine calls knockout for every character it puts down, including the
+    // player's own and including deaths in the field the player never saw. Only a
+    // knockout the player was responsible for counts towards yielding to them.
     bool beatenByPlayer = false;
-    const bool readWinner = SafeBeatenByPlayer(character, &beatenByPlayer);
+    const bool readWinner = SafeDefeatedByPlayer(character, &beatenByPlayer);
 
     const DefeatCredit credit = DecideDefeatCredit(readMine && mine, readWinner,
                                                    beatenByPlayer, creditedToPlayer);

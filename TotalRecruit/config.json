@@ -57,6 +57,12 @@
   "allyTierCloseLevelGap": 15,
   "allyTierTempMinDays": 3,
   "allyTierTempMaxDays": 10,
+  "tempMemberMaxStrikes": 3,
+  "tempMemberHungerThreshold": 0.25,
+  "tempMemberHungryHours": 12.0,
+  "tempMemberStrikeCooldownHours": 12.0,
+  "tempMemberExpiryWarningHours": 12.0,
+  "tempMemberRejoinCooldownDays": 7,
 
   "submissionEventEnabled": true,
   "submissionApproachSeconds": 60.0,

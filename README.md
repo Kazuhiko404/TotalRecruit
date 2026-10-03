@@ -108,6 +108,14 @@ level 100 so do the greedy. The popup says which: "Aliado (nivel 34): te cobra
 price. Every number is an `allyTier*` key in `config.json` and in Mod Hub;
 Vanilla+ and Cheat keep their old ally behaviour.
 
+A temporary member tells you, over their head, how long they will stay ("Te
+acompanare 6 dias"), and their card counts the days left. Starve them, hit them
+or knock them out and they complain ("No me trates asi"); one strike before the
+last they warn you ("Si sigues asi me voy"), and at three strikes they leave.
+Otherwise they say "Me ire pronto" half a day before their time is up and then
+go: back to their own faction, walking away in a squad of their own, and they
+will not join you again for a week. The numbers are `tempMember*` keys.
+
 ### Refusal, with a reason
 
 Someone who watched you kill their friend says no — and you are told so. Every

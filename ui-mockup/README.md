@@ -158,6 +158,17 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     (`readout.line.ally.paidJoin`) instead of the plain price. States "Ally pays", "Ally comes for a few days",
     "Ally refuses: leader too weak", "Good ally under 20 joins free".
 
+### Temporary members (section 2, "Temporary member (squad notices)")
+
+22. **A temporary member says what is going on, over their head** (ally-tiers-temp-helpers T2). The same
+    head notice (`.hn`), raised as a squad notice (`RaiseSquadHeadNotice`): it stays while they are in the squad,
+    where an ordinary notice goes the moment its NPC joins, and selecting them never dismisses it. Lines
+    (`tempMember.notice.*`): "Te acompanare 6 dias" on joining, "No me trates asi" on a strike (hunger: "Tengo
+    hambre... no me trates asi"), "Si sigues asi me voy" on the strike before the last, "Me ire pronto" before the
+    time is up, and after they left the squad "Me voy. Fue un honor" or "Me largo" (an ordinary notice by then).
+    Selecting a temporary member shows their card with one line, "Temporal: le quedan 4 dias"
+    (`readout.line.temp.daysLeft`), and nothing else. Section 2, tab "Temporary member (squad notices)".
+
 ## Checking a change
 
 Mockup first, then C++. Measure in Chrome (`getBoundingClientRect`) and copy the px into the constants.
