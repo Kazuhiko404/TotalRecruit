@@ -4,6 +4,7 @@
 #include "hold_tracking.h"
 #include "npc_speech.h"
 #include "char_key_reader.h"
+#include "defeats.h"
 #include "engine_reads.h"
 #include "config.h"
 #include "recruit_core.h"
@@ -120,6 +121,11 @@ void SweepForHails(bool hailing)
         // the cage starts the prisoner's hold clock and a sighting outside it
         // ends it, so a released-and-recaged prisoner starts over.
         const bool caged = NoteCageState(npc);
+
+        // Already looking at them: someone the player put down who is back on
+        // their feet re-arms the next knockout (defeat_episode_rules). Reads the
+        // engine only for a character whose last knockout counted.
+        NoteSeenStanding(npc);
 
         // Cheapest first: most characters in range are not captives at all.
         if (!hailing || !caged || !CouldEverHail(npc))

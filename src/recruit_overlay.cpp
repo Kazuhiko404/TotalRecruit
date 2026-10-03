@@ -339,7 +339,9 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
 
     // Someone the player finds unconscious was put down by somebody, and the
     // knockout hook does not fire for every way that happens. Checked here
-    // because this is the moment the player is actually looking at them.
+    // because this is the moment the player is actually looking at them: down,
+    // it counts once per knockout (with the player's credit); standing, it
+    // re-arms the next one.
     NoteIfDown(character);
 
     std::string excluded;

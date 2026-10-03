@@ -118,23 +118,24 @@ sumisión.
 *Verificado:* el motor tiene una llamada de noqueo interceptable, así que contar
 es posible.
 
-**R3.3 — El conteo necesita un piso que sobreviva la recarga.** *(P1; implementado en T2: el piso nunca baja de `defeatsToBreak`)*
-Un contador propio vive en memoria y una recarga lo borra. La solución pedida
-—inteligente, con respaldo— son tres niveles:
+**R3.3 — El conteo sobrevive la recarga.** *(P1; implementado en recruit-gating T1: el conteo vive en el save del propio personaje)*
+Un contador propio vive en memoria y una recarga lo borra. La solución es la de
+TotalSparring:
 
-1. **Piso persistente:** al primer noqueo se escribe una marca en la memoria del
-   propio NPC, que el motor guarda en la partida. Sobrevive todo.
-2. **Precisión de sesión:** el contador propio lleva la cuenta fina mientras el
-   juego está abierto.
+1. **Conteo en el save del personaje:** el mod ya guarda un id propio
+   (`total_recruit.character_id`) dentro del estado de guardado de cada
+   personaje; al lado guarda `total_recruit.player_defeats` con cuántas veces
+   el jugador lo derrotó. Cargar una partida restaura **exactamente** el conteo
+   de esa partida (una partida vieja trae su conteo viejo).
+2. **Una derrota por noqueo:** un noqueo cuenta una vez aunque el motor lo
+   anuncie varias veces o el jugador haga clic derecho sobre el cuerpo muchas
+   veces; verlo de pie de nuevo rearma el siguiente.
 3. **Respaldo por estado:** hambre y heridas actuales, que no dependen de ningún
    conteo.
 
-Al recargar se pierde la precisión, **nunca el progreso**: el NPC nunca vuelve a
-estar "intacto" si ya fue vencido.
-
-*Riesgo verificado:* escribir en la memoria del NPC es una API que ya usamos y
-funciona, pero la IA del juego lee esas marcas. Hay que comprobar jugando que no
-cambie el comportamiento del NPC de forma extraña.
+*Descartado:* la marca `LT_SQUAD_LOST_TO_ME_ONCE` del motor como piso. El motor
+la escribe solo, así que un guardia nunca vencido aparecía con `2/2` derrotas y
+se rendía en el campo. El mod ya no la lee ni la escribe.
 
 **R3.4 — Curar y volver a pegar.** *(P2)*
 Curar a un vencido y derrotarlo de nuevo debe acercarlo a la sumisión más que
@@ -275,7 +276,7 @@ construir sobre una suposición.
 | I1 | Si el motor asigna temperamento a los animales | R5.4 | ✅ **Sí, y varía** entre individuos de la misma especie |
 | I2 | Qué valores toma el hambre entre famélico y saciado | R5.1 | ✅ **0..3, donde 3 es lleno.** Tres fuentes independientes |
 | I3 | Qué señal sirve de "vida restante" | R3.1 | ✅ `blood`/`getMaxBlood()` o `derivedFleshHealthPercent` |
-| I4 | Si escribir la marca de derrota altera la conducta de la IA | R3.3 | ❌ **La única abierta.** Requiere observar conducta en juego |
+| I4 | Si escribir la marca de derrota altera la conducta de la IA | R3.3 | ✅ **Resuelta: ya no se escribe ni se lee.** El conteo vive en el save del personaje (recruit-gating T1) |
 | I5 | Si el conteo de intentos de charla sobrevive una recarga | R2.4 | ✅ **No**, y la clave es un puntero crudo — bug latente |
 | I6 | Qué tipos de control acepta realmente el panel del hub | R6.3 | ✅ Secciones, select, texto libre y más |
 

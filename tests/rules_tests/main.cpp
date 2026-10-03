@@ -44,6 +44,8 @@ const Suite kSuites[] = {
     { "price_rules",  RunPriceRulesTests },
     { "route_rules",  RunRouteRulesTests },
     { "defeat_rules", RunDefeatRulesTests },
+    { "defeat_episode_rules", RunDefeatEpisodeRulesTests },
+    { "defeat_ledger", RunDefeatLedgerTests },
     { "mercy_rules",  RunMercyRulesTests },
     { "plea_tracker", RunPleaTrackerTests },
     { "hold_clock", RunHoldClockTests },

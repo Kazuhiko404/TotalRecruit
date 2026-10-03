@@ -295,8 +295,6 @@ std::vector<Field> ConfigFields(Config& c)
     AddInt(f, "chancePersonalityWarmKind", &c.chance.personality[Temperament_WarmKind]);
 
     AddBool(f, "submissionCountDefeats", &c.submission.countDefeats);
-    AddFloat(f, "submissionDefeatDebounceHours", &c.submission.defeatDebounceHours);
-    AddInt(f, "submissionPersistedFloorCount", &c.submission.persistedFloorCount);
     AddInt(f, "submissionChancePerDefeat", &c.submission.chancePerDefeat);
     AddInt(f, "submissionMaxDefeatChance", &c.submission.maxDefeatChance);
     AddBool(f, "submissionBegWhenNearDeath", &c.submission.begWhenNearDeath);

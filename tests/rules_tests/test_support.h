@@ -17,6 +17,8 @@ void RunChanceRulesTests();
 void RunPriceRulesTests();
 void RunRouteRulesTests();
 void RunDefeatRulesTests();
+void RunDefeatEpisodeRulesTests();
+void RunDefeatLedgerTests();
 void RunMercyRulesTests();
 void RunPleaTrackerTests();
 void RunHoldClockTests();

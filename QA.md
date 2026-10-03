@@ -95,23 +95,22 @@ nuevo, así que un NPC de 17% era cuestión de insistir con F9.
 
 | # | Qué hacer | Esperado | Línea del log |
 |---|---|---|---|
-| D1 | Dejar inconsciente a un NPC hostil | Se cuenta una derrota | `defeated by the player (1 this session, floor+session=1)` |
+| D1 | Dejar inconsciente a un NPC hostil | Se cuenta una derrota | `defeated by the player (knocked down from standing; count 1, id:...)` |
 | D2 | Que **otro** NPC noquee a un tercero | **No** cuenta | Ninguna línea `defeated by the player` |
 | D3 | Que noqueen a alguien tuyo | **No** cuenta | Ninguna línea |
-| D4 | Curarlo, dejarlo inconsciente otra vez | Cuenta 2 (R3.4) | `(2 this session, floor+session=2)` |
+| D4 | Curarlo, dejarlo inconsciente otra vez | Cuenta 2 (R3.4) | `(knocked down from standing; count 2, ...)` |
 | D5 | Golpearlo dos veces en el mismo instante | Cuenta **una** sola | El contador no salta de 1 a 3 |
 
 **D2 y D3 son los filtros.** Si cuentan, el mod está sumando peleas ajenas.
 
-### 3.2 El piso persiste (R3.3)
+### 3.2 El conteo persiste en el save (R3.3)
 
 | # | Qué hacer | Esperado | Falla si |
 |---|---|---|---|
-| D6 | Vencerlo 3 veces, guardar, salir, entrar, click | `floor+session=2` — perdió precisión pero no la ruta (el piso nunca baja de `defeatsToBreak`) | Da `0`: la marca no persistió. Da `1`: el piso volvió a quedar bajo el umbral |
-| D7 | Tras D6, mirar el probe | `memoryTags: SQUAD_LOST_TO_ME` | No aparece el tag |
+| D6 | Vencerlo 3 veces, guardar, salir, entrar, click | `defeats=3` en la tarjeta / el log: el conteo exacto | Da `0`: el conteo no llegó al save. Da otro número: se leyó de otro lado |
+| D7 | Tras D6, cargar un save **anterior** a la tercera derrota | El conteo que tenía ese save (p. ej. 2) | Trae el 3 de la sesión |
 
-El diseño acepta perder precisión (3 → 1). Lo que **nunca** puede pasar es
-volver a 0.
+Ya no hay piso ni pérdida de precisión: el save guarda el número exacto.
 
 ### 3.3 Rogar por vida baja (R3.1)
 
@@ -241,26 +240,9 @@ Poné `"preset": 0` y **reiniciá el juego**.
 
 ### I4 — ¿escribir la marca altera la IA?
 
-**Esta es la que cierra el último punto pendiente.**
-
-1. Elegí un NPC hostil de una facción cuyo trato conozcas.
-2. Dejalo inconsciente **por primera vez**.
-3. Buscá en el log las dos líneas seguidas:
-
-```
-[I4 before-mark] intendedAggression=... aggroTowards=... distress=... intendsToAttack=... tempNeutral=...
-[I4 after-mark]  intendedAggression=... aggroTowards=... distress=... intendsToAttack=... tempNeutral=...
-```
-
-| Resultado | Qué significa |
-|---|---|
-| **Los cinco valores iguales** | La marca no toca la IA → **R3.3 confirmado** |
-| **Alguno cambia** | La marca mueve la IA → hay que buscar otro tag |
-
-4. Después dejalo despertar y **observalo 10 minutos**: ¿huye distinto? ¿su
-   facción te trata distinto? ¿ataca a quien antes ignoraba?
-
-Si nada cambia, I4 queda cerrada y las seis investigaciones también.
+**Resuelta (recruit-gating T1):** el mod ya no escribe ni lee
+`LT_SQUAD_LOST_TO_ME_ONCE`. El conteo vive en el save del propio personaje
+(`total_recruit.player_defeats`). Ver §12.13.
 
 ### R6.3 — el layout del hub
 
@@ -416,7 +398,7 @@ Para ver la clave de un NPC: `"probeOnClick": true` y mirar la linea `[route] ..
 | I5 | Guardar, cerrar Kenshi por completo, abrirlo, cargar y clic en el mismo prisionero | El mismo uuid (antes el handle cambiaba) y el **mismo % de unirse** que antes de cerrar (la tirada ya no se vuelve a sortear) | `first character id read back from the save` con el uuid de I2/I3; `[key] id:<uuid>` igual |
 | I6 | Probar con TotalSparring (y Kill Counter) cargados a la vez | Los tres mods mantienen su id y funcionan: un duelo de TotalSparring y una oferta de TotalRecruit, sin cuelgues | las tres lineas `Hooked Character::_NV_serialise` (una por mod); tras guardar y cargar, `first fighter id read back` **y** `first character id read back` |
 | I7 | Abrir un save de antes de este cambio (sin ids) y hacer clic en un NPC | Recibe un id nuevo; su **tirada cambia una vez** (la clave pasa de handle a id) y desde ahi es estable | `first character id created this session` |
-| I8 | Dejarle a un prisionero 1+ derrotas de sesion y un reloj de encierro corriendo, luego cargar otro save (o el mismo) | Nada de lo anterior se arrastra: las derrotas de sesion, el reloj de encierro, los avisos (`hail`) y la insistencia empiezan de cero; queda solo el piso que guarda el motor | `[identity] load begin: session state cleared` |
+| I8 | Dejarle a un prisionero 1+ derrotas de sesion y un reloj de encierro corriendo, luego cargar otro save (o el mismo) | Nada de lo anterior se arrastra: el reloj de encierro, los avisos (`hail`) y la insistencia empiezan de cero; las derrotas vuelven a lo que guardaba **ese** save | `[identity] load begin: session state cleared` |
 | I9 | Tener abierta la ventana de oferta (o la de piedad) y cargar | La ventana se cierra sola, no queda el boton de reclutar apuntando a nadie | `[identity] load begin: session state cleared` |
 | I10 | Si el log muestra `hook installation failed` | El mod sigue andando con clave por handle (como antes de T7), una sola vez en el log | `[identity] persisted character id unavailable; per-character state keyed by handle ...` |
 
@@ -543,3 +525,17 @@ Como en TotalSparring y TotalLoot: mantener clic derecho sobre el NPC, deslizar 
 | G5 | Mismo gesto (G1) sobre los botones de TotalSparring y TotalLoot en el mismo menu | Cada uno ejecuta solo su accion; `Hablar` no se dispara al soltar sobre otro boton | |
 | G6 | Clic con la rueda o el boton del medio sobre `Hablar` | No hace nada | |
 | G7 | Abrir el menu, cerrarlo sin elegir, abrirlo de nuevo y hacer G1 | Funciona igual (cada menu arma un gesto nuevo) | |
+
+### 12.13 Derrotas en el save, una por noqueo (recruit-gating T1)
+
+Con `"probeOnClick": true`. El conteo vive en el save del personaje y un noqueo cuenta una sola vez.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| K1 | Vencer dos veces al mismo NPC (fuera de una jaula), dejar que se levante entre medio | Dos derrotas; al hablarle entra por `field-yield` | `count 1` y luego `count 2` |
+| K2 | Tras K1, guardar, salir del juego, volver a entrar y cargar | La tarjeta y el clic siguen diciendo 2 derrotas | `first character id read back from the save` |
+| K3 | Cargar un save **anterior** a la segunda derrota | El conteo de ese save (1), no el de la sesion | |
+| K4 | Noquearlo una vez y, mientras sigue inconsciente un rato largo, hacer clic derecho varias veces | Cuenta **una** sola | un `defeated by the player`; los demas `[defeat-skip] ...: already counted this knockout` |
+| K5 | Un guardia que nunca venciste (ni en esta partida ni antes) | `defeats=0`; nunca `field-yield` | sin `defeated by the player` para el |
+| K6 | Golpearlo (`GOLPEARLO`) en tu jaula | Cuenta una; el enfriamiento corre | `credited to the player explicitly (beating)` o un solo `defeated by the player` |
+| K7 | Que otro NPC noquee a alguien y hacerle clic derecho mientras esta en el suelo | No cuenta | `[defeat-skip] ...: lastGuyWhoDefeatedMe is not yours` |

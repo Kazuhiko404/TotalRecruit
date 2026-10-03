@@ -254,8 +254,6 @@ static bool DoRegisterModHub()
 
     // Sumision: cuanto aguanta antes de ceder.
     regBool(api, mod, "sub_count_defeats", "Sumision: contar derrotas", "Cuenta cuantas veces lo dejaste inconsciente", &c.submission.countDefeats);
-    regFloat(api, mod, "sub_debounce_hours", "Sumision: horas entre derrotas", "Horas de juego antes de que otra caida cuente de nuevo", 0.0f, 12.0f, 0.25f, 2, &c.submission.defeatDebounceHours);
-    regInt(api, mod, "sub_persist_floor", "Sumision: piso tras recarga", "Cuantas derrotas recuerda la partida (pierde precision, no progreso). Nunca baja de las necesarias para quebrar", 0, 10, 1, &c.submission.persistedFloorCount);
     regInt(api, mod, "sub_chance_per_defeat", "Sumision: chance por derrota", "Cuanta chance suma cada derrota", 0, 50, 1, &c.submission.chancePerDefeat);
     regInt(api, mod, "sub_max_defeat_chance", "Sumision: techo por derrotas", "Cuanto pueden sumar las derrotas como maximo", 0, 95, 5, &c.submission.maxDefeatChance);
     regBool(api, mod, "sub_beg_near_death", "Sumision: rogar al morir", "Ruega por su vida cuando le queda poca sangre", &c.submission.begWhenNearDeath);

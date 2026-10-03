@@ -218,15 +218,10 @@ struct Submission
 {
     // Count knockouts the player inflicted. Off makes submission depend on
     // present condition alone, as it did before.
+    // One knockout counts once (defeat_episode_rules) and the count is saved in
+    // the character's own save state (defeat_ledger), so neither a debounce nor
+    // a reload floor is configured any more.
     bool countDefeats;
-    // Game hours before another knockout of the same character counts again.
-    // One beating raises several engine calls as the body settles, and a
-    // character left down keeps registering while they lie there.
-    float defeatDebounceHours;
-    // What a reload leaves behind. The engine's memory can only say "this
-    // happened", not how often, so a save restores this much and no more --
-    // precision is lost, progress is not.
-    int persistedFloorCount;
     // Chance added per recorded defeat.
     int chancePerDefeat;
     // Ceiling on that, so an endless beating is not an endless argument.
@@ -267,8 +262,6 @@ struct Submission
 
     Submission()
         : countDefeats(true),
-          defeatDebounceHours(0.5f),
-          persistedFloorCount(1),
           chancePerDefeat(12),
           maxDefeatChance(45),
           begWhenNearDeath(true),

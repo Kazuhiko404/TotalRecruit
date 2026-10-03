@@ -4,7 +4,7 @@
 
 #include "test_support.h"
 #include "route_rules.h"
-#include "defeat_rules.h"
+#include "defeat_ledger.h"
 #include "config.h"
 
 #include <cstring>
@@ -237,17 +237,45 @@ void CagedNpcWithDefeatsStillWaitsWhenUnconscious()
     CHECK(ChooseEntryRoute(f) == Route_Unconscious);
 }
 
-// T2c -- after a reload the session count is gone and only the persisted floor
-// remains. With a floor under defeatsToBreak the field-yield route was lost.
+// T2c, then recruit-gating T1 -- the count a beaten NPC carries is the one their
+// own save state holds: serialised from the ledger, cleared at load begin and put
+// back by their load hook. A reload keeps the field-yield route it unlocked.
 void ReloadedNpcKeepsTheFieldYieldRoute()
 {
-    const char* name = "route: a reloaded, previously beaten NPC still yields in the field";
-    Submission sub;   // shipped defaults: persistedFloorCount 1 < defeatsToBreak 2
+    const char* name = "route: a reloaded NPC keeps the defeat count their save holds";
+    const Submission sub;
+    const CharKey gwyn = CharKey::FromId("6f1c2a9e-guard-gwynnever");
+    DefeatLedger ledger;
+    for (int i = 0; i < sub.defeatsToBreak; ++i)
+    {
+        ledger.Add(gwyn);
+    }
+    const int saved = ledger.Get(gwyn);   // the serialise hook writes this
+
+    ledger.Clear();                       // load begin
+    ledger.Set(gwyn, saved);              // the load hook reads it back
+
     RouteFacts f;
     f.defeatsToBreak = sub.defeatsToBreak;
-    f.defeats = EffectiveDefeatCount(0, PersistedDefeatFloor(true, sub.persistedFloorCount,
-                                                             sub.defeatsToBreak));
+    f.defeats = ledger.Get(gwyn);
     CHECK(ChooseEntryRoute(f) == Route_FieldYield);
+}
+
+// The Gwynnever bug: the engine wrote its own "lost to me" tag and the mod read it
+// as two defeats. A character whose save holds no count has none.
+void NpcWithNoSavedCountHasNoDefeats()
+{
+    const char* name = "route: an NPC whose save holds no count is not field-yield";
+    const Submission sub;
+    const CharKey guard = CharKey::FromId("guard-never-beaten");
+    DefeatLedger ledger;
+    ledger.Clear();                       // load begin; her load hook found no key
+
+    RouteFacts f;
+    f.defeatsToBreak = sub.defeatsToBreak;
+    f.defeats = ledger.Get(guard);
+    CHECK(f.defeats == 0);
+    CHECK(ChooseEntryRoute(f) != Route_FieldYield);
 }
 
 void RouteNamesAreDistinct()
@@ -292,5 +320,6 @@ void RunRouteRulesTests()
     CagedNpcWithDefeatsStillDies();
     CagedNpcWithDefeatsStillWaitsWhenUnconscious();
     ReloadedNpcKeepsTheFieldYieldRoute();
+    NpcWithNoSavedCountHasNoDefeats();
     RouteNamesAreDistinct();
 }

@@ -91,6 +91,8 @@
     <ClCompile Include="src\route_rules.cpp" />
     <ClCompile Include="src\temperament_map.cpp" />
     <ClCompile Include="src\defeat_rules.cpp" />
+    <ClCompile Include="src\defeat_episode_rules.cpp" />
+    <ClCompile Include="src\defeat_ledger.cpp" />
     <ClCompile Include="src\mercy_rules.cpp" />
     <ClCompile Include="src\plea_tracker.cpp" />
     <ClCompile Include="src\hold_clock.cpp" />
@@ -169,6 +171,8 @@
     <ClInclude Include="src\atomic_file.h" />
     <ClInclude Include="src\route_rules.h" />
     <ClInclude Include="src\defeat_rules.h" />
+    <ClInclude Include="src\defeat_episode_rules.h" />
+    <ClInclude Include="src\defeat_ledger.h" />
     <ClInclude Include="src\mercy_rules.h" />
     <ClInclude Include="src\plea_tracker.h" />
     <ClInclude Include="src\hold_clock.h" />

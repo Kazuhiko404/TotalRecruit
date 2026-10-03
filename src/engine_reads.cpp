@@ -157,6 +157,23 @@ bool SafeIsDown(Character* character, bool* out)
     TR_CATCH { return false; }
 }
 
+// Port of TotalSparring/src/spar/game/fighter_down_state.cpp (SafeIsKnockedOut).
+// Never the raw sub50KO flag: it stays set for a merely crippled limb.
+bool SafeIsKnockedOut(Character* character, bool* out)
+{
+    if (character == NULL || out == NULL)
+    {
+        return false;
+    }
+    TR_TRY
+    {
+        *out = character->_NV_isLiterallyUnconciousNotPretending() ||
+               character->getProneState() == PS_KO;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
 bool SafeMemoryTag(Character* character, Character* about,
                    CharacterPerceptionTags_LongTerm tag, bool* out)
 {

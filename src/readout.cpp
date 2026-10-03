@@ -1,6 +1,7 @@
 #include "common.h"
 #include "readout.h"
 #include "config.h"
+#include "defeats.h"
 #include "engine_reads.h"
 #include "log.h"
 #include "mercy.h"
@@ -116,6 +117,10 @@ bool WorkOut(Character* character, const char* source)
     {
         return false;
     }
+
+    // The card is looking at them anyway: standing again re-arms the next
+    // knockout (defeat_episode_rules). Never counts, never mints an id.
+    NoteSeenStanding(character);
 
     // The same decision a click would run, asked as a bystander.
     EvaluationDetail detail;

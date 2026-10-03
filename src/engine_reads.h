@@ -36,6 +36,11 @@ bool SafeIsAnimal(Character* character, bool* out);
 bool SafeIsDead(Character* character, bool* out);
 bool SafeIsDown(Character* character, bool* out);
 
+// Out cold, the way TotalSparring's FighterDownState reads it: the engine's own
+// "literally unconscious, not pretending" or the KO prone state. isDown alone is
+// true for anyone who cannot stand, a wide-awake cripple included.
+bool SafeIsKnockedOut(Character* character, bool* out);
+
 // The engine's own per-character memory ("this one remembers that the player
 // ..."). It is saved with the game, which is why the mod uses it at all.
 bool SafeMemoryTag(Character* character, Character* about,

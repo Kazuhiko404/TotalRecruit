@@ -5,6 +5,8 @@
 #include "char_key_reader.h"
 #include "engine_reads.h"
 #include "defeat_rules.h"
+#include "defeat_episode_rules.h"
+#include "defeat_ledger.h"
 
 #include <map>
 #include <sstream>
@@ -21,76 +23,63 @@ void (*g_knockout_orig)(MedicalSystem*, float) = NULL;
 
 NearDeathListener g_nearDeathListener = NULL;
 
+// What the plugin remembers about the current knockout of a character the
+// player has put down. Keyed by CharKey (char_key.h), never by the pointer: an
+// address is not an identity, and a freed character's address is handed to the
+// next one. Session-only: a load starts every episode over.
 struct Record
 {
-    int count;
+    DefeatEpisode::State episode;
+    // Game hour of the last counted defeat: the beating's cooldown runs from it.
     double lastHour;
 
-    Record() : count(0), lastHour(-1000.0) {}
+    Record() : lastHour(-1000.0) {}
 };
 
-// Keyed by CharKey (rules.h), never by the pointer: an address is not an
-// identity, and a freed character's address is handed to the next one.
-std::map<CharKey, Record> g_defeats;
+std::map<CharKey, Record> g_records;
 
-// LT_SQUAD_LOST_TO_ME_ONCE reads, from the NPC's side, as "this player's people
-// beat mine" -- which is exactly what a defeat is. It persists in the save,
-// which is the whole reason for using engine memory rather than a file.
-bool SafeHasFloor(Character* character, Character* player, bool* out)
+// The counts themselves. The serialise hook reads them from wherever the engine
+// saves, so the ledger is the one piece of this module behind a lock.
+DefeatLedger g_ledger;
+
+struct LedgerMutex
 {
-    TR_TRY
-    {
-        *out = character->getCharacterMemoryTag(player, LT_SQUAD_LOST_TO_ME_ONCE);
-        return true;
-    }
-    TR_CATCH { return false; }
+    CRITICAL_SECTION value;
+    LedgerMutex() { InitializeCriticalSection(&value); }
+    ~LedgerMutex() { DeleteCriticalSection(&value); }
+} g_ledgerMutex;
+
+struct LedgerGuard
+{
+    LedgerGuard() { EnterCriticalSection(&g_ledgerMutex.value); }
+    ~LedgerGuard() { LeaveCriticalSection(&g_ledgerMutex.value); }
+private:
+    LedgerGuard(const LedgerGuard&);
+    LedgerGuard& operator=(const LedgerGuard&);
+};
+
+int LedgerGet(const CharKey& key)
+{
+    LedgerGuard lock;
+    return g_ledger.Get(key);
 }
 
-bool SafeWriteFloor(Character* character, Character* player)
+int LedgerAdd(const CharKey& key)
 {
-    TR_TRY
-    {
-        character->rememberCharacter(player, LT_SQUAD_LOST_TO_ME_ONCE);
-        return true;
-    }
-    TR_CATCH { return false; }
+    LedgerGuard lock;
+    return g_ledger.Add(key);
 }
 
-// I4 is still open: the engine reads these same tags, and nothing in the
-// headers says what it does with them. So every write is logged next to what
-// the AI intended at that moment, and the probe prints the same fields -- a
-// before-and-after diff is then just two clicks and a grep.
-// Split in two because C2712 counts every C++ object in the frame, and both the
-// std::string from CharacterName and the LogInfo call are objects: the guard
-// gets a POD-only frame, and the reporting happens outside it.
-bool ReadIntent(Character* character, const char* when, char* buf, size_t size)
+void LedgerSet(const CharKey& key, int count)
 {
-    TR_TRY
-    {
-        StateBroadcastData* broadcast = character->getStateBroadcast();
-        if (broadcast == NULL)
-        {
-            return false;
-        }
-        _snprintf_s(buf, size, _TRUNCATE,
-                    "[I4 %s] intendedAggression=%.2f aggroTowards=%.2f "
-                    "distress=%.2f intendsToAttack=%d tempNeutral=%d",
-                    when, broadcast->intendedAggression,
-                    broadcast->aggressionTowardsTarget, broadcast->distress,
-                    (broadcast->intendsToAttack.getCharacter() != NULL) ? 1 : 0,
-                    broadcast->isTemporaryNeutral ? 1 : 0);
-        return true;
-    }
-    TR_CATCH { return false; }
+    LedgerGuard lock;
+    g_ledger.Set(key, count);
 }
 
-void SafeLogIntent(Character* character, const char* when)
+void LedgerClear()
 {
-    char buf[224] = { 0 };
-    if (ReadIntent(character, when, buf, sizeof(buf)))
-    {
-        LogInfo(CharacterName(character) + " " + buf);
-    }
+    LedgerGuard lock;
+    g_ledger.Clear();
 }
 
 // R3.1 -- begging for your life when you are close to losing it.
@@ -161,37 +150,43 @@ Character* ReadVictim(MedicalSystem* medical)
     TR_CATCH { return NULL; }
 }
 
-void Knockout_hook(MedicalSystem* thisptr, float skill)
+const char* CreditSkipReason(DefeatCredit credit)
 {
-    if (g_knockout_orig != NULL)
-    {
-        g_knockout_orig(thisptr, skill);
-    }
+    return (credit == DefeatCredit_SkipPlayersOwn)       ? "is yours"
+         : (credit == DefeatCredit_SkipWinnerUnreadable) ? "lastGuyWhoDefeatedMe unreadable/empty"
+                                                         : "lastGuyWhoDefeatedMe is not yours";
+}
 
-    if (!GetConfig().enabled || thisptr == NULL)
+// The record of a character the player has already put down at least once this
+// session, or NULL. Never mints an id and never adds a record: a bystander the
+// hail sweep looks at has nothing to re-arm.
+Record* ExistingRecord(Character* character)
+{
+    CharKey key;
+    if (!SafeFindCharKey(character, &key))
     {
-        return;
+        return NULL;
     }
+    std::map<CharKey, Record>::iterator it = g_records.find(key);
+    return it == g_records.end() ? NULL : &it->second;
+}
 
-    Character* victim = ReadVictim(thisptr);
-    if (victim != NULL)
+void ReArm(Character* character, Record* record)
+{
+    const bool wasCounted = record->episode.countedThisEpisode;
+    record->episode = DefeatEpisode::NoteStanding(record->episode);
+    if (wasCounted && GetConfig().probeOnClick)
     {
-        // Logged before any filtering, because "the count stayed at zero" has
-        // two very different causes -- the hook never firing, or firing and
-        // being discarded -- and they need opposite fixes.
-        if (GetConfig().probeOnClick)
-        {
-            LogInfo("[defeat-hook] knockout fired for " + CharacterName(victim));
-        }
-        NoteDefeat(victim);
+        LogInfo("[defeat] " + CharacterName(character) +
+                " seen standing: the next knockout counts again");
     }
 }
-} // namespace
 
-// Counts one defeat. `creditedToPlayer` is the caller saying the player's own
-// action caused it, which skips the question put to the engine (who beat them)
-// and keeps every other filter -- see DecideDefeatCredit.
-static void RecordDefeat(Character* character, bool creditedToPlayer)
+// Counts one defeat if this sighting is a new one. `creditedToPlayer` is the
+// caller saying the player's own action caused it, which skips the question put
+// to the engine (who beat them) and keeps every other filter -- see
+// DecideDefeatCredit. `sighting` says whether the fall itself was seen.
+void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Sighting sighting)
 {
     if (character == NULL || !GetConfig().submission.countDefeats)
     {
@@ -211,23 +206,9 @@ static void RecordDefeat(Character* character, bool creditedToPlayer)
     {
         if (trace)
         {
-            const char* why =
-                (credit == DefeatCredit_SkipPlayersOwn)        ? "is yours"
-              : (credit == DefeatCredit_SkipWinnerUnreadable)  ? "lastGuyWhoDefeatedMe unreadable/empty"
-                                                               : "lastGuyWhoDefeatedMe is not yours";
-            LogInfo("[defeat-skip] " + CharacterName(character) + ": " + why);
+            LogInfo("[defeat-skip] " + CharacterName(character) + ": " + CreditSkipReason(credit));
         }
         return;
-    }
-
-    if (creditedToPlayer)
-    {
-        // The line QA looks for: the beating counted although the engine's own
-        // record may name nobody (or somebody else).
-        LogInfo("[defeat] credited to the player explicitly (beating): " +
-                CharacterName(character) + " (engine winner " +
-                (readWinner ? (beatenByPlayer ? "is the player" : "is someone else")
-                            : "unreadable") + ")");
     }
 
     CharKey key;
@@ -242,32 +223,32 @@ static void RecordDefeat(Character* character, bool creditedToPlayer)
         return;
     }
 
-    // One knockout can raise several engine calls as the body settles, and a
-    // character kept down keeps being "knocked out" while they lie there. A
-    // debounce in game hours is what separates a second beating from an echo of
-    // the first.
-    Record& record = g_defeats[key];
-    if (IsEchoOfLastDefeat(now, record.lastHour, GetConfig().submission.defeatDebounceHours))
+    // One knockout raises several engine calls as the body settles, and the
+    // right-click looks at the same body again on every click: only the first
+    // sighting of the episode counts, and only seeing them up again re-arms it.
+    Record& record = g_records[key];
+    const DefeatEpisode::Verdict verdict = DefeatEpisode::Judge(record.episode, sighting);
+    if (!DefeatEpisode::CountsForPlayer(credit, verdict))
     {
-        if (trace) LogInfo("[defeat-skip] " + CharacterName(character) + ": debounced");
+        if (trace)
+        {
+            LogInfo("[defeat-skip] " + CharacterName(character) + ": " +
+                    DefeatEpisode::VerdictName(verdict));
+        }
         return;
     }
+    record.episode = DefeatEpisode::AfterCount(record.episode);
     record.lastHour = now;
-    record.count++;
+    const int count = LedgerAdd(key);
 
-    Character* leader = NULL;
-    if (SafePlayerLeader(&leader))
+    if (creditedToPlayer)
     {
-        bool hadFloor = false;
-        SafeHasFloor(character, leader, &hadFloor);
-        if (!hadFloor)
-        {
-            SafeLogIntent(character, "before-mark");
-            if (SafeWriteFloor(character, leader))
-            {
-                SafeLogIntent(character, "after-mark");
-            }
-        }
+        // The line QA looks for: the beating counted although the engine's own
+        // record may name nobody (or somebody else).
+        LogInfo("[defeat] credited to the player explicitly (beating): " +
+                CharacterName(character) + " (engine winner " +
+                (readWinner ? (beatenByPlayer ? "is the player" : "is someone else")
+                            : "unreadable") + ")");
     }
 
     bool nearDeath = false;
@@ -277,8 +258,8 @@ static void RecordDefeat(Character* character, bool creditedToPlayer)
 
     std::ostringstream note;
     note << CharacterName(character) << " defeated by the player ("
-         << record.count << " this session, floor+session="
-         << DefeatCount(character) << ") blood=" << bloodFraction
+         << DefeatEpisode::VerdictName(verdict) << "; count " << count
+         << ", " << key.ToString() << ") blood=" << bloodFraction
          << " nearDeath=" << (nearDeath ? "yes" : "no")
          << " dead=" << (alreadyGone ? "yes" : "no");
     LogInfo(note.str());
@@ -296,61 +277,43 @@ static void RecordDefeat(Character* character, bool creditedToPlayer)
     }
 }
 
-void NoteDefeat(Character* character)
+void Knockout_hook(MedicalSystem* thisptr, float skill)
 {
-    RecordDefeat(character, false);
-}
-
-void CreditDefeatToPlayer(Character* character)
-{
-    RecordDefeat(character, true);
-}
-
-int DefeatCount(Character* character)
-{
-    if (character == NULL)
+    // Read before the native knockout runs: standing now means this call is the
+    // fall itself, not the body settling or a character kept down.
+    Character* victim = NULL;
+    bool readBefore = false;
+    bool downBefore = true;
+    if (GetConfig().enabled && thisptr != NULL)
     {
-        return 0;
+        victim = ReadVictim(thisptr);
+        readBefore = victim != NULL && SafeIsKnockedOut(victim, &downBefore);
     }
 
-    int session = 0;
-    CharKey key;
-    if (SafeFindCharKey(character, &key))
+    if (g_knockout_orig != NULL)
     {
-        std::map<CharKey, Record>::const_iterator it = g_defeats.find(key);
-        if (it != g_defeats.end())
-        {
-            session = it->second.count;
-        }
+        g_knockout_orig(thisptr, skill);
     }
 
-    // The floor is what a reload leaves behind. It cannot say how many times,
-    // only that it happened at least once -- so precision is lost and progress
-    // is not, which is the trade this design set out to make. It is never
-    // allowed under defeatsToBreak (defeat_rules.cpp), or a reload would undo
-    // the progress the floor exists to keep.
-    Character* leader = NULL;
-    int floor = 0;
-    if (SafePlayerLeader(&leader))
+    if (victim == NULL)
     {
-        bool marked = false;
-        if (SafeHasFloor(character, leader, &marked))
-        {
-            const Submission& sub = GetConfig().submission;
-            floor = PersistedDefeatFloor(marked, sub.persistedFloorCount,
-                                         sub.defeatsToBreak);
-        }
+        return;
     }
 
-    return EffectiveDefeatCount(session, floor);
+    // Logged before any filtering, because "the count stayed at zero" has two
+    // very different causes -- the hook never firing, or firing and being
+    // discarded -- and they need opposite fixes.
+    if (GetConfig().probeOnClick)
+    {
+        LogInfo("[defeat-hook] knockout fired for " + CharacterName(victim) +
+                (readBefore && !downBefore ? " (was standing)" : " (already down)"));
+    }
+    RecordDefeat(victim, false,
+                 (readBefore && !downBefore) ? DefeatEpisode::Sighting_KnockoutFromStanding
+                                             : DefeatEpisode::Sighting_FoundDown);
 }
 
 // R2.3 -- the beating.
-//
-// The proud and the honourable are meant to be expensive, but "wait in a cage"
-// was the only lever the player had against them, and waiting is not a choice.
-// This is: a deliberate, visible act with a cost, on a cooldown, that cannot
-// kill.
 //
 // knockoutForceTimer is the engine's own way to put someone out for a set time,
 // which is what a beating amounts to here. Damages is not fabricated: building
@@ -370,17 +333,26 @@ bool SafeForceKnockout(Character* character, float seconds)
     }
     TR_CATCH { return false; }
 }
+} // namespace
 
-// The engine's own predicate. isDown alone is true for anyone who cannot stand,
-// including someone wide awake with a crippled leg.
-bool SafeIsLiterallyOut(Character* character, bool* out)
+void NoteDefeat(Character* character)
 {
-    TR_TRY
+    RecordDefeat(character, false, DefeatEpisode::Sighting_FoundDown);
+}
+
+void CreditDefeatToPlayer(Character* character)
+{
+    RecordDefeat(character, true, DefeatEpisode::Sighting_FoundDown);
+}
+
+int DefeatCount(Character* character)
+{
+    CharKey key;
+    if (character == NULL || !SafeFindCharKey(character, &key))
     {
-        *out = character->_NV_isLiterallyUnconciousNotPretending();
-        return true;
+        return 0;
     }
-    TR_CATCH { return false; }
+    return LedgerGet(key);
 }
 
 bool CanBeatPrisoner(Character* character, double* outHoursLeft)
@@ -413,8 +385,8 @@ bool CanBeatPrisoner(Character* character, double* outHoursLeft)
         return false;
     }
 
-    std::map<CharKey, Record>::const_iterator it = g_defeats.find(key);
-    if (it != g_defeats.end())
+    std::map<CharKey, Record>::const_iterator it = g_records.find(key);
+    if (it != g_records.end())
     {
         const double since = now - it->second.lastHour;
         if (since < sub.beatingCooldownHours)
@@ -452,6 +424,8 @@ bool BeatPrisoner(Character* character, std::string* outMessage)
     // engine who put them down, and when lastGuyWhoDefeatedMe did not name the
     // player the knockout was dropped -- while the window said "lo dejaste sin
     // sentido" and the cooldown (which reads the same record) never started.
+    // If the forced knockout already raised the hook and it counted, this is the
+    // same episode and does not count twice.
     CreditDefeatToPlayer(character);
 
     if (outMessage) *outMessage = CharacterName(character) + ": lo dejaste sin sentido";
@@ -462,9 +436,9 @@ bool BeatPrisoner(Character* character, std::string* outMessage)
 // runs when someone drops: bleeding out, hunger and a leg giving way all end
 // with a body on the floor, and only some of those go through a knockout.
 //
-// So a character seen unconscious is counted too, once per time they go down.
-// The debounce that stops one beating counting twice does the same job here,
-// and NoteDefeat still applies every filter -- this only adds a trigger.
+// So a character the player right-clicks while out cold is counted too -- once
+// per episode, and only when the engine names the player as the one who put
+// them down. One standing is seen standing, which re-arms the next knockout.
 void NoteIfDown(Character* character)
 {
     if (character == NULL || !GetConfig().submission.countDefeats)
@@ -473,17 +447,68 @@ void NoteIfDown(Character* character)
     }
 
     bool down = false;
-    if (!SafeIsLiterallyOut(character, &down) || !down)
+    if (!SafeIsKnockedOut(character, &down))
     {
         return;
     }
 
-    NoteDefeat(character);
+    if (down)
+    {
+        RecordDefeat(character, false, DefeatEpisode::Sighting_FoundDown);
+        return;
+    }
+
+    Record* record = ExistingRecord(character);
+    if (record != NULL)
+    {
+        ReArm(character, record);
+    }
+}
+
+void NoteSeenStanding(Character* character)
+{
+    if (character == NULL || !GetConfig().submission.countDefeats)
+    {
+        return;
+    }
+
+    // Cheapest first: most characters looked at were never put down by the
+    // player, and those already re-armed need no engine read.
+    Record* record = ExistingRecord(character);
+    if (record == NULL || record->episode.seenStanding)
+    {
+        return;
+    }
+
+    bool down = true;
+    if (!SafeIsKnockedOut(character, &down) || down)
+    {
+        return;
+    }
+    ReArm(character, record);
 }
 
 void SetNearDeathListener(NearDeathListener listener)
 {
     g_nearDeathListener = listener;
+}
+
+int SavedDefeatCount(const std::string& persistedId)
+{
+    if (persistedId.empty())
+    {
+        return 0;
+    }
+    return LedgerGet(CharKey::FromId(persistedId));
+}
+
+void RestoreSavedDefeatCount(const std::string& persistedId, int count)
+{
+    if (persistedId.empty())
+    {
+        return;
+    }
+    LedgerSet(CharKey::FromId(persistedId), count);
 }
 
 bool InstallDefeatTracking()
@@ -502,7 +527,8 @@ bool InstallDefeatTracking()
 
 void ForgetAllDefeats()
 {
-    g_defeats.clear();
+    g_records.clear();
+    LedgerClear();
 }
 
 void RemoveDefeatTracking()

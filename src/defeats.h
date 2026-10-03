@@ -6,18 +6,20 @@
 // has to survive a reload -- a prisoner who has been knocked out five times
 // must not read as untouched because the player quit for lunch.
 //
-// Nothing here can be one number. Three layers, each covering the previous
-// one's blind spot:
+// The TotalSparring way, three modules with one job each:
 //
-//   1. A floor written into the engine's per-character memory. Coarse, and the
-//      only part that survives a save.
-//   2. A precise session count in the plugin, keyed by CharKey (the persisted
-//      character id, the engine handle as fallback) rather than by pointer so a
-//      reused address cannot inherit somebody else's history. Dropped when a
-//      save loads (load_boundary.cpp).
-//   3. Present condition -- hunger and wounds -- which needs no count at all.
+//   defeat_rules          who gets the credit (DecideDefeatCredit).
+//   defeat_episode_rules  one defeat per knockout: counted once while down,
+//                         re-armed only when they are seen standing again.
+//   defeat_ledger         how many, per CharKey. character_identity.cpp writes
+//                         it into the character's own save state next to the
+//                         persisted id and reads it back on load, so a reload
+//                         restores exactly that save's count.
 //
-// A reload costs precision, never progress.
+// This file is the engine side: the knockout hook, the right-click fallback,
+// the "seen standing" feed and the beating. The engine's own memory tags are no
+// longer read: the engine writes LT_SQUAD_LOST_TO_ME_ONCE by itself, and reading
+// it as a defeat handed never-beaten guards the field-yield route.
 
 #include <string>
 
@@ -25,28 +27,37 @@ class Character;
 
 namespace totalrecruit
 {
-// Records that the player just put this character down. Safe to call more than
-// once for the same knockout; a repeat inside the debounce window is ignored.
+// Records that the player may just have put this character down. Safe to call
+// more than once for the same knockout: only the first sighting of an episode
+// counts (defeat_episode_rules).
 void NoteDefeat(Character* character);
 
 // The same, for a knockout the player's own action caused (the beating,
 // BeatPrisoner): the engine is not asked who put them down, because the plugin
-// already knows. The debounce and the own-side filter still apply.
+// already knows. The episode rule and the own-side filter still apply.
 void CreditDefeatToPlayer(Character* character);
 
-// How many times, as best we can tell. Never below the persistent floor.
+// How many times the player has defeated them, as the ledger (and so the save)
+// holds it. 0 for a character never counted.
 int DefeatCount(Character* character);
 
-// Counts a defeat if this character is currently out cold. A fallback for the
-// knockouts MedicalSystem::knockout does not cover -- bleeding out among them.
+// The right-click: a fallback for the knockouts MedicalSystem::knockout does not
+// cover -- bleeding out among them. Counts once per episode if they are down and
+// the credit is the player's; re-arms the episode if they are standing.
 void NoteIfDown(Character* character);
+
+// Somewhere that already looks at this NPC (the hail sweep, the readout card)
+// saw them. If they are on their feet the next knockout is a new episode. Never
+// counts, never mints an id, and only reads the engine for a character whose
+// episode is still marked counted.
+void NoteSeenStanding(Character* character);
 
 // R2.3 -- rough up a prisoner in the player's own cage. Returns false with a
 // reason when it is not allowed: too soon, not caged, or already down.
 bool BeatPrisoner(Character* character, std::string* outMessage);
 
 // Whether beating this character is currently possible, for deciding whether to
-// offer the button at all.
+// offer the button at all. The cooldown runs from the last counted defeat.
 bool CanBeatPrisoner(Character* character, double* outHoursLeft);
 
 // Who is told when a defeat leaves someone close enough to death to plead. The
@@ -57,12 +68,19 @@ bool CanBeatPrisoner(Character* character, double* outHoursLeft);
 typedef void (*NearDeathListener)(Character* character);
 void SetNearDeathListener(NearDeathListener listener);
 
+// The save-state bridge, for character_identity.cpp only: the count to write
+// into the save state of the character carrying `persistedId`, and the count its
+// save state held when it loaded (absent key: not called). Thread-safe -- the
+// serialise hook is not guaranteed to run on the game thread.
+int SavedDefeatCount(const std::string& persistedId);
+void RestoreSavedDefeatCount(const std::string& persistedId, int count);
+
 // Installs the knockout hook.
 bool InstallDefeatTracking();
 void RemoveDefeatTracking();
 
-// Drops every session defeat count. The load boundary calls it: the counts
-// belong to the world that was just abandoned (the engine's own per-character
-// floor, layer 1 above, is what carries over a load).
+// Drops every defeat count and episode. The load boundary calls it at load
+// begin: the counts belong to the world that was just abandoned, and each
+// character's load hook puts back what the loaded save holds.
 void ForgetAllDefeats();
 } // namespace totalrecruit
