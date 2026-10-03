@@ -70,6 +70,10 @@ const Row kRows[] = {
     { Reason_TameHungry,          "animal.tame.hungry",                "todav\xc3\xad" "a tiene hambre: le falta {cats}% de barriga", RefusalTone_Default },
     { Reason_TameNotFed,          "animal.tame.notFed",                "todav\xc3\xad" "a no ha comido de tu mano", RefusalTone_Default },
     { Reason_RejectCooldown,      "reason.rejectCooldown",             "no quiere saber nada de ti", RefusalTone_Grudge },
+    { Reason_AllyTemporary,       "reason.ally.temporary",             "te acompa\xc3\xb1" "ar\xc3\xa1 unos d\xc3\xad" "as como miembro temporal", RefusalTone_Default },
+    { Reason_AllyLeaderTooWeak,   "reason.ally.leaderTooWeak",         "eres demasiado d\xc3\xa9" "bil para que te acompa\xc3\xb1" "e", RefusalTone_TooWeak },
+    { Reason_AllyCruel,           "reason.ally.cruel",                 "no camina al lado de nadie: su crueldad no se pone a tus \xc3\xb3rdenes", RefusalTone_Default },
+    { Reason_AllyGreedy,          "reason.ally.greedy",                "vale m\xc3\xa1s de lo que podr\xc3\xad" "as pagarle nunca", RefusalTone_Default },
 };
 
 const int kRowCount = (int)(sizeof(kRows) / sizeof(kRows[0]));

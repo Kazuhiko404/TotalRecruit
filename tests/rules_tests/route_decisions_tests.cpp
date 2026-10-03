@@ -721,9 +721,19 @@ void TheBandComesFromTheRelation()
     CHECK(DecideFreeWorld(Core(), Free(-20.0f), kConfig).band == "hostil");
 }
 
+// The single ally roll every preset had before the Balanced level tiers
+// (ally_tier_rules.h). Vanilla+ keeps it unchanged; Balanced reads the tiers.
+Config VanillaPlus()
+{
+    Config config;
+    config.preset = Preset_VanillaPlus;
+    return config;
+}
+
 void AnAllyRollsWithTheAlliedBonus()
 {
-    const char* name = "free world: an ally rolls level + relation + allied bonus";
+    const char* name = "free world (Vanilla+): an ally rolls level + relation + allied bonus";
+    const Config kConfig = VanillaPlus();
     FreeExtra extra = Free(40.0f);
     extra.roll = KeyRolling(true, 65);
     // 45 + (int)(40 * 0.25) + 10 = 65
@@ -744,8 +754,8 @@ void AnAllyRollsWithTheAlliedBonus()
 
 void TheAlliedBonusIsConfigurable()
 {
-    const char* name = "free world: the allied bonus comes from the config";
-    Config config;
+    const char* name = "free world (Vanilla+): the allied bonus comes from the config";
+    Config config = VanillaPlus();
     config.chance.alliedBonus = 0;
     FreeExtra extra = Free(40.0f);
     CHECK(DecideFreeWorld(Core(), extra, config).chancePercent == 55);
@@ -756,13 +766,204 @@ void TheAlliedBonusIsConfigurable()
 void FriendlyIsAtOrAboveTheThreshold()
 {
     const char* name = "free world: friendly standing is relation >= friendlyRelation, inclusive";
-    CHECK(DecideFreeWorld(Core(), Free(20.0f), kConfig).rolled);
+    CHECK(DecideFreeWorld(Core(), Free(20.0f), VanillaPlus()).rolled);
+    CHECK(!DecideFreeWorld(Core(), Free(19.9f), VanillaPlus()).rolled);
+    // Balanced: the level tier answers instead of the roll (a Neutral level 20 pays).
+    CHECK(DecideFreeWorld(Core(), Free(20.0f), kConfig).allyTiered);
+    CHECK(!DecideFreeWorld(Core(), Free(19.9f), kConfig).allyTiered);
     CHECK(!DecideFreeWorld(Core(), Free(19.9f), kConfig).rolled);
     CHECK(FreeWorldMayRoll(Core(), Relation(20.0f), kConfig));
     CHECK(!FreeWorldMayRoll(Core(), Relation(19.9f), kConfig));
     CHECK(!FreeWorldMayRoll(Core(), RelationFact(), kConfig));
     CoreFacts animal = AnimalCore(3.0f);
     CHECK(!FreeWorldMayRoll(animal, Relation(90.0f), kConfig));
+}
+
+// ------------------------------------------------ Balanced allies by level
+
+CoreFacts AllyCore(int npcLevel, int leaderLevel, Temperament temperament)
+{
+    CoreFacts core = Core();
+    core.npcLevel = npcLevel;
+    core.playerLevel = leaderLevel;
+    core.temperament = temperament;
+    return core;
+}
+
+void AGoodLowLevelAllyStillRollsAndJoinsFree()
+{
+    const char* name = "balanced ally: a Good ally under level 20 joins free on today's roll";
+    const CoreFacts core = AllyCore(12, 12, Temperament_Honorable);
+    FreeExtra extra = Free(40.0f);
+    // 45 + 10 (relation) + 10 (allied) - 20 (honourable) = 45
+    extra.roll = KeyRolling(true, 45);
+    Verdict v = DecideFreeWorld(core, extra, kConfig);
+    CHECK(v.rolled);
+    CHECK(v.chancePercent == 45);
+    CHECK(v.willJoin);
+    CHECK(v.currency == Currency_None);
+    CHECK(v.reasonKey == Reason_AllyJoins);
+    CHECK(v.allyTiered);
+    CHECK(v.allyLevel == 12);
+    CHECK(v.allyDiscountPercent == 0);
+    CHECK(!v.temporary);
+
+    extra.roll = KeyRolling(false, 45);
+    v = DecideFreeWorld(core, extra, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.reasonKey == Reason_AllyMaybe);
+    CHECK(v.allyTiered);
+}
+
+void APayingAllyIsQuotedThePriceAsGatheredWithNoRoll()
+{
+    const char* name = "balanced ally: a paying ally gets a cats quote (discount already in the price), no roll";
+    const CoreFacts core = AllyCore(34, 20, Temperament_Normal);
+    FreeExtra extra = Free(40.0f);
+    // character_facts puts 1 - discount in the faction multiplier for this ally.
+    extra.price = PriceAtLevel(34);
+    extra.price.factionMultiplier = 0.80f;
+    extra.roll = KeyRolling(false, 95);
+    const Verdict v = DecideFreeWorld(core, extra, kConfig);
+    CHECK(!v.rolled);
+    CHECK(v.willJoin);
+    CHECK(v.currency == Currency_Cats);
+    CHECK(v.reasonKey == Reason_CatsJoin);
+    // Quoted exactly as gathered: the route does not discount a second time.
+    CHECK(v.cats == FinalPriceInCats(extra.price, kConfig.prices));
+    CHECK(v.allyTiered);
+    CHECK(v.allyLevel == 34);
+    CHECK(v.allyDiscountPercent == 20);
+    CHECK(!v.temporary);
+}
+
+void APayingAllyTheGoodTooFromLevelTwenty()
+{
+    const char* name = "balanced ally: from level 20 a Good ally pays like everyone, a short purse is a CatsAsk";
+    const CoreFacts core = AllyCore(20, 20, Temperament_WarmKind);
+    FreeExtra extra = Free(30.0f);
+    extra.purse = Purse(10);
+    const Verdict v = DecideFreeWorld(core, extra, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.currency == Currency_Cats);
+    CHECK(v.reasonKey == Reason_CatsAsk);
+    CHECK(v.purse == 10);
+    CHECK(v.allyDiscountPercent == 20);
+}
+
+void APayingAllysDiscountFollowsTheTierCapAndTheScale()
+{
+    const char* name = "balanced ally: 50-79 caps at 10%; the scale moves the discount";
+    FreeExtra extra = Free(60.0f);
+    CHECK(DecideFreeWorld(AllyCore(60, 60, Temperament_Brave), extra, kConfig).allyDiscountPercent == 10);
+    Config scaled;
+    scaled.allyTiers.discountScale = 0.5f;
+    extra = Free(28.0f);
+    CHECK(DecideFreeWorld(AllyCore(34, 34, Temperament_Normal), extra, scaled).allyDiscountPercent == 14);
+}
+
+void AStrongGoodAllyComesForAFewDays()
+{
+    const char* name = "balanced ally: 80+ Good/Neutral close in level join as temporary members, days from the seed";
+    const CoreFacts core = AllyCore(85, 80, Temperament_Honorable);
+    FreeExtra extra = Free(40.0f);
+    extra.roll = KeyRolling(false, 95);
+    const Verdict v = DecideFreeWorld(core, extra, kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.currency == Currency_None);
+    CHECK(v.reasonKey == Reason_AllyTemporary);
+    CHECK(!v.rolled);
+    CHECK(v.temporary);
+    CHECK(v.allyTiered);
+    CHECK(v.allyLevel == 85);
+    const int expected = TemporaryDaysFromSeed(
+        DailySeed(extra.roll.key, extra.roll.dayIndex, kTempDaysSalt), kConfig.allyTiers);
+    CHECK(v.temporaryDays == expected);
+    CHECK(v.temporaryDays >= 3 && v.temporaryDays <= 10);
+    // Same key, same day: the same number of days however often they are asked.
+    CHECK(DecideFreeWorld(core, extra, kConfig).temporaryDays == v.temporaryDays);
+
+    // No key to draw from (a peek): still a temporary member, for the minimum.
+    extra.roll = RollFact();
+    const Verdict peek = DecideFreeWorld(core, extra, kConfig);
+    CHECK(peek.temporary);
+    CHECK(peek.temporaryDays == kConfig.allyTiers.tempMemberMinDays);
+
+    CHECK(DecideFreeWorld(AllyCore(120, 110, Temperament_Dumb), Free(40.0f), kConfig).reasonKey ==
+          Reason_AllyTemporary);
+}
+
+void TheStrongAlliesWhoWillNotCome()
+{
+    const char* name = "balanced ally: too far above the leader, cruel at 80+, greedy at 100+ -> refused";
+    Verdict v = DecideFreeWorld(AllyCore(85, 60, Temperament_Honorable), Free(40.0f), kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.currency == Currency_Refused);
+    CHECK(v.reasonKey == Reason_AllyLeaderTooWeak);
+    CHECK(v.allyTiered);
+    CHECK(!v.temporary);
+
+    v = DecideFreeWorld(AllyCore(85, 85, Temperament_ColdCruel), Free(40.0f), kConfig);
+    CHECK(v.currency == Currency_Refused);
+    CHECK(v.reasonKey == Reason_AllyCruel);
+
+    v = DecideFreeWorld(AllyCore(120, 120, Temperament_Smart), Free(40.0f), kConfig);
+    CHECK(v.currency == Currency_Refused);
+    CHECK(v.reasonKey == Reason_AllyGreedy);
+
+    // The greedy at 80-99 still pay.
+    v = DecideFreeWorld(AllyCore(90, 20, Temperament_Traitorous), Free(40.0f), kConfig);
+    CHECK(v.currency == Currency_Cats);
+    CHECK(v.allyDiscountPercent == 10);
+}
+
+void VanillaPlusAndCheatKeepTheirAllies()
+{
+    const char* name = "balanced ally: Vanilla+, Cheat and tiers switched off keep the single ally roll";
+    const CoreFacts strong = AllyCore(85, 20, Temperament_ColdCruel);
+    FreeExtra extra = Free(40.0f);
+    extra.roll = KeyRolling(true, 5);
+
+    Config vanilla = VanillaPlus();
+    Verdict v = DecideFreeWorld(strong, extra, vanilla);
+    CHECK(v.rolled);
+    CHECK(!v.allyTiered);
+    CHECK(v.reasonKey == Reason_AllyJoins || v.reasonKey == Reason_AllyMaybe);
+
+    Config cheat;
+    cheat.preset = Preset_Cheat;
+    v = DecideFreeWorld(strong, extra, cheat);
+    CHECK(v.rolled);
+    CHECK(!v.allyTiered);
+    // Cheat never reaches the free world in the game (rules.cpp answers first),
+    // and DecideCheat does not read the relation at all.
+    CheatFacts facts;
+    CHECK(DecideCheat(facts, cheat).reasonKey == DecideCheat(facts, Config()).reasonKey);
+
+    Config off;
+    off.allyTiers.enabled = false;
+    v = DecideFreeWorld(strong, extra, off);
+    CHECK(v.rolled);
+    CHECK(!v.allyTiered);
+
+    AllyTierDecision d;
+    CHECK(!DecideBalancedAllyTier(strong, Relation(40.0f), vanilla, &d));
+    CHECK(!DecideBalancedAllyTier(strong, Relation(40.0f), cheat, &d));
+    CHECK(!DecideBalancedAllyTier(strong, Relation(40.0f), off, &d));
+}
+
+void OnlyAlliesHaveATier()
+{
+    const char* name = "balanced ally: no tier below friendlyRelation, for an unknown relation or an animal";
+    AllyTierDecision d;
+    const CoreFacts core = AllyCore(34, 34, Temperament_Normal);
+    CHECK(DecideBalancedAllyTier(core, Relation(20.0f), kConfig, &d));
+    CHECK(d.mode == AllyTierMode_Paid);
+    CHECK(!DecideBalancedAllyTier(core, Relation(19.9f), kConfig, &d));
+    CHECK(!DecideBalancedAllyTier(core, RelationFact(), kConfig, &d));
+    CHECK(!DecideBalancedAllyTier(AnimalCore(3.0f), Relation(90.0f), kConfig, &d));
+    // A non-ally keeps the ordinary bribe, untiered.
+    CHECK(!DecideFreeWorld(core, Free(0.0f), kConfig).allyTiered);
 }
 
 void TheGoodNaturedStopTalkingBelowTheirCutoff()
@@ -1281,6 +1482,14 @@ void RunRouteDecisionsTests()
     AnAllyRollsWithTheAlliedBonus();
     TheAlliedBonusIsConfigurable();
     FriendlyIsAtOrAboveTheThreshold();
+    AGoodLowLevelAllyStillRollsAndJoinsFree();
+    APayingAllyIsQuotedThePriceAsGatheredWithNoRoll();
+    APayingAllyTheGoodTooFromLevelTwenty();
+    APayingAllysDiscountFollowsTheTierCapAndTheScale();
+    AStrongGoodAllyComesForAFewDays();
+    TheStrongAlliesWhoWillNotCome();
+    VanillaPlusAndCheatKeepTheirAllies();
+    OnlyAlliesHaveATier();
     TheGoodNaturedStopTalkingBelowTheirCutoff();
     NobodyTalksBelowTheSecondCutoff();
     TheCutoffsAreConfigurable();

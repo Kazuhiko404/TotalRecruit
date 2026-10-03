@@ -21,6 +21,7 @@
 #include "character_facts.h"
 #include "haggle_rules.h"
 #include "haggle_ledger.h"
+#include "temp_member.h"
 
 #include <algorithm>
 
@@ -367,27 +368,27 @@ bool PresentOffer(Character* character, const Verdict& verdict, bool afterRemedy
 }
 
 // Pays `cats` and recruits, putting the money back when the engine refuses the
-// recruit. `joined` is the line the player reads on success.
-void PayAndRecruit(Character* character, int cats, const std::string& name,
+// recruit. `joined` is the line the player reads on success. True when they joined.
+bool PayAndRecruit(Character* character, int cats, const std::string& name,
                    const std::string& joined)
 {
     // Money only moves here. Declining, or walking away, costs nothing.
     if (!SettlePrice(character, cats, name))
     {
-        return;
+        return false;
     }
 
     std::string message;
     if (Recruit(character, &message))
     {
         TellPlayer(joined, false);
+        return true;
     }
-    else
-    {
-        // Paid but not delivered: the engine refused the recruit. Put the money back.
-        RefundPrice(character, cats, name);
-        TellPlayer(name + ": " + message, true);
-    }
+
+    // Paid but not delivered: the engine refused the recruit. Put the money back.
+    RefundPrice(character, cats, name);
+    TellPlayer(name + ": " + message, true);
+    return false;
 }
 } // namespace
 
@@ -705,7 +706,13 @@ void CompleteOffer(Character* character, bool accepted)
         return;
     }
 
-    PayAndRecruit(character, CatsDue(verdict), name, name + ": " + verdict.reason);
+    const bool joined = PayAndRecruit(character, CatsDue(verdict), name,
+                                      name + ": " + verdict.reason);
+    // An 80+ ally comes for a few days only: the one hook that learns it.
+    if (joined && verdict.temporary)
+    {
+        OnRecruitedTemporarily(character, verdict.temporaryDays);
+    }
 }
 
 void CompleteHaggle(Character* character, int offer)

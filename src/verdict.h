@@ -105,6 +105,14 @@ enum ReasonKey
     // DecideRejectCooldown).
     Reason_RejectCooldown,
 
+    // Balanced allies by level (ally_tier_rules.h). A free or paid ally keeps the
+    // reasons above (AllyJoins / AllyMaybe, CatsJoin / CatsAsk); these are the deals
+    // and refusals only the tiers have.
+    Reason_AllyTemporary,
+    Reason_AllyLeaderTooWeak,
+    Reason_AllyCruel,
+    Reason_AllyGreedy,
+
     // Not a reason: the number of them, for tables indexed by one.
     Reason_Count
 };
@@ -149,6 +157,17 @@ struct Verdict
     // about a stomach, so a readout never has to guess.
     float tameFullness;
     float tameNeeded;
+    // A Balanced ally whose level tier decided the deal (ally_tier_rules.h): the
+    // popup and the card name the tier, the NPC's level and the friendship
+    // discount (a whole percent, already in `cats`).
+    bool allyTiered;
+    int allyLevel;
+    int allyDiscountPercent;
+    // They join for a while only (80+ allies). The days were drawn when the verdict
+    // was reached (0 when there was no key to draw them from); temp_member.h takes
+    // it from there once they are recruited.
+    bool temporary;
+    int temporaryDays;
 
     Verdict()
         : willJoin(false),
@@ -166,7 +185,12 @@ struct Verdict
           chanceInputs(),
           chancePercent(0),
           tameFullness(-1.0f),
-          tameNeeded(-1.0f)
+          tameNeeded(-1.0f),
+          allyTiered(false),
+          allyLevel(0),
+          allyDiscountPercent(0),
+          temporary(false),
+          temporaryDays(0)
     {
     }
 };

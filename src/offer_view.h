@@ -26,6 +26,10 @@
 //    the ask, the live odds of AcceptOdds, the purse checked against the offer,
 //    OFRECER below the ask and ACEPTAR at it. Offended today: the lock line and
 //    no slider. Never for a free route.
+//  - A Balanced ally whose level tier decided (Verdict::allyTiered) says so in the
+//    body: the friend's price with its discount ("Aliado (nivel 34): ... con 14%
+//    de descuento por amistad", PRECIO tagged "-14%"), the free friend, or the
+//    temporary member and their days. A tier refusal reads like any refusal.
 //
 // The words come in as OfferTexts (messages.json "popup" block, resolved by
 // npc_speech.cpp), so this stays testable and a translation changes no rule.
@@ -93,6 +97,14 @@ struct OfferTexts
     std::string bodyJoins;
     // The submission event: "{name} se arrodilla y te pide unirse a tu grupo."
     std::string bodySubmitted;
+
+    // Balanced allies by level (ally_tier_rules.h, popup.ally.*). Templates also
+    // take {level} (the NPC's), {pct} (the friendship discount) and {days}.
+    std::string allyFreeBody;       // "{name} es tu aliado (nivel {level}) y se une gratis por amistad."
+    std::string allyPaidBody;       // "Aliado (nivel {level}): {name} te cobra {cats} cats, con {pct}% de descuento por amistad."
+    std::string allyPaidFullBody;   // the same with no discount to speak of
+    std::string allyTemporaryBody;  // "Aliado (nivel {level}): {name} te acompanara {days} dias como miembro temporal."
+    std::string discountTag;        // "-{pct}%", beside the price
 
     // Reason_Defiant when the cage commands are not offered: the half of "hunger
     // or hurt them" the player can still act on (popup.reason.defiantNoBeat).
@@ -186,6 +198,9 @@ struct OfferView
     bool priceFree;
     int priceCats;
     std::string priceText;
+    // The friendship discount already in the price ("-14%"), drawn beside it.
+    // Empty when there is none.
+    std::string priceTag;
 
     bool showPurse;
     bool purseKnown;

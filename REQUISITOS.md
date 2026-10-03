@@ -214,6 +214,66 @@ Sin cambios.
 
 ---
 
+## 4b. BALANCED — aliados por nivel
+
+*(2026-10-03, ally-tiers-temp-helpers T1.)* Un aliado (relación ≥
+`friendlyRelation`) ya no es una sola tirada diaria: en Balanced deciden su
+nivel y su grupo de personalidad. Vanilla+ y Cheat no cambian (Vanilla+ conserva
+la tirada; Cheat responde antes de leer nada). `allyTierEnabled` en falso vuelve
+a la tirada también en Balanced.
+
+**Grupos de personalidad** (`src/personality_groups.cpp`, una sola función):
+
+| Grupo | Temperamentos |
+|---|---|
+| Bueno | Honorable, Cálido y bondadoso |
+| Neutral | Normal, Corto de luces, Miedoso, Valiente |
+| Ambicioso | Traicionero, Astuto |
+| Malo (cruel / psicópata) | Frío y cruel, Maníaco |
+
+**R4b.1 — El trato por nivel del NPC.** *(P1, hecho)* Cada nivel de corte
+pertenece al tramo que empieza: 20 ya es "20-49", 80 ya es "80-99", 100 ya es
+"100+".
+
+| Nivel del NPC | Grupo | Trato |
+|---|---|---|
+| 1-19 | Bueno | Gratis, con la tirada de aliado de hoy |
+| 1-19 | Los demás | Paga cats, descuento hasta 20% |
+| 20-49 | Todos | Paga cats, descuento hasta 20% |
+| 50-79 | Todos | Paga cats, descuento hasta 10% |
+| 80-99 | Ambicioso | Paga cats, descuento hasta 10% |
+| 80+ | Bueno / Neutral | Miembro temporal (si el nivel es cercano) |
+| 80+ | Malo | Se niega ("su crueldad no se pone a tus órdenes") |
+| 100+ | Ambicioso | Se niega ("vale más de lo que podrías pagarle") |
+
+Quien paga **no tira**: pagar es la condición, como cualquier precio.
+
+**R4b.2 — Descuento por amistad.** *(P1, hecho)*
+`descuento = min(máximo del tramo, max(0, relación) / 100 × allyTierDiscountScale)`.
+Entra al precio por `PriceInputs.factionMultiplier = 1 − descuento`, solo para
+aliados de Balanced en el mundo abierto (`character_facts.cpp`); en Balanced ese
+multiplicador vale 1.0 para todo lo demás, así que nada se cuenta dos veces. El
+regateo, la bolsa y el recargo por ofensa trabajan sobre el precio ya rebajado.
+
+**R4b.3 — Miembro temporal (80+).** *(P1, T1 hecho; T2 pendiente)* Bueno o
+Neutral, de nivel 80 o más, y a lo sumo `allyTierCloseLevelGap` (15) niveles por
+encima del líder; si no, "eres demasiado débil para que te acompañe". Se queda
+entre `allyTierTempMinDays` y `allyTierTempMaxDays` días (3..10), sorteados una
+vez por día con la semilla del NPC. T1 lo recluta como siempre y avisa a
+`OnRecruitedTemporarily` (`src/temp_member.h`); la duración, el maltrato y la
+partida son T2.
+
+**R4b.4 — Siempre se explica.** *(P1, hecho)* El popup nombra el tramo ("Aliado
+(nivel 34): te cobra 1.840 cats, con 14% de descuento por amistad", PRECIO con
+"-14%", "te acompañará 6 días como miembro temporal") y la lectura sobre el NPC
+también ("Aliado: 1.840 cats con descuento"). Las negativas llevan su motivo.
+
+**R4b.5 — Todo configurable.** *(P1, hecho)* Claves `allyTier*` en
+`config.json` y en el Mod Hub: los niveles de corte, los máximos de cada tramo,
+la escala, la distancia de nivel y los días.
+
+---
+
 ## 5. Animales
 
 **R5.1 — Domesticar por barra de hambre, no por comidas.** *(P1)*

@@ -235,6 +235,66 @@ var POPUP_STATES = [
     }
   },
   {
+    id: 'allyPaid',
+    title: 'Ally pays: friendship discount (Balanced)',
+    note: 'Balanced, an allied Normal of level 34 (relation 40): the 20-49 tier pays, friendship takes up to 20% off (<code>ally_tier_rules.h</code>). The discount is already in the price (<code>factionMultiplier</code> = 0.86 for this ally, <code>character_facts.cpp</code>), so the slider, the purse check and the offended markup all work on it. No roll: paying is the gate. The body names the tier; PRECIO carries the tag. Haggle off here; on, it opens with the slider like state 2.',
+    // facts: verdict willJoin, Currency_Cats, Reason_CatsJoin, cats 1840, allyTiered, allyLevel 34, allyDiscountPercent 14; purse 5000
+    vm: {
+      title: 'Reclutamiento', name: 'Gor el Cazador', route: 'libre', routeTag: 'Libre',
+      body: 'Aliado (nivel 34): Gor el Cazador te cobra 1.840 cats, con 14% de descuento por amistad.',
+      showPrice: true, priceText: '1.840 cats', priceTag: '-14%', priceFree: false,
+      showPurse: true, purseText: '5.000 cats', affordable: true,
+      showChance: false, chanceText: '',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: '', cancel: 'CANCELAR'
+    }
+  },
+  {
+    id: 'allyTemporary',
+    title: 'Ally comes for a few days (80+)',
+    note: 'Balanced, an allied Honorable of level 85 and the leader is 80 (within <code>allyTierCloseLevelGap</code> 15): Good and Neutral allies of 80+ join as temporary members (<code>Reason_AllyTemporary</code>). Free, no roll; the days are drawn once per day from the NPC\'s seed in <code>allyTierTempMinDays..MaxDays</code> (3..10). ACEPTAR recruits and hands the days to <code>temp_member.h</code>.',
+    // facts: verdict willJoin, Currency_None, Reason_AllyTemporary, allyTiered, allyLevel 85, temporary, temporaryDays 6
+    vm: {
+      title: 'Reclutamiento', name: 'Beep el Sabio', route: 'libre', routeTag: 'Libre',
+      body: 'Aliado (nivel 85): Beep el Sabio te acompanara 6 dias como miembro temporal.',
+      showPrice: true, priceText: 'Gratis', priceFree: true,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: '', cancel: 'CANCELAR'
+    }
+  },
+  {
+    id: 'allyTooWeak',
+    title: 'Ally refuses: leader too weak',
+    note: 'The same Beep with a leader of level 60: 25 levels apart, past <code>allyTierCloseLevelGap</code> (<code>Reason_AllyLeaderTooWeak</code>). An ordinary refusal: the reason in red, CERRAR. The cruel at 80+ (<code>Reason_AllyCruel</code>) and the greedy at 100+ (<code>Reason_AllyGreedy</code>) read the same with their own line.',
+    // facts: verdict refused, Currency_Refused, Reason_AllyLeaderTooWeak, allyTiered, allyLevel 85
+    vm: {
+      title: 'Reclutamiento', name: 'Beep el Sabio', route: 'libre', routeTag: 'Libre',
+      body: 'Beep el Sabio no se une todavia.',
+      showPrice: false, priceText: '', priceFree: false,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      reason: 'Eres demasiado debil para que te acompane', reasonRed: true,
+      accept: '', extra: '', cancel: 'CERRAR'
+    }
+  },
+  {
+    id: 'allyFree',
+    title: 'Good ally under 20 joins free',
+    note: 'Balanced, an allied WarmKind of level 12: the one tier where friendship is enough. Today\'s ally roll still decides (<code>Reason_AllyJoins</code> on a pass, <code>Reason_AllyMaybe</code> on a miss), so the odds show.',
+    // facts: verdict willJoin, Currency_None, Reason_AllyJoins, rolled 45%, allyTiered, allyLevel 12
+    vm: {
+      title: 'Reclutamiento', name: 'Ruka la Amable', route: 'libre', routeTag: 'Libre',
+      body: 'Ruka la Amable es tu aliado (nivel 12) y se une gratis por amistad.',
+      showPrice: true, priceText: 'Gratis', priceFree: true,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: true, chanceText: '45%',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: '', cancel: 'CANCELAR'
+    }
+  },
+  {
     id: 'yield',
     title: 'Joins free (field-yield)',
     note: 'Sometido: beaten enough times in the open and the roll passed (<code>Reason_FieldYieldJoins</code>). Its own tag (<code>readout.route.fieldYield</code>), not Rendicion, which is the "rather than die" surrender. Free, and the odds that were rolled.',

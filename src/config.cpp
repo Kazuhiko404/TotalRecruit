@@ -106,6 +106,26 @@ void ClampInt(int* value, int low, int high)
     if (*value > high) *value = high;
 }
 
+// The ally tiers (ally_tier_rules.h): the cut levels kept in order, so a hand
+// edit cannot make a tier start before the one below it; a discount never takes
+// the whole price; a stay of at least one day, the longest no shorter than the
+// shortest.
+void ClampAllyTiers(AllyTiers* t)
+{
+    ClampInt(&t->midFromLevel, 1, 500);
+    ClampInt(&t->highFromLevel, t->midFromLevel, 500);
+    ClampInt(&t->eliteFromLevel, t->highFromLevel, 500);
+    ClampInt(&t->legendFromLevel, t->eliteFromLevel, 500);
+    ClampFloat(&t->lowMaxDiscount, 0.0f, 0.9f);
+    ClampFloat(&t->midMaxDiscount, 0.0f, 0.9f);
+    ClampFloat(&t->highMaxDiscount, 0.0f, 0.9f);
+    ClampFloat(&t->eliteMaxDiscount, 0.0f, 0.9f);
+    ClampFloat(&t->discountScale, 0.0f, 5.0f);
+    ClampInt(&t->closeLevelGap, 0, 200);
+    ClampInt(&t->tempMemberMinDays, 1, 60);
+    ClampInt(&t->tempMemberMaxDays, t->tempMemberMinDays, 120);
+}
+
 void ReadFloat(const std::string& text, const std::string& key, float* target)
 {
     size_t valueStart = 0;
@@ -266,6 +286,19 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "haggleOffenceMarkup", &c.prices.haggleOffenceMarkup);
 
     AddFloat(f, "friendlyRelation", &c.friendlyRelation);
+    AddBool(f, "allyTierEnabled", &c.allyTiers.enabled);
+    AddInt(f, "allyTierMidFromLevel", &c.allyTiers.midFromLevel);
+    AddInt(f, "allyTierHighFromLevel", &c.allyTiers.highFromLevel);
+    AddInt(f, "allyTierEliteFromLevel", &c.allyTiers.eliteFromLevel);
+    AddInt(f, "allyTierLegendFromLevel", &c.allyTiers.legendFromLevel);
+    AddFloat(f, "allyTierLowMaxDiscount", &c.allyTiers.lowMaxDiscount);
+    AddFloat(f, "allyTierMidMaxDiscount", &c.allyTiers.midMaxDiscount);
+    AddFloat(f, "allyTierHighMaxDiscount", &c.allyTiers.highMaxDiscount);
+    AddFloat(f, "allyTierEliteMaxDiscount", &c.allyTiers.eliteMaxDiscount);
+    AddFloat(f, "allyTierDiscountScale", &c.allyTiers.discountScale);
+    AddInt(f, "allyTierCloseLevelGap", &c.allyTiers.closeLevelGap);
+    AddInt(f, "allyTierTempMinDays", &c.allyTiers.tempMemberMinDays);
+    AddInt(f, "allyTierTempMaxDays", &c.allyTiers.tempMemberMaxDays);
     AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
     AddFloat(f, "relationRefuseAll", &c.relationRefuseAll);
     AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);
@@ -466,6 +499,7 @@ void LoadConfig(const std::string& modDirectory)
     ClampInt(&g_config.animals.bigEdgeLevel, 1, 500);
     ClampFloat(&g_config.animals.temperamentBase, 0.0f, 2.0f);
     ClampFloat(&g_config.animals.temperamentWeight, 0.0f, 2.0f);
+    ClampAllyTiers(&g_config.allyTiers);
 
     g_modDirectory = modDirectory;
     LogInfo("Loaded config from " + path);

@@ -290,6 +290,57 @@ void ThePrimaryLineIsTheVerdictsReason()
     CHECK(!BuildReadout(no, kConfig).showStress);
 }
 
+void ABalancedAllysPriceNamesTheFriendship()
+{
+    const char* name = "primary line: a tiered ally's price says Aliado, a plain bribe does not";
+    ReadoutInput join = Input(Route_FreeWorld, Reason_CatsJoin);
+    join.verdict.willJoin = true;
+    join.verdict.currency = Currency_Cats;
+    join.verdict.cats = 1840;
+    join.verdict.allyTiered = true;
+    join.verdict.allyDiscountPercent = 14;
+    ReadoutView v = BuildReadout(join, kConfig);
+    CHECK(v.primary.id == kLineAllyPaidJoin);
+    CHECK(v.primary.cats == 1840);
+    CHECK(v.primary.tone == ReadoutTone_Good);
+
+    ReadoutInput ask = Input(Route_FreeWorld, Reason_CatsAsk);
+    ask.verdict.currency = Currency_Cats;
+    ask.verdict.cats = 1840;
+    ask.verdict.purse = 300;
+    ask.verdict.allyTiered = true;
+    v = BuildReadout(ask, kConfig);
+    CHECK(v.primary.id == kLineAllyPaidAsk);
+    CHECK(v.primary.purse == 300);
+
+    ask.verdict.allyTiered = false;
+    CHECK(BuildReadout(ask, kConfig).primary.id == (int)Reason_CatsAsk);
+}
+
+void ATemporaryOrRefusingAllyShowsItsTierLine()
+{
+    const char* name = "primary line: temporary is good news, the tier refusals are refusals";
+    ReadoutInput temp = Input(Route_FreeWorld, Reason_AllyTemporary);
+    temp.verdict.willJoin = true;
+    temp.verdict.allyTiered = true;
+    temp.verdict.temporary = true;
+    ReadoutView v = BuildReadout(temp, kConfig);
+    CHECK(v.visible);
+    CHECK(v.primary.id == (int)Reason_AllyTemporary);
+    CHECK(v.primary.tone == ReadoutTone_Good);
+
+    const ReasonKey refusals[3] = { Reason_AllyLeaderTooWeak, Reason_AllyCruel, Reason_AllyGreedy };
+    for (int i = 0; i < 3; ++i)
+    {
+        ReadoutInput no = Input(Route_FreeWorld, refusals[i]);
+        no.verdict.currency = Currency_Refused;
+        no.verdict.allyTiered = true;
+        v = BuildReadout(no, kConfig);
+        CHECK(v.primary.id == (int)refusals[i]);
+        CHECK(v.primary.tone == ReadoutTone_Refused);
+    }
+}
+
 void TheEasyWaitIsASecondLineWhileItRuns()
 {
     const char* name = "easy wait: second line beside another way in, with the hours left";
@@ -389,6 +440,8 @@ void RunReadoutModelTests()
     DefeatsAreShownWhereTheyMatter();
     AnAnimalShowsItsStomach();
     ThePrimaryLineIsTheVerdictsReason();
+    ABalancedAllysPriceNamesTheFriendship();
+    ATemporaryOrRefusingAllyShowsItsTierLine();
     TheEasyWaitIsASecondLineWhileItRuns();
     TheWaitIsPromotedWhenTheReasonNamesNoNumber();
     StressTermsMakeStressFromState();

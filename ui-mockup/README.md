@@ -144,6 +144,20 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     notice hides that frame. Up to 8 at once, one per NPC. Hidden off screen and under a right-click menu; dropped when
     the NPC dies or joins, when the submission window opens or the event ends, and at a load.
 
+### Balanced allies by level (section 5, the "Ally ..." states)
+
+21. **The tier says what the ally wants** (user request 2026-10-03: allies by level, with friendship discounts).
+    Nothing new is drawn: the same popup, with the body naming the tier (`popup.ally.*`). A paying ally reads
+    "Aliado (nivel 34): Gor te cobra 1.840 cats, con 14% de descuento por amistad." and PRECIO carries the
+    discount beside the price, two spaces after it, in the same amber ("1.840 cats  -14%",
+    `popup.ally.discountTag`); the slider, the purse check and the offended markup work on the discounted
+    price because the discount is already in it. A Good ally under 20 reads "es tu aliado (nivel 12) y se une
+    gratis por amistad" with the odds of today's roll. An 80+ Good or Neutral ally close in level reads "te
+    acompanara 6 dias como miembro temporal", Gratis. The tier refusals (leader too weak, cruel, greedy) are
+    ordinary refusals with their reason in red. The card shows "Aliado: 1.840 cats con descuento"
+    (`readout.line.ally.paidJoin`) instead of the plain price. States "Ally pays", "Ally comes for a few days",
+    "Ally refuses: leader too weak", "Good ally under 20 joins free".
+
 ## Checking a change
 
 Mockup first, then C++. Measure in Chrome (`getBoundingClientRect`) and copy the px into the constants.

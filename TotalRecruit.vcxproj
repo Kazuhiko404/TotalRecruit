@@ -141,6 +141,9 @@
     <ClCompile Include="src\submission_tracker.cpp" />
     <ClCompile Include="src\head_notice_rules.cpp" />
     <ClCompile Include="src\head_notice.cpp" />
+    <ClCompile Include="src\personality_groups.cpp" />
+    <ClCompile Include="src\ally_tier_rules.cpp" />
+    <ClCompile Include="src\temp_member.cpp" />
     <ClCompile Include="src\npc_motion.cpp" />
     <ClCompile Include="src\submission_director.cpp" />
     <ClCompile Include="src\mouse_input.cpp" />
@@ -226,6 +229,9 @@
     <ClInclude Include="src\submission_tracker.h" />
     <ClInclude Include="src\head_notice_rules.h" />
     <ClInclude Include="src\head_notice.h" />
+    <ClInclude Include="src\personality_groups.h" />
+    <ClInclude Include="src\ally_tier_rules.h" />
+    <ClInclude Include="src\temp_member.h" />
     <ClInclude Include="src\npc_motion.h" />
     <ClInclude Include="src\submission_director.h" />
   </ItemGroup>

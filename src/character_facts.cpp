@@ -359,6 +359,22 @@ float FactionMultiplier(const RelationFact& relation, const Config& config)
     return FactionPriceMultiplier(relation.value, config.prices);
 }
 
+// A Balanced ally's friendship discount as a price multiplier, 1 - discount
+// (ally_tier_rules.h). 1.0 for anyone the tiers do not price -- and always outside
+// Balanced, where FactionMultiplier is the one that moves, so the two multiply
+// together without ever both being off 1.0. The route decides by the same
+// DecideBalancedAllyTier, so the popup's "-14%" is the discount in the price.
+float AllyFriendshipMultiplier(const CoreFacts& core, const RelationFact& relation,
+                               const Config& config)
+{
+    AllyTierDecision tier;
+    if (!DecideBalancedAllyTier(core, relation, config, &tier))
+    {
+        return 1.0f;
+    }
+    return AllyPriceMultiplier(tier);
+}
+
 // Reads everything that decides the quote; price_rules.cpp does the arithmetic. The
 // player's own level is deliberately not an input: the price is what this person is
 // worth, and how hard they are to win over is already the level gap's job in
@@ -622,6 +638,9 @@ FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core, GatherMod
     extra.relation = ReadRelation(character, PlayerFaction());
     extra.purse = ReadPurse();
     extra.price = GatherPrice(character, core, extra.relation);
+    // Only here, in the open world: a friend's price is a free-world deal, and a
+    // caged ally is priced like any other prisoner.
+    extra.price.factionMultiplier *= AllyFriendshipMultiplier(core, extra.relation, config);
     extra.haggle = ReadHaggle(character);
 
     // The roll's key is only minted when the route can roll at all, so asking

@@ -691,10 +691,13 @@ int LayoutUnguarded(const OfferView& view)
     const std::string* labels[kInfoRows] = { NULL, NULL, NULL };
     const std::string* values[kInfoRows] = { NULL, NULL, NULL };
     MyGUI::Colour inks[kInfoRows] = { kText, kText, kText };
+    // A Balanced ally's friendship discount rides beside the price ("1.840 cats  -14%").
+    const std::string priceShown =
+        view.priceTag.empty() ? view.priceText : view.priceText + "  " + view.priceTag;
     if (view.showPrice)
     {
         labels[rows] = &view.priceLabel;
-        values[rows] = &view.priceText;
+        values[rows] = &priceShown;
         inks[rows] = view.priceFree ? kReady : kAmber;
         ++rows;
     }

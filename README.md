@@ -94,6 +94,20 @@ they stay calm where they are for the same 5 minutes. One NPC at a time, once
 per beating. Calm is per character: no faction relation is changed. Turn it off
 with `submissionEventEnabled`.
 
+### Allies, by level (Balanced)
+
+An ally (faction standing at or above `friendlyRelation`) no longer gets one
+daily roll whatever their level. In Balanced their level and their personality
+decide the deal. A good-natured ally under level 20 joins free on today's roll;
+everyone else pays a friend's price, with friendship taking up to 20% off
+(10% from level 50) in proportion to the standing. From level 80 the good and
+the ordinary only come along as temporary members, for 3 to 10 days, and only
+behind a leader no more than 15 levels below them; the cruel refuse, and from
+level 100 so do the greedy. The popup says which: "Aliado (nivel 34): te cobra
+1.840 cats, con 14% de descuento por amistad", with the discount beside the
+price. Every number is an `allyTier*` key in `config.json` and in Mod Hub;
+Vanilla+ and Cheat keep their old ally behaviour.
+
 ### Refusal, with a reason
 
 Someone who watched you kill their friend says no — and you are told so. Every
@@ -106,8 +120,9 @@ itself.
 - **Cheat** — the cage and a one-minute wait, nothing else: the character must be
   in your cage and held for `cheatHoursCaged` (0.02 game hours); no cats, food,
   submission, level or standing. `cheatNeedsCage` turns the cage requirement off.
-- **Balanced** — the prices above. *(default)*
-- **Vanilla+** — as Balanced, plus faction relation shifting the price.
+- **Balanced** — the prices above, and allies by level. *(default)*
+- **Vanilla+** — as Balanced, plus faction relation shifting the price; allies
+  keep the single daily roll.
 
 Faction relation is deliberately never a gate. It is the one thing the player
 cannot change, so using it as a door would make half the world unrecruitable —

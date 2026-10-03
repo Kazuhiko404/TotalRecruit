@@ -209,6 +209,12 @@ OfferTexts OfferWording()
     Word(&t.bodySubmitted, "popup.body.submitted");
     Word(&t.reasonDefiantNoBeat, "popup.reason.defiantNoBeat");
 
+    Word(&t.allyFreeBody, "popup.ally.free");
+    Word(&t.allyPaidBody, "popup.ally.paid");
+    Word(&t.allyPaidFullBody, "popup.ally.paidFull");
+    Word(&t.allyTemporaryBody, "popup.ally.temporary");
+    Word(&t.discountTag, "popup.ally.discountTag");
+
     Word(&t.haggleLabel, "popup.haggle.label");
     Word(&t.haggleOdds, "popup.haggle.odds");
     Word(&t.haggleOffer, "popup.haggle.offer");

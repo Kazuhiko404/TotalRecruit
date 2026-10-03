@@ -882,6 +882,20 @@
     "military": [
       "sirve con lealtad a su facción: gana reputación, o enciérralo y somételo"
     ],
+    "ally": {
+      "temporary": [
+        "te acompañará unos días como miembro temporal"
+      ],
+      "leaderTooWeak": [
+        "eres demasiado débil para que te acompañe"
+      ],
+      "cruel": [
+        "no camina al lado de nadie: su crueldad no se pone a tus órdenes"
+      ],
+      "greedy": [
+        "vale más de lo que podrías pagarle nunca"
+      ]
+    },
     "cats": {
       "ask": [
         "pide {cats} cats y tienes {purse}"
@@ -978,7 +992,13 @@
       "insistence": "Harto de ti: dejalo en paz un rato",
       "ally": {
         "joins": "Aliado: se une",
-        "maybe": "Quiza te siga; si no, hazte mas fuerte"
+        "maybe": "Quiza te siga; si no, hazte mas fuerte",
+        "temporary": "Aliado: te acompana unos dias",
+        "leaderTooWeak": "Aliado: eres muy debil para el",
+        "cruel": "Cruel: no camina a tu lado",
+        "greedy": "Ambicioso: no hay precio para el",
+        "paidJoin": "Aliado: {cats} cats con descuento",
+        "paidAsk": "Aliado: {cats} cats (tienes {purse})"
       },
       "faction": {
         "honour": "Su honor no trata con tu reputacion",
@@ -1062,6 +1082,14 @@
     "reason": {
       "_comment": "Motivo en rojo cuando GOLPEAR / NOQUEAR no estan en la ventana (submissionAllowBeating apagado): no le pide al jugador que lo hiera.",
       "defiantNoBeat": "Sigue desafiante: dejalo con hambre"
+    },
+    "ally": {
+      "_comment": "Aliados por nivel en Balanced. {level} = nivel del NPC, {pct} = descuento por amistad, {days} = dias que se queda un miembro temporal.",
+      "free": "{name} es tu aliado (nivel {level}) y se une gratis por amistad.",
+      "paid": "Aliado (nivel {level}): {name} te cobra {cats} cats, con {pct}% de descuento por amistad.",
+      "paidFull": "Aliado (nivel {level}): {name} te cobra {cats} cats.",
+      "temporary": "Aliado (nivel {level}): {name} te acompanara {days} dias como miembro temporal.",
+      "discountTag": "-{pct}%"
     },
     "haggle": {
       "_comment": "Regateo (solo precios en cats). {pct} = probabilidad de que acepte la oferta, {cats} = lo que falta para esa oferta.",

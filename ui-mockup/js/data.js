@@ -68,15 +68,15 @@ var STATES = [
   {
     id: 'ally',
     title: 'Friendly NPC in the open',
-    note: 'Libre, ally. Chance from standing and level gap; the line is what the NPC says when the roll does not carry them (no price in this branch: allies are asked, not bribed). (The readout never says whether the roll passed: the odds are shown, the result is still the click\'s.)',
-    // facts: Route FreeWorld, relation +40, level 18 vs 20, honorable? no. chance 63
+    note: 'Libre, ally, Balanced: the level tier decides (<code>ally_tier_rules.h</code>). A Normal of level 34 pays a friend\'s price, no roll, so no chance bar: the line is the discounted price (<code>readout.line.ally.paidJoin</code>; short of cats it is <code>paidAsk</code> with the purse). A Good ally under 20 still rolls and shows the odds; 80+ reads "Aliado: te acompana unos dias" or the tier refusal. Vanilla+ keeps the single roll for every ally: chance bar and "Quiza te siga; si no, hazte mas fuerte".',
+    // facts: Route FreeWorld, Balanced, relation +40, level 34 vs 20, Normal -> Paid 20%; cats 1840, willJoin
     vm: {
       name: 'Mercader Ostrel', route: 'libre', routeLabel: 'Libre',
       showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0 },
-      showChance: true, chancePct: 63, ready: false,
+      showChance: false, chancePct: 0, ready: false,
       showDefeats: false, defeats: 0, defeatsNeeded: 0,
       showFood: false,
-      why:  { text: 'Quiza te siga; si no, hazte mas fuerte', tone: '' },
+      why:  { text: 'Aliado: 1.840 cats con descuento', tone: 'ok' },
       alt:  null
     }
   },

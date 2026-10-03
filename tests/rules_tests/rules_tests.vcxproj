@@ -75,6 +75,8 @@
     <ClCompile Include="submission_rules_tests.cpp" />
     <ClCompile Include="submission_tracker_tests.cpp" />
     <ClCompile Include="head_notice_rules_tests.cpp" />
+    <ClCompile Include="personality_groups_tests.cpp" />
+    <ClCompile Include="ally_tier_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -116,6 +118,8 @@
     <ClCompile Include="..\..\src\submission_rules.cpp" />
     <ClCompile Include="..\..\src\submission_tracker.cpp" />
     <ClCompile Include="..\..\src\head_notice_rules.cpp" />
+    <ClCompile Include="..\..\src\personality_groups.cpp" />
+    <ClCompile Include="..\..\src\ally_tier_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

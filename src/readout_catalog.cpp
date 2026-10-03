@@ -5,7 +5,8 @@ namespace totalrecruit
 namespace
 {
 // One row per id, in ReasonKey order and then the card's own lines: the cage wait,
-// the open roll and the field-yield beat-again (the test checks the count). Text is plain ASCII like the rest of messages.json, and short: the card
+// the open roll, the field-yield beat-again and a Balanced ally's discounted price
+// (join / short) (the test checks the count). Text is plain ASCII like the rest of messages.json, and short: the card
 // does not wrap. A row with empty text is a verdict the card is hidden for.
 struct Row
 {
@@ -63,9 +64,15 @@ const Row kRows[] = {
     { "readout.line.animal.tame.hungry",     "Hambre {food}% / necesita {need}%" },
     { "readout.line.animal.tame.notFed",     "No comio de tu mano: dale comida" },
     { "readout.line.rejectCooldown",         "No quiere saber nada de ti" },
-    { "readout.line.waitCage",               "Faltan {hours} en la jaula" },
+    { "readout.line.ally.temporary",         "Aliado: te acompana unos dias" },
+    { "readout.line.ally.leaderTooWeak",     "Aliado: eres muy debil para el" },
+    { "readout.line.ally.cruel",             "Cruel: no camina a tu lado" },
+    { "readout.line.ally.greedy",            "Ambicioso: no hay precio para el" },
+    { "readout.line.waitCage",              "Faltan {hours} en la jaula" },
     { "readout.line.rollOpen",               "{chance}%: puede unirse si le hablas" },    // kLineRollOpen
     { "readout.line.fieldYield.beatAgain",   "Aun no cede: vencelo otra vez" },          // kLineFieldYieldBeatAgain
+    { "readout.line.ally.paidJoin",          "Aliado: {cats} cats con descuento" },      // kLineAllyPaidJoin
+    { "readout.line.ally.paidAsk",           "Aliado: {cats} cats (tienes {purse})" },   // kLineAllyPaidAsk
 };
 
 // One label per ReadoutRoute, in enum order.

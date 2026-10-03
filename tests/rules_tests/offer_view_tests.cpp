@@ -678,10 +678,178 @@ void CagedSubmissionHasNoForgive()
     CHECK(v.extraLabel.empty());
     CHECK(v.cancelLabel == t.decline);
 }
+
+// ------------------------------------------------------- Balanced allies
+// ui-mockup/readout.html section 5, the ally states (js/popup_data.js).
+
+Verdict AllyPaid(int cats, int level, int discount)
+{
+    Verdict v = CatsVerdict(true, cats, 0);
+    v.allyTiered = true;
+    v.allyLevel = level;
+    v.allyDiscountPercent = discount;
+    return v;
+}
+
+void APayingAllyNamesTheTierAndTheDiscount()
+{
+    const char* name = "ally paid: body names level and discount, PRECIO carries the -N% tag";
+    OfferInput in;
+    in.name = "Gor";
+    in.verdict = AllyPaid(1840, 34, 14);
+    in.purseKnown = true;
+    in.purse = 5000;
+    const OfferTexts t = Texts();
+    const OfferView v = BuildOfferView(in, t);
+    CHECK(v.bodyLine == "Aliado (nivel 34): Gor te cobra 1.840 cats, con 14% de descuento por amistad.");
+    CHECK(v.showPrice && !v.priceFree);
+    CHECK(v.priceText == "1.840 cats");
+    CHECK(v.priceTag == "-14%");
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(v.reasonText.empty());
+}
+
+void APayingAllyWithNoDiscountSaysJustThePrice()
+{
+    const char* name = "ally paid at 0%: no tag, the plain ally body";
+    OfferInput in;
+    in.name = "Gor";
+    in.verdict = AllyPaid(2000, 60, 0);
+    const OfferView v = BuildOfferView(in, Texts());
+    CHECK(v.priceTag.empty());
+    CHECK(v.bodyLine == "Aliado (nivel 60): Gor te cobra 2.000 cats.");
+}
+
+void AShortAllyStillSeesTheTierAndTheShortfall()
+{
+    const char* name = "ally paid, short purse: the tier body stays, the shortfall is red, no Accept";
+    OfferInput in;
+    in.name = "Gor";
+    in.verdict = AllyPaid(1840, 34, 14);
+    in.verdict.willJoin = false;
+    in.verdict.reasonKey = Reason_CatsAsk;
+    in.purseKnown = true;
+    in.purse = 840;
+    const OfferView v = BuildOfferView(in, Texts());
+    CHECK(v.bodyLine.find("14%") != std::string::npos);
+    CHECK(v.priceTag == "-14%");
+    CHECK(!v.affordable);
+    CHECK(v.shortfall == 1000);
+    CHECK(v.reasonRefused);
+    CHECK(v.acceptLabel.empty());
+}
+
+void AHaggledAllyKeepsTheTierBody()
+{
+    const char* name = "ally paid with haggling: the slider works on the discounted ask, the body keeps the tier";
+    OfferInput in;
+    in.name = "Gor";
+    in.verdict = AllyPaid(1840, 34, 14);
+    in.purseKnown = true;
+    in.purse = 5000;
+    in.haggle.enabled = true;
+    const OfferView v = BuildOfferView(in, Texts());
+    CHECK(v.showSlider);
+    CHECK(v.haggleBounds.maxOffer == 1840);
+    CHECK(v.priceTag == "-14%");
+    CHECK(v.bodyLine.find("nivel 34") != std::string::npos);
+}
+
+void ATemporaryAllySaysForHowManyDays()
+{
+    const char* name = "ally temporary: free, the body says the days";
+    OfferInput in;
+    in.name = "Beep";
+    in.verdict.willJoin = true;
+    in.verdict.currency = Currency_None;
+    in.verdict.reasonKey = Reason_AllyTemporary;
+    in.verdict.allyTiered = true;
+    in.verdict.allyLevel = 85;
+    in.verdict.temporary = true;
+    in.verdict.temporaryDays = 6;
+    const OfferTexts t = Texts();
+    const OfferView v = BuildOfferView(in, t);
+    CHECK(v.showPrice && v.priceFree);
+    CHECK(v.priceTag.empty());
+    CHECK(v.bodyLine.find("Aliado (nivel 85): Beep te acompa") == 0);
+    CHECK(v.bodyLine.find(" 6 d") != std::string::npos);
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(!v.showSlider);
+}
+
+void AFreeGoodAllySaysItIsFriendship()
+{
+    const char* name = "ally free (Good, under 20): Gratis, the body says it is friendship";
+    OfferInput in;
+    in.name = "Ruka";
+    in.verdict.willJoin = true;
+    in.verdict.currency = Currency_None;
+    in.verdict.reasonKey = Reason_AllyJoins;
+    in.verdict.rolled = true;
+    in.verdict.chancePercent = 45;
+    in.verdict.allyTiered = true;
+    in.verdict.allyLevel = 12;
+    const OfferView v = BuildOfferView(in, Texts());
+    CHECK(v.priceFree);
+    CHECK(v.bodyLine == "Ruka es tu aliado (nivel 12) y se une gratis por amistad.");
+    CHECK(v.showChance);
+}
+
+void ARefusingAllyReadsAsARefusal()
+{
+    const char* name = "ally refused (too weak, cruel, greedy): the usual refusal window with the reason";
+    OfferInput in;
+    in.name = "Beep";
+    in.verdict.currency = Currency_Refused;
+    in.verdict.reasonKey = Reason_AllyLeaderTooWeak;
+    in.verdict.reason = "eres demasiado debil para que te acompane";
+    in.verdict.allyTiered = true;
+    in.verdict.allyLevel = 95;
+    const OfferTexts t = Texts();
+    const OfferView v = BuildOfferView(in, t);
+    CHECK(v.reasonRefused);
+    CHECK(v.reasonText == "Eres demasiado debil para que te acompane");
+    CHECK(v.acceptLabel.empty());
+    CHECK(v.cancelLabel == t.close);
+    CHECK(!v.showPrice);
+    CHECK(v.priceTag.empty());
+}
+
+void AnUntieredPriceHasNoTag()
+{
+    const char* name = "a plain bribe or cage price never carries a discount tag";
+    OfferInput in;
+    in.name = "Merc";
+    in.verdict = CatsVerdict(true, 9570, 0);
+    in.verdict.allyDiscountPercent = 30;   // ignored without allyTiered
+    const OfferView v = BuildOfferView(in, Texts());
+    CHECK(v.priceTag.empty());
+    CHECK(v.bodyLine == "Merc se unir\xc3\xa1 a tu grupo por 9.570 cats.");
+}
+
+void TheAllyTextsAreComplete()
+{
+    const char* name = "every ally template is present with its placeholders";
+    const OfferTexts t = Texts();
+    CHECK(t.allyFreeBody.find("{level}") != std::string::npos);
+    CHECK(t.allyPaidBody.find("{pct}") != std::string::npos && t.allyPaidBody.find("{cats}") != std::string::npos);
+    CHECK(t.allyPaidFullBody.find("{cats}") != std::string::npos);
+    CHECK(t.allyTemporaryBody.find("{days}") != std::string::npos);
+    CHECK(t.discountTag.find("{pct}") != std::string::npos);
+}
 } // namespace
 
 void RunOfferViewTests()
 {
+    APayingAllyNamesTheTierAndTheDiscount();
+    APayingAllyWithNoDiscountSaysJustThePrice();
+    AShortAllyStillSeesTheTierAndTheShortfall();
+    AHaggledAllyKeepsTheTierBody();
+    ATemporaryAllySaysForHowManyDays();
+    AFreeGoodAllySaysItIsFriendship();
+    ARefusingAllyReadsAsARefusal();
+    AnUntieredPriceHasNoTag();
+    TheAllyTextsAreComplete();
     JoinsForCatsShowsPriceAndPurse();
     ShortPurseHidesAcceptAndSaysTheShortfall();
     ShortPurseReadFromTheVerdictWhenNotSupplied();

@@ -419,6 +419,54 @@ struct Animals
     }
 };
 
+// Balanced allies by level (ally_tier_rules.h): who joins free, who charges with a
+// friendship discount, who comes along only for a few days, and who will not.
+// Each cut level belongs to the tier it starts: 20 is already "20-50", 80 is
+// already "80-100", 100 is already "100+". Only the Balanced preset reads these.
+struct AllyTiers
+{
+    // Off, Balanced allies keep the single daily roll every preset used to have.
+    bool enabled;
+    // The levels where the next tier starts.
+    int midFromLevel;      // 20: below it the low tier (Good joins free)
+    int highFromLevel;     // 50
+    int eliteFromLevel;    // 80: temporary members start here
+    int legendFromLevel;   // 100
+    // The most friendship can take off the price in each tier, as a 0..1 fraction.
+    // The elite one is only for the greedy (everyone else at 80+ is temporary or
+    // refuses).
+    float lowMaxDiscount;
+    float midMaxDiscount;
+    float highMaxDiscount;
+    float eliteMaxDiscount;
+    // discount = min(tierMax, relation / 100 * discountScale).
+    float discountScale;
+    // A temporary member (80+) only follows a leader at most this many levels
+    // below them.
+    int closeLevelGap;
+    // How many days a temporary member stays, drawn once per day from the NPC's
+    // seed, inclusive at both ends.
+    int tempMemberMinDays;
+    int tempMemberMaxDays;
+
+    AllyTiers()
+        : enabled(true),
+          midFromLevel(20),
+          highFromLevel(50),
+          eliteFromLevel(80),
+          legendFromLevel(100),
+          lowMaxDiscount(0.20f),
+          midMaxDiscount(0.20f),
+          highMaxDiscount(0.10f),
+          eliteMaxDiscount(0.10f),
+          discountScale(1.0f),
+          closeLevelGap(15),
+          tempMemberMinDays(3),
+          tempMemberMaxDays(10)
+    {
+    }
+};
+
 // Which dialogue records the plugin fires. Empty means "no FCS package
 // installed" -- the plugin then falls back to acting directly, so the mod still
 // works as a code-only install.
@@ -528,6 +576,7 @@ struct Config
     Insistence insistence;
     Submission submission;
     Animals animals;
+    AllyTiers allyTiers;
     DialogueIds dialogue;
     Exclusions exclude;
 

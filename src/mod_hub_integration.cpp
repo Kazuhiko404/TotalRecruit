@@ -237,7 +237,21 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "animal_strong_penalty", "Animal: recargo fuerte", "Cuanta comida extra pide un animal de nivel alto", 0.0f, 1.0f, 0.05f, 2, &c.animals.strongPenalty);
     regFloat(api, mod, "animal_edge_discount", "Animal: descuento +10", "Descuento si le sacas 10 niveles o mas", 0.0f, 1.0f, 0.05f, 2, &c.animals.edgeDiscount);
     regFloat(api, mod, "friendly_relation", "Relacion amistosa", "Reputacion a partir de la cual te consideran amigo", -100.0f, 100.0f, 5.0f, 0, &c.friendlyRelation);
-    regBool(api, mod, "cheat_needs_cage", "Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
+    // Aliados por nivel (solo Balanced): gratis, con descuento, temporal o no.
+    regBool(api, mod, "ally_tier_enabled", "Aliados por nivel: activo", "En Balanced el nivel y la personalidad del aliado deciden el trato. Apagado, una sola tirada diaria como antes", &c.allyTiers.enabled);
+    regInt(api, mod, "ally_tier_mid_from", "Aliados: nivel del 2do tramo", "Desde este nivel todos cobran (bajo el, los buenos se unen gratis)", 1, 300, 1, &c.allyTiers.midFromLevel);
+    regInt(api, mod, "ally_tier_high_from", "Aliados: nivel del 3er tramo", "Desde este nivel el descuento maximo baja", 1, 300, 1, &c.allyTiers.highFromLevel);
+    regInt(api, mod, "ally_tier_elite_from", "Aliados: nivel temporal", "Desde este nivel buenos y neutrales solo te acompanan unos dias; los crueles se niegan", 1, 300, 1, &c.allyTiers.eliteFromLevel);
+    regInt(api, mod, "ally_tier_legend_from", "Aliados: nivel leyenda", "Desde este nivel tampoco los ambiciosos se unen", 1, 300, 1, &c.allyTiers.legendFromLevel);
+    regFloat(api, mod, "ally_tier_low_discount", "Aliados: descuento max. tramo 1", "Lo maximo que la amistad descuenta bajo el 2do tramo (0.2 = 20%)", 0.0f, 0.9f, 0.05f, 2, &c.allyTiers.lowMaxDiscount);
+    regFloat(api, mod, "ally_tier_mid_discount", "Aliados: descuento max. tramo 2", "Lo maximo que la amistad descuenta en el 2do tramo", 0.0f, 0.9f, 0.05f, 2, &c.allyTiers.midMaxDiscount);
+    regFloat(api, mod, "ally_tier_high_discount", "Aliados: descuento max. tramo 3", "Lo maximo que la amistad descuenta en el 3er tramo", 0.0f, 0.9f, 0.05f, 2, &c.allyTiers.highMaxDiscount);
+    regFloat(api, mod, "ally_tier_elite_discount", "Aliados: descuento max. ambiciosos", "Lo maximo que descuenta un ambicioso de nivel temporal", 0.0f, 0.9f, 0.05f, 2, &c.allyTiers.eliteMaxDiscount);
+    regFloat(api, mod, "ally_tier_discount_scale", "Aliados: peso de la amistad", "Descuento = reputacion / 100 x esto, hasta el maximo del tramo", 0.0f, 5.0f, 0.1f, 1, &c.allyTiers.discountScale);
+    regInt(api, mod, "ally_tier_close_gap", "Aliados: distancia de nivel", "Cuantos niveles mas que tu lider puede tener un aliado temporal", 0, 100, 1, &c.allyTiers.closeLevelGap);
+    regInt(api, mod, "ally_tier_temp_min_days", "Aliados: dias minimos", "Lo minimo que se queda un miembro temporal", 1, 60, 1, &c.allyTiers.tempMemberMinDays);
+    regInt(api, mod, "ally_tier_temp_max_days", "Aliados: dias maximos", "Lo maximo que se queda un miembro temporal", 1, 120, 1, &c.allyTiers.tempMemberMaxDays);
+    regBool(api, mod, "cheat_needs_cage","Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
     regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame (0.02 = un minuto)", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
     regInt(api, mod, "rescue_base_bonus", "Rescate: peso de la deuda", "Cuanto pesa haberle salvado la vida, antes de contar la cura", 0, 90, 5, &c.rescueBaseBonus);
     regFloat(api, mod, "rescue_heal_weight", "Rescate: peso de la cura", "Cuanta chance suma haberlo curado del todo", 0.0f, 90.0f, 5.0f, 0, &c.rescueHealWeight);

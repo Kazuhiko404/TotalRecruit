@@ -20,11 +20,28 @@ bool IsHidden(int id)
 
 void EveryReasonHasARowPlusTheCardsOwnLines()
 {
-    const char* name = "catalog: one row per ReasonKey plus the wait, the open roll and beat-again";
-    CHECK(ReadoutLineCount() == (int)Reason_Count + 3);
+    const char* name = "catalog: one row per ReasonKey plus the wait, the open roll, beat-again and the ally prices";
+    CHECK(ReadoutLineCount() == (int)Reason_Count + 5);
     CHECK(kLineWaitCage == (int)Reason_Count);
     CHECK(kLineRollOpen == (int)Reason_Count + 1);
     CHECK(kLineFieldYieldBeatAgain == (int)Reason_Count + 2);
+    CHECK(kLineAllyPaidJoin == (int)Reason_Count + 3);
+    CHECK(kLineAllyPaidAsk == (int)Reason_Count + 4);
+}
+
+void TheAllyTierLinesNameTheFriendship()
+{
+    const char* name = "catalog: the ally price lines keep {cats} (and {purse} when short); the tier refusals have lines";
+    const std::string join = ReadoutLineDefaultText(kLineAllyPaidJoin);
+    const std::string ask = ReadoutLineDefaultText(kLineAllyPaidAsk);
+    CHECK(join.find("Aliado") == 0 && join.find("{cats}") != std::string::npos);
+    CHECK(ask.find("{cats}") != std::string::npos && ask.find("{purse}") != std::string::npos);
+    CHECK(std::string(ReadoutLineMessageKey(kLineAllyPaidJoin)) == "readout.line.ally.paidJoin");
+    CHECK(std::string(ReadoutLineMessageKey(kLineAllyPaidAsk)) == "readout.line.ally.paidAsk");
+    CHECK(std::string(ReadoutLineMessageKey(Reason_AllyTemporary)) == "readout.line.ally.temporary");
+    CHECK(std::strlen(ReadoutLineDefaultText(Reason_AllyLeaderTooWeak)) > 0);
+    CHECK(std::strlen(ReadoutLineDefaultText(Reason_AllyCruel)) > 0);
+    CHECK(std::strlen(ReadoutLineDefaultText(Reason_AllyGreedy)) > 0);
 }
 
 void TheCardsOwnLinesSayWhatTheyMean()
@@ -123,6 +140,7 @@ void RunReadoutCatalogTests()
 {
     EveryReasonHasARowPlusTheCardsOwnLines();
     TheCardsOwnLinesSayWhatTheyMean();
+    TheAllyTierLinesNameTheFriendship();
     EveryRouteHasALabel();
     VisibleReasonsHaveShortAsciiText();
     KeysAreUniqueAndNamespaced();

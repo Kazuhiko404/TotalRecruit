@@ -24,6 +24,11 @@ const int kLineRollOpen = Reason_Count + 1;
 // The id of "Aun no cede: vencelo otra vez": the field-yield "not yet" for someone
 // who is not in the player's cage, where starving them is not on offer.
 const int kLineFieldYieldBeatAgain = Reason_Count + 2;
+// The ids of a Balanced ally's discounted price (ally_tier_rules.h): the yes and the
+// "not yet" the purse cannot meet. The verdict's reason is CatsJoin / CatsAsk like
+// any other price; the card names the friendship on top.
+const int kLineAllyPaidJoin = Reason_Count + 3;
+const int kLineAllyPaidAsk = Reason_Count + 4;
 
 int ReadoutLineCount();
 // messages.json path ("readout.line.cats.ask") and the built-in text used when the

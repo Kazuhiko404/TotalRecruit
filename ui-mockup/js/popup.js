@@ -105,7 +105,10 @@ function layoutOffer(vm) {
 
   // Info box: line frame around a bgdark plate, muted labels, coloured values.
   var rows = [];
-  if (vm.showPrice) rows.push([PP_INFO_LABELS.price, vm.priceText, vm.priceFree ? 'var(--ready)' : 'var(--amber)']);
+  // A Balanced ally's friendship discount rides beside the price, two spaces apart
+  // (offer_popup.cpp priceShown).
+  var priceShown = vm.priceTag ? vm.priceText + '  ' + vm.priceTag : vm.priceText;
+  if (vm.showPrice) rows.push([PP_INFO_LABELS.price, priceShown, vm.priceFree ? 'var(--ready)' : 'var(--amber)']);
   if (vm.showPurse) rows.push([PP_INFO_LABELS.purse, vm.purseText, vm.affordable ? 'var(--text)' : 'var(--soft-danger)']);
   if (vm.showChance) rows.push([PP_INFO_LABELS.chance, vm.chanceText, 'var(--text)']);
   if (rows.length) {

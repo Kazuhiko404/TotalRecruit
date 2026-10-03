@@ -731,3 +731,24 @@ Pedido del usuario (2026-10-03): "el juego te avisa, pero si no lees el nombre n
 | N11 | Que el NPC del cartel muera o se una al grupo | El cartel se va (en menos de 1 s) | — |
 | N12 | Cargar un save con carteles visibles | No queda ningun cartel | — |
 | N13 | Ventana de oferta abierta y el cartel caeria encima | Se corre de costado a la altura de la cabeza (como la tarjeta), u oculto sin lugar | — |
+
+### 12.24 Aliados por nivel y descuento por amistad (ally-tiers-temp-helpers T1)
+
+Pedido del usuario (2026-10-03): en Balanced, el nivel y la personalidad de un aliado deciden el trato (REQUISITOS §4b). Preset 1 (Balanced), `allyTierEnabled` encendido, un aliado = relacion >= `friendlyRelation` (cursor amarillo). El nivel del jugador es el del lider del escuadron activo. Mockup: `ui-mockup/readout.html` seccion 5, los estados "Ally ...". Con `probeOnClick` el log del precio muestra `faction=x0.86` para un descuento de 14%.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| A1 | Hablar con un aliado Honorable o Calido de nivel < 20 | PRECIO Gratis, PROBABILIDAD (la tirada de hoy), cuerpo "<nombre> es tu aliado (nivel N) y se une gratis por amistad."; si la tirada no da, "te aprecia, pero te mide" | `[chance] ...` |
+| A2 | Aliado Normal (u otro no Bueno) de nivel 20-49, relacion 40 | Cuerpo "Aliado (nivel N): <nombre> te cobra X cats, con 20% de descuento por amistad."; PRECIO "X cats  -20%"; sin PROBABILIDAD; regateo con slider sobre X | `[price] ... faction=x0.80 -> X cats` |
+| A3 | El mismo aliado sin cats suficientes | TIENES en rojo, "No te alcanzan..." (o la linea del slider), sin ACEPTAR; la tarjeta dice "Aliado: X cats (tienes Y)" | — |
+| A4 | Aliado de nivel 50-79 con relacion alta | Descuento tope 10% ("-10%") | `faction=x0.90` |
+| A5 | Aliado Traicionero o Astuto de nivel 80-99 | Paga con hasta 10% de descuento | — |
+| A6 | Aliado Bueno o Neutral de nivel 80+ y tu lider a 15 niveles o menos | PRECIO Gratis, "Aliado (nivel N): <nombre> te acompanara D dias como miembro temporal." (D entre 3 y 10, el mismo todo el dia); ACEPTAR lo recluta | `<nombre> [temp] joined for D days` |
+| A7 | El mismo con el lider a mas de 15 niveles | Rechazo en rojo "Eres demasiado debil para que te acompane", CERRAR | — |
+| A8 | Aliado Frio y cruel o Maniaco de nivel 80+ | Rechazo "no camina al lado de nadie: su crueldad no se pone a tus ordenes" | — |
+| A9 | Aliado Traicionero o Astuto de nivel 100+ | Rechazo "vale mas de lo que podrias pagarle nunca" | — |
+| A10 | Seleccionar al aliado de A2 (tarjeta) | Linea "Aliado: X cats con descuento" en verde, sin barra de chance | — |
+| A11 | Preset 2 (Vanilla+) con el aliado de A2 | Como antes: una tirada diaria, PROBABILIDAD, sin "-N%" | — |
+| A12 | Preset 0 (Cheat) | Sin cambios: jaula y un momento | — |
+| A13 | Mod Hub "Aliados por nivel: activo" apagado, preset 1 | Todos los aliados vuelven a la tirada diaria | — |
+| A14 | Mod Hub: bajar "Aliados: peso de la amistad" a 0.5 con relacion 28 | El descuento pasa a 14% | — |

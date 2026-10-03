@@ -119,6 +119,12 @@ ReadoutLineView PrimaryLine(const ReadoutInput& in)
         // Starving them is only on offer for someone in the player's own cage.
         return LineFor(kLineFieldYieldBeatAgain, in);
     }
+    if (in.verdict.allyTiered && in.verdict.currency == Currency_Cats)
+    {
+        // A Balanced ally's price is a friend's price: the card says so.
+        if (key == Reason_CatsJoin) return LineFor(kLineAllyPaidJoin, in);
+        if (key == Reason_CatsAsk)  return LineFor(kLineAllyPaidAsk, in);
+    }
     return LineFor((int)key, in);
 }
 } // namespace

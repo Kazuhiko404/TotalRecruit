@@ -74,6 +74,8 @@ const Suite kSuites[] = {
     { "submission_rules", RunSubmissionRulesTests },
     { "submission_tracker", RunSubmissionTrackerTests },
     { "head_notice_rules", RunHeadNoticeRulesTests },
+    { "personality_groups", RunPersonalityGroupsTests },
+    { "ally_tier_rules", RunAllyTierRulesTests },
 };
 } // namespace
 

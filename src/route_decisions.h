@@ -14,10 +14,11 @@
 //   route_rescue.cpp  out cold, dying, saved, healed back up
 //   route_yield.cpp   beaten: the grudge, the field yield, the surrender
 //   route_animal.cpp  taming: food and nothing else
-//   route_free.cpp    the open world: allies, honour, bribes
+//   route_free.cpp    the open world: allies (by level tier in Balanced), honour, bribes
 //   route_cage.cpp    the player's cage: the wait, intimidation, the price table
 //   route_cats.cpp    the price both of the last two quote
 
+#include "ally_tier_rules.h"
 #include "config.h"
 #include "entry_facts.h"
 #include "verdict.h"
@@ -72,6 +73,13 @@ Verdict DecideFreeWorld(const CoreFacts& core, const FreeExtra& extra, const Con
 // animal). The roll's key is only minted when it can, so asking about a bystander
 // does not give them an id.
 bool FreeWorldMayRoll(const CoreFacts& core, const RelationFact& relation, const Config& config);
+// route_free: the level tier a Balanced ally falls in (ally_tier_rules.h), from
+// their level, the leader's, their personality group and the relation. False when
+// the tiers do not apply: another preset, the tiers switched off, an animal, or
+// not an ally. The free-world route decides by it and character_facts prices by
+// it (the friendship discount), so the two can never disagree.
+bool DecideBalancedAllyTier(const CoreFacts& core, const RelationFact& relation,
+                            const Config& config, AllyTierDecision* out);
 
 // route_cage: the player's own cage.
 Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& config);

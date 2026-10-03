@@ -87,6 +87,52 @@ std::string JoinBody(const Verdict& v, const std::string& name, const OfferTexts
     }
 }
 
+// A Balanced ally's template ({level}, {pct}, {days} on top of {name} and {cats}).
+std::string AllyFill(const std::string& text, const std::string& name, const Verdict& v)
+{
+    std::string out = Fill(text, name, v.cats);
+    ReplaceAll(&out, "{level}", PercentNumber(v.allyLevel));
+    ReplaceAll(&out, "{pct}", PercentNumber(v.allyDiscountPercent));
+    ReplaceAll(&out, "{days}", PercentNumber(v.temporaryDays));
+    return out;
+}
+
+// The body line a Balanced ally's tier gives (ally_tier_rules.h): the friend's
+// price, the free friend, the temporary member. Empty when the tier has nothing
+// of its own to say (not tiered, or a refusal, which reads like any other).
+std::string AllyBody(const Verdict& v, const std::string& name, const OfferTexts& t)
+{
+    if (!v.allyTiered)
+    {
+        return std::string();
+    }
+    if (v.currency == Currency_Cats)
+    {
+        return AllyFill(v.allyDiscountPercent > 0 ? t.allyPaidBody : t.allyPaidFullBody, name, v);
+    }
+    if (v.willJoin && v.temporary)
+    {
+        return AllyFill(t.allyTemporaryBody, name, v);
+    }
+    if (v.willJoin)
+    {
+        return AllyFill(t.allyFreeBody, name, v);
+    }
+    return std::string();
+}
+
+// "-14%" beside a tiered ally's price; nothing for any other price.
+std::string PriceTag(const Verdict& v, const OfferTexts& t)
+{
+    if (!v.allyTiered || v.allyDiscountPercent <= 0)
+    {
+        return std::string();
+    }
+    std::string tag = t.discountTag;
+    ReplaceAll(&tag, "{pct}", PercentNumber(v.allyDiscountPercent));
+    return tag;
+}
+
 // A cats price the player is being asked for: a yes with a price, or the "not
 // yet" that is only the purse.
 bool IsPriceOffer(const Verdict& v)
@@ -240,6 +286,12 @@ OfferTexts DefaultOfferTexts()
     t.bodySubmitted = "{name} se arrodilla y te pide unirse a tu grupo.";
     t.reasonDefiantNoBeat = "Sigue desafiante: d\xc3\xa9jalo con hambre";
 
+    t.allyFreeBody = "{name} es tu aliado (nivel {level}) y se une gratis por amistad.";
+    t.allyPaidBody = "Aliado (nivel {level}): {name} te cobra {cats} cats, con {pct}% de descuento por amistad.";
+    t.allyPaidFullBody = "Aliado (nivel {level}): {name} te cobra {cats} cats.";
+    t.allyTemporaryBody = "Aliado (nivel {level}): {name} te acompa\xc3\xb1" "ar\xc3\xa1 {days} d\xc3\xad" "as como miembro temporal.";
+    t.discountTag = "-{pct}%";
+
     t.haggleLabel = "OFERTA";
     t.haggleOdds = "Probabilidad de aceptar: {pct}%";
     t.haggleOffer = "OFRECER";
@@ -299,7 +351,9 @@ OfferView BuildVerdictView(const OfferInput& in, const OfferTexts& t)
         view.showPrice = true;
         view.priceCats = v.cats;
         view.priceText = Fill(t.catsValue, in.name, v.cats);
-        view.bodyLine = Fill(t.bodyCats, in.name, v.cats);
+        view.priceTag = PriceTag(v, t);
+        const std::string allyBody = AllyBody(v, in.name, t);
+        view.bodyLine = allyBody.empty() ? Fill(t.bodyCats, in.name, v.cats) : allyBody;
 
         // The caller's fresh read wins; the verdict carries the purse it was
         // short against when the caller could not read one.
@@ -364,7 +418,8 @@ OfferView BuildVerdictView(const OfferInput& in, const OfferTexts& t)
         view.showPrice = true;
         view.priceFree = true;
         view.priceText = t.free;
-        view.bodyLine = JoinBody(v, in.name, t);
+        const std::string allyBody = AllyBody(v, in.name, t);
+        view.bodyLine = allyBody.empty() ? JoinBody(v, in.name, t) : allyBody;
         view.acceptLabel = t.accept;
         return view;
     }
