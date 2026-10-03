@@ -482,6 +482,11 @@ struct Config
     bool readoutCompact;
     bool readoutOnSelect;
 
+    // How long the "wants to talk" card stays over the head of an NPC who called out
+    // (head_notice.h), in real seconds frozen on pause. Clamped on load to
+    // kHeadNoticeSecondsMin..kHeadNoticeSecondsMax (head_notice_rules.h).
+    float headNoticeSeconds;
+
     int preset; // Preset enum
     // Route A: recruit someone you saved from dying. The one route no existing
     // mod has, and the only one where the player is not exercising power.
@@ -543,6 +548,7 @@ struct Config
           readoutEnabled(true),
           readoutCompact(false),
           readoutOnSelect(true),
+          headNoticeSeconds(300.0f),
           friendlyRelation(20.0f),
           relationRefuseGoodNatured(-15.0f),
           relationRefuseAll(-30.0f),

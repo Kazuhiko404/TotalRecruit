@@ -113,6 +113,16 @@ var PLACEMENT = {
   selectionRefreshMs: 2000 // kSelectionRefreshMs
 };
 
+// The "wants to talk" notice over the head (src/head_notice.cpp, src/head_notice_rules.h). Raised by
+// hail.cpp (a ready captive calls out) and submission_director.cpp (a beaten NPC walks up); gone
+// after headNoticeSeconds, when that NPC is selected, when they die or join, or at a load.
+var HEAD_NOTICE = {
+  seconds: 300,          // headNoticeSeconds default (config.h), clamp 10..3600
+  cap: 8,                // kHeadNoticeCap: one per NPC, the oldest goes when full
+  wantsToTalk: 'Quiere hablar contigo',          // messages.json headNotice.wantsToTalk
+  approaching: 'Se acerca para hablar contigo'   // messages.json headNotice.approaching
+};
+
 // Mod Hub rows, word for word as src/mod_hub_integration.cpp registers them, with the
 // src/config.h default.
 var HUB = [
@@ -121,5 +131,7 @@ var HUB = [
   ['Lectura: compacta', 'readoutCompact', 'OFF',
    'Version mas chica: sin el desglose del estres ni las derrotas'],
   ['Lectura: al seleccionar', 'readoutOnSelect', 'ON',
-   'La lectura sigue al NPC que seleccionas con clic izquierdo. Apagado, solo aparece al apretar Hablar']
+   'La lectura sigue al NPC que seleccionas con clic izquierdo. Apagado, solo aparece al apretar Hablar'],
+  ['Aviso: segundos sobre la cabeza', 'headNoticeSeconds', '300',
+   'Cuanto queda el cartel \'Quiere hablar contigo\' sobre quien te llama (seleccionarlo lo quita)']
 ];

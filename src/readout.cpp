@@ -563,6 +563,11 @@ void ReadoutTick()
     TickSelection(selected);
 }
 
+bool ReadoutCardOnScreen(ScreenRect* out)
+{
+    return ReadoutUiRect(out);
+}
+
 void ForgetReadout()
 {
     HideCard();

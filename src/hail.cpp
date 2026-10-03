@@ -9,6 +9,8 @@
 #include "config.h"
 #include "recruit_core.h"
 #include "dialogue_authoring.h"
+#include "head_notice.h"
+#include "messages.h"
 #include "log.h"
 
 #include <map>
@@ -173,6 +175,8 @@ void SweepForHails(bool hailing)
         // The bubble floats over their head and fades; the roller keeps a line
         // the player can still read after turning the camera away.
         TellPlayer(CharacterName(npc) + " quiere hablar contigo.", false);
+        // And over their head, so a player who missed the name sees who it was.
+        RaiseHeadNotice(npc, Say("headNotice.wantsToTalk", "Quiere hablar contigo", npc));
         LogInfo(CharacterName(npc) + " called out to the player.");
     }
 }

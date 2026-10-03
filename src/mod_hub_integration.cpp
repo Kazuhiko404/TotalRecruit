@@ -182,6 +182,7 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "hail_first_hours", "Aviso: primeras horas", "Horas de juego antes del primer llamado", 8.0f, 72.0f, 1.0f, 0, &c.hailFirstHours);
     regFloat(api, mod, "hail_repeat_hours", "Aviso: cada cuantas horas", "Horas entre repeticiones", 1.0f, 24.0f, 1.0f, 0, &c.hailRepeatHours);
     regInt(api, mod, "hail_repeats", "Aviso: repeticiones", "Cuantas veces llama en total", 1, 10, 1, &c.hailRepeats);
+    regFloat(api, mod, "head_notice_seconds", "Aviso: segundos sobre la cabeza", "Cuanto queda el cartel 'Quiere hablar contigo' sobre quien te llama (seleccionarlo lo quita)", 10.0f, 3600.0f, 10.0f, 0, &c.headNoticeSeconds);
 
     // Lectura de estres y chance sobre el NPC
     regBool(api, mod, "readout_enabled", "Lectura: activa", "Muestra estres, chance y que falta del NPC seleccionado o al apretar Hablar", &c.readoutEnabled);

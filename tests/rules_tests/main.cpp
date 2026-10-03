@@ -73,6 +73,7 @@ const Suite kSuites[] = {
     { "feeding_ledger", RunFeedingLedgerTests },
     { "submission_rules", RunSubmissionRulesTests },
     { "submission_tracker", RunSubmissionTrackerTests },
+    { "head_notice_rules", RunHeadNoticeRulesTests },
 };
 } // namespace
 

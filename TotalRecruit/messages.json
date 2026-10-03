@@ -807,6 +807,18 @@
       "{name}: lo rechazaste. No querra saber nada de ti en {hours} h."
     ]
   },
+  "_avisoCabeza": [
+    "Cartel sobre la cabeza de quien quiere hablar contigo (se va al seleccionarlo o al pasar headNoticeSeconds).",
+    "Una linea corta y sin acentos: el cartel no hace salto de linea. El nombre va arriba, solo."
+  ],
+  "headNotice": {
+    "wantsToTalk": [
+      "Quiere hablar contigo"
+    ],
+    "approaching": [
+      "Se acerca para hablar contigo"
+    ]
+  },
   "_razones": [
     "Los motivos que el jugador lee cuando un NPC no se une todavia, o por que si.",
     "{cats} es el precio (o el % de estomago que falta) y {purse} lo que llevas encima.",

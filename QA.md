@@ -711,3 +711,23 @@ Reporte del usuario (2026-10-03): un "Holy Warden" en tu jaula, Cautiverio 87%, 
 | W8 | Preso inconsciente en tu jaula, o un preso en la jaula de otro | Sin GOLPEAR ni NOQUEAR (como C2) | — |
 | W9 | Un preso de tu jaula lisiado que pide piedad (si llega a pasar) | ACEPTAR / RECHAZAR, **nunca** IGNORAR | — |
 | W10 | Durante el evento de 12.21, levantar (cargar) al NPC antes de que llegue | Si la ventana se abre, ACEPTAR / RECHAZAR, **nunca** PERDONAR | — |
+
+### 12.23 Quien quiere hablar, sobre su cabeza (head notice)
+
+Pedido del usuario (2026-10-03): "el juego te avisa, pero si no lees el nombre no sabes quien quiere hablar". Quien te llama lleva un cartel sobre la cabeza: su nombre y "Quiere hablar contigo" (cautivo listo, `hail.cpp`) o "Se acerca para hablar contigo" (el sometido, `submission_director.cpp`). Dura `headNoticeSeconds` (300 por defecto, segundos reales, congelado en pausa). Mockup: `ui-mockup/readout.html` seccion 2, "Someone wants to talk" y "Select the one who called". Con `probeOnClick` el log dice `[notice]`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| N1 | Esperar a que un preso de tu jaula llame (`hailFirstHours`; o Cheat con `cheatHoursCaged` bajo) | Ademas del aviso en el registro, un cartel compacto sobre su cabeza: nombre en bronce, "Quiere hablar contigo" en ambar, borde ambar a la izquierda | `[notice] <nombre>: "Quiere hablar contigo" over the head [key ...]` |
+| N2 | Mover la camara | El cartel sigue la cabeza cada cuadro; fuera de pantalla se oculta y vuelve al volver | — |
+| N3 | Abrir un menu contextual con el cartel visible | El cartel se oculta mientras el menu esta abierto | — |
+| N4 | Seleccionar (clic izquierdo) a **ese** NPC | El cartel se va para siempre y aparece la tarjeta normal; nunca los dos a la vez | `[notice] dismissed by selection [key ...]` (con `probeOnClick`) |
+| N5 | Con el cartel sobre A, seleccionar a otro NPC B | B tiene la tarjeta normal; el cartel de A sigue | — |
+| N6 | Clic izquierdo o derecho en el suelo con el cartel visible | El cartel sigue (solo seleccionarlo o el tiempo lo quitan) | — |
+| N7 | B seleccionado justo al lado de A, de modo que la tarjeta de B tape el cartel de A | El cartel de A se oculta mientras se tocarian; la tarjeta gana | — |
+| N8 | No hacer nada `headNoticeSeconds` (bajar a 10 s en Mod Hub "Aviso: segundos sobre la cabeza" para probar) | El cartel se va solo | — |
+| N9 | Pausar el juego con el cartel visible | El tiempo del cartel se congela; al despausar sigue contando | — |
+| N10 | Evento del sometido (12.21) | Al empezar a caminar: cartel "Se acerca para hablar contigo"; se va cuando abre la ventana o si se cancela el evento | `[notice] <nombre>: "Se acerca para hablar contigo" ...` |
+| N11 | Que el NPC del cartel muera o se una al grupo | El cartel se va (en menos de 1 s) | — |
+| N12 | Cargar un save con carteles visibles | No queda ningun cartel | — |
+| N13 | Ventana de oferta abierta y el cartel caeria encima | Se corre de costado a la altura de la cabeza (como la tarjeta), u oculto sin lugar | — |

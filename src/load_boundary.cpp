@@ -5,6 +5,7 @@
 #include "defeats.h"
 #include "dialogue_bridge.h"
 #include "hail.h"
+#include "head_notice.h"
 #include "log.h"
 #include "mercy.h"
 #include "offer_popup.h"
@@ -56,6 +57,7 @@ void ResetSessionState()
     ForgetSubmission();
     ForgetOverlayTarget();
     ForgetReadout();
+    ForgetHeadNotices();
     ForgetCursorTarget();
     ForgetConversation();
     ForgetCageCommands();

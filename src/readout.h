@@ -43,6 +43,8 @@ class Character;
 
 namespace totalrecruit
 {
+struct ScreenRect;
+
 // Pins the card to this NPC (the Hablar click). Does nothing when the readout is
 // off or the NPC is not someone the mod talks to. Replaces any card showing.
 void RequestReadout(Character* character);
@@ -50,6 +52,10 @@ void RequestReadout(Character* character);
 // Called once per frame from the frame tick: follows the selection, moves the card,
 // ends the pin, and refreshes the card on its slow interval.
 void ReadoutTick();
+
+// Where the card is on the screen this frame, when it is shown (head_notice.cpp
+// hides a notice the card would collide with: the card wins).
+bool ReadoutCardOnScreen(ScreenRect* out);
 
 // Hides the card and forgets the target (a raw pointer): a load frees characters.
 void ForgetReadout();

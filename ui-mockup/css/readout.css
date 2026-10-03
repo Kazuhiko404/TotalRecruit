@@ -63,6 +63,21 @@
 .rd .why.ok{color:var(--ready)}
 .rd .why.no{color:#f08a7c}
 
+/* ------------- the head notice (src/head_notice.cpp) -------------
+   "X wants to talk": the readout card's plate and frame, compact. Every px is a constant in
+   head_notice.cpp: kPad 6, kNameH 18, kLineH 16, kGap 3, kMinWidth 120, kMaxWidth 264, and the
+   3 px amber accent on the left (inner text starts at kPad + 4). Width = the wider of the two
+   texts plus the padding, clamped to 120..264. */
+.hn{min-width:120px;max-width:264px;box-sizing:border-box;background:rgba(20,17,16,.92);
+  border:1px solid var(--line);padding:6px 6px 4px 10px;position:relative;display:inline-flex;
+  flex-direction:column;box-shadow:0 6px 18px #000a;pointer-events:none;user-select:none}
+.hn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber)}
+.hn .nm{font:600 14px Georgia,serif;color:var(--brass);letter-spacing:.04em;line-height:18px;height:18px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--golddim);
+  padding-bottom:1px;margin-bottom:3px}
+.hn .ln{font-size:12px;color:var(--amber);line-height:16px;height:16px;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+
 /* ------------- where it sits on screen ------------- */
 .scene{position:relative;width:860px;height:420px;background:
   radial-gradient(ellipse at 50% 120%,#3b2f22 0,#1a1511 55%,#0e0c0a 100%);border:1px solid var(--line);overflow:hidden}

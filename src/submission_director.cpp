@@ -18,6 +18,7 @@
 #include "offer_view.h"
 #include "npc_speech.h"
 #include "dialogue_authoring.h"
+#include "head_notice.h"
 #include "messages.h"
 #include "reason_catalog.h"
 #include "config.h"
@@ -205,6 +206,9 @@ void Apply(SubmissionOutcome outcome)
     const RestorePlan plan = PlanFor(outcome, g_event.wasHostile, up);
     const std::string name = g_event.name;
 
+    // Whatever the outcome (an aborted walk-up included), nobody is coming to talk.
+    DismissHeadNotice(npc);
+
     Log(name + ": " + SubmissionOutcomeName(outcome) + " (from " +
         SubmissionStateName(g_event.state) + ", hostile before " +
         (g_event.wasHostile ? "yes" : "no") + ")");
@@ -295,6 +299,8 @@ bool OpenPopup(Character* npc)
     }
     // Marked only now that the window is up: opening it cleared any older mark.
     g_onScreen.Begin(g_event.key);
+    // The window names them: the "walks up to talk" notice has done its job.
+    DismissHeadNotice(npc);
     return true;
 }
 
@@ -535,6 +541,7 @@ bool Start(Character* npc, Character* leader, int defeats, const Verdict& verdic
     TellPlayer(Line("submissionEvent.approachNotice", "{name} se acerca para hablar contigo.",
                     npc, 0),
                false);
+    RaiseHeadNotice(npc, Say("headNotice.approaching", "Se acerca para hablar contigo", npc));
 
     float meters = -1.0f;
     NpcMotion::DistanceMeters(npc, leader, &meters);

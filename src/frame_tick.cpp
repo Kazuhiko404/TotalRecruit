@@ -2,6 +2,7 @@
 #include "frame_tick.h"
 #include "rescue.h"
 #include "hail.h"
+#include "head_notice.h"
 #include "mod_hub_integration.h"
 #include "readout.h"
 #include "cage_commands.h"
@@ -20,7 +21,8 @@ void (*g_forgottenGuiUpdate_orig)(ForgottenGUI*) = NULL;
 // the game's GUI update down with it.
 void SafeTick()
 {
-    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); TickCageCommands(); SubmissionTick(); ModHubTick(); }
+    // HeadNoticeTick after ReadoutTick: it reads where the normal card is this frame.
+    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); HeadNoticeTick(); TickCageCommands(); SubmissionTick(); ModHubTick(); }
     TR_CATCH { }
 }
 
@@ -51,5 +53,7 @@ bool InstallFrameTick()
 
 void ShutdownFrameTick()
 {
+    // The head notices only live through the frame tick, so their widgets go with it.
+    ShutdownHeadNotices();
 }
 } // namespace totalrecruit

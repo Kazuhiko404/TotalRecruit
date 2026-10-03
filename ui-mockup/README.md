@@ -7,7 +7,7 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 
 | File | What it holds | C++ it mirrors |
 |---|---|---|
-| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / menu on your prisoner with Golpear and Noquear / press Hablar), the per-route table, the Mod Hub controls, the recruit popup gallery (section 5) | -- |
+| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / menu on your prisoner with Golpear and Noquear / press Hablar / head notice and selecting the one who called), the per-route table, the Mod Hub controls, the recruit popup gallery (section 5) | -- |
 | `css/base.css` | palette tokens | `ui_style.h` / `ui_style.cpp` colours |
 | `css/readout.css` | the card: widths, padding, bar heights, segment colours | `kCardWidth`, `kCardWidthCompact`, `kPad`, `kBarH` ... |
 | `js/data.js` | one view-model per state (the facts that produce it are in a comment above each); `PLACEMENT` timings and gaps; `HUB` rows | `readout_model.cpp` output (`ReadoutView`); `readout.cpp` / `readout_ui.cpp` constants; `mod_hub_integration.cpp` |
@@ -129,6 +129,20 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     the extra slot), RECHAZAR (line plate, the cancel slot). No chance row: the roll was already made when the NPC
     set off. The X is not RECHAZAR: closing without an answer leaves the NPC calm in place for the forgive window.
     The popup opens only when the NPC has arrived and no other window is up; while one is, the NPC stands and waits.
+
+### Head notice (section 2, "Someone wants to talk" / "Select the one who called")
+
+20. **Who wants to talk is shown over their head** (user request 2026-10-03: "the game tells you, but if you don't
+    read the name you don't know who wants to talk"). Whoever calls out -- a ready captive (`hail.cpp`, "Quiere hablar
+    contigo") or a beaten NPC walking up (`submission_director.cpp`, "Se acerca para hablar contigo") -- gets a compact
+    card over the head: the readout card's lacquer plate and frame, a 3 px amber edge on the left, the name in brass
+    over a gold rule and the line in amber (`.hn` in `css/readout.css` = the constants of `head_notice.cpp`; width =
+    the wider text, 120..264 px). Same anchor and `PlaceCard` as the readout card, `ToolTip` layer, no mouse focus.
+    It stays `headNoticeSeconds` (default 300, real seconds frozen on pause) and goes by itself; selecting that NPC
+    dismisses it for good and the normal card takes the head, so the two never overlap. Selecting someone else or
+    clicking elsewhere never dismisses it; if the normal card about another NPC would cover it, the card wins and the
+    notice hides that frame. Up to 8 at once, one per NPC. Hidden off screen and under a right-click menu; dropped when
+    the NPC dies or joins, when the submission window opens or the event ends, and at a load.
 
 ## Checking a change
 

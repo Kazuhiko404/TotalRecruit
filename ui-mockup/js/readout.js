@@ -49,6 +49,12 @@ function defeatsRow(vm) {
     vm.defeats + '/' + vm.defeatsNeeded + '</b></span></div>';
 }
 
+// The head notice over an NPC who called out (src/head_notice.cpp LayoutUnguarded): the name,
+// a gold rule, and the line from messages.json headNotice.*.
+function headNoticeHTML(name, line) {
+  return '<div class="hn"><div class="nm">' + esc(name) + '</div><div class="ln">' + esc(line) + '</div></div>';
+}
+
 function readoutHTML(vm, compact, noArrow) {
   var h = '<div class="rd' + (compact ? ' compact' : '') + (noArrow ? ' noarrow' : '') + '">';
   h += '<div class="hd"><span class="nm">' + esc(vm.name) + '</span>' +

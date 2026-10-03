@@ -454,6 +454,23 @@ bool SafeIsVisible()
     TR_CATCH { return false; }
 }
 
+bool SafeRect(ScreenRect* out)
+{
+    TR_TRY
+    {
+        if (!g_built || g_card.root == NULL || !g_card.root->getVisible())
+        {
+            return false;
+        }
+        out->left = g_card.root->getLeft();
+        out->top = g_card.root->getTop();
+        out->width = g_card.root->getWidth();
+        out->height = g_card.root->getHeight();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
 void DestroyUnguarded()
 {
     MyGUI::Gui* gui = MyGUI::Gui::getInstancePtr();
@@ -529,6 +546,11 @@ void ReadoutUiHide()
 bool ReadoutUiVisible()
 {
     return SafeIsVisible();
+}
+
+bool ReadoutUiRect(ScreenRect* out)
+{
+    return out != NULL && SafeRect(out);
 }
 
 void ReadoutUiDestroy()

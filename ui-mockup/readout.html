@@ -43,6 +43,8 @@ is shown on hover.</p>
   <button class="tab" data-s="cagemenu" aria-pressed="false">Menu on your prisoner (Golpear / Noquear)</button>
   <button class="tab" data-s="hablar" aria-pressed="false">Press Hablar</button>
   <button class="tab" data-s="compact" aria-pressed="false">Press Hablar, compact</button>
+  <button class="tab" data-s="notice" aria-pressed="false">Someone wants to talk (head notice)</button>
+  <button class="tab" data-s="noticeselect" aria-pressed="false">Select the one who called</button>
 </div>
 <div class="scene-wrap"><div class="scene wide" id="scene"></div></div>
 <p class="hint">Who is worth talking to is still marked by the vanilla talk marker (<code>hasDialogue_Fast</code>); that answer is
@@ -205,6 +207,33 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
            'or beating switched off -- gets the block of one, [Hablar], as in "Right-click menu open". The popup\'s ' +
            'GOLPEAR and NOQUEAR (section 5) give the same native orders and close the window.</div>';
       scene.innerHTML = h;
+      return;
+    }
+    if (mode === 'notice' || mode === 'noticeselect') {
+      // A ready captive in the cage on the left called out (hail.cpp) and a beaten bandit on the
+      // right is walking up (submission_director.cpp): each carries a head notice, placed by the
+      // same PlaceCard as the readout card. The player has a third NPC selected, so that one has
+      // the normal card; the notices are other heads and stay. Selecting the captive (second tab)
+      // dismisses his notice for good and the normal card takes his head.
+      var captiveSelected = mode === 'noticeselect';
+      h += '<div class="cage" style="left:150px"></div><div class="npc" style="left:168px"></div>';
+      h += '<div class="npc" style="left:640px"></div><div class="npc" style="left:1040px"></div>';
+      h += '<div class="selring" style="left:' + (captiveSelected ? 157 : 629) + 'px"></div>';
+      h += '<div class="callout" style="left:300px;top:16px;max-width:520px">' + (captiveSelected
+        ? 'Left-click on the captive who called: his notice is dismissed for good and the normal readout card ' +
+          'takes his head (they never overlap). The bandit\'s notice stays: a click elsewhere never dismisses a notice.'
+        : 'The roller said "Ana quiere hablar contigo"; the notice shows who. It stays ' + HEAD_NOTICE.seconds +
+          ' s of real time (headNoticeSeconds, frozen on pause), then goes by itself. The selected NPC in the middle ' +
+          'has the normal card; if it ever covered a notice, the normal card wins and the notice hides that frame.') +
+        '</div>';
+      scene.innerHTML = h;
+      if (captiveSelected) {
+        placeInto(readoutHTML(cage, false), anchorOf(168), null);
+      } else {
+        placeInto(headNoticeHTML('Ana la Cautiva', HEAD_NOTICE.wantsToTalk), anchorOf(168), null);
+        placeInto(readoutHTML(stateById('ally').vm, false), anchorOf(640), null);
+      }
+      placeInto(headNoticeHTML('Bandido Hambriento', HEAD_NOTICE.approaching), anchorOf(1040), null);
       return;
     }
     // Default: the player pressed Hablar on the caged bandit in the middle of the screen.

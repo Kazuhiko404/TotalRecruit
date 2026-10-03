@@ -45,6 +45,9 @@ void ReadoutUiMove(int anchorX, int anchorY, const ScreenRect* avoid, ReadoutPla
 void ReadoutUiHide();
 bool ReadoutUiVisible();
 
+// Where the card is on the screen, when it is shown. False when hidden or not built.
+bool ReadoutUiRect(ScreenRect* out);
+
 // Destroys every widget (shutdown). A load only hides: the widgets belong to the
 // GUI, not to a world.
 void ReadoutUiDestroy();

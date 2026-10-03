@@ -46,3 +46,4 @@ void RunCageCommandRulesTests();
 void RunFeedingLedgerTests();
 void RunSubmissionRulesTests();
 void RunSubmissionTrackerTests();
+void RunHeadNoticeRulesTests();
