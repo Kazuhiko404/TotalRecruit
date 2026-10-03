@@ -61,11 +61,27 @@ Three in-game tweaks requested by the user on 2026-10-03 after the first deploy 
   - Route: delegated.
   - Check: rules_tests green (slot tests); Release build; QA.md steps.
 - [ ] **T4 Deploy.** `scripts/deploy.sh` (never-overwrite merge). deploy.sh now migrates catsPerLevel 90->32 and catsCeiling 28000->10000 only when untouched (3deddb5); dry run OK. Real deploy pending: Kenshi was running.
+- [x] **T5 Readout card on selection** (user request 2026-10-03: "que se enable y disable al dar
+  click en el NPC, no hover; mejor cuando lo seleccionas"). The card follows the selected non-player
+  NPC: per-frame pointer compare for the change, one `EvaluatePeek` when it changes, slow named
+  refresh (2 s) for live values. Hablar pin kept beside the offer; after it closes the card stays
+  only if the NPC is still selected. Hover path and `readoutOnHover` removed; `readoutOnSelect`
+  (default true) + Mod Hub control. Card never takes input and is hidden while a context menu is open.
+  Mockup + QA.md updated.
+  - Route: delegated.
+  - Check: Release build; rules_tests green; QA.md steps.
+- [x] **T6 Hablar activates on right-button release** (user request): hold right click on the NPC,
+  slide onto Hablar, release -> acts once, like TotalSparring / TotalLoot. Port TotalLoot's tested
+  `click_gesture` rule (RED first) and wire pressed + released.
+  - Route: delegated.
+  - Check: rules_tests green (gesture suite); Release build; QA.md steps.
 
 ## Progress / evidence
 - T1: rules_tests 19/19 suites, 0/36673 checks failed (RED observed first: 23 failing checks); Release DLL builds; Soman case 2580 cats; commit 21f4b69. Deployed config NOT edited (Kenshi running): T4 must add catsPerLevel 90->32 / catsCeiling 28000->10000 set-if and the premiumMaxMultiplier key.
 - T2: rules_tests 20/20 suites, 0/36721 checks failed (RED first: 114 failing talk_hint_cache checks); Release DLL rebuilds with no warnings outside SDK headers; mockup scene measured in Chrome (card 8 px right of the offer); commit 1401c1f. In-game QA pending: QA.md 12.9 H1-H13. readoutOnHover not added to deployed config (shipped config has no readout keys).
 - T3: rules_tests 21/21 suites, 0/36796 checks failed (menu_slot suite: verbatim port of TotalLoot's tested resolver, no RED possible; added Hablar-vs-TS/TL characterization case, green on first run); Release DLL builds, warnings only in SDK headers; OverlayMenuTarget removed (no callers); commit d0a4a7f. In-game QA pending: QA.md 12.10 B1-B7.
+- T5: rules_tests 21/21 suites, 0/36796 checks failed (engine-bound: no pure part, no RED); Release DLL builds with no warnings outside SDK headers; mockup scenes measured in Chrome (selected card at 54,118; menu scene hides it; Hablar card 959,118 beside the offer); commit 9e28fa4. In-game QA pending: QA.md 12.11 S1-S14.
+- T6: RED first (stubbed rule: 8 failing menu_button_release checks), then rules_tests 22/22 suites, 0/36808 checks failed; Release DLL builds clean; commit 8fb1afa. Mechanism ported from TotalLoot click_gesture/context_button_input (same as TotalSparring spar_overlay.cpp:307). In-game QA pending: QA.md 12.12 G1-G7.
 
 ## Next step
-Close Kenshi, run `bash scripts/deploy.sh`, then in-game QA (QA.md 12.9 H1-H13, 12.10 B1-B7).
+Deploy + in-game QA: close Kenshi, run `bash scripts/deploy.sh`, then QA.md 12.9 H1-H13, 12.10 B1-B7, 12.11 S1-S14, 12.12 G1-G7.
