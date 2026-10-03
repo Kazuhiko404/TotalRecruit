@@ -17,14 +17,26 @@
 
 namespace totalrecruit
 {
+// A screen rectangle the card must not cover (the offer window).
+struct ReadoutRect
+{
+    int left;
+    int top;
+    int width;
+    int height;
+};
+
 // Lays out and shows the card with its bottom edge just above (anchorX, anchorY),
 // clamped inside the screen. Builds the widgets on first use. False when they could
-// not be built (the card stays hidden; the rest of the mod is untouched).
+// not be built (the card stays hidden; the rest of the mod is untouched). The
+// widgets are only laid out again when the view or its texts differ from the last
+// call; an identical card is just moved.
 bool ReadoutUiShow(const ReadoutView& view, const ReadoutTexts& texts, bool compact,
                    int anchorX, int anchorY);
 
-// Moves a card that is already showing, keeping its size. Cheap enough for every frame.
-void ReadoutUiMove(int anchorX, int anchorY);
+// Moves a card that is already showing, keeping its size. Cheap enough for every
+// frame. With `avoid`, a card that would cover that rectangle steps beside it.
+void ReadoutUiMove(int anchorX, int anchorY, const ReadoutRect* avoid = 0);
 
 void ReadoutUiHide();
 bool ReadoutUiVisible();

@@ -184,9 +184,9 @@ static bool DoRegisterModHub()
     regInt(api, mod, "hail_repeats", "Aviso: repeticiones", "Cuantas veces llama en total", 1, 10, 1, &c.hailRepeats);
 
     // Lectura de estres y chance sobre el NPC
-    regBool(api, mod, "readout_enabled", "Lectura: activa", "Muestra estres, chance y que falta sobre el NPC con el que podrias hablar", &c.readoutEnabled);
+    regBool(api, mod, "readout_enabled", "Lectura: activa", "Muestra estres, chance y que falta del NPC al apretar Hablar", &c.readoutEnabled);
     regBool(api, mod, "readout_compact", "Lectura: compacta", "Version mas chica: sin el desglose del estres ni las derrotas", &c.readoutCompact);
-    regBool(api, mod, "readout_on_hover", "Lectura: al pasar el mouse", "Apagado, solo aparece sobre el NPC seleccionado o el del menu abierto", &c.readoutOnHover);
+    regBool(api, mod, "readout_on_hover", "Lectura: al pasar el mouse", "Opcional y cuesta rendimiento. Apagado, la lectura aparece al apretar Hablar, junto a la oferta", &c.readoutOnHover);
 
     // Exclusiones
     regBool(api, mod, "exclude_dead", "Excluir muertos", "Nunca reclutar cadaveres", &c.exclude.dead);

@@ -8,7 +8,7 @@
 </head>
 <body>
 <h1>TotalRecruit readout</h1>
-<p class="lead">What the player sees when they hover or select an NPC the mod can talk to: how worn down they are,
+<p class="lead">What the player sees when they press <i>Hablar</i> on an NPC the mod can talk to: how worn down they are,
 the exact chance the engine will roll against, which route answers, and the one thing standing in the way.
 Open from disk in Chrome; no server, no build. Source of truth for <code>src/readout_ui.cpp</code>;
 the rules behind each number are in <code>src/readout_model.cpp</code> (README.md in this folder).</p>
@@ -27,16 +27,19 @@ click's), and showing it never starts a hold clock, records an interaction or mi
 <div class="gal" id="gallery"></div>
 
 <h2 class="sec">2. Where it sits</h2>
-<p class="lead">Anchored above the NPC's head (their world position projected to the screen, clamped inside the view), so it
-moves with them and never covers the cursor hint or the context menu. In <b>selection only</b> mode the same card follows
-the selected object; while a right-click menu is open the card stays on that NPC next to the <i>Hablar</i> button.</p>
+<p class="lead">By default the card appears only when the player presses <i>Hablar</i>: it is worked out once at that
+click and then only follows the NPC (anchored above their head, clamped inside the view). It stands beside the offer
+window the same click opens, never on top of it, and goes away when that window closes, after 8 s when no window opened,
+or when the NPC dies or leaves the screen. Nothing is shown on hover or selection unless the player turns on the
+<b>hover</b> opt-in in Mod Hub, which re-evaluates the NPC under the cursor four times a second and costs frame time.</p>
 <div class="bar" id="sceneBar">
-  <button class="tab" data-s="hover" aria-pressed="true">Hover</button>
-  <button class="tab" data-s="menu" aria-pressed="false">Right-click menu open</button>
-  <button class="tab" data-s="compact" aria-pressed="false">Hover, compact</button>
+  <button class="tab" data-s="hablar" aria-pressed="true">Press Hablar (default)</button>
+  <button class="tab" data-s="compact" aria-pressed="false">Press Hablar, compact</button>
+  <button class="tab" data-s="hover" aria-pressed="false">Hover (opt-in)</button>
 </div>
-<div class="scene" id="scene"></div>
-<p class="hint">The speech bubble is the vanilla talk marker (<code>hasDialogue_Fast</code>) the mod already shows; the card never draws on top of it.</p>
+<div class="scene-wrap"><div class="scene wide" id="scene"></div></div>
+<p class="hint">Who is worth talking to is still marked by the vanilla talk marker (<code>hasDialogue_Fast</code>); that answer is
+asked as a bystander and remembered per NPC for 2 s (<code>src/talk_hint_cache.h</code>), so it costs nothing per frame.</p>
 
 <h2 class="sec">3. What each route shows</h2>
 <table class="spec">
@@ -84,31 +87,57 @@ the selected object; while a right-click menu is open the card stays on that NPC
   drawGallery();
 
   var scene = document.getElementById('scene');
+  var VIEW = { w: 1280, h: 520 };
+  // An NPC drawn at `left` (34 px wide, 120 tall, standing 70 px above the bottom): the
+  // card's anchor is their projected body centre lifted by kAnchorLiftPx.
+  function anchorOf(left) {
+    var top = VIEW.h - 70 - 120;
+    return { x: left + 17, y: top + 60 - PLACEMENT.anchorLift };
+  }
+  // Draws the card, measures it as the C++ does after the layout, and places it.
+  function placeInto(html, anchor, avoid) {
+    var holder = document.createElement('div');
+    holder.className = 'placed';
+    holder.style.visibility = 'hidden';
+    holder.innerHTML = html;
+    scene.appendChild(holder);
+    var box = holder.firstChild.getBoundingClientRect();
+    var p = placeCard(anchor, { w: Math.round(box.width), h: Math.round(box.height) }, VIEW, avoid);
+    holder.style.left = p.left + 'px';
+    holder.style.top = p.top + 'px';
+    holder.style.visibility = '';
+  }
   function drawScene(mode) {
-    var cage = stateById('cage').vm, animal = stateById('animal').vm;
+    var cage = stateById('cage').vm;
     var compact = mode === 'compact';
     var h = '<div class="ground"></div>';
-    // caged bandit, mouse over him
-    h += '<div class="cage" style="left:150px"></div><div class="npc" style="left:168px"></div>';
-    h += '<div class="npc" style="left:430px"></div>';
-    h += '<div class="npc" style="left:620px"></div>';
-    h += '<div class="at" style="left:185px;top:222px">' + readoutHTML(cage, compact) + '</div>';
-    h += '<div class="bubble" style="left:185px;top:135px;display:none"></div>';
-    if (mode === 'menu') {
-      h += '<div class="cursor" style="left:200px;top:230px"></div>';
-      h += '<div class="ctxmenu" style="left:206px;top:236px"><div>Atacar</div><div>Hablar</div><div>Mover aqui</div></div>';
-      h += '<div class="ctxbtn" style="left:332px;top:236px">Hablar</div>';
-      h += '<div class="callout" style="left:445px;top:240px">The card stays on the NPC. The Hablar button keeps its own place beside the menu.</div>';
-    } else {
-      h += '<div class="cursor" style="left:215px;top:262px"></div>';
-      h += '<div class="callout" style="left:445px;top:60px">Hover: the card follows the NPC under the cursor (about 4 updates a second). It hides when the mouse is over any window.</div>';
+    if (mode === 'hover') {
+      // Opt-in: the card follows the NPC under the cursor; no offer is open.
+      h += '<div class="cage" style="left:150px"></div><div class="npc" style="left:168px"></div>';
+      h += '<div class="npc" style="left:640px"></div><div class="npc" style="left:900px"></div>';
+      h += '<div class="cursor" style="left:180px;top:' + (VIEW.h - 150) + 'px"></div>';
+      h += '<div class="callout" style="left:420px;top:60px;max-width:420px">Hover (opt-in, Mod Hub): the card follows the NPC ' +
+           'under the cursor and is worked out again every ' + PLACEMENT.hoverIntervalMs + ' ms. It costs frame time with many ' +
+           'NPCs on screen, hides when the mouse is over any window and while the offer window is open.</div>';
+      scene.innerHTML = h;
+      placeInto(readoutHTML(cage, false), anchorOf(168), null);
+      return;
     }
-    h += '<div class="bubble" style="left:447px;top:240px">...</div>';
-    h += '<div class="at" style="left:637px;top:280px;opacity:.55">' + readoutHTML(animal, true) + '</div>';
-    h += '<div class="callout" style="left:700px;top:330px;max-width:160px">Only one card at a time.</div>';
+    // Default: the player pressed Hablar on the caged bandit in the middle of the screen.
+    var offer = offerRect(VIEW);
+    h += '<div class="cage" style="left:605px"></div><div class="npc" style="left:623px"></div>';
+    h += '<div class="npc" style="left:200px"></div><div class="npc" style="left:1180px"></div>';
+    h += offerHTML(offer, 'Por 9.570 cats me voy contigo. Ni uno menos.');
+    h += '<div class="callout" style="left:16px;top:16px;max-width:300px">Pressing Hablar opens the offer and pins the card. ' +
+         'Worked out once, at the click; after that it only follows the NPC. It would cover the offer above his head, so it ' +
+         'steps to the right of the window. It closes with the offer, or after ' + (PLACEMENT.pinTimeoutMs / 1000) +
+         ' s when no offer opened.</div>';
+    h += '<div class="callout" style="left:16px;top:' + (VIEW.h - 64) + 'px;max-width:300px">No card for the other NPCs: ' +
+         'nothing is shown on hover or selection by default.</div>';
     scene.innerHTML = h;
+    placeInto(readoutHTML(cage, compact, true), anchorOf(623), offer);
   }
-  var sceneMode = 'hover';
+  var sceneMode = 'hablar';
   document.getElementById('sceneBar').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     sceneMode = b.getAttribute('data-s');
@@ -119,12 +148,7 @@ the selected object; while a right-click menu is open the card stays on that NPC
   });
   drawScene(sceneMode);
 
-  var hub = [
-    ['Mostrar lectura de estres y chance', 'readoutEnabled', 'ON', 'Muestra el panel sobre el NPC con el que podrias hablar'],
-    ['Lectura compacta', 'readoutCompact', 'OFF', 'Una version mas chica: sin el desglose ni las derrotas'],
-    ['Lectura al pasar el mouse', 'readoutOnHover', 'ON', 'OFF = solo sobre el NPC seleccionado o el del menu abierto']
-  ];
-  document.getElementById('hub').innerHTML = hub.map(function (r) {
+  document.getElementById('hub').innerHTML = HUB.map(function (r) {
     return '<figure><div class="rd noarrow" style="pointer-events:auto"><div class="hd"><span class="nm">' + r[0] +
       '</span><span class="tag r-libre">' + r[2] + '</span></div><div class="why" style="border:0">' + r[3] +
       '</div></div><figcaption><code>' + r[1] + '</code></figcaption></figure>';

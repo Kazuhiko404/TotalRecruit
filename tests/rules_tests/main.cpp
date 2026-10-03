@@ -59,6 +59,7 @@ const Suite kSuites[] = {
     { "readout_format", RunReadoutFormatTests },
     { "readout_catalog", RunReadoutCatalogTests },
     { "readout_model", RunReadoutModelTests },
+    { "talk_hint_cache", RunTalkHintCacheTests },
 };
 } // namespace
 

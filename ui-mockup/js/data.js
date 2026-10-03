@@ -96,3 +96,27 @@ var STATES = [
     }
   }
 ];
+
+// Where the card goes and when (src/readout.cpp, src/readout_ui.cpp, src/offer_popup.cpp).
+// By default the card is pinned by the Hablar click: worked out once, shown beside the offer
+// window that click opened, gone when that window closes or after pinTimeoutMs when none
+// opened. Hover is the opt-in mode that re-evaluates every hoverIntervalMs.
+var PLACEMENT = {
+  arrowGap: 8,          // kArrowGap
+  screenMargin: 4,      // kScreenMargin
+  anchorLift: 70,       // kAnchorLiftPx (readout_target.cpp)
+  pinTimeoutMs: 8000,   // kPinTimeoutMs
+  hoverIntervalMs: 250, // kHoverIntervalMs
+  offer: { width: 620, height: 260 } // kBaseWidth, kBaseHeightNoExtra
+};
+
+// Mod Hub rows, word for word as src/mod_hub_integration.cpp registers them, with the
+// src/config.h default.
+var HUB = [
+  ['Lectura: activa', 'readoutEnabled', 'ON',
+   'Muestra estres, chance y que falta del NPC al apretar Hablar'],
+  ['Lectura: compacta', 'readoutCompact', 'OFF',
+   'Version mas chica: sin el desglose del estres ni las derrotas'],
+  ['Lectura: al pasar el mouse', 'readoutOnHover', 'OFF',
+   'Opcional y cuesta rendimiento. Apagado, la lectura aparece al apretar Hablar, junto a la oferta']
+];

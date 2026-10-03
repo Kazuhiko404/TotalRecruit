@@ -8,6 +8,7 @@
 #include "probe.h"
 #include "rules.h"
 #include "offer_popup.h"
+#include "readout.h"
 
 namespace totalrecruit
 {
@@ -80,6 +81,11 @@ void OnRecruitClicked(MyGUI::Widget* /*sender*/, int /*left*/, int /*top*/,
     }
 
     AttemptRecruit(target);
+
+    // The readout card is asked for by this click and nothing else (not the
+    // rescue path, which also calls AttemptRecruit): it stands beside the offer
+    // the attempt just opened, worked out after the attempt so both agree.
+    RequestReadout(target);
 }
 
 // Split out so the guarded frame holds no C++ objects; MSVC rejects __try in a
@@ -363,11 +369,11 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
         return;
     }
 
-    // The label carries the verdict, so the player learns what an NPC wants
-    // without having to click and be refused. Telling them WHY is the feature.
-    const Verdict verdict = Evaluate(character);
+    // A full evaluation only feeds this diagnostic line, so it only runs when
+    // the line is wanted; the verdict itself is worked out when Hablar is pressed.
     if (config.probeOnClick)
     {
+        const Verdict verdict = Evaluate(character);
         LogInfo("Context menu: " + CharacterName(character) + " -> " +
                 (verdict.willJoin ? "CAN JOIN" : "refuses") +
                 " (" + CurrencyName(verdict.currency) + ") " + verdict.reason);

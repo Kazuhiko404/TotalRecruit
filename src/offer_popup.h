@@ -30,6 +30,10 @@ bool ShowOffer(Character* npc, const std::string& npcLine,
 // during that time so the two do not fight for the same corner.
 bool IsOfferOpen();
 
+// Where the open offer window is on screen, so the readout card pinned by the
+// same click can stand beside it instead of on top of it. False when closed.
+bool OfferWindowRect(int* left, int* top, int* width, int* height);
+
 void HideOffer();
 void ShutdownOfferPopup();
 } // namespace totalrecruit

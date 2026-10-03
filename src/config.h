@@ -439,9 +439,10 @@ struct Config
     int hailRepeats;
 
     // The readout card over an NPC the mod can talk to: how worn down they are, the
-    // chance, the route and what stands in the way (readout.h). Hover follows the
-    // NPC under the cursor; off, it only shows for the selected object or the
-    // target of an open right-click menu.
+    // chance, the route and what stands in the way (readout.h). By default it is
+    // shown when the player presses Hablar, beside the offer window. readoutOnHover
+    // is an opt-in that also follows the NPC under the cursor; it re-evaluates four
+    // times a second and costs frame time with many NPCs on screen.
     bool readoutEnabled;
     bool readoutCompact;
     bool readoutOnHover;
@@ -506,7 +507,7 @@ struct Config
           hailRepeats(5),
           readoutEnabled(true),
           readoutCompact(false),
-          readoutOnHover(true),
+          readoutOnHover(false),
           friendlyRelation(20.0f),
           relationRefuseGoodNatured(-15.0f),
           relationRefuseAll(-30.0f),

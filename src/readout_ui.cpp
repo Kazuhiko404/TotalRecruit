@@ -3,6 +3,8 @@
 #include "config.h"
 #include "log.h"
 
+#include <cstdio>
+
 #pragma warning(push)
 #pragma warning(disable: 4091)
 #include <ogre/OgreResourceGroupManager.h>
@@ -111,6 +113,10 @@ bool g_resourcesTried = false;
 bool g_resourcesReady = false;
 int g_width = 0;
 int g_height = 0;
+// What the widgets were last laid out for (LayoutKey). Laying out hides and
+// re-captions about forty widgets, so it only runs when this changes; an
+// unchanged card is only moved.
+std::string g_layoutKey;
 
 // ---------------------------------------------------------------- Resources
 // <mod dir>\gui\images, mapped into Ogre GUI resource group the way TotalSparring
@@ -486,7 +492,49 @@ void LayoutUnguarded(const ReadoutView& view, const ReadoutTexts& texts, bool co
     c.root->setSize(width, y);
 }
 
-void MoveUnguarded(int anchorX, int anchorY)
+bool Intersects(int left, int top, int width, int height, const ReadoutRect& r)
+{
+    return left < r.left + r.width && r.left < left + width &&
+           top < r.top + r.height && r.top < top + height;
+}
+
+// The card would cover `avoid` (the offer window): it steps to the window's right,
+// or its left when the right has no room, or above / below it when neither side
+// does. Clamped to the screen either way.
+void StepAside(const ReadoutRect& avoid, int viewW, int viewH, int* left, int* top)
+{
+    if (!Intersects(*left, *top, g_width, g_height, avoid))
+    {
+        return;
+    }
+
+    const int right = avoid.left + avoid.width + kArrowGap;
+    const int leftSide = avoid.left - kArrowGap - g_width;
+    if (viewW <= 0 || right + g_width <= viewW - kScreenMargin)
+    {
+        *left = right;
+    }
+    else if (leftSide >= kScreenMargin)
+    {
+        *left = leftSide;
+    }
+    else
+    {
+        const int above = avoid.top - kArrowGap - g_height;
+        *top = (above >= kScreenMargin) ? above : avoid.top + avoid.height + kArrowGap;
+    }
+
+    if (viewH > 0 && *top + g_height > viewH - kScreenMargin)
+    {
+        *top = viewH - kScreenMargin - g_height;
+    }
+    if (*top < kScreenMargin)
+    {
+        *top = kScreenMargin;
+    }
+}
+
+void MoveUnguarded(int anchorX, int anchorY, const ReadoutRect* avoid)
 {
     int viewW = 0, viewH = 0;
     MyGUI::RenderManager* render = MyGUI::RenderManager::getInstancePtr();
@@ -512,11 +560,15 @@ void MoveUnguarded(int anchorX, int anchorY)
     {
         top = viewH - kScreenMargin - g_height;
     }
+    if (avoid != NULL)
+    {
+        StepAside(*avoid, viewW, viewH, &left, &top);
+    }
     g_card.root->setPosition(left, top);
 }
 
 bool ShowUnguarded(const ReadoutView* view, const ReadoutTexts* texts, bool compact,
-                   int anchorX, int anchorY)
+                   int anchorX, int anchorY, bool relayout)
 {
     if (!g_built)
     {
@@ -530,9 +582,13 @@ bool ShowUnguarded(const ReadoutView* view, const ReadoutTexts* texts, bool comp
             return false;
         }
         g_built = true;
+        relayout = true;
     }
-    LayoutUnguarded(*view, *texts, compact);
-    MoveUnguarded(anchorX, anchorY);
+    if (relayout)
+    {
+        LayoutUnguarded(*view, *texts, compact);
+    }
+    MoveUnguarded(anchorX, anchorY, NULL);
     g_card.root->setVisible(true);
     return true;
 }
@@ -540,15 +596,15 @@ bool ShowUnguarded(const ReadoutView* view, const ReadoutTexts* texts, bool comp
 // -------------------------------------------------------------------- Guards
 // POD-only frames; each calls the unguarded work above.
 bool SafeShow(const ReadoutView* view, const ReadoutTexts* texts, bool compact,
-              int anchorX, int anchorY)
+              int anchorX, int anchorY, bool relayout)
 {
-    TR_TRY { return ShowUnguarded(view, texts, compact, anchorX, anchorY); }
+    TR_TRY { return ShowUnguarded(view, texts, compact, anchorX, anchorY, relayout); }
     TR_CATCH { return false; }
 }
 
-void SafeMove(int anchorX, int anchorY)
+void SafeMove(int anchorX, int anchorY, const ReadoutRect* avoid)
 {
-    TR_TRY { if (g_built) MoveUnguarded(anchorX, anchorY); }
+    TR_TRY { if (g_built) MoveUnguarded(anchorX, anchorY, avoid); }
     TR_CATCH { }
 }
 
@@ -578,12 +634,41 @@ void SafeDestroy()
     TR_TRY { DestroyUnguarded(); }
     TR_CATCH { }
 }
+
+// Everything LayoutUnguarded reads, in one string: the texts and every number of
+// the view that sizes, colours or places a widget.
+std::string LayoutKey(const ReadoutView& v, const ReadoutTexts& t, bool compact)
+{
+    char nums[192] = { 0 };
+    _snprintf_s(nums, sizeof(nums), _TRUNCATE,
+                "%d|%d|%d%d%d%d|%d,%d,%d|%d,%d|%d|%d,%d|%d",
+                compact ? 1 : 0, (int)v.route,
+                v.showStress ? 1 : 0, v.showFood ? 1 : 0, v.showChance ? 1 : 0,
+                v.showDefeats ? 1 : 0, v.hungerPts, v.woundsPts, v.tiredPts,
+                v.foodPct, v.foodNeededPct, v.chancePct, v.defeats, v.defeatsNeeded,
+                (int)v.primary.tone);
+    std::string key(nums);
+    const std::string* parts[] = {
+        &t.name, &t.route, &t.stressLabel, &t.stressValue, &t.hungerLegend,
+        &t.woundsLegend, &t.tiredLegend, &t.chanceLabel, &t.chanceValue,
+        &t.defeatsLabel, &t.defeatsValue, &t.foodLabel, &t.foodValue,
+        &t.primary, &t.secondary
+    };
+    for (size_t i = 0; i < sizeof(parts) / sizeof(parts[0]); ++i)
+    {
+        key += '\x1f';
+        key += *parts[i];
+    }
+    return key;
+}
 } // namespace
 
 bool ReadoutUiShow(const ReadoutView& view, const ReadoutTexts& texts, bool compact,
                    int anchorX, int anchorY)
 {
-    const bool shown = SafeShow(&view, &texts, compact, anchorX, anchorY);
+    const std::string key = LayoutKey(view, texts, compact);
+    const bool shown = SafeShow(&view, &texts, compact, anchorX, anchorY, key != g_layoutKey);
+    g_layoutKey = shown ? key : std::string();
     if (!shown && g_buildFailed)
     {
         static bool reported = false;
@@ -596,9 +681,9 @@ bool ReadoutUiShow(const ReadoutView& view, const ReadoutTexts& texts, bool comp
     return shown;
 }
 
-void ReadoutUiMove(int anchorX, int anchorY)
+void ReadoutUiMove(int anchorX, int anchorY, const ReadoutRect* avoid)
 {
-    SafeMove(anchorX, anchorY);
+    SafeMove(anchorX, anchorY, avoid);
 }
 
 void ReadoutUiHide()
@@ -618,5 +703,6 @@ void ReadoutUiDestroy()
     g_card = empty;
     g_built = false;
     g_buildFailed = false;
+    g_layoutKey.clear();
 }
 } // namespace totalrecruit

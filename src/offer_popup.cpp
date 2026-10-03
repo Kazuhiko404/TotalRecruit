@@ -703,11 +703,34 @@ void OnExtra(MyGUI::Widget* /*sender*/)
         }
     }
 }
+// The window's screen rectangle as drawn now (the player may have dragged it).
+// POD-only frame: the coord is read field by field inside the guard.
+bool SafeWindowRect(int* left, int* top, int* width, int* height)
+{
+    TR_TRY
+    {
+        if (g_root == NULL)
+        {
+            return false;
+        }
+        *left = g_root->getAbsoluteLeft();
+        *top = g_root->getAbsoluteTop();
+        *width = g_root->getWidth();
+        *height = g_root->getHeight();
+        return *width > 0 && *height > 0;
+    }
+    TR_CATCH { return false; }
+}
 } // namespace
 
 bool IsOfferOpen()
 {
     return g_open;
+}
+
+bool OfferWindowRect(int* left, int* top, int* width, int* height)
+{
+    return g_open && SafeWindowRect(left, top, width, height);
 }
 
 void HideOffer()

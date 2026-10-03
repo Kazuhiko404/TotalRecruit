@@ -445,7 +445,9 @@ T8 es un refactor: **el comportamiento no debe cambiar** salvo A1 (golpiza) y la
 
 La tarjeta de `ui-mockup/readout.html` sobre el NPC. Todo se prueba con `"probeOnClick": true` en `config.json`: cada vez que lo dibujado cambia, el log dice **lo mismo que se ve** en una linea `[readout]`, y se compara con `[chance]`/`[price]` de un clic en el mismo NPC (la tarjeta no calcula nada propio: tiene que coincidir). El mod necesita `gui/images/tr_white.png` en su carpeta (sin el, las barras usan el skin `WhiteSkin` y el log lo dice).
 
-Linea: `[readout] <nombre> route=<ruta> chance=<n>% stress=<n>% (hunger H wounds W tired T) defeats=<a/b> food=<n>% line="<texto>" [hover|selection|menu]`
+Linea: `[readout] <nombre> route=<ruta> chance=<n>% stress=<n>% (hunger H wounds W tired T) defeats=<a/b> food=<n>% line="<texto>" [hablar|hover]`
+
+Desde 12.9 la tarjeta sale por defecto al apretar **Hablar**. Las filas de esta tabla que dicen "pasar el mouse" se prueban con `Lectura: al pasar el mouse` en ON en el hub (modo opcional); las mismas comprobaciones de contenido valen para la tarjeta de Hablar.
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
@@ -461,8 +463,8 @@ Linea: `[readout] <nombre> route=<ruta> chance=<n>% stress=<n>% (hunger H wounds
 | U10 | Persona en rescate (la salvaste), inconsciente, y moribunda | Ruta **Rescate**; moribundo: `Se muere: curalo primero`; inconsciente: `Inconsciente: espera a que despierte` | `route=rescue` |
 | U11 | Pasar el mouse por un NPC **no reclutable** (excluido por config, muerto, o tu propio escuadron) | No aparece tarjeta | (sin linea) |
 | U12 | Mouse sobre una ventana del juego (inventario, etc.) con un NPC detras | La tarjeta se oculta (modo hover); vuelve al sacar el mouse | (sin linea) |
-| U13 | Seleccionar un NPC que no es tuyo (clic izquierdo) y apagar `Lectura: al pasar el mouse` en el hub | La tarjeta aparece solo para el seleccionado o el del menu abierto. Si ver al NPC seleccionado **no** funciona, anotarlo: `selectedObject` no esta confirmado para personajes | `[selection]` en la linea |
-| U14 | Abrir el menu contextual sobre un NPC | La tarjeta queda sobre ese NPC (fuente `[menu]`) y el boton `Hablar` sigue a su lado, sin tapar nada. Al hacer clic en `Hablar` la tarjeta se oculta con la ventana de oferta | `[menu]` |
+| U13 | Seleccionar un NPC que no es tuyo (clic izquierdo), con la configuracion por defecto | **No** aparece tarjeta: la seleccion ya no es una fuente (12.9) | (sin linea) |
+| U14 | Abrir el menu contextual sobre un NPC, sin apretar Hablar | **No** aparece tarjeta: el menu abierto ya no es una fuente; el boton `Hablar` sigue a su lado | (sin linea) |
 | U15 | Hub: `Lectura: activa` en OFF | Ninguna tarjeta; en ON vuelve en <0.5 s. `Lectura: compacta` ON: tarjeta de 176 px sin leyenda ni derrotas ni segunda linea | S2: sin `Mod Hub rejected` |
 | U16 | Mover la camara / el NPC camina con la tarjeta visible | La tarjeta lo sigue cada cuadro, nunca se sale de la pantalla (se pega al borde) | (sin linea) |
 | U17 | **No debe tener efectos**: pasar el mouse por un prisionero nuevo (sin id) en tu jaula, y por un NPC libre cualquiera | No aparece `first character id created` por pasar el mouse; el reloj de encierro **no** arranca por mirarlo (la linea `Faltan` aparece recien cuando el barrido de `hail` ya vio al prisionero); sin insistencia registrada | `[identity] first character id created` ausente tras solo pasar el mouse |
@@ -471,4 +473,24 @@ Linea: `[readout] <nombre> route=<ruta> chance=<n>% stress=<n>% (hunger H wounds
 | U20 | La tarjeta **no roba clics**: clic izquierdo y derecho a traves de ella sobre el NPC | Funciona como si no estuviera | (sin linea) |
 | U21 | Mirar el log al abrir el juego por primera vez con la tarjeta | Una linea `[readout] fills use ...tr_white.png`; si falta la carpeta `gui/images`, `[readout] no gui/images/tr_white.png ...` y las barras igual se ven | |
 
-**Lo que hay que confirmar jugando** (no se puede saber sin correr el juego): que el mouse sobre un NPC se detecta (radio de 48 px sobre el centro del cuerpo, proyectando con la camara de Kenshi); que `getPositionBip01()` queda a la altura del torso y el ancla de 70 px queda sobre la cabeza; que `selectedObject` de `PlayerInterface` contiene al NPC seleccionado; que la leyenda cabe en 264 px con la fuente `Kenshi_StandardFont_MediumSmall` (una linea larga se corta, no se ajusta).
+**Lo que hay que confirmar jugando** (no se puede saber sin correr el juego): que el mouse sobre un NPC se detecta (radio de 48 px sobre el centro del cuerpo, proyectando con la camara de Kenshi); que `getPositionBip01()` queda a la altura del torso y el ancla de 70 px queda sobre la cabeza; que la leyenda cabe en 264 px con la fuente `Kenshi_StandardFont_MediumSmall` (una linea larga se corta, no se ajusta).
+
+### 12.9 Tarjeta al apretar Hablar y globo barato (price-readout-button-tweaks T2)
+
+Por defecto la tarjeta sale **solo** al apretar `Hablar`, al lado de la ventana de oferta; el modo hover es opcional. El globo de chat (`showTalkCursor`) ahora pregunta como espectador y recuerda la respuesta por NPC 2 s. Con `"probeOnClick": true`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| H1 | Config por defecto (sin `readoutOnHover` en `config.json`). Pasar el mouse por NPCs reclutables y seleccionar uno | **Ninguna** tarjeta | (sin `[readout]`) |
+| H2 | Clic derecho en un prisionero, apretar `Hablar` | Se abre la oferta y la tarjeta aparece sobre su cabeza; si taparia la ventana, se pone a su derecha (o izquierda, o arriba/abajo si no entra), nunca encima | `[readout] ... [hablar]` una sola vez |
+| H3 | Con la oferta abierta, mover la camara | La tarjeta sigue al NPC cada cuadro y sigue sin tapar la oferta; su contenido no cambia (se calculo al clic) | (sin linea nueva) |
+| H4 | Cerrar la oferta (ACEPTAR, RECHAZAR, la X) | La tarjeta se va con ella | |
+| H5 | `Hablar` en alguien que se une sin ventana, o donde no se abre oferta | Sin tarjeta, o la tarjeta se va sola a los 8 s | |
+| H6 | `Hablar` en un NPC y que muera / salga de pantalla con la tarjeta a la vista | La tarjeta desaparece | |
+| H7 | Rescate automatico (un NPC que curaste se ofrece solo) | La oferta aparece **sin** tarjeta (el rescate no la pide) | |
+| H8 | Hub: `Lectura: al pasar el mouse` ON | La tarjeta vuelve a seguir al NPC bajo el mouse (4 veces por segundo) y se oculta con la oferta abierta; OFF la quita | `[readout] ... [hover]` |
+| H9 | Hub: `Lectura: activa` OFF y apretar `Hablar` | Oferta sin tarjeta | |
+| H10 | Zona con muchos NPCs en pantalla (una ciudad, 20+ personajes) con la config por defecto | FPS normales (comparar con el mod apagado en el hub); antes caian por el globo y la tarjeta | |
+| H11 | Globo de chat (`showTalkCursor` ON): mirar prisioneros reclutables y NPCs comunes | El globo sigue apareciendo sobre quien vale la pena hablar (incluye rescates con chance > 0); alimentar o golpear a uno cambia su globo en ~2 s | |
+| H12 | **Sin efectos** del globo: mirar un prisionero nuevo en tu jaula sin hacer clic | No aparece `first character id created` ni `[route]`/`[hold]` por solo mirarlo | |
+| H13 | Clic derecho en un NPC con `probeOnClick` OFF y luego ON | Con OFF no hay evaluacion extra al abrir el menu; con ON sigue la linea `Context menu: <nombre> -> ...` | `Context menu: ...` solo con probe |

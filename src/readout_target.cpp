@@ -1,7 +1,6 @@
 #include "common.h"
 #include "readout_target.h"
 #include "engine_reads.h"
-#include "recruit_overlay.h"
 #include "log.h"
 
 #include <kenshi/CameraClass.h>
@@ -25,20 +24,6 @@ const int kPickRadiusPx = 48;
 const int kAnchorLiftPx = 70;
 // A widget bigger than this share of the screen is a HUD layer, not a window.
 const int kHudAreaPercent = 80;
-
-bool SafeSelectedObjectCharacter(Character** out)
-{
-    TR_TRY
-    {
-        if (ou == NULL || ou->player == NULL)
-        {
-            return false;
-        }
-        *out = ou->player->selectedObject.getCharacter();
-        return *out != NULL;
-    }
-    TR_CATCH { return false; }
-}
 
 bool SafeCamera(CameraClass** out)
 {
@@ -187,49 +172,25 @@ Character* PickUnderMouse(int mouseX, int mouseY, int viewW, int viewH)
 }
 } // namespace
 
-bool FindReadoutTarget(bool hoverAllowed, ReadoutTarget* out)
+bool FindHoverTarget(ReadoutTarget* out)
 {
     int viewW = 0, viewH = 0;
-    SafeViewSize(&viewW, &viewH);
+    if (!SafeViewSize(&viewW, &viewH))
+    {
+        return false;
+    }
 
     int mx = 0, my = 0;
     bool overWindow = false;
-    const bool haveMouse = viewW > 0 && SafeMouse(viewW, viewH, &mx, &my, &overWindow);
+    if (!SafeMouse(viewW, viewH, &mx, &my, &overWindow) || overWindow)
+    {
+        return false;
+    }
     out->mouseX = mx;
     out->mouseY = my;
 
-    // A right-click menu is about someone on purpose; it wins over everything.
-    Character* menu = OverlayMenuTarget();
-    if (menu != NULL)
-    {
-        out->character = menu;
-        out->source = ReadoutSource_Menu;
-        return true;
-    }
-
-    Character* selected = NULL;
-    if (SafeSelectedObjectCharacter(&selected))
-    {
-        bool mine = false;
-        if (!(SafeIsPlayerCharacter(selected, &mine) && mine))
-        {
-            out->character = selected;
-            out->source = ReadoutSource_Selection;
-            return true;
-        }
-    }
-
-    if (hoverAllowed && haveMouse && !overWindow)
-    {
-        Character* hovered = PickUnderMouse(mx, my, viewW, viewH);
-        if (hovered != NULL)
-        {
-            out->character = hovered;
-            out->source = ReadoutSource_Hover;
-            return true;
-        }
-    }
-    return false;
+    out->character = PickUnderMouse(mx, my, viewW, viewH);
+    return out->character != NULL;
 }
 
 bool ReadoutAnchorFor(Character* character, int* x, int* y)
@@ -245,16 +206,5 @@ bool ReadoutAnchorFor(Character* character, int* x, int* y)
     }
     *y -= kAnchorLiftPx;
     return true;
-}
-
-const char* ReadoutSourceName(ReadoutSource source)
-{
-    switch (source)
-    {
-    case ReadoutSource_Menu:      return "menu";
-    case ReadoutSource_Selection: return "selection";
-    case ReadoutSource_Hover:     return "hover";
-    default:                      return "?";
-    }
 }
 } // namespace totalrecruit

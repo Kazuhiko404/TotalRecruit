@@ -78,6 +78,7 @@
     <ClCompile Include="src\offer_popup.cpp" />
     <ClCompile Include="src\feeding.cpp" />
     <ClCompile Include="src\cursor_hint.cpp" />
+    <ClCompile Include="src\talk_hint_cache.cpp" />
     <ClCompile Include="src\hail.cpp" />
     <ClCompile Include="src\mercy.cpp" />
     <ClCompile Include="src\messages.cpp" />
@@ -144,6 +145,7 @@
     <ClInclude Include="src\offer_popup.h" />
     <ClInclude Include="src\feeding.h" />
     <ClInclude Include="src\cursor_hint.h" />
+    <ClInclude Include="src\talk_hint_cache.h" />
     <ClInclude Include="src\hail.h" />
     <ClInclude Include="src\mercy.h" />
     <ClInclude Include="src\messages.h" />

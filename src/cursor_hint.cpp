@@ -3,6 +3,7 @@
 #include "rules.h"
 #include "config.h"
 #include "recruit_core.h"
+#include "talk_hint_cache.h"
 #include "log.h"
 
 #include <kenshi/gui/ForgottenGUI.h>
@@ -15,11 +16,11 @@ namespace
 void (*g_changeMouseCursor_orig)(ForgottenGUI*, CursorType, const hand&, const hand&) = NULL;
 bool (*g_hasDialogueFast_orig)(Dialogue*) = NULL;
 
-// Resolving the target costs a rules evaluation, and the cursor is recomputed
-// constantly, so the last answer is remembered and only recomputed when the
-// target actually changes.
-Character* g_lastTarget = NULL;
-bool g_lastWasRecruitable = false;
+// Resolving the target costs a rules evaluation, and the engine asks constantly,
+// once per candidate NPC in view, so every answer is remembered per NPC for a
+// couple of seconds (talk_hint_cache.h). A one-entry cache thrashed with two NPCs
+// on screen and paid a full evaluation per NPC per frame.
+TalkHintCache g_hints;
 
 bool SafeResolveTarget(const hand& target, Character** out)
 {
@@ -46,11 +47,15 @@ bool WorthTalkingTo(Character* npc)
         return false;
     }
 
-    const Verdict verdict = Evaluate(npc);
+    // Asked as a bystander: a hint must not mint roll keys, start hold clocks or
+    // log, and the engine asks this for every NPC in view. A peek supplies no roll
+    // key, so a route that rolls never says willJoin here; a real chance of
+    // joining is what makes them worth approaching instead.
+    const Verdict verdict = EvaluatePeek(npc, NULL);
 
-    // Someone who will join, or whose refusal names something the player can
-    // do about it. A flat "they are dead" is not worth a cursor.
-    if (verdict.willJoin)
+    // Someone who will (or may) join, or whose refusal names something the
+    // player can do about it. A flat "they are dead" is not worth a cursor.
+    if (verdict.willJoin || (verdict.rolled && verdict.chancePercent > 0))
     {
         return true;
     }
@@ -78,22 +83,28 @@ bool SafeDialogueOwner(Dialogue* dialogue, Character** out)
 
 // The hand parameters are references, and the compiler counts those as objects,
 // so the guarded read lives in its own POD-only frame.
+// The one place the cache is consulted, so the marker and the cursor can never
+// disagree about who is worth approaching.
+bool CachedWorthTalkingTo(Character* npc)
+{
+    const unsigned int now = GetTickCount();
+    bool worth = false;
+    if (!g_hints.Lookup(npc, now, &worth))
+    {
+        worth = WorthTalkingTo(npc);
+        g_hints.Store(npc, now, worth);
+    }
+    return worth;
+}
+
 bool CachedWorthTalkingTo(const hand& target)
 {
     Character* npc = NULL;
     if (!SafeResolveTarget(target, &npc))
     {
-        g_lastTarget = NULL;
-        g_lastWasRecruitable = false;
         return false;
     }
-
-    if (npc != g_lastTarget)
-    {
-        g_lastTarget = npc;
-        g_lastWasRecruitable = WorthTalkingTo(npc);
-    }
-    return g_lastWasRecruitable;
+    return CachedWorthTalkingTo(npc);
 }
 
 
@@ -125,14 +136,7 @@ bool HasDialogueFast_hook(Dialogue* thisptr)
         return original;
     }
 
-    // Same cached question the cursor asks, so the icon and the cursor can
-    // never disagree about who is worth approaching.
-    if (npc != g_lastTarget)
-    {
-        g_lastTarget = npc;
-        g_lastWasRecruitable = WorthTalkingTo(npc);
-    }
-    return g_lastWasRecruitable;
+    return CachedWorthTalkingTo(npc);
 }
 
 void ChangeMouseCursor_hook(ForgottenGUI* thisptr, CursorType cursor,
@@ -192,8 +196,7 @@ bool InstallCursorHint()
 
 void ForgetCursorTarget()
 {
-    g_lastTarget = NULL;
-    g_lastWasRecruitable = false;
+    g_hints.Clear();
 }
 
 void ShutdownCursorHint()

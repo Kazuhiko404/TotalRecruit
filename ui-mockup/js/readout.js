@@ -66,3 +66,46 @@ function stateById(id) {
   for (var i = 0; i < STATES.length; i++) if (STATES[i].id === id) return STATES[i];
   return STATES[0];
 }
+
+// Where the card's top-left goes. C++ twin: MoveUnguarded + StepAside in src/readout_ui.cpp.
+// Centred above the anchor and clamped to the view; below the head when there is no room
+// above; then, when it would cover `avoid` (the offer window), beside it: right, else left,
+// else above / below it.
+function placeCard(anchor, size, view, avoid) {
+  var g = PLACEMENT.arrowGap, m = PLACEMENT.screenMargin;
+  var left = anchor.x - Math.floor(size.w / 2);
+  var top = anchor.y - size.h - g;
+  if (left + size.w > view.w - m) left = view.w - m - size.w;
+  if (left < m) left = m;
+  if (top < m) top = anchor.y + g * 4;
+  if (top + size.h > view.h - m) top = view.h - m - size.h;
+  if (avoid && left < avoid.left + avoid.width && avoid.left < left + size.w &&
+      top < avoid.top + avoid.height && avoid.top < top + size.h) {
+    var right = avoid.left + avoid.width + g, leftSide = avoid.left - g - size.w;
+    if (right + size.w <= view.w - m) left = right;
+    else if (leftSide >= m) left = leftSide;
+    else {
+      var above = avoid.top - g - size.h;
+      top = above >= m ? above : avoid.top + avoid.height + g;
+    }
+    if (top + size.h > view.h - m) top = view.h - m - size.h;
+    if (top < m) top = m;
+  }
+  return { left: left, top: top };
+}
+
+// The offer window as src/offer_popup.cpp centres it (ChoosePosition).
+function offerRect(view) {
+  var o = PLACEMENT.offer;
+  return { left: Math.floor((view.w - o.width) / 2), top: Math.floor((view.h - o.height) / 2),
+           width: o.width, height: o.height };
+}
+
+function offerHTML(r, npcLine) {
+  var bw = Math.floor((r.width - 16 * 3) / 2);
+  return '<div class="offer" style="left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width +
+    'px;height:' + r.height + 'px"><div class="ttl">Reclutamiento</div><div class="pt"></div>' +
+    '<div class="txt">' + esc(npcLine) + '</div>' +
+    '<div class="btn" style="left:16px;width:' + bw + 'px">ACEPTAR</div>' +
+    '<div class="btn" style="left:' + (32 + bw) + 'px;width:' + bw + 'px">RECHAZAR</div></div>';
+}

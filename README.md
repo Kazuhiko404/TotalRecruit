@@ -123,21 +123,24 @@ their stable roll is recast once.
 | | |
 |---|---|
 | Right-click an NPC | The recruit button, labelled with what they want |
-| Hover or select an NPC | The stress and join-chance card (see below) |
+| Press the recruit button (Hablar) | The offer window, with the stress and join-chance card beside it (see below) |
 | **Shift+K** | Spawn panel |
 
 Settings are in the Mod Hub panel, not in a window of this mod.
 
 ### The readout card
 
-Hover an NPC (or select one, or open their menu) and a small card appears over
+Press Hablar on an NPC and, next to the offer window, a small card appears over
 their head: the route that answers them (Captivity, Surrender, Animal, Free,
 Rescue, Mercy), a three-colour stress bar (hunger, wounds, tiredness), the join
 chance, the defeats counted against the threshold, the stomach bar for animals,
 one short line saying what stands in the way, and the hours still to wait when
 easy mode applies. Every number is one the decision itself computed. The card
 shows the odds, never whether the roll will pass, and asking has no side effects.
-Hub switches: card on/off, compact, hover on/off.
+It is worked out once, at the click, and closes with the offer window (or after
+8 seconds when no window opened). Hub switches: card on/off, compact, and an
+opt-in to also show it when hovering an NPC (off by default: it costs frame time
+with many NPCs on screen).
 
 ## Optional: FCS dialogue
 

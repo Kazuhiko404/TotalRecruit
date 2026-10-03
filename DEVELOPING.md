@@ -158,12 +158,12 @@ qué existe — leelo antes que el `.cpp`.
 | `recruit_overlay.cpp` | El botón junto al menú contextual (dos hooks). |
 | `offer_popup.cpp` | La ventana de decisión. Acá vive el retrato. |
 | `hail.cpp` | Los cautivos avisan, programado sobre el reloj de juego. |
-| `readout.cpp/.h` | La tarjeta de estres y chance sobre el NPC, de punta a punta: cada 250 ms busca el objetivo, pregunta a las reglas **sin efectos** (`EvaluatePeek`), arma la vista y la dibuja; entre actualizaciones solo la mueve. Con `probeOnClick` loguea `[readout] ...` lo mismo que se ve. |
+| `readout.cpp/.h` | La tarjeta de estres y chance sobre el NPC, de punta a punta. Por defecto la pide el clic en **Hablar** (`RequestReadout`, llamado desde `recruit_overlay.cpp`, no desde `AttemptRecruit`, asi el rescate no la abre): se calcula **una vez** (`EvaluatePeek`, sin efectos), se dibuja al lado de la ventana de oferta y cada cuadro solo se mueve; se cierra cuando la oferta se cierra, a los 8 s si no se abrio oferta, si el NPC muere o sale de pantalla, o con otro pedido. Con `readoutOnHover` (opcional, apagado por defecto) ademas sigue al NPC bajo el mouse, recalculando cada 250 ms. Con `probeOnClick` loguea `[readout] ... [hablar|hover]` lo mismo que se ve. |
 | `readout_model.cpp/.h` | **Puro.** Que muestra la tarjeta (`BuildReadout`): ruta, estres y sus 3 partes, chance, derrotas, barriga, linea principal y espera. Solo reusa numeros que la decision ya calculo. |
 | `readout_catalog.cpp/.h`, `readout_format.cpp/.h` | **Puros.** La linea corta de cada motivo (un renglon por `ReasonKey` + la espera; el test exige que quepan en la tarjeta) y como se escriben cats (`9.570`) y horas (`3h`, `45min`). |
 | `readout_text.cpp/.h` | Las palabras de la tarjeta: `messages.json` bloque `readout`, con texto interno si falta. |
-| `readout_target.cpp/.h` | A quien mira la tarjeta: el menu abierto, el objeto seleccionado o el NPC bajo el mouse (proyecta a pantalla los personajes cerca del centro de camara y toma el mas cercano al cursor). Solo lee. |
-| `readout_ui.cpp/.h` | Los widgets MyGUI de la tarjeta (capa `ToolTip`, sin foco de mouse, rellenos con `gui/images/tr_white.png` o `WhiteSkin`). Medidas = las variables CSS de `ui-mockup/css/readout.css`. |
+| `readout_target.cpp/.h` | Proyecta un personaje a pantalla (el ancla de la tarjeta) y, solo en el modo hover opcional, busca el NPC bajo el mouse (proyecta los personajes cerca del centro de camara y toma el mas cercano al cursor). Solo lee. |
+| `readout_ui.cpp/.h` | Los widgets MyGUI de la tarjeta (capa `ToolTip`, sin foco de mouse, rellenos con `gui/images/tr_white.png` o `WhiteSkin`). Medidas = las variables CSS de `ui-mockup/css/readout.css`. Solo rearma el layout cuando cambian los textos o la vista (`LayoutKey`); si no, solo mueve. Si taparia la ventana de oferta, se corre al costado (`StepAside`, igual que `placeCard` del mockup). |
 | `dialogue_authoring.cpp` | Escribe las líneas y las burbujas. |
 | `mercy.cpp` | Ruta piedad: al perder un miembro, tres respuestas. |
 | `mod_hub_integration.cpp` | Ajustes en el panel de Mod Hub (`src/emc/` es su API). |
@@ -173,7 +173,8 @@ qué existe — leelo antes que el `.cpp`.
 
 | Archivo | Qué hace |
 |---|---|
-| `cursor_hint.cpp` | El globo de chat vanilla sobre NPCs hablables. |
+| `cursor_hint.cpp` | El globo de chat vanilla sobre NPCs hablables. Pregunta como espectador (`EvaluatePeek`: sin claves de tirada, sin reloj de encierro, sin log). |
+| `talk_hint_cache.cpp/.h` | **Puro.** La memoria del globo: respuesta por NPC con TTL de 2 s, hasta 64 entradas (desaloja la mas vieja). Se vacia en la carga (`ForgetCursorTarget`). Tests en `tests/rules_tests`. |
 | `frame_tick.cpp` | Callback por frame, hookeado a `ForgottenGUI::update`. |
 | `probe.cpp` | Diagnóstico. Con `probeOnClick` loguea todo del NPC clickeado. |
 | `dialogue_bridge.cpp` | Puente a diálogo FCS. **Compila pero nunca se ejecutó.** |

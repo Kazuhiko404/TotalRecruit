@@ -7,11 +7,11 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 
 | File | What it holds | C++ it mirrors |
 |---|---|---|
-| `readout.html` | page: the six states (expanded / compact / side by side), the on-screen placement scene, the per-route table, the Mod Hub controls | -- |
+| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (press Hablar / hover opt-in), the per-route table, the Mod Hub controls | -- |
 | `css/base.css` | palette tokens | `readout_ui.cpp` colours |
 | `css/readout.css` | the card: widths, padding, bar heights, segment colours | `kCardWidth`, `kCardWidthCompact`, `kPad`, `kBarH` ... |
-| `js/data.js` | one view-model per state (the facts that produce it are in a comment above each) | `readout_model.cpp` output (`ReadoutView`) |
-| `js/readout.js` | draws a view-model as the card | `readout_ui.cpp` |
+| `js/data.js` | one view-model per state (the facts that produce it are in a comment above each); `PLACEMENT` timings and gaps; `HUB` rows | `readout_model.cpp` output (`ReadoutView`); `readout.cpp` / `readout_ui.cpp` constants; `mod_hub_integration.cpp` |
+| `js/readout.js` | draws a view-model as the card; `placeCard` (beside the offer); the offer window | `readout_ui.cpp` (`MoveUnguarded`, `StepAside`); `offer_popup.cpp` |
 
 ## Design decisions
 
@@ -19,9 +19,13 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
    centred over their head, clamped inside the view; if the projection fails it falls back to the cursor. Not
    anchored to the cursor hint (the vanilla speech bubble is drawn by the engine and has no widget to anchor to)
    and not to the context menu (the Hablar button already lives beside it).
-2. **Shown on hover (default) or on selection only** (Mod Hub). While a right-click menu is open the card stays
-   on that NPC in both modes. Hidden when nothing recruitable is targeted, when the mouse is over any window,
-   while the offer window is open, and at a load.
+2. **Shown when you press Hablar, beside the offer; hover is an opt-in in Mod Hub.** The Hablar click pins the
+   card: it is worked out once, at the click, and then only follows the NPC. When it would cover the offer
+   window that click opened it steps beside it (right, else left, else above / below). It goes away when the
+   offer closes, after 8 s when no offer opened, when the NPC dies or leaves the screen, when another Hablar
+   replaces it, and at a load. Nothing is shown on hover or selection by default: polling the cursor and
+   re-evaluating four times a second cost frame time with many NPCs on screen, so `readoutOnHover` is off
+   and opt-in (hidden while the offer is open and when the mouse is over any window).
 3. **It shows the engine's numbers, never its own.** Chance = `Verdict::chancePercent`; price = `Verdict::cats`;
    stress = `StressFromState`, split into the three terms it is made of (hunger, wounds, exhaustion) which add up
    to the bar; defeats against `defeatsToBreak`; animal bar = fullness against `TamingFullnessNeeded`.

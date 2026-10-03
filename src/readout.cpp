@@ -18,14 +18,26 @@ namespace totalrecruit
 {
 namespace
 {
-// Four updates a second: enough to follow a hover, cheap enough that the peek (the
-// whole decision, with the talent survey for a price) is not noticeable.
-const unsigned int kUpdateIntervalMs = 250;
+// Hover (opt-in) re-evaluates four times a second: enough to follow the cursor.
+const unsigned int kHoverIntervalMs = 250;
+// A card pinned by Hablar with no offer window to close it goes after this long.
+const unsigned int kPinTimeoutMs = 8000;
 
-DWORD g_nextUpdate = 0;
+enum CardMode
+{
+    Card_None,
+    Card_Pinned, // the Hablar click
+    Card_Hover   // readoutOnHover
+};
+
+CardMode g_mode = Card_None;
 // The character the card is showing. Raw: only ever read behind a guard, and cleared
 // at a load. Never dereferenced here.
 Character* g_shown = NULL;
+DWORD g_nextHoverUpdate = 0;
+DWORD g_pinnedAt = 0;
+// The offer window has been seen open since the pin: its closing ends the card.
+bool g_offerSeen = false;
 std::string g_lastLogged;
 
 const char* RouteWord(ReadoutRoute route)
@@ -44,7 +56,9 @@ const char* RouteWord(ReadoutRoute route)
 
 void HideCard()
 {
+    g_mode = Card_None;
     g_shown = NULL;
+    g_offerSeen = false;
     if (ReadoutUiVisible())
     {
         ReadoutUiHide();
@@ -54,7 +68,7 @@ void HideCard()
 // What is drawn, in one line. Only logged when it changes, so hovering does not
 // write four lines a second.
 void LogReadout(Character* character, const ReadoutView& view, const ReadoutTexts& texts,
-                ReadoutSource source)
+                const char* source)
 {
     char buf[320] = { 0 };
     _snprintf_s(buf, sizeof(buf), _TRUNCATE,
@@ -68,7 +82,7 @@ void LogReadout(Character* character, const ReadoutView& view, const ReadoutText
                 view.showFood ? texts.foodValue.c_str() : "-",
                 texts.primary.c_str(),
                 texts.secondary.empty() ? "" : " + ",
-                texts.secondary.c_str(), ReadoutSourceName(source));
+                texts.secondary.c_str(), source);
     const std::string line = "[readout] " + CharacterName(character) + buf;
     if (line != g_lastLogged)
     {
@@ -77,22 +91,16 @@ void LogReadout(Character* character, const ReadoutView& view, const ReadoutText
     }
 }
 
-void Update()
+// Works the card out for this character and shows it: the one full evaluation.
+// False (card hidden) when there is nothing to show. `fallback` is where to hang
+// the card when the character cannot be projected (the cursor, for hover).
+bool ShowFor(Character* character, const int* fallbackX, const int* fallbackY,
+             const char* source)
 {
     const Config& config = GetConfig();
-
-    ReadoutTarget target;
-    if (!FindReadoutTarget(config.readoutOnHover, &target))
-    {
-        HideCard();
-        return;
-    }
-
-    Character* character = target.character;
     if (!IsRecruitable(character, NULL))
     {
-        HideCard();
-        return;
+        return false;
     }
 
     // The same decision a click would run, asked as a bystander.
@@ -111,8 +119,7 @@ void Update()
     const ReadoutView view = BuildReadout(input, config);
     if (!view.visible)
     {
-        HideCard();
-        return;
+        return false;
     }
 
     const ReadoutTexts texts = BuildReadoutTexts(view, CharacterName(character), character);
@@ -120,38 +127,75 @@ void Update()
     int ax = 0, ay = 0;
     if (!ReadoutAnchorFor(character, &ax, &ay))
     {
-        ax = target.mouseX;
-        ay = target.mouseY - 24;
+        if (fallbackX == NULL || fallbackY == NULL)
+        {
+            return false;
+        }
+        ax = *fallbackX;
+        ay = *fallbackY - 24;
     }
 
     if (!ReadoutUiShow(view, texts, config.readoutCompact, ax, ay))
     {
-        HideCard();
-        return;
+        return false;
     }
-    g_shown = character;
 
     if (config.probeOnClick)
     {
-        LogReadout(character, view, texts, target.source);
+        LogReadout(character, view, texts, source);
+    }
+    return true;
+}
+
+// Follows the pinned NPC, beside the offer window while it is open; ends the pin
+// when its reason to be on screen is gone. No evaluation: the card was worked out
+// once, at the click.
+void TickPinned()
+{
+    const bool offerOpen = IsOfferOpen();
+    if (offerOpen)
+    {
+        g_offerSeen = true;
+    }
+    else if (g_offerSeen || GetTickCount() - g_pinnedAt >= kPinTimeoutMs)
+    {
+        HideCard();
+        return;
+    }
+
+    bool dead = false;
+    int ax = 0, ay = 0;
+    if (!SafeIsDead(g_shown, &dead) || dead || !ReadoutAnchorFor(g_shown, &ax, &ay))
+    {
+        HideCard();
+        return;
+    }
+
+    ReadoutRect offer;
+    if (offerOpen && OfferWindowRect(&offer.left, &offer.top, &offer.width, &offer.height))
+    {
+        ReadoutUiMove(ax, ay, &offer);
+    }
+    else
+    {
+        ReadoutUiMove(ax, ay);
     }
 }
-} // namespace
 
-void ReadoutTick()
+// The opt-in hover: the card follows the NPC every frame and is worked out again
+// every kHoverIntervalMs for whoever is under the cursor.
+void TickHover()
 {
-    const Config& config = GetConfig();
-    if (!config.enabled || !config.readoutEnabled || IsOfferOpen())
+    if (IsOfferOpen())
     {
-        if (g_shown != NULL || ReadoutUiVisible())
+        if (g_mode != Card_None)
         {
             HideCard();
         }
         return;
     }
 
-    // Between updates the card only follows the NPC it is about.
-    if (g_shown != NULL)
+    if (g_mode == Card_Hover)
     {
         int ax = 0, ay = 0;
         if (ReadoutAnchorFor(g_shown, &ax, &ay))
@@ -161,18 +205,79 @@ void ReadoutTick()
     }
 
     const DWORD now = GetTickCount();
-    if (now < g_nextUpdate)
+    if (now < g_nextHoverUpdate)
     {
         return;
     }
-    g_nextUpdate = now + kUpdateIntervalMs;
-    Update();
+    g_nextHoverUpdate = now + kHoverIntervalMs;
+
+    ReadoutTarget target;
+    if (!FindHoverTarget(&target) ||
+        !ShowFor(target.character, &target.mouseX, &target.mouseY, "hover"))
+    {
+        HideCard();
+        return;
+    }
+    g_mode = Card_Hover;
+    g_shown = target.character;
+}
+} // namespace
+
+void RequestReadout(Character* character)
+{
+    const Config& config = GetConfig();
+    if (character == NULL || !config.enabled || !config.readoutEnabled)
+    {
+        return;
+    }
+
+    HideCard();
+    if (!ShowFor(character, NULL, NULL, "hablar"))
+    {
+        HideCard();
+        return;
+    }
+    g_mode = Card_Pinned;
+    g_shown = character;
+    g_pinnedAt = GetTickCount();
+    g_offerSeen = false;
+    // Placed beside the offer at once, not one frame late.
+    TickPinned();
+}
+
+void ReadoutTick()
+{
+    const Config& config = GetConfig();
+    if (!config.enabled || !config.readoutEnabled)
+    {
+        if (g_mode != Card_None)
+        {
+            HideCard();
+        }
+        return;
+    }
+
+    if (g_mode == Card_Pinned)
+    {
+        TickPinned();
+        return;
+    }
+
+    // Default: nothing to do. Hover only runs when the player asked for it.
+    if (config.readoutOnHover)
+    {
+        TickHover();
+    }
+    else if (g_mode == Card_Hover)
+    {
+        HideCard();
+    }
 }
 
 void ForgetReadout()
 {
     HideCard();
-    g_nextUpdate = 0;
+    g_nextHoverUpdate = 0;
     g_lastLogged.clear();
 }
 
