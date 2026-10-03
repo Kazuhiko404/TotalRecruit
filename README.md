@@ -133,17 +133,19 @@ Settings are in the Mod Hub panel, not in a window of this mod.
 
 ### The readout card
 
-Press Hablar on an NPC and, next to the offer window, a small card appears over
-their head: the route that answers them (Captivity, Surrender, Animal, Free,
+Select an NPC with a left click (or press Hablar on them) and a small card appears
+over their head: the route that answers them (Captivity, Surrender, Animal, Free,
 Rescue, Mercy), a three-colour stress bar (hunger, wounds, tiredness), the join
 chance, the defeats counted against the threshold, the stomach bar for animals,
 one short line saying what stands in the way, and the hours still to wait when
 easy mode applies. Every number is one the decision itself computed. The card
 shows the odds, never whether the roll will pass, and asking has no side effects.
-It is worked out once, at the click, and closes with the offer window (or after
-8 seconds when no window opened). Hub switches: card on/off, compact, and an
-opt-in to also show it when hovering an NPC (off by default: it costs frame time
-with many NPCs on screen).
+It follows the selection: deselect the NPC and it goes, select another and it
+switches. It is worked out when the selection changes and refreshed every 2
+seconds, so it costs nothing per frame. Pressing Hablar places it beside the offer
+window; when the offer closes it stays only if that NPC is still selected. It never
+takes a click and hides while a right-click menu is open. Hub switches: card
+on/off, compact, and "on selection" (on by default; off, it only shows on Hablar).
 
 ## Optional: FCS dialogue
 

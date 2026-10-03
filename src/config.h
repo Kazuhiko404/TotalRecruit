@@ -439,13 +439,14 @@ struct Config
     int hailRepeats;
 
     // The readout card over an NPC the mod can talk to: how worn down they are, the
-    // chance, the route and what stands in the way (readout.h). By default it is
-    // shown when the player presses Hablar, beside the offer window. readoutOnHover
-    // is an opt-in that also follows the NPC under the cursor; it re-evaluates four
-    // times a second and costs frame time with many NPCs on screen.
+    // chance, the route and what stands in the way (readout.h). Pressing Hablar always
+    // shows it beside the offer window. readoutOnSelect (on by default) also shows it
+    // over the NPC the player selects with a left click, worked out when the selection
+    // changes and every 2 s after that. The old readoutOnHover key is ignored if a
+    // config file still has it.
     bool readoutEnabled;
     bool readoutCompact;
-    bool readoutOnHover;
+    bool readoutOnSelect;
 
     int preset; // Preset enum
     // Route A: recruit someone you saved from dying. The one route no existing
@@ -507,7 +508,7 @@ struct Config
           hailRepeats(5),
           readoutEnabled(true),
           readoutCompact(false),
-          readoutOnHover(false),
+          readoutOnSelect(true),
           friendlyRelation(20.0f),
           relationRefuseGoodNatured(-15.0f),
           relationRefuseAll(-30.0f),

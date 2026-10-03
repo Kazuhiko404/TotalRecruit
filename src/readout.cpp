@@ -10,6 +10,7 @@
 #include "readout_text.h"
 #include "readout_ui.h"
 #include "recruit_core.h"
+#include "recruit_overlay.h"
 #include "rules.h"
 
 #include <cstdio>
@@ -18,25 +19,34 @@ namespace totalrecruit
 {
 namespace
 {
-// Hover (opt-in) re-evaluates four times a second: enough to follow the cursor.
-const unsigned int kHoverIntervalMs = 250;
+// A card that follows the selection is worked out again this often, so the price
+// and the stress it shows stay roughly current. Slow on purpose: the evaluation is
+// the costly part, and every frame in between only moves the card.
+const unsigned int kSelectionRefreshMs = 2000;
 // A card pinned by Hablar with no offer window to close it goes after this long.
 const unsigned int kPinTimeoutMs = 8000;
 
 enum CardMode
 {
     Card_None,
-    Card_Pinned, // the Hablar click
-    Card_Hover   // readoutOnHover
+    Card_Pinned,  // the Hablar click
+    Card_Selected // readoutOnSelect
 };
 
 CardMode g_mode = Card_None;
-// The character the card is showing. Raw: only ever read behind a guard, and cleared
+// The character the card is about. Raw: only ever read behind a guard, and cleared
 // at a load. Never dereferenced here.
 Character* g_shown = NULL;
-DWORD g_nextHoverUpdate = 0;
+// What the card shows, as last worked out. Kept so a card that went off the screen
+// comes back without another evaluation.
+ReadoutView g_view;
+ReadoutTexts g_texts;
+// The selection as last seen: comparing it is the whole per-frame cost of the
+// selection mode. Raw, never dereferenced, cleared at a load.
+Character* g_lastSelection = NULL;
+DWORD g_nextRefresh = 0;
 DWORD g_pinnedAt = 0;
-// The offer window has been seen open since the pin: its closing ends the card.
+// The offer window has been seen open since the pin: its closing ends the pin.
 bool g_offerSeen = false;
 std::string g_lastLogged;
 
@@ -54,6 +64,11 @@ const char* RouteWord(ReadoutRoute route)
     }
 }
 
+bool TimeReached(DWORD now, DWORD when)
+{
+    return (LONG)(now - when) >= 0;
+}
+
 void HideCard()
 {
     g_mode = Card_None;
@@ -65,8 +80,8 @@ void HideCard()
     }
 }
 
-// What is drawn, in one line. Only logged when it changes, so hovering does not
-// write four lines a second.
+// What is drawn, in one line. Only logged when it changes, so the slow refresh of
+// an unchanged card writes nothing.
 void LogReadout(Character* character, const ReadoutView& view, const ReadoutTexts& texts,
                 const char* source)
 {
@@ -91,11 +106,10 @@ void LogReadout(Character* character, const ReadoutView& view, const ReadoutText
     }
 }
 
-// Works the card out for this character and shows it: the one full evaluation.
-// False (card hidden) when there is nothing to show. `fallback` is where to hang
-// the card when the character cannot be projected (the cursor, for hover).
-bool ShowFor(Character* character, const int* fallbackX, const int* fallbackY,
-             const char* source)
+// Works the card out for this character: the one full evaluation. False when there
+// is nothing to show (not someone the mod talks to, or a verdict with no card).
+// On success the card is about `character` and holds the new content.
+bool WorkOut(Character* character, const char* source)
 {
     const Config& config = GetConfig();
     if (!IsRecruitable(character, NULL))
@@ -122,104 +136,114 @@ bool ShowFor(Character* character, const int* fallbackX, const int* fallbackY,
         return false;
     }
 
-    const ReadoutTexts texts = BuildReadoutTexts(view, CharacterName(character), character);
-
-    int ax = 0, ay = 0;
-    if (!ReadoutAnchorFor(character, &ax, &ay))
+    g_view = view;
+    g_texts = BuildReadoutTexts(view, CharacterName(character), character);
+    g_shown = character;
+    // A changed card is laid out again on the next show (readout_ui's LayoutKey).
+    if (ReadoutUiVisible())
     {
-        if (fallbackX == NULL || fallbackY == NULL)
-        {
-            return false;
-        }
-        ax = *fallbackX;
-        ay = *fallbackY - 24;
-    }
-
-    if (!ReadoutUiShow(view, texts, config.readoutCompact, ax, ay))
-    {
-        return false;
+        ReadoutUiHide();
     }
 
     if (config.probeOnClick)
     {
-        LogReadout(character, view, texts, source);
+        LogReadout(character, g_view, g_texts, source);
     }
     return true;
 }
 
-// Follows the pinned NPC, beside the offer window while it is open; ends the pin
-// when its reason to be on screen is gone. No evaluation: the card was worked out
-// once, at the click.
-void TickPinned()
+// Draws the card that was worked out, over its NPC: no evaluation. Hidden (but kept)
+// while the NPC is off the screen or, unless it stands beside a window, while a
+// right-click menu is open. `avoid` is the window the card steps beside (the offer).
+// False when the NPC died: the card is over.
+bool Present(const ReadoutRect* avoid)
+{
+    bool dead = false;
+    if (!SafeIsDead(g_shown, &dead) || dead)
+    {
+        return false;
+    }
+
+    int ax = 0, ay = 0;
+    const bool underMenu = avoid == NULL && IsContextMenuOpen();
+    if (underMenu || !ReadoutAnchorFor(g_shown, &ax, &ay))
+    {
+        if (ReadoutUiVisible())
+        {
+            ReadoutUiHide();
+        }
+        return true;
+    }
+
+    // Re-showing an unchanged card does not lay it out again (LayoutKey): it is a move.
+    if (!ReadoutUiVisible() &&
+        !ReadoutUiShow(g_view, g_texts, GetConfig().readoutCompact, ax, ay))
+    {
+        return true;
+    }
+    ReadoutUiMove(ax, ay, avoid);
+    return true;
+}
+
+// The pinned card, beside the offer window while it is open. False when the pin is
+// over: the offer closed, no offer opened in time, or (no offer open) the player
+// selected someone else.
+bool TickPinned(Character* selected)
 {
     const bool offerOpen = IsOfferOpen();
     if (offerOpen)
     {
         g_offerSeen = true;
     }
-    else if (g_offerSeen || GetTickCount() - g_pinnedAt >= kPinTimeoutMs)
+    else if (g_offerSeen || TimeReached(GetTickCount(), g_pinnedAt + kPinTimeoutMs) ||
+             selected != g_lastSelection)
     {
-        HideCard();
-        return;
-    }
-
-    bool dead = false;
-    int ax = 0, ay = 0;
-    if (!SafeIsDead(g_shown, &dead) || dead || !ReadoutAnchorFor(g_shown, &ax, &ay))
-    {
-        HideCard();
-        return;
+        return false;
     }
 
     ReadoutRect offer;
-    if (offerOpen && OfferWindowRect(&offer.left, &offer.top, &offer.width, &offer.height))
-    {
-        ReadoutUiMove(ax, ay, &offer);
-    }
-    else
-    {
-        ReadoutUiMove(ax, ay);
-    }
-}
-
-// The opt-in hover: the card follows the NPC every frame and is worked out again
-// every kHoverIntervalMs for whoever is under the cursor.
-void TickHover()
-{
-    if (IsOfferOpen())
-    {
-        if (g_mode != Card_None)
-        {
-            HideCard();
-        }
-        return;
-    }
-
-    if (g_mode == Card_Hover)
-    {
-        int ax = 0, ay = 0;
-        if (ReadoutAnchorFor(g_shown, &ax, &ay))
-        {
-            ReadoutUiMove(ax, ay);
-        }
-    }
-
-    const DWORD now = GetTickCount();
-    if (now < g_nextHoverUpdate)
-    {
-        return;
-    }
-    g_nextHoverUpdate = now + kHoverIntervalMs;
-
-    ReadoutTarget target;
-    if (!FindHoverTarget(&target) ||
-        !ShowFor(target.character, &target.mouseX, &target.mouseY, "hover"))
+    const bool haveOffer =
+        offerOpen && OfferWindowRect(&offer.left, &offer.top, &offer.width, &offer.height);
+    if (!Present(haveOffer ? &offer : NULL))
     {
         HideCard();
+    }
+    return true;
+}
+
+// The card follows the selection: worked out when it changes and every
+// kSelectionRefreshMs after that, only moved in between.
+void TickSelection(Character* selected)
+{
+    const DWORD now = GetTickCount();
+    if (selected != g_lastSelection)
+    {
+        g_lastSelection = selected;
+        HideCard();
+        g_nextRefresh = now;
+    }
+    if (selected == NULL)
+    {
         return;
     }
-    g_mode = Card_Hover;
-    g_shown = target.character;
+
+    if (TimeReached(now, g_nextRefresh))
+    {
+        // Scheduled whether or not it worked: someone the mod does not talk to is
+        // asked again at the next refresh, not every frame.
+        g_nextRefresh = now + kSelectionRefreshMs;
+        if (!WorkOut(selected, "select"))
+        {
+            HideCard();
+            return;
+        }
+        g_mode = Card_Selected;
+    }
+
+    if (g_mode == Card_Selected && !Present(NULL))
+    {
+        HideCard();
+    }
 }
 } // namespace
 
@@ -232,17 +256,20 @@ void RequestReadout(Character* character)
     }
 
     HideCard();
-    if (!ShowFor(character, NULL, NULL, "hablar"))
+    if (!WorkOut(character, "hablar"))
     {
         HideCard();
         return;
     }
     g_mode = Card_Pinned;
-    g_shown = character;
     g_pinnedAt = GetTickCount();
     g_offerSeen = false;
+    // The pin outlives whatever was selected at the click; only a later change of
+    // selection (with no offer open) ends it.
+    Character* selected = config.readoutOnSelect ? SelectedNpc() : NULL;
+    g_lastSelection = selected;
     // Placed beside the offer at once, not one frame late.
-    TickPinned();
+    TickPinned(selected);
 }
 
 void ReadoutTick()
@@ -254,30 +281,33 @@ void ReadoutTick()
         {
             HideCard();
         }
+        g_lastSelection = NULL;
         return;
     }
+
+    Character* selected = config.readoutOnSelect ? SelectedNpc() : NULL;
 
     if (g_mode == Card_Pinned)
     {
-        TickPinned();
-        return;
+        if (TickPinned(selected))
+        {
+            return;
+        }
+        // The pin is over. Forgetting the last selection makes the selection mode
+        // decide afresh this frame: the card comes back (worked out again, since the
+        // offer may have changed things) only if that NPC is still selected.
+        HideCard();
+        g_lastSelection = NULL;
     }
 
-    // Default: nothing to do. Hover only runs when the player asked for it.
-    if (config.readoutOnHover)
-    {
-        TickHover();
-    }
-    else if (g_mode == Card_Hover)
-    {
-        HideCard();
-    }
+    TickSelection(selected);
 }
 
 void ForgetReadout()
 {
     HideCard();
-    g_nextHoverUpdate = 0;
+    g_lastSelection = NULL;
+    g_nextRefresh = 0;
     g_lastLogged.clear();
 }
 

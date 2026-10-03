@@ -230,7 +230,7 @@ std::vector<Field> ConfigFields(Config& c)
     AddInt(f, "hailRepeats", &c.hailRepeats);
     AddBool(f, "readoutEnabled", &c.readoutEnabled);
     AddBool(f, "readoutCompact", &c.readoutCompact);
-    AddBool(f, "readoutOnHover", &c.readoutOnHover);
+    AddBool(f, "readoutOnSelect", &c.readoutOnSelect);
 
     AddInt(f, "preset", &c.preset);
     AddBool(f, "rescueEnabled", &c.rescueEnabled);

@@ -11,6 +11,9 @@ bool InstallRecruitOverlay();
 // Destroys the button and drops any target reference.
 void ShutdownRecruitOverlay();
 
+// True while Kenshi's right-click menu is on screen, whoever it is about.
+bool IsContextMenuOpen();
+
 // Drops the clicked target (raw engine pointers) and hides the button, so a
 // load cannot leave it aimed at a character the engine just freed.
 void ForgetOverlayTarget();

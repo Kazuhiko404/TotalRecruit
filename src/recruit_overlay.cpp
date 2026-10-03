@@ -37,6 +37,13 @@ Character* g_targetCharacter = NULL;
 // not hop between sides when another mod's hook runs before or after ours.
 menuslot::Side g_previousSide = menuslot::SIDE_NONE;
 
+// Whether Kenshi's right-click menu is on screen, whoever it is about (the readout
+// card hides under it). Refreshed by the update hook every frame the menu is open;
+// a mark older than kMenuStaleMs means the hook stopped running, so it is closed.
+const DWORD kMenuStaleMs = 500;
+bool g_menuOpen = false;
+DWORD g_menuSeenAt = 0;
+
 void (*g_showContextMenu_orig)(ContextMenu*, bool, RootObject*) = NULL;
 void (*g_contextMenuUpdate_orig)(ContextMenu*) = NULL;
 
@@ -58,6 +65,12 @@ void ClearTarget()
     g_targetObject = NULL;
     g_targetCharacter = NULL;
     g_previousSide = menuslot::SIDE_NONE;
+}
+
+void NoteMenuOpen(bool open)
+{
+    g_menuOpen = open;
+    g_menuSeenAt = GetTickCount();
 }
 
 void HideButton()
@@ -235,6 +248,7 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
     {
         g_showContextMenu_orig(thisptr, on, what);
     }
+    NoteMenuOpen(on);
 
     const Config& config = GetConfig();
     if (!config.enabled || !config.showRecruitButton)
@@ -341,7 +355,7 @@ void ContextMenu_update_hook(ContextMenu* thisptr)
         g_contextMenuUpdate_orig(thisptr);
     }
 
-    if (g_button == NULL || g_targetCharacter == NULL || thisptr == NULL)
+    if (thisptr == NULL)
     {
         return;
     }
@@ -349,6 +363,12 @@ void ContextMenu_update_hook(ContextMenu* thisptr)
     bool visible = false;
     TR_TRY { visible = thisptr->isVisible(); }
     TR_CATCH { visible = false; }
+    NoteMenuOpen(visible);
+
+    if (g_button == NULL || g_targetCharacter == NULL)
+    {
+        return;
+    }
 
     if (!visible)
     {
@@ -383,6 +403,11 @@ bool InstallRecruitOverlay()
 
     LogInfo("Recruit overlay installed.");
     return true;
+}
+
+bool IsContextMenuOpen()
+{
+    return g_menuOpen && GetTickCount() - g_menuSeenAt < kMenuStaleMs;
 }
 
 void ForgetOverlayTarget()

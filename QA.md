@@ -447,7 +447,7 @@ La tarjeta de `ui-mockup/readout.html` sobre el NPC. Todo se prueba con `"probeO
 
 Linea: `[readout] <nombre> route=<ruta> chance=<n>% stress=<n>% (hunger H wounds W tired T) defeats=<a/b> food=<n>% line="<texto>" [hablar|hover]`
 
-Desde 12.9 la tarjeta sale por defecto al apretar **Hablar**. Las filas de esta tabla que dicen "pasar el mouse" se prueban con `Lectura: al pasar el mouse` en ON en el hub (modo opcional); las mismas comprobaciones de contenido valen para la tarjeta de Hablar.
+Desde 12.11 la tarjeta sale al **seleccionar** el NPC (clic izquierdo) y al apretar **Hablar**; el modo hover ya no existe. Las filas de esta tabla que dicen "pasar el mouse" se prueban seleccionando al NPC; las mismas comprobaciones de contenido valen. U4 ahora refresca cada ~2 s, U12 ya no aplica, U13 y U14 los reemplaza 12.11.
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
@@ -481,14 +481,14 @@ Por defecto la tarjeta sale **solo** al apretar `Hablar`, al lado de la ventana 
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
-| H1 | Config por defecto (sin `readoutOnHover` en `config.json`). Pasar el mouse por NPCs reclutables y seleccionar uno | **Ninguna** tarjeta | (sin `[readout]`) |
+| H1 | Config por defecto. Pasar el mouse por NPCs reclutables **sin** seleccionarlos | **Ninguna** tarjeta (seleccionar uno: ver 12.11) | (sin `[readout]`) |
 | H2 | Clic derecho en un prisionero, apretar `Hablar` | Se abre la oferta y la tarjeta aparece sobre su cabeza; si taparia la ventana, se pone a su derecha (o izquierda, o arriba/abajo si no entra), nunca encima | `[readout] ... [hablar]` una sola vez |
 | H3 | Con la oferta abierta, mover la camara | La tarjeta sigue al NPC cada cuadro y sigue sin tapar la oferta; su contenido no cambia (se calculo al clic) | (sin linea nueva) |
 | H4 | Cerrar la oferta (ACEPTAR, RECHAZAR, la X) | La tarjeta se va con ella | |
 | H5 | `Hablar` en alguien que se une sin ventana, o donde no se abre oferta | Sin tarjeta, o la tarjeta se va sola a los 8 s | |
 | H6 | `Hablar` en un NPC y que muera / salga de pantalla con la tarjeta a la vista | La tarjeta desaparece | |
 | H7 | Rescate automatico (un NPC que curaste se ofrece solo) | La oferta aparece **sin** tarjeta (el rescate no la pide) | |
-| H8 | Hub: `Lectura: al pasar el mouse` ON | La tarjeta vuelve a seguir al NPC bajo el mouse (4 veces por segundo) y se oculta con la oferta abierta; OFF la quita | `[readout] ... [hover]` |
+| H8 | (Reemplazado por 12.11: el modo hover se quito) | | |
 | H9 | Hub: `Lectura: activa` OFF y apretar `Hablar` | Oferta sin tarjeta | |
 | H10 | Zona con muchos NPCs en pantalla (una ciudad, 20+ personajes) con la config por defecto | FPS normales (comparar con el mod apagado en el hub); antes caian por el globo y la tarjeta | |
 | H11 | Globo de chat (`showTalkCursor` ON): mirar prisioneros reclutables y NPCs comunes | El globo sigue apareciendo sobre quien vale la pena hablar (incluye rescates con chance > 0); alimentar o golpear a uno cambia su globo en ~2 s | |
@@ -508,3 +508,24 @@ Por defecto la tarjeta sale **solo** al apretar `Hablar`, al lado de la ventana 
 | B5 | Lo mismo pegado al borde **derecho** y al borde **inferior** | Queda entero en pantalla; si no hay hueco libre, se ajusta a la izquierda del menu dentro de la pantalla | |
 | B6 | Solo TotalRecruit (sin los otros mods) | `Hablar` a la izquierda del menu, alineado arriba, 160 x 44 | |
 | B7 | Clic en `Hablar` | Se abre la oferta como antes (con la tarjeta de 12.9) y el boton se va | |
+
+### 12.11 Tarjeta al seleccionar el NPC (price-readout-button-tweaks T5)
+
+La tarjeta sigue a la **seleccion**: clic izquierdo en un NPC que no es tuyo y aparece sobre su cabeza; se calcula al cambiar la seleccion y se refresca cada 2 s, no cada cuadro. `Hablar` la sigue poniendo al lado de la oferta. Hub: `Lectura: al seleccionar` (ON por defecto). Con `"probeOnClick": true`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| S1 | Clic izquierdo en un prisionero reclutable | Aparece la tarjeta sobre su cabeza al instante | `[readout] ... [select]` una vez |
+| S2 | Deseleccionar (clic en el suelo, Esc, o seleccionar a uno de los tuyos) | La tarjeta se va | |
+| S3 | Con uno seleccionado, seleccionar a otro NPC reclutable | La tarjeta cambia al nuevo, sin quedar la del anterior | `[readout] <nuevo> ... [select]` |
+| S4 | Seleccionar un NPC **no** reclutable (excluido, muerto, tuyo) | Sin tarjeta | (sin linea) |
+| S5 | Con la tarjeta a la vista, alimentar o golpear al prisionero | El estres o el precio cambian en ~2 s, sin volver a seleccionarlo | `[readout]` con otro `stress=` / precio |
+| S6 | Zona con muchos NPCs (ciudad, 20+) con uno seleccionado; mover el mouse por encima de todos | FPS normales (comparar con `Lectura: activa` OFF); pasar el mouse no muestra nada | sin `[readout]` nuevos al mover el mouse |
+| S7 | Con la tarjeta a la vista, clic derecho sobre ese NPC | El menu contextual y su boton `Hablar` (y los de TotalSparring / TotalLoot) quedan sin tapar: la tarjeta se oculta mientras el menu esta abierto y vuelve al cerrarlo | |
+| S8 | Clic izquierdo y derecho a traves de la tarjeta | Funcionan como si no estuviera (no roba clics ni el foco del mouse) | |
+| S9 | Seleccionado, apretar `Hablar` | La tarjeta se pone al lado de la oferta (no encima); al cerrar la oferta sigue sobre el NPC porque sigue seleccionado (recalculada) | `[readout] ... [hablar]` y luego `[select]` |
+| S10 | `Hablar` sobre un NPC **sin** seleccionarlo, y cerrar la oferta | La tarjeta se va con la oferta | |
+| S11 | Seleccionado y que el NPC salga de pantalla (mover la camara) y vuelva | Se oculta fuera de pantalla y reaparece sola al volver, sin linea nueva de log | |
+| S12 | Hub: `Lectura: al seleccionar` OFF | Seleccionar ya no muestra nada; `Hablar` sigue mostrandola junto a la oferta | |
+| S13 | `config.json` viejo con `"readoutOnHover": true` | Se ignora sin error; la tarjeta funciona por seleccion | sin `[config]` de error |
+| S14 | Cargar un save con la tarjeta a la vista | Desaparece; no queda apuntando a nadie | `[identity] load begin ...` |

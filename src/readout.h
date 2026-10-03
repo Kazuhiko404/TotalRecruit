@@ -6,17 +6,23 @@
 // draw it (readout_ui.h).
 //
 // Two ways in:
-//   - Pinned (the default): pressing Hablar calls RequestReadout. The card is worked
-//     out ONCE, there, and then only follows the NPC every frame. It stands beside
-//     the offer window that the same click opened and is dismissed when that window
-//     closes, after kPinTimeoutMs when no window opened, when the NPC dies or leaves
-//     the screen, or when another request replaces it.
-//   - Hover (readoutOnHover, opt-in): the NPC under the cursor, re-evaluated four
-//     times a second. That sweep and evaluation cost frame time with many NPCs on
-//     screen, which is why it is off by default. Hidden while the offer is open.
+//   - Selection (readoutOnSelect, the default): the NPC the player selected with a
+//     left click, never one of their own. Each frame only compares the selection
+//     with last frame's (one field read); the card is worked out once when it
+//     changes and again every kSelectionRefreshMs, so live numbers (price, stress)
+//     stay roughly current without an evaluation per frame. Deselecting hides it,
+//     selecting someone else switches it.
+//   - Pinned: pressing Hablar calls RequestReadout. The card is worked out at the
+//     click and stands beside the offer window that the same click opened. When that
+//     window closes (or after kPinTimeoutMs when none opened) the pin ends: the card
+//     stays only if that NPC is still the selection.
+// Either way the card follows the NPC every frame, is hidden while they are off the
+// screen and while a right-click menu is open (other mods' buttons flank the menu on
+// both sides, so there is no side to step to), and goes when they die. It never takes
+// input (ToolTip layer, no mouse focus).
 //
 // With probeOnClick on, a line is logged whenever what is drawn changes:
-//   [readout] <name> route=<r> chance=<n> stress=<s> ... [hablar|hover]
+//   [readout] <name> route=<r> chance=<n> stress=<s> ... [hablar|select]
 // and it states the numbers the card shows, so a screenshot and the log can be
 // compared.
 
@@ -28,8 +34,8 @@ namespace totalrecruit
 // off or the NPC is not someone the mod talks to. Replaces any card showing.
 void RequestReadout(Character* character);
 
-// Called once per frame from the frame tick: moves the pinned card, dismisses it,
-// or (hover mode) throttles its own re-evaluation.
+// Called once per frame from the frame tick: follows the selection, moves the card,
+// ends the pin, and refreshes the card on its slow interval.
 void ReadoutTick();
 
 // Hides the card and forgets the target (a raw pointer): a load frees characters.

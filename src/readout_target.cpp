@@ -5,25 +5,28 @@
 
 #include <kenshi/CameraClass.h>
 
-#include <vector>
-
 namespace totalrecruit
 {
 namespace
 {
-// How far from the camera centre characters are looked for, in world units. The
-// hail sweep uses 900 around the player for "close enough to hear"; what is on
-// screen at the far zoom is wider than that.
-const float kHoverRadius = 2500.0f;
-// The pick: a character counts as under the cursor within this many pixels of their
-// projected body centre.
-const int kPickRadiusPx = 48;
 // The card hangs this many pixels above the projected body centre, about a head
 // above. Pixels rather than world units: the unit scale of the world is not
 // something this mod has measured.
 const int kAnchorLiftPx = 70;
-// A widget bigger than this share of the screen is a HUD layer, not a window.
-const int kHudAreaPercent = 80;
+
+bool SafeSelectedObjectCharacter(Character** out)
+{
+    TR_TRY
+    {
+        if (ou == NULL || ou->player == NULL)
+        {
+            return false;
+        }
+        *out = ou->player->selectedObject.getCharacter();
+        return *out != NULL;
+    }
+    TR_CATCH { return false; }
+}
 
 bool SafeCamera(CameraClass** out)
 {
@@ -34,21 +37,6 @@ bool SafeCamera(CameraClass** out)
             return false;
         }
         *out = ou->player->camera;
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-bool SafeCameraCentre(Ogre::Vector3* out)
-{
-    TR_TRY
-    {
-        CameraClass* camera = NULL;
-        if (!SafeCamera(&camera))
-        {
-            return false;
-        }
-        *out = camera->getCenter();
         return true;
     }
     TR_CATCH { return false; }
@@ -66,32 +54,6 @@ bool SafeViewSize(int* w, int* h)
         *w = render->getViewSize().width;
         *h = render->getViewSize().height;
         return *w > 0 && *h > 0;
-    }
-    TR_CATCH { return false; }
-}
-
-// The mouse, and whether it is over a window of the game (or of another mod): the
-// card follows the world, so it steps aside while the player works in a window.
-bool SafeMouse(int viewW, int viewH, int* x, int* y, bool* overWindow)
-{
-    TR_TRY
-    {
-        MyGUI::InputManager* input = MyGUI::InputManager::getInstancePtr();
-        if (input == NULL)
-        {
-            return false;
-        }
-        *x = input->getMousePosition().left;
-        *y = input->getMousePosition().top;
-
-        MyGUI::Widget* focus = input->getMouseFocusWidget();
-        *overWindow = false;
-        if (focus != NULL)
-        {
-            const int area = focus->getAbsoluteCoord().width * focus->getAbsoluteCoord().height;
-            *overWindow = area * 100 < viewW * viewH * kHudAreaPercent;
-        }
-        return true;
     }
     TR_CATCH { return false; }
 }
@@ -128,69 +90,21 @@ bool SafeProject(Character* character, int viewW, int viewH, int* x, int* y)
     }
     TR_CATCH { return false; }
 }
-
-// The nearest character to the mouse within the pick radius, never one of the
-// player's own.
-Character* PickUnderMouse(int mouseX, int mouseY, int viewW, int viewH)
-{
-    Ogre::Vector3 centre;
-    if (!SafeCameraCentre(&centre))
-    {
-        return NULL;
-    }
-
-    std::vector<Character*> nearby;
-    if (!CharactersNear(centre, kHoverRadius, &nearby))
-    {
-        return NULL;
-    }
-
-    Character* best = NULL;
-    long bestDistance = (long)kPickRadiusPx * (long)kPickRadiusPx;
-    for (size_t i = 0; i < nearby.size(); ++i)
-    {
-        bool mine = false;
-        if (SafeIsPlayerCharacter(nearby[i], &mine) && mine)
-        {
-            continue;
-        }
-        int sx = 0, sy = 0;
-        if (!SafeProject(nearby[i], viewW, viewH, &sx, &sy))
-        {
-            continue;
-        }
-        const long dx = sx - mouseX;
-        const long dy = sy - mouseY;
-        const long d = dx * dx + dy * dy;
-        if (d < bestDistance)
-        {
-            bestDistance = d;
-            best = nearby[i];
-        }
-    }
-    return best;
-}
 } // namespace
 
-bool FindHoverTarget(ReadoutTarget* out)
+Character* SelectedNpc()
 {
-    int viewW = 0, viewH = 0;
-    if (!SafeViewSize(&viewW, &viewH))
+    Character* selected = NULL;
+    if (!SafeSelectedObjectCharacter(&selected))
     {
-        return false;
+        return NULL;
     }
-
-    int mx = 0, my = 0;
-    bool overWindow = false;
-    if (!SafeMouse(viewW, viewH, &mx, &my, &overWindow) || overWindow)
+    bool mine = false;
+    if (!SafeIsPlayerCharacter(selected, &mine) || mine)
     {
-        return false;
+        return NULL;
     }
-    out->mouseX = mx;
-    out->mouseY = my;
-
-    out->character = PickUnderMouse(mx, my, viewW, viewH);
-    return out->character != NULL;
+    return selected;
 }
 
 bool ReadoutAnchorFor(Character* character, int* x, int* y)

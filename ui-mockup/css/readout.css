@@ -86,6 +86,8 @@
   text-align:center;line-height:42px;font:18px "Trebuchet MS",sans-serif;text-shadow:1px 1px 0 #000}
 .ctxbtn:hover{background:#ecb860;color:#1e1b18}
 .callout{position:absolute;font-size:12px;color:var(--amber);max-width:230px}
+/* Kenshi's own selection marker under the selected NPC (drawn by the engine, not the mod). */
+.selring{position:absolute;width:56px;height:14px;bottom:62px;border:2px solid #8fd18f;border-radius:50%}
 /* The screen is 1280 x 520 here so the 620 px offer window and a 264 px card fit side by side
    at 1:1, as on a real 1080p screen. */
 .scene-wrap{max-width:100%;overflow-x:auto}
