@@ -34,6 +34,13 @@
 .pp .val{font:600 16px "Trebuchet MS",sans-serif;display:flex;align-items:center;font-variant-numeric:tabular-nums}
 .pp .why{font:16px/20px "Trebuchet MS",sans-serif;color:var(--soft-danger);text-shadow:1px 1px 0 #000}
 .pp .why.plain{color:var(--text)}
+/* The haggle section: right-aligned value / max, the min and max under the slider ends
+   (kSmallFont), the odds line (kBodyFont, coloured by its tone), the drag surface. */
+.pp .right{justify-content:flex-end;text-align:right}
+.pp .scale{font:11px "Trebuchet MS",sans-serif;color:var(--muted);display:flex;align-items:center;
+  font-variant-numeric:tabular-nums}
+.pp .odds{font:14px "Trebuchet MS",sans-serif;display:flex;align-items:center}
+.pp .sl{position:absolute;cursor:ew-resize;touch-action:none}
 /* Flat buttons: a coloured plate (and an optional 1px edge under it) with a skinless
    Kenshi_TextBoxEmptySkin button carrying the caption on top. */
 .pp .btn{position:absolute;display:flex;align-items:center;justify-content:center;

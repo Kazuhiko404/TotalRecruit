@@ -76,11 +76,17 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
   <li>A free join says <i>Gratis</i> in green; <i>Probabilidad</i> appears only when the verdict rolled.</li>
   <li>The X in the title bar is Cancel. Money only moves on ACEPTAR, and the price is re-checked at that moment
     (<code>money.short</code> is now only that last-second check).</li>
+  <li><b>Haggling</b> (<code>haggleEnabled</code>, cats prices only: never rescue, mercy, field yield or surrender). An
+    OFERTA row with a slider from half the ask to the ask (steps of 10, starting at the ask), the live odds under it, and
+    the purse checked against the offer. Below the ask the amber button reads OFRECER; at the ask it is ACEPTAR as
+    before. An offended NPC shows the raised price and "Se ofendio: hoy no regatea" instead of the slider. The section
+    has a fixed height: dragging only changes texts, colours and the button row. States 2-4 are live: drag them.</li>
 </ul></div>
 <div class="ppgal" id="popups"></div>
 
 <script src="js/data.js"></script>
 <script src="js/readout.js"></script>
+<script src="js/haggle.js"></script>
 <script src="js/popup_data.js"></script>
 <script src="js/popup.js"></script>
 <script>
@@ -181,7 +187,8 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
     // The recruit popup (section 5), measured and centred as ChoosePosition does.
     var pop = document.createElement('div');
     pop.className = 'placed';
-    pop.innerHTML = popupHTML(POPUP_STATES[0].vm);
+    // haggleEnabled is on by default, so the cats offer opens with its slider (state 2).
+    pop.innerHTML = popupHTML(POPUP_STATES[1].vm);
     scene.appendChild(pop);
     var pbox = pop.firstChild.getBoundingClientRect();
     var offer = offerRect(VIEW, { w: Math.round(pbox.width), h: Math.round(pbox.height) });
@@ -207,9 +214,36 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
   }).join('');
 
   document.getElementById('popups').innerHTML = POPUP_STATES.map(function (s, i) {
-    return '<figure>' + popupHTML(s.vm) + '<figcaption><b>' + (i + 1) + '. ' + s.title + '.</b> ' + s.note +
-      '</figcaption></figure>';
+    return '<figure><div class="pphold" id="pp-' + s.id + '">' + popupHTML(s.vm) + '</div><figcaption><b>' +
+      (i + 1) + '. ' + s.title + '.</b> ' + s.note + '</figcaption></figure>';
   }).join('');
+
+  // The live sliders: a press or a drag on the row moves the thumb under the mouse
+  // (FlatSlider::OnPressed / OnDragged), and the view is rebuilt for the new offer, as
+  // offer_popup.cpp OnSliderChange does. The row's rect is read once per drag: the
+  // section has a fixed height, so nothing moves under the mouse while dragging.
+  var drag = null;
+  function popupState(id) {
+    for (var i = 0; i < POPUP_STATES.length; ++i) if (POPUP_STATES[i].id === id) return POPUP_STATES[i];
+    return null;
+  }
+  function dragTo(clientX) {
+    var vm = drag.state.vm;
+    var step = hgValueFromX(Math.round(clientX - drag.left), drag.width, SLIDER_ART.thumb, vm.sliderSteps);
+    if (step === vm.sliderStep) return;
+    setHaggleStep(vm, step);
+    document.getElementById('pp-' + drag.state.id).innerHTML = popupHTML(vm);
+  }
+  document.getElementById('popups').addEventListener('pointerdown', function (e) {
+    var row = e.target.closest('.sl'); if (!row || e.button !== 0) return;
+    var s = popupState(row.getAttribute('data-slider')); if (!s) return;
+    var r = row.getBoundingClientRect();
+    drag = { state: s, left: r.left, width: Math.round(r.width) };
+    e.preventDefault();
+    dragTo(e.clientX);
+  });
+  document.addEventListener('pointermove', function (e) { if (drag) dragTo(e.clientX); });
+  document.addEventListener('pointerup', function () { drag = null; });
 })();
 </script>
 </body>

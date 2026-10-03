@@ -14,7 +14,8 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 | `js/readout.js` | draws a view-model as the card; `placeCard` (over the head, sideways beside the offer); `offerRect` (the popup centred) | `screen_projection.cpp` (`PlaceCard`, called by `readout_ui.cpp` `PlaceUnguarded`); `offer_popup.cpp` (`ChoosePosition`) |
 | `css/popup.css` | the recruit popup: fonts and colours of each slot, flat buttons | `offer_popup.cpp` (widgets from `ui_style.cpp`) |
 | `js/popup_data.js` | `POPUP_LAYOUT` (every px of the popup) and one `OfferView` per state, the facts above each | `offer_popup.cpp` constants; `offer_view.cpp` output (`OfferView`) |
-| `js/popup.js` | `layoutOffer`: every rectangle of the popup, text measured first | `offer_popup.cpp` (`LayoutOffer`, `MeasureWrapped`) |
+| `js/popup.js` | `layoutOffer`: every rectangle of the popup, text measured first; the haggle section and the slider art | `offer_popup.cpp` (`LayoutOffer`, `MeasureWrapped`); `flat_slider.cpp` |
+| `js/haggle.js` | JS copy of the haggle rules (bounds, steps, odds), the slider's pixel math and the haggle step of the view, so the slider can be dragged | `haggle_rules.cpp`; `flat_slider.h`; `offer_view.cpp` (`ApplyHaggle`) |
 
 ## Design decisions
 
@@ -86,6 +87,17 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 15. **Text** is the `popup` block of `messages.json`; the route tag reuses `readout.route.*`. Field yield has its own
     tag, **Sometido** (`readout.route.fieldYield`), on the card and the popup alike: Rendicion is the "rather than
     die" surrender.
+
+16. **Haggling** (`haggleEnabled`; user request 2026-10-03). Only a cats price gets it (free-world bribe, the
+    captive cats route); rescue, mercy, field yield and surrender never do. Between the top block and the reason:
+    OFERTA | the flat slider (TotalSparring's, ported as `flat_slider.cpp`) | the offer in amber; the min and max under
+    the slider's ends; one line under that: "Probabilidad de aceptar: N%" (green from 70, amber 30-69, red under 30),
+    or the shortfall for the offer, or "Se ofendio: hoy no regatea". The slider runs from `haggleMinFraction` of the
+    ask to the ask in steps of 10 and starts at the ask. The purse is checked against the offer: short, TIENES is red
+    and the amber button is hidden. Below the ask it reads OFRECER (one attempt on the day's seed), at the ask ACEPTAR.
+    An offended NPC shows the raised price and the offended line with no slider. The section has a fixed height, so a
+    drag never resizes the window: only texts, colours and the button row change. With the slider, the purse
+    shortfall goes in the slider's line, never on the reason plate.
 
 ## Checking a change
 

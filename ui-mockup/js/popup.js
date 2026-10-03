@@ -4,7 +4,8 @@
 //
 // Every rectangle is computed here with the same arithmetic as LayoutOffer, in client
 // coordinates; the two word-wrapped texts (body and reason) are measured first, as the
-// C++ asks MyGUI for getTextSize() before sizing the window.
+// C++ asks MyGUI for getTextSize() before sizing the window. The haggle section's fields
+// come from js/haggle.js applyHaggle; its slider art is SLIDER_ART (src/flat_slider.cpp).
 
 var PP_INFO_LABELS = { price: 'Precio', purse: 'Tienes', chance: 'Probabilidad' };
 
@@ -40,6 +41,24 @@ function ppTagColour(route) {
   return { cautiverio: 'var(--amber)', rendicion: 'var(--soft-danger)', sometido: 'var(--soft-danger)',
            rescate: 'var(--ready)',
            animal: '#9db8e6', piedad: 'var(--brass)', libre: 'var(--text)' }[route] || 'var(--text)';
+}
+
+// The odds line's colour: ready from 70%, amber 30-69, the soft red under 30 (and for the
+// shortfall and offended lines).
+function ppToneColour(tone) {
+  return { ready: 'var(--ready)', amber: 'var(--amber)', danger: 'var(--soft-danger)' }[tone] || 'var(--text)';
+}
+
+// The flat slider (src/flat_slider.cpp, ported from TotalSparring): a golddim-edged sumi
+// track centred in the row, a lacquer-edged amber square thumb at ThumbLeftFor(step).
+function ppSlider(x, y, w, h, step, steps) {
+  var A = SLIDER_ART;
+  var trackY = y + Math.floor((h - A.trackH) / 2), thumbY = y + Math.floor((h - A.thumb) / 2);
+  var tx = x + hgThumbLeft(step, w, A.thumb, steps);
+  return ppFill(x, trackY, w, A.trackH, 'var(--golddim)') +
+    ppFill(x + A.trackBorder, trackY + A.trackBorder, w - 2 * A.trackBorder, A.trackH - 2 * A.trackBorder, 'var(--sumi)') +
+    ppFill(tx, thumbY, A.thumb, A.thumb, 'var(--lacquer)') +
+    ppFill(tx + A.thumbBorder, thumbY + A.thumbBorder, A.thumb - 2 * A.thumbBorder, A.thumb - 2 * A.thumbBorder, 'var(--amber)');
 }
 
 // Flat button: optional 1px edge, plate, caption. style = 'accept' | 'extra' | 'cancel'.
@@ -103,6 +122,30 @@ function layoutOffer(vm) {
   }
 
   y = Math.max(y, m + P + 2);
+
+  // The haggle section (cats prices only): OFERTA | slider | value, the min and max under
+  // the slider's ends, then one line: the live odds, the shortfall for the offer, or the
+  // offended lock. Fixed height, so dragging never resizes the window.
+  if (vm.showSlider || vm.haggleLine) {
+    y += L.sectionGap;
+    if (vm.showSlider) {
+      var sx = m + L.haggleLabelW;
+      var sw = W - 2 * m - L.haggleLabelW - L.haggleGap - L.haggleValueW;
+      front += ppBox('t lbl', m, y, L.haggleLabelW, L.haggleRowH) + '>' + esc(HAGGLE_TEXTS.label) + '</div>';
+      back += ppSlider(sx, y, sw, L.haggleRowH, vm.sliderStep, vm.sliderSteps);
+      front += ppBox('sl', sx, y, sw, L.haggleRowH) + ' data-slider="' + esc(vm.id || '') + '"></div>';
+      front += ppBox('t val right', W - m - L.haggleValueW, y, L.haggleValueW, L.haggleRowH,
+                     'color:var(--amber)') + '>' + esc(vm.offerText) + '</div>';
+      y += L.haggleRowH;
+      var half = Math.floor(sw / 2);
+      front += ppBox('t scale', sx, y, half, L.haggleScaleH) + '>' + esc(vm.minText) + '</div>';
+      front += ppBox('t scale right', sx + half, y, sw - half, L.haggleScaleH) + '>' + esc(vm.maxText) + '</div>';
+      y += L.haggleScaleH;
+    }
+    front += ppBox('t odds', m, y, W - 2 * m, L.haggleLineH, 'color:' + ppToneColour(vm.haggleTone)) + '>' +
+             esc(vm.haggleLine) + '</div>';
+    y += L.haggleLineH;
+  }
 
   // The reason: a bgdark plate across the window, a red bar on its left when it is a no.
   if (vm.reason) {

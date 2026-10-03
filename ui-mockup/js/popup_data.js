@@ -23,14 +23,21 @@ var POPUP_LAYOUT = {
   reasonPadY: 7,     // kReasonPadY
   buttonH: 32,       // kButtonHeight
   buttonGap: 8,      // kButtonGap
-  aloneW: 150        // kAloneButtonW: Cancel / Close when it is the only button
+  aloneW: 150,       // kAloneButtonW: Cancel / Close when it is the only button
+  // The haggle section (cats prices only), between the top block and the reason.
+  haggleRowH: 24,    // kHaggleRowH: label | slider | value (the 22 px thumb fits)
+  haggleLabelW: 84,  // kHaggleLabelW: "OFERTA"
+  haggleValueW: 110, // kHaggleValueW: "7.650 cats", right-aligned
+  haggleGap: 8,      // kHaggleGap: slider -> value
+  haggleScaleH: 16,  // kHaggleScaleH: min / max under the slider ends
+  haggleLineH: 20    // kHaggleLineH: the odds, the short line or the offended line
 };
 
 var POPUP_STATES = [
   {
     id: 'cats',
-    title: 'Joins for cats',
-    note: 'Cautiverio, the roll passed and the price is due: <code>Reason_CatsJoin</code>. Price in amber, the purse it is checked against, the odds the engine rolled. Money only moves on ACEPTAR (CompleteOffer re-checks and charges).',
+    title: 'Joins for cats (haggle off)',
+    note: 'Cautiverio, the roll passed and the price is due: <code>Reason_CatsJoin</code>. Price in amber, the purse it is checked against, the odds the engine rolled. Money only moves on ACEPTAR (CompleteOffer re-checks and charges). This is the window with <code>haggleEnabled</code> off: no slider; with it on, the same NPC opens as state 2.',
     // facts: verdict willJoin, Currency_Cats, cats 9570, rolled 58%; purse read 12000
     vm: {
       title: 'Reclutamiento', name: 'Kareem el Tuerto', route: 'cautiverio', routeTag: 'Cautiverio',
@@ -43,9 +50,58 @@ var POPUP_STATES = [
     }
   },
   {
+    id: 'haggle',
+    title: 'Haggle: offer below the ask',
+    note: 'The same Kareem with <code>haggleEnabled</code> on. <b>Drag the slider</b>: it runs from half the ask to the ask in steps of 10, starting at the ask. Below the ask the amber button reads OFRECER and the line gives the live odds (green from 70%, amber 30-69, red under 30); at the ask it is ACEPTAR again, 100%, exactly as before. OFRECER is one attempt on the day\'s seed: accepted, he joins for the offer; refused, he is offended (state 4). Sample: speaker best stat 46 vs level 30 (leverage +8), Normal temperament.',
+    // facts: verdict willJoin, Currency_Cats, cats 9570, rolled 58%; purse 12000;
+    // haggle: leverage +8, Temperament_Normal, not offended today; slider at 7650
+    hg: { ask: 9570, purse: 12000, leverage: 8, temperament: 'normal', locked: false, offer: 7650 },
+    vm: {
+      title: 'Reclutamiento', name: 'Kareem el Tuerto', route: 'cautiverio', routeTag: 'Cautiverio',
+      body: 'Kareem el Tuerto se unira a tu grupo por 9.570 cats.',
+      showPrice: true, priceText: '9.570 cats', priceFree: false,
+      showPurse: true, purseText: '12.000 cats', affordable: true,
+      showChance: true, chanceText: '58%',
+      reason: '', reasonRed: false,
+      accept: 'OFRECER', extra: '', cancel: 'CANCELAR'
+    }
+  },
+  {
+    id: 'haggleShort',
+    title: 'Haggle: offer the purse cannot meet',
+    note: 'A mercenary asks 9.570 and the purse holds 6.000 (<code>Reason_CatsAsk</code>). With the slider the purse is checked against the <b>offer</b>: at the ask TIENES is red, the line says how much is missing for that offer and OFRECER is hidden. Drag below 6.000 and OFRECER appears: the price he quoted is out of reach, a lower one may not be. Brave (-10), weak speaker (leverage -6).',
+    // facts: verdict refused, Reason_CatsAsk, cats 9570, purse 6000; leverage -6, Brave
+    hg: { ask: 9570, purse: 6000, leverage: -6, temperament: 'brave', locked: false, offer: 0 },
+    vm: {
+      title: 'Reclutamiento', name: 'Mercenario de Gesha', route: 'libre', routeTag: 'Libre',
+      body: 'Mercenario de Gesha se unira a tu grupo por 9.570 cats.',
+      showPrice: true, priceText: '9.570 cats', priceFree: false,
+      showPurse: true, purseText: '6.000 cats', affordable: false,
+      showChance: false, chanceText: '',
+      reason: '', reasonRed: false,
+      accept: '', extra: '', cancel: 'CANCELAR'
+    }
+  },
+  {
+    id: 'offended',
+    title: 'Haggle refused: offended today',
+    note: 'Kareem refused an offer: <code>SessionHaggleLedger</code> recorded the offence for today, the popup reopened on the new verdict. The ask is up by <code>haggleOffenceMarkup</code> (9.570 &times; 1.2 = 11.490), no slider, and the red line says why. ACEPTAR at the raised price still works. The next in-game day both reset.',
+    // facts: verdict willJoin, cats 11490 (OffendedAsk), purse 12000; haggle locked today
+    hg: { ask: 11490, purse: 12000, leverage: 8, temperament: 'normal', locked: true, offer: 0 },
+    vm: {
+      title: 'Reclutamiento', name: 'Kareem el Tuerto', route: 'cautiverio', routeTag: 'Cautiverio',
+      body: 'Kareem el Tuerto se unira a tu grupo por 11.490 cats.',
+      showPrice: true, priceText: '11.490 cats', priceFree: false,
+      showPurse: true, purseText: '12.000 cats', affordable: true,
+      showChance: true, chanceText: '58%',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: '', cancel: 'CANCELAR'
+    }
+  },
+  {
     id: 'short',
-    title: "Can't afford",
-    note: 'Libre, a mercenary who wants 9.570 and the purse holds 3.200: <code>Reason_CatsAsk</code>. Same price block, the purse in red, the red line says by how much, and ACEPTAR is hidden: there is nothing to accept. Only CANCELAR.',
+    title: "Can't afford (haggle off)",
+    note: 'Libre, a mercenary who wants 9.570 and the purse holds 3.200: <code>Reason_CatsAsk</code>. Same price block, the purse in red, the red line says by how much, and ACEPTAR is hidden: there is nothing to accept. Only CANCELAR. With haggling on, the shortfall moves into the slider\'s line instead (state 3); this plate is also what an offended NPC the purse cannot meet shows.',
     // facts: verdict refused, Reason_CatsAsk, Currency_Cats, cats 9570, purse 3200
     vm: {
       title: 'Reclutamiento', name: 'Mercenario de Gesha', route: 'libre', routeTag: 'Libre',
@@ -133,3 +189,14 @@ var POPUP_STATES = [
     }
   }
 ];
+
+// The haggle states carry their inputs (hg); their haggle fields are what BuildOfferView's
+// haggle step returns for them (js/haggle.js applyHaggle, the JS twin), so the slider can
+// be dragged and the view rebuilt as offer_popup.cpp does.
+POPUP_STATES.forEach(function (s) {
+  s.vm.id = s.id;
+  if (s.hg) {
+    s.vm.hg = s.hg;
+    applyHaggle(s.vm);
+  }
+});
