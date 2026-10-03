@@ -56,6 +56,14 @@ Verdict DecideSurrendered(const CoreFacts& core);
 // matters: an animal that belongs to someone is only refused in the open.
 Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Config& config);
 
+// route_free: whether someone outside the player's cage can be asked anything at
+// all -- not another faction's prisoner, not one who stopped listening. True when
+// `out` is already the answer. Field-yield and the free world both ask it first.
+bool DecideAccessRefusal(const CoreFacts& core, const AccessFact& access, Verdict* out);
+// Military and law enforcement serve a standing organisation: the free world
+// cannot buy them, and field-yield weighs that loyalty against the beating.
+bool ServesStandingOrganisation(Archetype archetype);
+
 // route_free: the open-world conversation.
 Verdict DecideFreeWorld(const CoreFacts& core, const FreeExtra& extra, const Config& config);
 // Whether the free-world route can roll at all for this NPC (an ally who is not an

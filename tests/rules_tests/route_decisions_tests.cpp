@@ -357,6 +357,72 @@ void FieldYieldReadsStressAndUniqueButNotTheGrudge()
     CHECK(DecideFieldYield(grudging, extra, kConfig).chancePercent == base);
 }
 
+// recruit-gating T2 -- field-yield ran before every free-world check, so a guard
+// in somebody else's cage, or one who had stopped listening, still yielded.
+void FieldYieldRefusesSomeoneInAnotherCage()
+{
+    const char* name = "field yield: another faction's prisoner is not yours to ask";
+    CoreFacts core = Core();
+    core.defeats = 2;
+    YieldExtra extra;
+    extra.roll = KeyRolling(true, 79);
+    extra.access.inAnyCage = true;
+    const Verdict v = DecideFieldYield(core, extra, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(!v.rolled);
+    CHECK(v.reasonKey == Reason_InOthersCage);
+}
+
+void FieldYieldRefusesUnderThePesteringLockout()
+{
+    const char* name = "field yield: pestered once too often, they will not hear you out";
+    CoreFacts core = Core();
+    core.defeats = 2;
+    YieldExtra extra;
+    extra.roll = KeyRolling(true, 79);
+    extra.access.ignoringPlayer = true;
+    const Verdict v = DecideFieldYield(core, extra, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(!v.rolled);
+    CHECK(v.currency == Currency_Refused);
+    CHECK(v.reasonKey == Reason_Insistence);
+}
+
+// Loyalty to a standing organisation is a weight on the roll, not a wall: the
+// free world refuses them outright, but a beating is the one argument they hear.
+void FieldYieldLoyaltyIsAPenaltyNotASkip()
+{
+    const char* name = "field yield: military and law loyalty lower the chance, they still roll";
+    CHECK(kConfig.submission.fieldYieldLoyaltyPenalty == 25);
+
+    CoreFacts bandit = Core();
+    bandit.defeats = 2;
+    YieldExtra extra;
+    const int base = DecideFieldYield(bandit, extra, kConfig).chancePercent;
+    CHECK(base == 79);
+
+    const Archetype loyal[] = { Archetype_Military, Archetype_LawEnforcement };
+    for (int i = 0; i < 2; ++i)
+    {
+        CoreFacts guard = bandit;
+        guard.archetype = loyal[i];
+        YieldExtra joins;
+        joins.roll = KeyRolling(true, base - kConfig.submission.fieldYieldLoyaltyPenalty);
+        const Verdict v = DecideFieldYield(guard, joins, kConfig);
+        CHECK(v.rolled);
+        CHECK(v.chancePercent == base - kConfig.submission.fieldYieldLoyaltyPenalty);
+        CHECK(v.currency == Currency_Submission);
+        CHECK(v.willJoin);
+        CHECK(v.reasonKey == Reason_FieldYieldJoins);
+    }
+
+    Config noPenalty;
+    noPenalty.submission.fieldYieldLoyaltyPenalty = 0;
+    CoreFacts guard = bandit;
+    guard.archetype = Archetype_Military;
+    CHECK(DecideFieldYield(guard, extra, noPenalty).chancePercent == base);
+}
+
 void GrudgeAndSurrenderAreFixedAnswers()
 {
     const char* name = "yield: the grudge is the one honest no, a surrender joins";
@@ -530,7 +596,7 @@ void SomeoneInAnotherCageIsNotYoursToAsk()
 {
     const char* name = "free world: another faction's prisoner is not yours to talk to";
     FreeExtra extra = Free(0.0f);
-    extra.inAnyCage = true;
+    extra.access.inAnyCage = true;
     const Verdict v = DecideFreeWorld(Core(), extra, kConfig);
     CHECK(!v.willJoin);
     CHECK(v.currency == Currency_None);
@@ -541,7 +607,7 @@ void PesteringIsRefusedBeforeAnythingElse()
 {
     const char* name = "free world: pestered once too often, they will not hear you out";
     FreeExtra extra = Free(90.0f);
-    extra.ignoringPlayer = true;
+    extra.access.ignoringPlayer = true;
     const Verdict v = DecideFreeWorld(Core(), extra, kConfig);
     CHECK(v.currency == Currency_Refused);
     CHECK(v.reasonKey == Reason_Insistence);
@@ -1043,6 +1109,9 @@ void RunRouteDecisionsTests()
     FieldYieldRollsAtTheBeatingChance();
     FieldYieldNotYetNamesTheWayOut();
     FieldYieldReadsStressAndUniqueButNotTheGrudge();
+    FieldYieldRefusesSomeoneInAnotherCage();
+    FieldYieldRefusesUnderThePesteringLockout();
+    FieldYieldLoyaltyIsAPenaltyNotASkip();
     GrudgeAndSurrenderAreFixedAnswers();
     AnOwnedAnimalIsOnlyRefusedInTheOpen();
     AFullAnimalFollowsYou();

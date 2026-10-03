@@ -304,6 +304,7 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "submissionHonourableResolve", &c.submission.honourableResolve);
     AddInt(f, "submissionDefeatsToBreak", &c.submission.defeatsToBreak);
     AddInt(f, "submissionFieldYieldBonus", &c.submission.fieldYieldBonus);
+    AddInt(f, "submissionFieldYieldLoyaltyPenalty", &c.submission.fieldYieldLoyaltyPenalty);
     AddFloat(f, "submissionStressFromHunger", &c.submission.stressFromHunger);
     AddFloat(f, "submissionStressFromWounds", &c.submission.stressFromWounds);
     AddFloat(f, "submissionStressFromExhaustion", &c.submission.stressFromExhaustion);
@@ -432,6 +433,7 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.prices.shadowFamilyWeight, 0.0f, 10.0f);
     ClampFloat(&g_config.chance.relationWeight, 0.0f, 2.0f);
     ClampInt(&g_config.chance.alliedBonus, 0, 100);
+    ClampInt(&g_config.submission.fieldYieldLoyaltyPenalty, 0, 100);
     for (int i = 0; i < Temperament_Count; ++i)
     {
         ClampInt(&g_config.chance.personality[i], -100, 100);

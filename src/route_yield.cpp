@@ -23,9 +23,19 @@ Verdict DecideGrudgeRefusal(const CoreFacts& core)
 // Being knocked out is not a bar here -- it is the evidence. They lost to you,
 // repeatedly, and the wounds are still on them. The offer is made when they come
 // round, which is exactly how surrender reads in fiction.
+//
+// It speaks before the free-world route, so it asks the same access question
+// first: another faction's prisoner and someone who has stopped listening are
+// not the player's to talk to, beaten or not. Loyalty to a standing organisation
+// does not bar the route -- a beating is the one argument such a person hears --
+// but it weighs on the roll (fieldYieldLoyaltyPenalty).
 Verdict DecideFieldYield(const CoreFacts& core, const YieldExtra& extra, const Config& config)
 {
     Verdict v = BaseVerdict(core);
+    if (DecideAccessRefusal(core, extra.access, &v))
+    {
+        return v;
+    }
 
     ChanceInputs in;
     in.npcLevel     = core.npcLevel;
@@ -37,7 +47,9 @@ Verdict DecideFieldYield(const CoreFacts& core, const YieldExtra& extra, const C
     in.stress       = StressFromState(core.hunger, core.worstDamage, core.restedState,
                                       config.submission);
     in.unique       = core.unique;
-    in.situation    = config.submission.fieldYieldBonus;
+    in.situation    = config.submission.fieldYieldBonus -
+                      (ServesStandingOrganisation(core.archetype)
+                           ? config.submission.fieldYieldLoyaltyPenalty : 0);
 
     const int chance = JoinChance(in, config.chance, config.submission);
     v.rolled = true;

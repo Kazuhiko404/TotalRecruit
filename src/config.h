@@ -248,6 +248,10 @@ struct Submission
     // What a field yield argues on its own. Lower than the cage, because a cage
     // is a sustained condition and a beating in the open is a single moment.
     int fieldYieldBonus;
+    // What loyalty to a standing organisation (military, law enforcement) takes
+    // off the field-yield roll. A penalty, not a refusal: in the open world they
+    // cannot be bought, but being beaten is the one argument they still hear.
+    int fieldYieldLoyaltyPenalty;
     // The stress bar: how much each kind of hardship contributes, and how much
     // the whole bar can argue for. Derived from present state, so it falls
     // again when the player feeds or treats them -- keeping someone hungry is
@@ -271,6 +275,7 @@ struct Submission
           honourableResolve(1.8f),
           defeatsToBreak(2),
           fieldYieldBonus(10),
+          fieldYieldLoyaltyPenalty(25),
           stressFromHunger(0.5f),
           stressFromWounds(0.35f),
           stressFromExhaustion(0.15f),

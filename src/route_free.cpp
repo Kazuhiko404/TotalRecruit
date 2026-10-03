@@ -16,6 +16,33 @@ bool IsFriendly(const RelationFact& relation, const Config& config)
 }
 } // namespace
 
+bool DecideAccessRefusal(const CoreFacts& core, const AccessFact& access, Verdict* out)
+{
+    if (access.inAnyCage)
+    {
+        Verdict v = BaseVerdict(core);
+        v.reasonKey = Reason_InOthersCage;
+        *out = v;
+        return true;
+    }
+
+    // Insistence check: the player has pestered them once too often.
+    if (access.ignoringPlayer)
+    {
+        Verdict v = BaseVerdict(core);
+        v.currency = Currency_Refused;
+        v.reasonKey = Reason_Insistence;
+        *out = v;
+        return true;
+    }
+    return false;
+}
+
+bool ServesStandingOrganisation(Archetype archetype)
+{
+    return archetype == Archetype_Military || archetype == Archetype_LawEnforcement;
+}
+
 bool FreeWorldMayRoll(const CoreFacts& core, const RelationFact& relation, const Config& config)
 {
     return !core.animal && IsFriendly(relation, config);
@@ -26,17 +53,9 @@ Verdict DecideFreeWorld(const CoreFacts& core, const FreeExtra& extra, const Con
 {
     Verdict v = BaseVerdict(core);
 
-    if (extra.inAnyCage)
+    // Another cage, or pestered once too often (shared with field-yield).
+    if (DecideAccessRefusal(core, extra.access, &v))
     {
-        v.reasonKey = Reason_InOthersCage;
-        return v;
-    }
-
-    // Insistence check: the player has pestered them once too often.
-    if (extra.ignoringPlayer)
-    {
-        v.currency = Currency_Refused;
-        v.reasonKey = Reason_Insistence;
         return v;
     }
 
@@ -132,7 +151,7 @@ Verdict DecideFreeWorld(const CoreFacts& core, const FreeExtra& extra, const Con
     // Nobody who serves a standing organisation can be bought off in the open. A
     // reason is only worth showing if it names the way out; two exist here, so both
     // are offered rather than only the one the mod happens to prefer.
-    if (core.archetype == Archetype_Military || core.archetype == Archetype_LawEnforcement)
+    if (ServesStandingOrganisation(core.archetype))
     {
         v.currency = Currency_Refused;
         v.reasonKey = Reason_MilitaryLoyalty;

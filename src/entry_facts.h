@@ -131,24 +131,33 @@ struct RescueExtra
     RollFact roll;
 };
 
-struct YieldExtra
-{
-    RollFact roll;
-};
-
-struct FreeExtra
+// Whether the NPC can be asked anything in the open at all. Read by both routes
+// that talk to someone outside the player's cage (field-yield and the free
+// world), and decided once (DecideAccessRefusal, route_decisions.h).
+struct AccessFact
 {
     // In somebody else's cage, shackled or carried off.
     bool inAnyCage;
     // Pestered once too often.
     bool ignoringPlayer;
+
+    AccessFact() : inAnyCage(false), ignoringPlayer(false) {}
+};
+
+struct YieldExtra
+{
+    AccessFact access;
+    RollFact roll;
+};
+
+struct FreeExtra
+{
+    AccessFact access;
     RelationFact relation;
     RollFact roll;
     PurseFact purse;
     PriceInputs price;
     AnimalExtra animal;
-
-    FreeExtra() : inAnyCage(false), ignoringPlayer(false) {}
 };
 
 struct CageExtra

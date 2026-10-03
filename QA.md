@@ -326,7 +326,7 @@ la ruta que contestó primero (`field-yield`, `unconscious`, `grudge-refusal`,
 | F3 | Un prisionero **tuyo** con 2 o más derrotas, sano y alimentado, con `easyHoursCaged` > 0 | Entra por el atajo del modo fácil, no por *"todavía no se quiebra"* | `[route] easy-healthy` |
 | F4 | Un prisionero tuyo con 2 o más derrotas, hambriento o herido, con `easyHoursCaged` en 0 | Llega a los fallbacks de la jaula: cuidados, precio en cats, o intimidación; **no** el cartel de sumisión del campo | `[route] cage` y una línea `[chance]` con `defeats=` > 0 |
 | F5 | Un NPC **libre** vencido 2 veces | Sigue cediendo (es la ruta del campo) | `[route] field-yield` |
-| F6 | Vencer a alguien 2 veces, guardar, **salir al escritorio**, volver y hablarle fuera de la jaula | Sigue en la ruta del campo: el progreso sobrevivió | `[route] field-yield`; tras una derrota más, `floor+session=2` o más |
+| F6 | Vencer a alguien 2 veces, guardar, **salir al escritorio**, volver y hablarle fuera de la jaula | Sigue en la ruta del campo: el progreso sobrevivió | `[route] field-yield`; tras una derrota más, `count 3` |
 | F7 | Un NPC pide piedad (perdió un miembro o sangre < 25%). Apretar **ACEPTAR** | **Se une gratis**, también un honorable o un valiente. Nunca un precio en cats ni *"su honor le impide aceptar sobornos"* | `Accepted the plea of <nombre>: joined without a price.` y **ningún** `pagaste` |
 | F8 | Mismo caso, apretar **IGNORAR** (solo si puede comprar su vida) | Se va; si llevaba cats, te los deja | `Tribute of N cats from <nombre>` |
 
@@ -539,3 +539,15 @@ Con `"probeOnClick": true`. El conteo vive en el save del personaje y un noqueo 
 | K5 | Un guardia que nunca venciste (ni en esta partida ni antes) | `defeats=0`; nunca `field-yield` | sin `defeated by the player` para el |
 | K6 | Golpearlo (`GOLPEARLO`) en tu jaula | Cuenta una; el enfriamiento corre | `credited to the player explicitly (beating)` o un solo `defeated by the player` |
 | K7 | Que otro NPC noquee a alguien y hacerle clic derecho mientras esta en el suelo | No cuenta | `[defeat-skip] ...: lastGuyWhoDefeatedMe is not yours` |
+
+### 12.14 Rendirse en el campo: jaula ajena, insistencia y lealtad (recruit-gating T2)
+
+`field-yield` ya no se salta las preguntas del mundo libre. Con `"probeOnClick": true`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| Y1 | Vencer 2 veces a un prisionero en la jaula de **otra** faccion y hablarle | "esta en la jaula de otro"; no se une | `[route] field-yield` y luego `Refused ...: está en la jaula de otro` |
+| Y2 | Vencer 2 veces a un NPC libre, insistirle hasta que te ignore, hablarle de nuevo | "esta harto de tu insistencia"; no tira el dado | `[route] field-yield` y luego `Refused ...: está harto de tu insistencia` |
+| Y3 | Vencer 2 veces a un guardia o soldado (no a un bandido) | Tira el dado con 25 menos que un bandido igual; puede unirse | `chance=` 25 por debajo del bandido |
+| Y4 | Hub: `Sumision: lealtad al rendirse` en 0 y repetir Y3 | La misma chance que el bandido | |
+| Y5 | `config.json` con `"submissionFieldYieldLoyaltyPenalty": 500` | Se lee como 100 (tope) | |

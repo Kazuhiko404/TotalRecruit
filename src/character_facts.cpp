@@ -517,10 +517,25 @@ RescueExtra GatherRescueExtra(Character* character, GatherMode mode)
     return extra;
 }
 
+// Whether they can be asked anything in the open: another faction's cage, the
+// pestering lockout. Stops at the first that answers.
+static AccessFact GatherAccess(Character* character)
+{
+    AccessFact access;
+    SafeInPrison(character, &access.inAnyCage);
+    if (!access.inAnyCage)
+    {
+        access.ignoringPlayer = IsIgnoringPlayer(character);
+    }
+    return access;
+}
+
 YieldExtra GatherYieldExtra(Character* character, GatherMode mode)
 {
     YieldExtra extra;
-    if (mode == Gather_Decide)
+    extra.access = GatherAccess(character);
+    // No roll to seed when the access question already answered.
+    if (mode == Gather_Decide && !extra.access.inAnyCage && !extra.access.ignoringPlayer)
     {
         extra.roll = MintRollKey(character);
     }
@@ -535,14 +550,8 @@ FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core, GatherMod
     const Config& config = GetConfig();
     FreeExtra extra;
 
-    SafeInPrison(character, &extra.inAnyCage);
-    if (extra.inAnyCage)
-    {
-        return extra;
-    }
-
-    extra.ignoringPlayer = IsIgnoringPlayer(character);
-    if (extra.ignoringPlayer)
+    extra.access = GatherAccess(character);
+    if (extra.access.inAnyCage || extra.access.ignoringPlayer)
     {
         return extra;
     }

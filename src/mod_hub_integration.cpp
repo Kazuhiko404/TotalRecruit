@@ -264,6 +264,7 @@ static bool DoRegisterModHub()
 
     regInt(api, mod, "sub_defeats_to_break", "Sumision: derrotas para quebrar", "Cuantas veces hay que vencerlo (sin jaula) antes de que ceda", 1, 10, 1, &c.submission.defeatsToBreak);
     regInt(api, mod, "sub_field_yield_bonus", "Sumision: peso de rendirse", "Cuanto pesa haberse rendido en el campo", 0, 60, 5, &c.submission.fieldYieldBonus);
+    regInt(api, mod, "sub_field_yield_loyalty", "Sumision: lealtad al rendirse", "Cuanto le resta a rendirse en el campo ser militar o de la ley (no lo impide)", 0, 100, 5, &c.submission.fieldYieldLoyaltyPenalty);
     regFloat(api, mod, "sub_stress_hunger", "Estres: peso del hambre", "Cuanto pesa el hambre en quebrarlo", 0.0f, 1.0f, 0.05f, 2, &c.submission.stressFromHunger);
     regFloat(api, mod, "sub_stress_wounds", "Estres: peso de las heridas", "Cuanto pesan las heridas sin curar", 0.0f, 1.0f, 0.05f, 2, &c.submission.stressFromWounds);
     regFloat(api, mod, "sub_stress_tired", "Estres: peso del agotamiento", "Cuanto pesa no dejarlo descansar", 0.0f, 1.0f, 0.05f, 2, &c.submission.stressFromExhaustion);

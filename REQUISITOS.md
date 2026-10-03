@@ -145,6 +145,13 @@ dejarlo tirado. Es el bucle que la nota pide, y encaja con R2.3 y R3.2.
 Cuántas derrotas hacen falta y con qué probabilidad cede depende del
 temperamento. Un cobarde cede antes que un valiente.
 
+*Rendirse en el campo (recruit-gating T2):* la ruta `field-yield` habla antes
+que el mundo libre, así que hace las mismas preguntas de acceso primero: el
+prisionero de otra facción y el que está harto de tu insistencia no son tuyos
+para hablarles, vencidos o no. La lealtad militar o de la ley no cierra la ruta
+(una paliza es el único argumento que escuchan) pero pesa en la tirada:
+`submissionFieldYieldLoyaltyPenalty`, 25 por defecto, 0..100.
+
 **R3.6 — Quién puede comprar su vida.** *(P1, decidido; implementado en T2, `mercy_rules`)*
 
 | Temperamento | Al rogar por su vida |
