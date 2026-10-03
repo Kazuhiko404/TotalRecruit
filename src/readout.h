@@ -24,6 +24,14 @@
 // both sides, so there is no side to step to), and goes when they die. It never takes
 // input (ToolTip layer, no mouse focus).
 //
+// A click elsewhere puts it away (card_dismiss_rules.h): while there is a card, the
+// mouse buttons are edge-read once per frame, and a fresh left or right press that is
+// not on a MyGUI widget and not on the card's NPC (their projected body, worked out
+// only at that press) dismisses it. It stays away for that NPC until the selection
+// changes, the player left-clicks that NPC again, or Hablar pins it; a pinned card
+// beside an open offer window ignores outside clicks. Kenshi keeps the selection on a
+// right-click to walk, so without this the card never went.
+//
 // With probeOnClick on, a line is logged whenever what is drawn changes:
 //   [readout] <name> route=<r> chance=<n> stress=<s> ... [hablar|select]
 // and it states the numbers the card shows, so a screenshot and the log can be

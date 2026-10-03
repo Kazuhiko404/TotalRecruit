@@ -92,18 +92,30 @@ bool SafeCameraState(Mat4* view, Mat4* proj, Vec3* origin)
     TR_CATCH { return false; }
 }
 
-// Game space, the same space the AI and the physics use.
-bool SafeHeadPoint(Character* character, Vec3* out)
+// Game space, the same space the AI and the physics use. `lift` is added to the
+// height: 0 for the feet, kHeadHeightUnits for the point over the head.
+bool SafeLiftedPoint(Character* character, float lift, Vec3* out)
 {
     TR_TRY
     {
         const Ogre::Vector3 p = character->getPosition();
         out->x = p.x;
-        out->y = p.y + kHeadHeightUnits;
+        out->y = p.y + lift;
         out->z = p.z;
         return true;
     }
     TR_CATCH { return false; }
+}
+
+bool SafeHeadPoint(Character* character, Vec3* out)
+{
+    return SafeLiftedPoint(character, kHeadHeightUnits, out);
+}
+
+// A projection whose pixel can be used: on the screen, or just off it.
+bool PixelUsable(ProjectionResult result)
+{
+    return result == Projection_Ok || result == Projection_OffScreen;
 }
 } // namespace
 
@@ -157,6 +169,27 @@ AnchorReading ReadoutAnchorFor(Character* character)
         break;
     }
     return a;
+}
+
+bool ReadoutBodySpanFor(Character* character, BodySpan* out)
+{
+    int viewW = 0;
+    int viewH = 0;
+    Mat4 view;
+    Mat4 proj;
+    Vec3 origin;
+    Vec3 feet;
+    Vec3 head;
+    if (character == NULL || !SafeViewSize(&viewW, &viewH) ||
+        !SafeCameraState(&view, &proj, &origin) ||
+        !SafeLiftedPoint(character, 0.0f, &feet) || !SafeHeadPoint(character, &head))
+    {
+        return false;
+    }
+    return PixelUsable(ProjectToScreen(view, proj, feet, origin, viewW, viewH, &out->footX,
+                                       &out->footY)) &&
+           PixelUsable(ProjectToScreen(view, proj, head, origin, viewW, viewH, &out->headX,
+                                       &out->headY));
 }
 
 const char* AnchorResultWord(AnchorResult result)

@@ -598,3 +598,19 @@ horizonte. Ahora se resta como lo hace el propio motor. Con `"probeOnClick": tru
 | A8 | A7 y apretar `Hablar` | La ventana dice lo que sale del dado; si se une, la tarjeta no lo habia negado | `[chance] ... -> NN%` con el mismo `NN` |
 | A9 | Aliado (reputacion >= 20) en campo abierto, seleccionarlo | `NN%: puede unirse si le hablas` en vez de "Quiza te siga" | `route=free ... line="NN%: ..."` |
 | A10 | Cualquier NPC **libre** (fuera de tu jaula) en cualquier ruta | Ninguna linea dice "dejalo sin comer" | (buscar `sin comer` en el log: solo para presos en tu jaula) |
+
+### 12.17 La tarjeta se va con un clic en otro lado (fix recruit-gating-and-popup)
+
+Kenshi no limpia la seleccion al caminar con clic derecho, asi que la tarjeta quedaba para siempre. Ahora un clic izquierdo o derecho que no cae en un widget MyGUI ni sobre el NPC la guarda. Con `probeOnClick` el log dice `[readout] <nombre> dismissed: left|right` y `[readout] <nombre> shown again: ...`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| C1 | Clic izquierdo en un NPC reclutable | Aparece la tarjeta sobre su cabeza | `[readout] ... [select]` |
+| C2 | Con la tarjeta a la vista, clic derecho en el suelo para caminar | La tarjeta se va al instante; el personaje camina igual | `[readout] <nombre> dismissed: right` |
+| C3 | Volver a C1 y hacer clic izquierdo en el suelo | La tarjeta se va | `dismissed: left` |
+| C4 | Con la tarjeta guardada, clic izquierdo sobre el mismo NPC (cuerpo, no solo la cabeza) | La tarjeta vuelve, con numeros al dia | `shown again: left` |
+| C5 | Con la tarjeta a la vista, clic en la ventana de oferta, en el Mod Hub o en el boton `Hablar` | La tarjeta **se queda** | (sin `dismissed`) |
+| C6 | Con la tarjeta guardada, seleccionar a otro NPC reclutable | La tarjeta aparece para el nuevo | `shown again: ... (selection)` o un `[readout] ... [select]` nuevo |
+| C7 | Con la tarjeta a la vista, clic derecho sobre el NPC | Se abre el menu (la tarjeta se oculta mientras esta abierto, como antes); al cerrarlo con Esc vuelve | (sin `dismissed`) |
+| C8 | Con la tarjeta guardada, clic derecho en el NPC y `Hablar` | La tarjeta vuelve al lado de la oferta; clics en el mundo con la oferta abierta no la guardan; se va con la oferta | `shown again: ... (hablar)` |
+| C9 | Guardar la tarjeta y cargar un save | Nada queda guardado: el primer NPC que se seleccione muestra su tarjeta | `[identity] load begin ...` |
