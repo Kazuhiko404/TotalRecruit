@@ -34,15 +34,17 @@ CoreFacts Core()
     return f;
 }
 
-// A key whose stable roll at `percent` comes out as asked.
+// A key whose daily roll at `percent` comes out as asked, on day 3 (any day
+// works: the search runs on the same day the route will roll on).
 RollFact KeyRolling(bool joins, int percent)
 {
     RollFact roll;
     roll.haveKey = true;
+    roll.dayIndex = 3;
     for (unsigned int i = 1; i < 100000; ++i)
     {
         roll.key = CharKey(i, 1u);
-        if (RollsToJoin(true, roll.key, percent) == joins)
+        if (RollsToJoin(true, roll.key, roll.dayIndex, percent) == joins)
         {
             return roll;
         }

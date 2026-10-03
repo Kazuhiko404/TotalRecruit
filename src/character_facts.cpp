@@ -316,11 +316,15 @@ PurseFact ReadPurse()
 
 // The key a roll is seeded from. Without an identity there is no stable answer to
 // give, and inventing one that changes per call is worse than refusing, so a
-// character whose key cannot be read simply cannot pass the roll.
+// character whose key cannot be read simply cannot pass the roll. The same goes
+// for the day: the roll is seeded by (key, day), and without the game clock it
+// has no stable seed either.
 RollFact MintRollKey(Character* character)
 {
     RollFact fact;
-    fact.haveKey = SafeCharKey(character, &fact.key);
+    double nowHours = 0.0;
+    fact.haveKey = SafeCharKey(character, &fact.key) && SafeGameHours(&nowHours);
+    fact.dayIndex = DayIndexFromHours(nowHours);
     return fact;
 }
 

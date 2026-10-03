@@ -97,8 +97,11 @@ struct RollFact
 {
     bool haveKey;
     CharKey key;
+    // The in-game day the roll is drawn on (DayIndexFromHours of the game clock).
+    // The roll holds for the day and is drawn afresh the next.
+    int dayIndex;
 
-    RollFact() : haveKey(false), key() {}
+    RollFact() : haveKey(false), key(), dayIndex(0) {}
 };
 
 // What the animal route needs beyond the core.

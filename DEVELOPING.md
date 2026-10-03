@@ -136,7 +136,7 @@ qué existe — leelo antes que el `.cpp`.
 | `engine_reads.cpp/.h` | Las lecturas `Safe*` compartidas (líder, facción, reloj de juego, memoria del motor, jaula, nombre). **Si necesitás una lectura que ya existe en otro archivo, va acá, no una copia.** |
 | `hold_tracking.cpp/.h`, `insistence.cpp/.h`, `rescue_memory.cpp/.h`, `pacify.cpp/.h` | El reloj de encierro, la insistencia (R2.4), la deuda del rescate y la pacificación: estado por-sesión o memoria del motor, cada uno en su archivo. |
 | `route_rules.cpp/.h` | **Puro.** Qué ruta contesta primero (`ChooseEntryRoute`, sobre los hechos de `MakeRouteFacts`). El orden de precedencia vive solo acá. |
-| `chance_rules.cpp/.h` | **Puro.** El motor de chance (`JoinChance`, `ChanceFrom*`, el roll estable). |
+| `chance_rules.cpp/.h` | **Puro.** El motor de chance (`JoinChance`, `ChanceFrom*`, el roll estable). La tirada del veredicto es diaria: `RollsToJoin(haveKey, key, dayIndex, pct)` = `DailyRoll(key, dayIndex, kJoinRollSalt, pct)`; `DayIndexFromHours` = `floor(horas/24)`. El día lo pone `MintRollKey` (`character_facts.cpp`) desde `SafeGameHours`, el mismo reloj que el de encierro, en `RollFact.dayIndex`. Otra tirada del mismo día usa otra sal (`kHaggleRollSalt`). |
 | `price_rules.cpp/.h` | **Puro.** La curva de precio (calibrada a precios tipo vanilla: nivel 13 con nombre y talento ~2.500 cats), los multiplicadores (talento, personalidad, facción), la prima conjunta talento x único x carácter con tope `premiumMaxMultiplier` (`PremiumMultiplier`) y el precio final: redondeo, mínimo y tope (`FinalPriceInCats`). |
 | `money_rules.cpp/.h` | **Puro.** Cobrar y mover cats entre bolsas (`ChargePrice`, `TransferCats`): todo o nada, sin acuñar ni perder cats si un paso falla. |
 | `cats_purse.cpp/.h` | La bolsa respaldada por el motor (`CharacterPurse`): el único lugar que conoce `getMoney` / `takeMoney` / `Ownerships::addMoney`. |
@@ -528,8 +528,9 @@ Where a rule lives decides how it is tested:
 - What a route decides (`route_*.cpp`) takes `CoreFacts` and a per-route extra from
   `entry_facts.h` plus the `Config`, and returns a `Verdict` whose reason is a
   `ReasonKey`. Test it in `route_decisions_tests.cpp` with plain structs. A roll is
-  seeded from the character, so a test searches for a key that rolls the way the case
-  needs (`KeyRolling`) instead of depending on the hash.
+  seeded from the character and the in-game day (`RollFact.dayIndex`), so a test
+  searches for a key that rolls the way the case needs on a fixed day (`KeyRolling`)
+  instead of depending on the hash.
 - What the engine says (`character_facts.cpp`, `engine_reads.cpp`) is not tested; it is
   `QA.md`. Keep `Gather*` free of decisions: if it needs an `if` that is a game rule,
   the rule belongs in a `route_*.cpp` and the gather only reads the extra input.

@@ -57,7 +57,7 @@ Verdict DecideFieldYield(const CoreFacts& core, const YieldExtra& extra, const C
     v.chancePercent = chance;
 
     v.currency = Currency_Submission;
-    if (RollsToJoin(extra.roll.haveKey, extra.roll.key, chance))
+    if (RollsToJoin(extra.roll.haveKey, extra.roll.key, extra.roll.dayIndex, chance))
     {
         v.willJoin = true;
         v.reasonKey = Reason_FieldYieldJoins;

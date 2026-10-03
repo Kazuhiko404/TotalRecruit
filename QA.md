@@ -87,6 +87,10 @@ Todo esto se lee de una sola línea:
 **C7 es el bug que arreglé esta ronda.** Antes cada recarga tiraba el dado de
 nuevo, así que un NPC de 17% era cuestión de insistir con F9.
 
+| # | Qué hacer | Esperado | Falla si |
+|---|---|---|---|
+| C8 | Un NPC que dijo "todavía no" (chance entre 30% y 70%): esperar a que pase la medianoche del juego (o dormir/acelerar) y volver a hablarle; repetir algunos días | Dentro del mismo día el veredicto no cambia (C6); en algún día siguiente puede decir **que sí**. El log muestra la misma `-> N%` | Dice que no todos los días para siempre, o cambia dentro del mismo día |
+
 ---
 
 ## 3. Sumisión (R3.1 a R3.5)

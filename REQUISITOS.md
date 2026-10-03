@@ -24,7 +24,10 @@ Clean code y SOLID: funciones compactas, reutilizables, fáciles de testear.
 
 **R0.3 — Nada se decide dos veces.** Un mismo NPC consultado dos veces seguidas
 da el mismo resultado. Sin dados por click: el jugador no debe poder insistir
-hasta que salga bien.
+hasta que salga bien. La tirada se siembra con el NPC **y el día de juego**
+(`floor(horas de juego / 24)`): dentro del mismo día no cambia por más clics o
+recargas, y al día siguiente se vuelve a sortear. "Volvé mañana" significa algo,
+y un 37% es un 37% a lo largo del tiempo, no un sí o un no para siempre.
 
 **R0.4 — Todo número es configurable.** Sin excepciones nuevas. Preferentemente
 en el panel del hub, porque ahí el cambio es inmediato; el archivo de config

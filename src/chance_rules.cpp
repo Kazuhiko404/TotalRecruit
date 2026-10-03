@@ -1,5 +1,7 @@
 #include "chance_rules.h"
 
+#include <cmath>
+
 namespace totalrecruit
 {
 namespace
@@ -177,6 +179,17 @@ bool StableRoll(unsigned int index, unsigned int serial, int percent)
 
 namespace
 {
+// Murmur3's 32-bit finaliser: every input bit reaches every output bit.
+unsigned int Fmix32(unsigned int h)
+{
+    h ^= h >> 16;
+    h *= 0x85ebca6bu;
+    h ^= h >> 13;
+    h *= 0xc2b2ae35u;
+    h ^= h >> 16;
+    return h;
+}
+
 // FNV-1a over the id's bytes, then Murmur3's finaliser so the low bits (the
 // ones "% 100" reads) depend on every byte: ids that differ in one character
 // must not land in neighbouring buckets.
@@ -188,21 +201,48 @@ unsigned int HashId(const std::string& id)
         h ^= (unsigned char)id[i];
         h *= 16777619u;
     }
-    h ^= h >> 16;
-    h *= 0x85ebca6bu;
-    h ^= h >> 13;
-    h *= 0xc2b2ae35u;
-    h ^= h >> 16;
-    return h;
+    return Fmix32(h);
+}
+
+// The key's own hash, before any day or salt: the id when there is one, the
+// handle otherwise.
+unsigned int HashKey(const CharKey& key)
+{
+    if (key.HasId())
+    {
+        return HashId(key.id);
+    }
+    return Fmix32((key.index * 2654435761u) ^ (key.serial * 40503u));
 }
 } // namespace
 
-bool RollsToJoin(bool haveKey, const CharKey& key, int percent)
+int DayIndexFromHours(double gameHours)
+{
+    return (int)std::floor(gameHours / 24.0);
+}
+
+// The day and the salt go through their own avalanche before they meet the key,
+// and the result through another, so "day + 1" flips about half the bits of the
+// seed instead of nudging the bucket by one.
+unsigned int DailySeed(const CharKey& key, int dayIndex, unsigned int salt)
+{
+    const unsigned int day = Fmix32((unsigned int)dayIndex * 0x9E3779B9u ^ salt);
+    return Fmix32(HashKey(key) ^ day);
+}
+
+bool DailyRoll(const CharKey& key, int dayIndex, unsigned int salt, int percent)
+{
+    if (percent >= 100) return true;
+    if (percent <= 0)   return false;
+    return (int)(DailySeed(key, dayIndex, salt) % 100u) < percent;
+}
+
+bool RollsToJoin(bool haveKey, const CharKey& key, int dayIndex, int percent)
 {
     if (percent >= 100) return true;
     if (percent <= 0)   return false;
     if (!haveKey)       return false;
-    return StableRoll(key, percent);
+    return DailyRoll(key, dayIndex, kJoinRollSalt, percent);
 }
 
 bool StableRoll(const CharKey& key, int percent)

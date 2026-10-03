@@ -173,7 +173,7 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
         v.chanceInputs = in;
         v.chancePercent = chance;
 
-        if (RollsToJoin(extra.roll.haveKey, extra.roll.key, chance))
+        if (RollsToJoin(extra.roll.haveKey, extra.roll.key, extra.roll.dayIndex, chance))
         {
             v.willJoin = true;
             v.currency = Currency_Submission;

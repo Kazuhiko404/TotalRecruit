@@ -103,16 +103,39 @@ int JoinChance(const ChanceInputs& in, const Chance& chance, const Submission& s
 // form below is the one the mod rolls with.
 bool StableRoll(unsigned int index, unsigned int serial, int percent);
 
+// The same roll seeded from a CharKey, for a whole lifetime. A key that carries a
+// persisted id is seeded from the id, so an NPC keeps their luck across a game
+// relaunch; a handle-only key (the fallback) is seeded exactly as above. The
+// verdict no longer rolls with this: it rolls once per in-game day (DailyRoll).
+bool StableRoll(const CharKey& key, int percent);
+
+// Whole in-game days since the clock started: floor(gameHours / 24). The day is
+// what a daily roll is re-seeded by, so "come back tomorrow" means something.
+int DayIndexFromHours(double gameHours);
+
+// Salts that keep two daily draws about the same NPC on the same day apart: the
+// join roll and the haggle roll must not be the same coin.
+const unsigned int kJoinRollSalt   = 0x4A4F494Eu;   // "JOIN"
+const unsigned int kHaggleRollSalt = 0x48414747u;   // "HAGG"
+
+// The 32-bit seed of one daily draw: the key's own hash, mixed with the day and
+// the salt through a full avalanche, so consecutive days (and neighbouring ids)
+// land in unrelated buckets rather than drifting by one.
+unsigned int DailySeed(const CharKey& key, int dayIndex, unsigned int salt);
+
+// A draw that holds for the whole of one in-game day and is drawn afresh the
+// next: DailySeed % 100 < percent. 100 and above always passes, 0 and below never
+// does. Monotonic in the percent within a day.
+bool DailyRoll(const CharKey& key, int dayIndex, unsigned int salt, int percent);
+
 // A chance the player cannot re-roll by clicking. PLAN.md settled that this mod
 // has no dice, and the reason was save-scumming: a percentage rolled per click is
-// really "click until it works". The roll is seeded from the character, so they
-// see a real chance that stays decided once it is decided. 100 and above always
-// joins, 0 and below never does, and with no key to seed from there is no stable
-// answer to give -- inventing one that changes per call is worse than refusing.
-bool RollsToJoin(bool haveKey, const CharKey& key, int percent);
-
-// The same roll seeded from a CharKey. A key that carries a persisted id is
-// seeded from the id, so an NPC keeps their luck across a game relaunch; a
-// handle-only key (the fallback) is seeded exactly as above.
-bool StableRoll(const CharKey& key, int percent);
+// really "click until it works". The roll is seeded from the character and the
+// in-game day (DailyRoll under kJoinRollSalt), so they see a real chance that
+// stays decided for the rest of the day and is asked again the next one. 100 and
+// above always joins, 0 and below never does, and with no key to seed from there
+// is no stable answer to give -- inventing one that changes per call is worse
+// than refusing. The day arrives as an argument (RollFact.dayIndex, read on the
+// engine side from the same game clock as the hold clock); this stays pure.
+bool RollsToJoin(bool haveKey, const CharKey& key, int dayIndex, int percent);
 } // namespace totalrecruit

@@ -413,10 +413,10 @@ void TheVerdictRollHonoursTheExtremesWithoutAKey()
 {
     const char* name = "verdict roll: 100 always joins, 0 never does, even with no key";
     const CharKey none;
-    CHECK(RollsToJoin(false, none, 100));
-    CHECK(RollsToJoin(false, none, 150));
-    CHECK(!RollsToJoin(false, none, 0));
-    CHECK(!RollsToJoin(false, none, -5));
+    CHECK(RollsToJoin(false, none, 3, 100));
+    CHECK(RollsToJoin(false, none, 3, 150));
+    CHECK(!RollsToJoin(false, none, 3, 0));
+    CHECK(!RollsToJoin(false, none, 3, -5));
 }
 
 void TheVerdictRollRefusesWhenThereIsNoKey()
@@ -425,20 +425,147 @@ void TheVerdictRollRefusesWhenThereIsNoKey()
     const CharKey none;
     for (int percent = 1; percent < 100; ++percent)
     {
-        CHECK(!RollsToJoin(false, none, percent));
+        CHECK(!RollsToJoin(false, none, 3, percent));
     }
 }
 
-void TheVerdictRollIsTheStableRoll()
+void TheVerdictRollIsTheDailyJoinRoll()
 {
-    const char* name = "verdict roll: with a key it is exactly StableRoll, so it never rerolls";
+    const char* name = "verdict roll: with a key it is the daily roll under the join salt";
     for (unsigned int i = 1; i < 200; ++i)
     {
         const CharKey key(i, i * 7u);
         for (int percent = 1; percent < 100; percent += 11)
         {
-            CHECK(RollsToJoin(true, key, percent) == StableRoll(key, percent));
-            CHECK(RollsToJoin(true, key, percent) == RollsToJoin(true, key, percent));
+            CHECK(RollsToJoin(true, key, 12, percent) == DailyRoll(key, 12, kJoinRollSalt, percent));
+            CHECK(RollsToJoin(true, IdKey("v-%d", (int)i), 12, percent) ==
+                  DailyRoll(IdKey("v-%d", (int)i), 12, kJoinRollSalt, percent));
+        }
+    }
+}
+
+// --- haggle-and-daily-roll T1: the roll re-seeds once per in-game day.
+
+void DayIndexIsWholeGameDays()
+{
+    const char* name = "day index: floor(game hours / 24)";
+    CHECK(DayIndexFromHours(0.0) == 0);
+    CHECK(DayIndexFromHours(23.99) == 0);
+    CHECK(DayIndexFromHours(24.0) == 1);
+    CHECK(DayIndexFromHours(47.5) == 1);
+    CHECK(DayIndexFromHours(24.0 * 400 + 3.0) == 400);
+    // An older save or a clock that has not started: never a positive day.
+    CHECK(DayIndexFromHours(-1.0) == -1);
+}
+
+void DailyRollNeverRerollsWithinADay()
+{
+    const char* name = "daily roll: the same id and day always answer the same";
+    for (int i = 0; i < 200; ++i)
+    {
+        for (int day = 0; day < 5; ++day)
+        {
+            const bool first = RollsToJoin(true, IdKey("same-%d", i), day, 37);
+            CHECK(RollsToJoin(true, IdKey("same-%d", i), day, 37) == first);
+            CHECK(RollsToJoin(true, IdKey("same-%d", i), day, 37) == first);
+        }
+    }
+}
+
+void DailyRollHonoursTheExtremes()
+{
+    const char* name = "daily roll: 0% never, 100% always, on every day";
+    for (int day = 0; day < 60; ++day)
+    {
+        CHECK(!RollsToJoin(true, IdKey("edge-%d", day), day, 0));
+        CHECK(RollsToJoin(true, IdKey("edge-%d", day), day, 100));
+        CHECK(!DailyRoll(CharKey(5u, 9u), day, kJoinRollSalt, 0));
+        CHECK(DailyRoll(CharKey(5u, 9u), day, kJoinRollSalt, 100));
+    }
+}
+
+void DailyRollPassesAboutHalfTheDaysAtFifty()
+{
+    const char* name = "daily roll: a 50% NPC passes on roughly half of 30 days";
+    int total = 0;
+    for (int i = 0; i < 100; ++i)
+    {
+        int passes = 0;
+        for (int day = 0; day < 30; ++day)
+        {
+            if (RollsToJoin(true, IdKey("npc-%d-4000-8000", i), day, 50)) ++passes;
+        }
+        // Deterministic for these ids; a fair coin over 30 days lands well inside this.
+        CHECK(passes >= 5 && passes <= 25);
+        total += passes;
+    }
+    CHECK(total > 3000 * 45 / 100 && total < 3000 * 55 / 100);
+}
+
+void DailyRollHandleKeyAlsoReseeds()
+{
+    const char* name = "daily roll: a handle-only key re-seeds per day as well";
+    int passes = 0;
+    for (int day = 0; day < 200; ++day)
+    {
+        if (RollsToJoin(true, CharKey(42u, 7u), day, 50)) ++passes;
+    }
+    CHECK(passes > 200 * 35 / 100 && passes < 200 * 65 / 100);
+}
+
+void DailyRollDifferentIdsAreIndependent()
+{
+    const char* name = "daily roll: different ids on the same day do not roll alike";
+    int agree = 0;
+    const int total = 1000;
+    for (int i = 0; i < total; ++i)
+    {
+        if (RollsToJoin(true, IdKey("npc-%d", i), 9, 50) ==
+            RollsToJoin(true, IdKey("npc-%d", i + 1), 9, 50)) ++agree;
+    }
+    CHECK(agree > total * 40 / 100 && agree < total * 60 / 100);
+}
+
+void DailyRollConsecutiveDaysAreIndependent()
+{
+    const char* name = "daily roll: the same id on consecutive days does not roll alike";
+    int agree = 0;
+    const int total = 1000;
+    for (int i = 0; i < total; ++i)
+    {
+        const CharKey key = IdKey("walker-%d", i);
+        if (RollsToJoin(true, key, i, 50) == RollsToJoin(true, key, i + 1, 50)) ++agree;
+    }
+    CHECK(agree > total * 40 / 100 && agree < total * 60 / 100);
+}
+
+void DailyRollSaltSeparatesDraws()
+{
+    const char* name = "daily roll: a different salt is a different draw on the same day";
+    int agree = 0;
+    const int total = 1000;
+    for (int i = 0; i < total; ++i)
+    {
+        const CharKey key = IdKey("salted-%d", i);
+        if (DailyRoll(key, 4, kJoinRollSalt, 50) == DailyRoll(key, 4, kJoinRollSalt + 1u, 50)) ++agree;
+    }
+    CHECK(agree > total * 40 / 100 && agree < total * 60 / 100);
+}
+
+void DailyRollIsMonotonicInThePercent()
+{
+    const char* name = "daily roll: an id that passes at p on a day passes at every higher p";
+    for (int i = 0; i < 200; ++i)
+    {
+        bool passed = false;
+        for (int p = 1; p < 100; ++p)
+        {
+            const bool ok = RollsToJoin(true, IdKey("mono-%d", i), i % 7, p);
+            if (passed)
+            {
+                CHECK(ok);
+            }
+            passed = passed || ok;
         }
     }
 }
@@ -478,5 +605,14 @@ void RunChanceRulesTests()
     JoinChanceUsesTheConfiguredTerms();
     TheVerdictRollHonoursTheExtremesWithoutAKey();
     TheVerdictRollRefusesWhenThereIsNoKey();
-    TheVerdictRollIsTheStableRoll();
+    TheVerdictRollIsTheDailyJoinRoll();
+    DayIndexIsWholeGameDays();
+    DailyRollNeverRerollsWithinADay();
+    DailyRollHonoursTheExtremes();
+    DailyRollPassesAboutHalfTheDaysAtFifty();
+    DailyRollHandleKeyAlsoReseeds();
+    DailyRollDifferentIdsAreIndependent();
+    DailyRollConsecutiveDaysAreIndependent();
+    DailyRollSaltSeparatesDraws();
+    DailyRollIsMonotonicInThePercent();
 }
