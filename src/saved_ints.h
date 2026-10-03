@@ -12,6 +12,8 @@
 //
 //   total_recruit.player_defeats   defeats.h       knockouts the player dealt
 //   total_recruit.fed_by_player    feeding_ledger  meals the player gave (animals)
+//   total_recruit.reject_cooldown_until
+//                                  submission_tracker  game hour the reject cooldown ends
 //
 // Contract for each row:
 //   saved(id)          the value to write for the character carrying `id`. Always

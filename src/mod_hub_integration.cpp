@@ -278,6 +278,10 @@ static bool DoRegisterModHub()
     regInt(api, mod, "sub_max_stress", "Estres: chance maxima", "Cuanta chance puede sumar la barra entera", 0, 90, 5, &c.submission.maxStressChance);
     regBool(api, mod, "sub_allow_beating", "Sumision: permitir golpear", "Deja castigar al prisionero en tu jaula", &c.submission.allowBeating);
     regFloat(api, mod, "sub_beating_cooldown", "Sumision: horas entre golpizas", "Horas de juego antes de poder volver a golpearlo", 0.5f, 48.0f, 0.5f, 1, &c.submission.beatingCooldownHours);
+    regBool(api, mod, "sub_event_enabled", "Sometido: viene a pedirte unirse", "Un NPC que se rinde camina hasta ti y pide unirse (Aceptar, Perdonar, Rechazar)", &c.submission.eventEnabled);
+    regFloat(api, mod, "sub_event_approach", "Sometido: segundos para llegar", "Cuanto puede tardar en llegar; mientras camina no te ataca", 10.0f, 600.0f, 5.0f, 0, &c.submission.approachSeconds);
+    regFloat(api, mod, "sub_event_forgive", "Sometido: segundos en calma al perdonar", "Cuanto sigue sin atacarte despues de perdonarlo (puedes hablarle)", 0.0f, 1800.0f, 30.0f, 0, &c.submission.forgiveSeconds);
+    regFloat(api, mod, "sub_event_reject_cooldown", "Sometido: horas sin reclutar al rechazar", "Horas de juego en que un NPC rechazado no se une por ninguna via", 0.0f, 720.0f, 6.0f, 0, &c.submission.rejectCooldownHours);
 
     regFloat(api, mod, "animal_nutrition_per_meal", "Animal: comida por racion", "Cuanto llena el estomago una racion (escala 0..3 del motor)", 0.05f, 3.0f, 0.05f, 2, &c.animals.nutritionPerMeal);
     regBool(api, mod, "animal_personality_matters", "Animal: cuenta la personalidad", "Un animal desconfiado pide mas comida que uno timido", &c.animals.personalityMatters);

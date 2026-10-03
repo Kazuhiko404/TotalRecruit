@@ -100,6 +100,11 @@ enum ReasonKey
     // Full or not, it never ate from the player's hand (AnimalExtra::fedByPlayer).
     Reason_TameNotFed,
 
+    // The submission event: the player rejected them (RECHAZAR) and the reject
+    // cooldown still runs. Checked once, before every route (submission_rules.h
+    // DecideRejectCooldown).
+    Reason_RejectCooldown,
+
     // Not a reason: the number of them, for tables indexed by one.
     Reason_Count
 };

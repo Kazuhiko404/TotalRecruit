@@ -1,6 +1,7 @@
 #include "saved_ints.h"
 #include "defeats.h"
 #include "feeding_ledger.h"
+#include "submission_tracker.h"
 
 namespace totalrecruit
 {
@@ -9,6 +10,7 @@ namespace
 const SavedIntField kFields[] = {
     { "total_recruit.player_defeats", &SavedDefeatCount, &RestoreSavedDefeatCount },
     { "total_recruit.fed_by_player",  &SavedPlayerMeals, &RestoreSavedPlayerMeals },
+    { "total_recruit.reject_cooldown_until", &SavedRejectCooldown, &RestoreSavedRejectCooldown },
 };
 } // namespace
 

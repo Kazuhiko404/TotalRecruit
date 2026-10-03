@@ -44,3 +44,5 @@ void RunCardDismissRulesTests();
 void RunFlatSliderTests();
 void RunCageCommandRulesTests();
 void RunFeedingLedgerTests();
+void RunSubmissionRulesTests();
+void RunSubmissionTrackerTests();

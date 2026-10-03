@@ -16,6 +16,8 @@
 #include "route_decisions.h"
 #include "haggle_ledger.h"
 #include "feeding_ledger.h"
+#include "submission_rules.h"
+#include "submission_tracker.h"
 
 #include <kenshi/CharacterAnimal.h>
 #include <kenshi/CharStats.h>
@@ -696,6 +698,26 @@ HaggleTerms ReadHaggleTerms(Character* npc)
         terms.speakerBestStat = best;
     }
     return terms;
+}
+
+bool ReadRejectCooldown(Character* character, double* outHoursLeft)
+{
+    if (outHoursLeft != NULL)
+    {
+        *outHoursLeft = 0.0;
+    }
+    CharKey key;
+    if (character == NULL || !SafeFindCharKey(character, &key))
+    {
+        return false;
+    }
+    const int until = RejectCooldownUntil(key);
+    double now = 0.0;
+    if (until <= 0 || !SafeGameHours(&now))
+    {
+        return false;
+    }
+    return RejectCooldownActive(until, now, outHoursLeft);
 }
 
 // Why a character was judged down or dead, in the log.

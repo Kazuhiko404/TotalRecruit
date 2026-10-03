@@ -285,6 +285,17 @@ struct Submission
     int maxStressChance;
     bool allowBeating;
     float beatingCooldownHours;
+    // The submission event (submission_director.h): a beaten NPC that yields
+    // walks up to the player and asks to join -- Aceptar / Perdonar / Rechazar.
+    // `approachSeconds` is how long the walk-up may take (and how long a hostile
+    // NPC is kept calm for it), in real seconds that stop while paused;
+    // `forgiveSeconds` how long a forgiven (or unanswered) NPC stays calm;
+    // `rejectCooldownHours` how many game hours a rejected NPC refuses every
+    // recruit route (saved with the character).
+    bool eventEnabled;
+    float approachSeconds;
+    float forgiveSeconds;
+    float rejectCooldownHours;
 
     Submission()
         : countDefeats(true),
@@ -303,7 +314,11 @@ struct Submission
           stressFromExhaustion(0.15f),
           maxStressChance(45),
           allowBeating(true),
-          beatingCooldownHours(6.0f)
+          beatingCooldownHours(6.0f),
+          eventEnabled(true),
+          approachSeconds(60.0f),
+          forgiveSeconds(300.0f),
+          rejectCooldownHours(72.0f)
     {
     }
 };

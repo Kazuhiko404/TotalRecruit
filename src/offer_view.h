@@ -56,6 +56,8 @@ struct OfferTexts
     std::string beat;
     std::string ignore;
     std::string decline;
+    // The submission event's third answer: let them go (submission_director.h).
+    std::string forgive;
 
     std::string routeFree;
     std::string routeCaptivity;
@@ -79,6 +81,8 @@ struct OfferTexts
     std::string bodyCare;
     std::string bodyRescue;
     std::string bodyJoins;
+    // The submission event: "{name} se arrodilla y te pide unirse a tu grupo."
+    std::string bodySubmitted;
 
     // The haggle section (popup.haggle.*).
     std::string haggleLabel;    // "OFERTA"
@@ -224,4 +228,10 @@ OfferView BuildOfferView(const OfferInput& in, const OfferTexts& texts);
 // take them / let them go (only when `canIgnore`) / refuse.
 OfferView BuildMercyOfferView(const std::string& name, const std::string& pleaLine,
                               bool canIgnore, const OfferTexts& texts);
+
+// A beaten NPC that walked up to ask (submission_director.cpp): the Sometido
+// tag, the kneeling line as the body, a free join, and three answers --
+// ACEPTAR (they join), PERDONAR (they go, calm for a while), RECHAZAR (defeats
+// wiped, no recruiting for the cooldown, hostile again).
+OfferView BuildSubmissionOfferView(const std::string& name, const OfferTexts& texts);
 } // namespace totalrecruit

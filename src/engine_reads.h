@@ -31,6 +31,14 @@ bool SafePlayerLeader(Character** out);
 // game is paused).
 bool SafeGameHours(double* out);
 
+// Whether the game is paused (GameWorld::isPaused). The submission event's clock
+// stops while it is.
+bool SafeIsPaused(bool* out);
+
+// Every character the player controls (PlayerInterface::playerCharacters), up to
+// `max`, into `out`. Returns how many were written; 0 before there is a player.
+int SafePlayerCharacters(Character** out, int max);
+
 bool SafeIsPlayerCharacter(Character* character, bool* out);
 bool SafeIsAnimal(Character* character, bool* out);
 bool SafeIsDead(Character* character, bool* out);

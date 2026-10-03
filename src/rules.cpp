@@ -8,6 +8,7 @@
 #include "route_rules.h"
 #include "route_decisions.h"
 #include "reason_text.h"
+#include "submission_rules.h"
 
 namespace totalrecruit
 {
@@ -125,6 +126,15 @@ Verdict Run(Character* character, GatherMode mode, EvaluationDetail* detail)
     }
 
     const Config& config = GetConfig();
+
+    // Rejected after asking to join (the submission event's RECHAZAR): no route
+    // answers until the cooldown runs out, the cheat preset included. Checked
+    // once, here, before the route is chosen (submission_rules.h).
+    Verdict rejected;
+    if (DecideRejectCooldown(ReadRejectCooldown(character, NULL), &rejected))
+    {
+        return Finish(rejected, character, NULL, mode);
+    }
 
     // Cheat keeps the gesture and drops the price: it never reads who they are.
     if (config.preset == Preset_Cheat)

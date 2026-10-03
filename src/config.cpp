@@ -316,6 +316,10 @@ std::vector<Field> ConfigFields(Config& c)
     AddInt(f, "submissionMaxStressChance", &c.submission.maxStressChance);
     AddBool(f, "submissionAllowBeating", &c.submission.allowBeating);
     AddFloat(f, "submissionBeatingCooldownHours", &c.submission.beatingCooldownHours);
+    AddBool(f, "submissionEventEnabled", &c.submission.eventEnabled);
+    AddFloat(f, "submissionApproachSeconds", &c.submission.approachSeconds);
+    AddFloat(f, "submissionForgiveSeconds", &c.submission.forgiveSeconds);
+    AddFloat(f, "submissionRejectCooldownHours", &c.submission.rejectCooldownHours);
 
     AddFloat(f, "animalCubMaturity", &c.animals.cubMaturity);
     AddInt(f, "animalWeakLevel", &c.animals.weakLevel);
@@ -444,6 +448,11 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.chance.relationWeight, 0.0f, 2.0f);
     ClampInt(&g_config.chance.alliedBonus, 0, 100);
     ClampInt(&g_config.submission.fieldYieldLoyaltyPenalty, 0, 100);
+    // The submission event: a walk-up needs some seconds to happen at all, and
+    // neither window nor the cooldown may run for a season.
+    ClampFloat(&g_config.submission.approachSeconds, 10.0f, 600.0f);
+    ClampFloat(&g_config.submission.forgiveSeconds, 0.0f, 1800.0f);
+    ClampFloat(&g_config.submission.rejectCooldownHours, 0.0f, 720.0f);
     for (int i = 0; i < Temperament_Count; ++i)
     {
         ClampInt(&g_config.chance.personality[i], -100, 100);

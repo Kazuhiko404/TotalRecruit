@@ -62,6 +62,7 @@ const Row kRows[] = {
     { "readout.line.animal.tame.ready",      "Comio de tu mano: te sigue" },
     { "readout.line.animal.tame.hungry",     "Hambre {food}% / necesita {need}%" },
     { "readout.line.animal.tame.notFed",     "No comio de tu mano: dale comida" },
+    { "readout.line.rejectCooldown",         "No quiere saber nada de ti" },
     { "readout.line.waitCage",               "Faltan {hours} en la jaula" },
     { "readout.line.rollOpen",               "{chance}%: puede unirse si le hablas" },    // kLineRollOpen
     { "readout.line.fieldYield.beatAgain",   "Aun no cede: vencelo otra vez" },          // kLineFieldYieldBeatAgain

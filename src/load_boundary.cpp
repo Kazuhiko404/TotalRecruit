@@ -15,6 +15,8 @@
 #include "haggle_ledger.h"
 #include "cage_commands.h"
 #include "feeding_ledger.h"
+#include "submission_director.h"
+#include "submission_tracker.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4091)
@@ -49,6 +51,9 @@ void ResetSessionState()
 {
     // UI and raw pointers first: they refer to characters the load will free.
     HideOffer();
+    // The NPC of a submission in progress gets its pace and routine back while
+    // it can still be read.
+    ForgetSubmission();
     ForgetOverlayTarget();
     ForgetReadout();
     ForgetCursorTarget();
@@ -62,13 +67,15 @@ void ResetSessionState()
     ResetTalkStates();
     ForgetAllDefeats();
     ForgetAllPlayerMeals();
+    ForgetAllSubmissionMemory();
     SessionHaggleLedger().Clear();
 
     // Last: the ids the keys above were made from.
     CharacterIdentity::AbandonWorldState();
     LogInfo("[identity] load begin: session state cleared (offer window, overlay, readout and cursor targets, "
-            "conversation, cage command watch and credits, mercy, hails, hold clock, insistence, defeats, "
-            "meals from the player, haggle offences, identity registry).");
+            "conversation, cage command watch and credits, submission event, mercy, hails, hold clock, "
+            "insistence, defeats, meals from the player, submission asks and reject cooldowns, haggle "
+            "offences, identity registry).");
 }
 
 bool Install()

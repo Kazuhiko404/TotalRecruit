@@ -159,6 +159,21 @@ var POPUP_STATES = [
     }
   },
   {
+    id: 'submission',
+    title: 'Submitted NPC asks to join',
+    note: 'Sometido, the event (submission_director.cpp): a beaten NPC that yields walks up to the player, calm, and kneels. Free; three answers: ACEPTAR (joins), PERDONAR (runs off and stays calm for <code>submissionForgiveSeconds</code>, you can still talk to it), RECHAZAR (defeats wiped, no recruiting for <code>submissionRejectCooldownHours</code>, hostile again). The X is no answer: calm in place for the same window.',
+    // facts: BuildSubmissionOfferView("Bandido Hambriento")
+    vm: {
+      title: 'Reclutamiento', name: 'Bandido Hambriento', route: 'sometido', routeTag: 'Sometido',
+      body: 'Bandido Hambriento se arrodilla y te pide unirse a tu grupo.',
+      showPrice: true, priceText: 'Gratis', priceFree: true,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: 'PERDONAR', cancel: 'RECHAZAR'
+    }
+  },
+  {
     id: 'rescue',
     title: 'Rescue',
     note: 'Rescate: you saved them and they owe you (<code>Reason_RescueJoins</code>). Free: PRECIO says Gratis in green so the player knows no money moves.',

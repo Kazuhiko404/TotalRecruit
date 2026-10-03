@@ -65,7 +65,8 @@ asked as a bystander and remembered per NPC for 2 s (<code>src/talk_hint_cache.h
 
 <h2 class="sec">5. The recruit popup</h2>
 <p class="lead">Every <i>Hablar</i> outcome opens this one window: a yes with its price, a price the purse cannot meet, a
-refusal and why, a refusal the player can act on, a plea for mercy, a rescue. Nothing ends in a notification any more.
+refusal and why, a refusal the player can act on, a plea for mercy, a rescue, a submitted NPC that walked up to ask.
+Nothing ends in a notification any more.
 It keeps Kenshi's own <code>Kenshi_WindowCX</code> frame on the <code>Info</code> layer (title bar and X, drawn by the
 engine) and paints the mockup's flat art over the client area, the way TotalSparring's duel popup does. Source of truth
 for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_view.cpp</code>.</p>

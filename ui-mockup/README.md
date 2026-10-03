@@ -109,6 +109,16 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     "Noquear" when there are none. Labels are title case like Hablar (`cage.button.*` in `messages.json`). Each
     button arms its own press-and-release gesture.
 
+### Submission event (section 5, "Submitted NPC asks to join")
+
+18. **A beaten NPC asks; the window is the same popup** (user request 2026-10-03: "it should walk up to me
+    automatically and ask to join ... Accept, Forgive, Reject"). Nothing new is drawn: `BuildSubmissionOfferView`
+    fills the recruit popup with the Sometido tag, the kneeling line ("se arrodilla y te pide unirse a tu grupo"),
+    PRECIO Gratis and three buttons in the usual order and styles -- ACEPTAR (amber plate), PERDONAR (amber edge,
+    the extra slot), RECHAZAR (line plate, the cancel slot). No chance row: the roll was already made when the NPC
+    set off. The X is not RECHAZAR: closing without an answer leaves the NPC calm in place for the forgive window.
+    The popup opens only when the NPC has arrived and no other window is up; while one is, the NPC stands and waits.
+
 ## Checking a change
 
 Mockup first, then C++. Measure in Chrome (`getBoundingClientRect`) and copy the px into the constants.

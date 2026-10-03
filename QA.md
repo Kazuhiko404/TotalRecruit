@@ -669,3 +669,26 @@ Un animal se une solo si el jugador le dio de comer al menos una vez **y** su ba
 | F7 | Alimentar un animal, guardar, salir del juego, volver y cargar | Sigue contando como alimentado: si esta lleno se une | `first character id read back from the save` |
 | F8 | Cargar un save **anterior** a la comida | Vuelve a "todavia no ha comido de tu mano" | — |
 | F9 | Dar de comer a una **persona** presa | Igual que antes (el motor la alimenta); no se registra comida del jugador | `Fed <nombre> ... (engine)` sin `meals from the player` |
+
+### 12.21 El sometido viene a pedirte unirse (cage-animals-submission T3)
+
+Un NPC vencido que se rinde (derrotas >= `submissionDefeatsToBreak` y la tirada del dia pasa, o huye / se desangra tras perder contigo) camina solo hasta el lider del grupo, calmado, y abre la ventana con ACEPTAR / PERDONAR / RECHAZAR. Mockup: `ui-mockup/readout.html` seccion 5, "Submitted NPC asks to join". Port del evento de desafio de TotalSparring. Con `probeOnClick` para ver el resto del log; las lineas `[submission]` salen siempre.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| S1 | Vencer a un NPC **hostil** (bandido) hasta que ceda: noquearlo `submissionDefeatsToBreak` veces y esperar a que se levante, cerca (<40 m) | A los pocos segundos de levantarse dice "Espera... no quiero pelear mas", el registro dice "<nombre> se acerca para hablar contigo" y camina hasta tu lider | `[submission] <nombre> submitted (submission.broken|reason.surrendered), walks up from N m, defeats N; hostile before yes [key id:...]` |
+| S2 | Mirar al NPC mientras camina (hasta 60 s) | **No ataca** a nadie de tu grupo; si alguien de tu grupo lo ataca a mano, a los ~3 s el evento se cancela y vuelve a ser hostil | `approach aborted: combat: ...` solo en el segundo caso |
+| S3 | Al llegar (~3 m) | Se queda quieto mirandote y se abre la ventana: etiqueta Sometido, "<nombre> se arrodilla y te pide unirse a tu grupo.", PRECIO Gratis, botones ACEPTAR / PERDONAR / RECHAZAR | `[submission] <nombre>: arrived: ...` |
+| S4 | ACEPTAR | Se une al grupo; "<nombre>: se une a ti." | `[submission] <nombre>: accepted ...`, `joined the squad` |
+| S5 | (otro NPC) PERDONAR | "Gracias... no lo olvidare"; sale corriendo ~80 m en direccion contraria a ti y se queda tranquilo; durante 5 minutos no ataca y **Hablar** sigue funcionando con el | `forgiven ...`, `calm for 300 s, running off`, `ran off; stays calm` |
+| S6 | Esperar los 5 minutos de S5 | Vuelve a su rutina y a su velocidad normal; si era hostil, vuelve a ser hostil | `forgive window over after 300 s (time up)`, `forgive window over (from forgiven, hostile before yes)` |
+| S7 | (otro NPC) RECHAZAR | Dice "Entonces nos volveremos a ver" y vuelve a ser hostil al instante; "<nombre>: lo rechazaste. No querra saber nada de ti en 72 h." | `rejected ...`, `[defeat] <nombre>: defeats cleared`, `reject cooldown until game hour N (72 h)` |
+| S8 | Tras S7, Hablar con el (o meterlo en tu jaula y Hablar) | Ventana de rechazo: "No quiere saber nada de ti"; la tarjeta dice lo mismo; tampoco ruega piedad si pierde un miembro | `Context menu: <nombre> -> refuses ... no quiere saber nada de ti` |
+| S9 | Tras S7, guardar, salir, volver a cargar y Hablar con el | Sigue en enfriamiento hasta que pasen las 72 h de juego; despues se puede volver a vencer y a reclutar | `first character id read back from the save` |
+| S10 | Cerrar la ventana de S3 con la X | Ninguna decision: se queda calmado donde esta durante 5 minutos y luego vuelve a lo suyo (como S6, sin correr) | `dismissed ...`, `calm for 300 s, in place` |
+| S11 | Alejarte mas de 120 m mientras camina, o dejar pasar 60 s sin que llegue | Se cancela: vuelve a su rutina y, si era hostil, ataca de nuevo | `approach aborted: too far: ...` / `timeout: ...` |
+| S12 | Pausar el juego mientras camina | El reloj de 60 s se congela; al despausar sigue | — |
+| S13 | Tener la ventana de otro NPC abierta cuando llega | Se queda parado mirandote hasta que cierres la otra ventana; entonces abre la suya (si no pasaron los 60 s) | `arrived, waits for the window to be free` |
+| S14 | Cargar un save mientras camina o con la ventana abierta | Nada queda colgado; el NPC del mundo cargado no recuerda el evento | `load begin: session state cleared (... submission event ... reject cooldowns ...)` |
+| S15 | Vencer al mismo NPC otra vez despues de PERDONAR | Vuelve a acercarse (una vez por paliza, no una vez por sesion) | `submitted (...)` de nuevo |
+| S16 | `submissionEventEnabled` apagado en Mod Hub | Ningun NPC viene; Hablar sigue igual | sin `[submission]` |

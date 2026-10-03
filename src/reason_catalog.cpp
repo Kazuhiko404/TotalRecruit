@@ -69,6 +69,7 @@ const Row kRows[] = {
     { Reason_TameReady,           "animal.tame.ready",                 "comi\xc3\xb3 de tu mano y te sigue", RefusalTone_Default },
     { Reason_TameHungry,          "animal.tame.hungry",                "todav\xc3\xad" "a tiene hambre: le falta {cats}% de barriga", RefusalTone_Default },
     { Reason_TameNotFed,          "animal.tame.notFed",                "todav\xc3\xad" "a no ha comido de tu mano", RefusalTone_Default },
+    { Reason_RejectCooldown,      "reason.rejectCooldown",             "no quiere saber nada de ti", RefusalTone_Grudge },
 };
 
 const int kRowCount = (int)(sizeof(kRows) / sizeof(kRows[0]));

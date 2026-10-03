@@ -5,6 +5,7 @@
 #include "mod_hub_integration.h"
 #include "readout.h"
 #include "cage_commands.h"
+#include "submission_director.h"
 #include "log.h"
 
 #include <kenshi/gui/ForgottenGUI.h>
@@ -19,7 +20,7 @@ void (*g_forgottenGuiUpdate_orig)(ForgottenGUI*) = NULL;
 // the game's GUI update down with it.
 void SafeTick()
 {
-    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); TickCageCommands(); ModHubTick(); }
+    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); TickCageCommands(); SubmissionTick(); ModHubTick(); }
     TR_CATCH { }
 }
 

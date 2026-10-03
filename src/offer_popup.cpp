@@ -7,6 +7,7 @@
 #include "feeding.h"
 #include "log.h"
 #include "mercy.h"
+#include "submission_director.h"
 #include "ui_style.h"
 #include "flat_slider.h"
 #include "haggle_rules.h"
@@ -767,29 +768,82 @@ void Close()
     // Whatever way the window ends -- an answer, the title-bar cross, the HUD
     // hiding it, shutdown -- no plea is on screen any more. A pending plea
     // blocks every later one, so leaving it set meant no one could beg again
-    // until a reload. The handlers below read IsMercyPending BEFORE calling
-    // Close for the same reason.
+    // until a reload. Answer reads the pending kind BEFORE calling Close for
+    // the same reason. A submission's mark goes too: the director reads an
+    // unanswered close as Dismiss.
     ForgetMercy(NULL);
+    ForgetSubmissionOffer();
 }
 
-void OnAccept(MyGUI::Widget* /*sender*/)
+// Who the window is asking about decides what each button means, and it is
+// decided here, once, for every answer: a mercy plea and a submission each have
+// their own three answers; everything else is an ordinary offer.
+enum OfferKind
 {
-    Character* npc = g_subject;
-    const bool plea = IsMercyPending(npc);
-    // OFRECER rides on the same button: below the ask it is one haggle attempt.
-    const bool offering = g_haggleLive && g_view.acceptIsOffer;
-    const int offer = g_view.offerCats;
-    Close();
+    OfferKind_Plain,
+    OfferKind_Mercy,
+    OfferKind_Submission
+};
 
-    if (npc != NULL)
+enum OfferAnswer
+{
+    Answer_Accept,
+    Answer_Extra,
+    Answer_Decline,
+    // The title-bar X. The same as Decline, except for a submission, where it
+    // is no decision at all (submission_director.h).
+    Answer_Close
+};
+
+OfferKind PendingKind(Character* npc)
+{
+    if (IsMercyPending(npc))
     {
-        // A plea for mercy is answered by its own rule, not by the price
-        // evaluation every other offer goes through.
-        if (plea)
-        {
-            AcceptMercy(npc);
-        }
-        else if (offering)
+        return OfferKind_Mercy;
+    }
+    if (IsSubmissionPending(npc))
+    {
+        return OfferKind_Submission;
+    }
+    return OfferKind_Plain;
+}
+
+// A plea for mercy is answered by its own rule, not by the price evaluation
+// every other offer goes through. Refusing it is a real answer: nothing
+// changes, they stay hostile, and the fight goes on. The third button is the
+// one answer that is neither joining nor killing.
+void AnswerMercy(Character* npc, OfferAnswer answer)
+{
+    switch (answer)
+    {
+    case Answer_Accept: AcceptMercy(npc); return;
+    case Answer_Extra:  GrantMercy(npc); return;
+    default:
+        TellPlayer(CharacterName(npc) + ": ignoraste su s\xc3\xbaplica.", false);
+        return;
+    }
+}
+
+void AnswerSubmission(Character* npc, OfferAnswer answer)
+{
+    switch (answer)
+    {
+    case Answer_Accept:  AcceptSubmission(npc); return;
+    case Answer_Extra:   ForgiveSubmission(npc); return;
+    case Answer_Decline: RejectSubmission(npc); return;
+    case Answer_Close:   DismissSubmission(npc); return;
+    }
+}
+
+// OFRECER rides on the accept button: below the ask it is one haggle attempt.
+// The extra button acts on the refusal instead of answering it -- feeding a
+// starving captive, for one -- then reopens so the player sees the new verdict.
+void AnswerPlain(Character* npc, OfferAnswer answer, bool offering, int offer)
+{
+    switch (answer)
+    {
+    case Answer_Accept:
+        if (offering)
         {
             CompleteHaggle(npc, offer);
         }
@@ -797,7 +851,40 @@ void OnAccept(MyGUI::Widget* /*sender*/)
         {
             CompleteOffer(npc, true);
         }
+        return;
+    case Answer_Extra:
+        HelpCaptive(npc);
+        return;
+    default:
+        CompleteOffer(npc, false);
+        return;
     }
+}
+
+// Every button and the X end here: read what is pending, close, then route.
+void Answer(OfferAnswer answer)
+{
+    Character* npc = g_subject;
+    const OfferKind kind = PendingKind(npc);
+    const bool offering = g_haggleLive && g_view.acceptIsOffer;
+    const int offer = g_view.offerCats;
+    Close();
+
+    if (npc == NULL)
+    {
+        return;
+    }
+    switch (kind)
+    {
+    case OfferKind_Mercy:      AnswerMercy(npc, answer); return;
+    case OfferKind_Submission: AnswerSubmission(npc, answer); return;
+    case OfferKind_Plain:      AnswerPlain(npc, answer, offering, offer); return;
+    }
+}
+
+void OnAccept(MyGUI::Widget* /*sender*/)
+{
+    Answer(Answer_Accept);
 }
 
 // MyGUI names the title-bar buttons by their skin; "close" is the cross.
@@ -805,55 +892,18 @@ void OnWindowButton(MyGUI::Window* /*sender*/, const std::string& button)
 {
     if (button == "close")
     {
-        OnDecline(NULL);
+        Answer(Answer_Close);
     }
 }
 
 void OnDecline(MyGUI::Widget* /*sender*/)
 {
-    Character* npc = g_subject;
-    const bool plea = IsMercyPending(npc);
-    Close();
-
-    if (npc != NULL)
-    {
-        // Refusing a plea is a real answer: nothing changes, they stay hostile,
-        // and the fight goes on. It is not the same as the captive decline,
-        // which only reports that they were left where they are.
-        if (plea)
-        {
-            TellPlayer(CharacterName(npc) + ": ignoraste su s\xc3\xbaplica.", false);
-        }
-        else
-        {
-            CompleteOffer(npc, false);
-        }
-    }
+    Answer(Answer_Decline);
 }
 
-// The extra button acts on the refusal instead of answering it -- feeding a
-// starving captive, for one -- then reopens so the player sees the new verdict
-// without having to click through the menu again.
 void OnExtra(MyGUI::Widget* /*sender*/)
 {
-    Character* npc = g_subject;
-    const bool plea = IsMercyPending(npc);
-    Close();
-
-    if (npc != NULL)
-    {
-        // The third button is context: it feeds a starving captive, but for
-        // someone pleading over a lost limb it is the one answer that is
-        // neither joining nor killing.
-        if (plea)
-        {
-            GrantMercy(npc);
-        }
-        else
-        {
-            HelpCaptive(npc);
-        }
-    }
+    Answer(Answer_Extra);
 }
 
 // The window's screen rectangle as drawn now (the player may have dragged it).
@@ -947,8 +997,10 @@ static bool OpenWith(Character* npc, const OfferView& view)
     // Opening a window replaces whatever was on screen, plea included, and the
     // buttons below route on whether a plea is pending. A plea that outlived
     // its window would turn this offer's ACEPTAR into a free join. OfferMercy
-    // marks its plea AFTER this call succeeds, for the same reason.
+    // marks its plea AFTER this call succeeds, for the same reason; so does the
+    // submission director.
     ForgetMercy(NULL);
+    ForgetSubmissionOffer();
 
     if (!Build())
     {

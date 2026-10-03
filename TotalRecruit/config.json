@@ -43,6 +43,11 @@
   "haggleLeverageWeight": 0.5,
   "haggleOffenceMarkup": 0.2,
 
+  "submissionEventEnabled": true,
+  "submissionApproachSeconds": 60.0,
+  "submissionForgiveSeconds": 300.0,
+  "submissionRejectCooldownHours": 72.0,
+
   "dialoguePackage": "",
   "dialogueRescue": "",
   "dialogueCaptive": "",

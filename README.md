@@ -82,6 +82,18 @@ refunded.
 You beat them, and they are bleeding out or running. Rather than be cut down,
 they yield. No cage needed — the fight itself was the argument.
 
+**They come to you.** A beaten NPC that yields (beaten enough times, or
+running from you) walks up on its own, calm — a hostile one stops attacking for
+the walk (`submissionApproachSeconds`, 60 s) — kneels, and asks to join:
+**Aceptar** (they join), **Perdonar** (they run off and stay calm for
+`submissionForgiveSeconds`, 5 minutes, so you can still talk to them; then back
+to what they were) or **Rechazar** (your defeats over them are wiped, no route
+recruits them for `submissionRejectCooldownHours`, 72 game hours, saved with
+them, and they are hostile again). Closing the window with the X is no answer:
+they stay calm where they are for the same 5 minutes. One NPC at a time, once
+per beating. Calm is per character: no faction relation is changed. Turn it off
+with `submissionEventEnabled`.
+
 ### Refusal, with a reason
 
 Someone who watched you kill their friend says no — and you are told so. Every

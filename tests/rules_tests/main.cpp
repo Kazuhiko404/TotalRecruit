@@ -71,6 +71,8 @@ const Suite kSuites[] = {
     { "flat_slider", RunFlatSliderTests },
     { "cage_command_rules", RunCageCommandRulesTests },
     { "feeding_ledger", RunFeedingLedgerTests },
+    { "submission_rules", RunSubmissionRulesTests },
+    { "submission_tracker", RunSubmissionTrackerTests },
 };
 } // namespace
 

@@ -771,6 +771,42 @@
       "todavia cree que puede contigo: demostrale que no"
     ]
   },
+  "_sometido": [
+    "Evento de sometido: un NPC vencido que se rinde camina hasta ti y te pide unirse.",
+    "approach = lo que dice al acercarse; joinedNotice / forgivenNotice / rejectedNotice = la linea del registro.",
+    "{name} = su nombre, {hours} = horas de juego que dura el rechazo."
+  ],
+  "submissionEvent": {
+    "approach": [
+      "{name}: Espera... no quiero pelear mas.",
+      "{name}: Basta. Me rindo, escuchame.",
+      "{name}: Ya entendi. Dejame hablar contigo.",
+      "{name}: No me ataques. Quiero hablar."
+    ],
+    "approachNotice": [
+      "{name} se acerca para hablar contigo."
+    ],
+    "joinedNotice": [
+      "{name}: se une a ti.",
+      "{name}: jura seguirte."
+    ],
+    "forgiven": [
+      "Gracias... no lo olvidare.",
+      "Me voy. No volveras a verme.",
+      "Te debo una."
+    ],
+    "forgivenNotice": [
+      "{name}: lo perdonaste y se aleja."
+    ],
+    "rejected": [
+      "Entonces nos volveremos a ver.",
+      "Te arrepentiras de esto.",
+      "Como quieras. La proxima no me rindo."
+    ],
+    "rejectedNotice": [
+      "{name}: lo rechazaste. No querra saber nada de ti en {hours} h."
+    ]
+  },
   "_razones": [
     "Los motivos que el jugador lee cuando un NPC no se une todavia, o por que si.",
     "{cats} es el precio (o el % de estomago que falta) y {purse} lo que llevas encima.",
@@ -811,6 +847,11 @@
     ],
     "surrendered": [
       "se rinde antes que morir aquí"
+    ],
+    "rejectCooldown": [
+      "no quiere saber nada de ti",
+      "lo rechazaste cuando te pidio unirse: no quiere saber nada de ti",
+      "no olvida que lo echaste: no quiere saber nada de ti"
     ],
     "inOthersCage": [
       "está en la jaula de otro"
@@ -966,6 +1007,7 @@
           "notFed": "No comio de tu mano: dale comida"
         }
       },
+      "rejectCooldown": "No quiere saber nada de ti",
       "waitCage": "Faltan {hours} en la jaula",
       "rollOpen": "{chance}%: puede unirse si le hablas"
     }
@@ -982,7 +1024,8 @@
       "feedMore": "DARLE MAS COMIDA",
       "beat": "GOLPEARLO",
       "ignore": "IGNORAR",
-      "decline": "RECHAZAR"
+      "decline": "RECHAZAR",
+      "forgive": "PERDONAR"
     },
     "info": {
       "price": "PRECIO",
@@ -999,7 +1042,8 @@
       "submission": "{name} ya no tiene voluntad de pelear y desea unirse a tu grupo.",
       "care": "{name} te debe la comida y las curas, y desea unirse a tu grupo.",
       "rescue": "{name} te debe la vida y desea unirse a tu grupo.",
-      "joins": "{name} desea unirse a tu grupo."
+      "joins": "{name} desea unirse a tu grupo.",
+      "submitted": "{name} se arrodilla y te pide unirse a tu grupo."
     },
     "haggle": {
       "_comment": "Regateo (solo precios en cats). {pct} = probabilidad de que acepte la oferta, {cats} = lo que falta para esa oferta.",

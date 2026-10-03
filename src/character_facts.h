@@ -72,6 +72,11 @@ bool SafeSpeakerBestStat(Character* speaker, int* out);
 // id or no clock) means there is no stable seed and so no haggle.
 HaggleTerms ReadHaggleTerms(Character* npc);
 
+// The submission event's reject cooldown (submission_tracker.h): true while it
+// runs for this character, with the hours left in `outHoursLeft` (may be NULL).
+// Read without minting an id: a character never rejected has none to find.
+bool ReadRejectCooldown(Character* character, double* outHoursLeft);
+
 // Why a character was judged out cold, in the log. Written whenever a verdict
 // turns on medical state, because those are the calls that have been wrong before
 // and the headers cannot say which flag lied.

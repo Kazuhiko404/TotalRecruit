@@ -181,6 +181,7 @@ OfferTexts DefaultOfferTexts()
     t.beat = "GOLPEARLO";
     t.ignore = "IGNORAR";
     t.decline = "RECHAZAR";
+    t.forgive = "PERDONAR";
 
     t.routeFree = "Libre";
     t.routeCaptivity = "Cautiverio";
@@ -204,6 +205,7 @@ OfferTexts DefaultOfferTexts()
     t.bodyCare = "{name} te debe la comida y las curas, y desea unirse a tu grupo.";
     t.bodyRescue = "{name} te debe la vida y desea unirse a tu grupo.";
     t.bodyJoins = "{name} desea unirse a tu grupo.";
+    t.bodySubmitted = "{name} se arrodilla y te pide unirse a tu grupo.";
 
     t.haggleLabel = "OFERTA";
     t.haggleOdds = "Probabilidad de aceptar: {pct}%";
@@ -341,6 +343,19 @@ OfferView BuildMercyOfferView(const std::string& name, const std::string& pleaLi
     view.bodyLine = pleaLine;
     view.acceptLabel = t.accept;
     view.extraLabel = canIgnore ? t.ignore : std::string();
+    view.cancelLabel = t.decline;
+    return view;
+}
+
+OfferView BuildSubmissionOfferView(const std::string& name, const OfferTexts& t)
+{
+    OfferView view = Frame(name, ReadoutRoute_FieldYield, t);
+    view.bodyLine = Fill(t.bodySubmitted, name, 0);
+    view.showPrice = true;
+    view.priceFree = true;
+    view.priceText = t.free;
+    view.acceptLabel = t.accept;
+    view.extraLabel = t.forgive;
     view.cancelLabel = t.decline;
     return view;
 }

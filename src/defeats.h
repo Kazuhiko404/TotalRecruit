@@ -39,6 +39,11 @@ void NoteDefeat(Character* character);
 // holds it. 0 for a character never counted.
 int DefeatCount(Character* character);
 
+// Forgets every defeat the player has over them: the count (so the save holds 0
+// from the next save on) and the current knockout episode. The submission
+// event's RECHAZAR (submission_director.cpp): beaten-to-yield starts over.
+void ClearDefeats(Character* character);
+
 // The right-click: a fallback for the knockouts MedicalSystem::knockout does not
 // cover -- bleeding out among them. Counts once per episode if they are down and
 // the credit is the player's; re-arms the episode if they are standing.

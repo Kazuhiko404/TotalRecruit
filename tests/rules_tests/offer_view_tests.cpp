@@ -503,6 +503,30 @@ void FreeRoutesNeverHaggle()
 
     v = BuildMercyOfferView("Bandido", "Bandido: Piedad.", true, t);
     CHECK(!v.showSlider && v.haggleLine.empty() && !v.acceptIsOffer);
+
+    v = BuildSubmissionOfferView("Bandido", t);
+    CHECK(!v.showSlider && v.haggleLine.empty() && !v.acceptIsOffer);
+}
+
+// cage-animals-submission T3: a beaten NPC walked up to ask. Sometido tag, the
+// kneeling line, free, and Aceptar / Perdonar / Rechazar.
+void SubmissionHasAcceptForgiveReject()
+{
+    const char* name = "submission event: kneeling body, free, Accept / Forgive / Reject";
+    const OfferTexts t = Texts();
+    const OfferView v = BuildSubmissionOfferView("Bandido", t);
+    CHECK(v.route == ReadoutRoute_FieldYield);
+    CHECK(v.routeTag == t.routeFieldYield);
+    CHECK(v.name == "Bandido");
+    CHECK(v.bodyLine == "Bandido se arrodilla y te pide unirse a tu grupo.");
+    CHECK(v.showPrice && v.priceFree && v.priceText == t.free);
+    CHECK(!v.showPurse && !v.showChance);
+    CHECK(v.reasonText.empty() && !v.reasonRefused);
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(v.extraLabel == t.forgive);
+    CHECK(v.cancelLabel == t.decline);
+    CHECK(t.forgive == "PERDONAR");
+    CHECK(t.bodySubmitted.find("{name}") != std::string::npos);
 }
 } // namespace
 
@@ -530,4 +554,5 @@ void RunOfferViewTests()
     UnaffordableOfferHidesOffer();
     OffendedTodayShowsTheLockNotTheSlider();
     FreeRoutesNeverHaggle();
+    SubmissionHasAcceptForgiveReject();
 }

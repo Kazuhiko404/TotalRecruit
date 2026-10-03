@@ -181,6 +181,7 @@ OfferTexts OfferWording()
     Word(&t.beat, "popup.button.beat");
     Word(&t.ignore, "popup.button.ignore");
     Word(&t.decline, "popup.button.decline");
+    Word(&t.forgive, "popup.button.forgive");
 
     Word(&t.routeFree, "readout.route.free");
     Word(&t.routeCaptivity, "readout.route.captivity");
@@ -204,6 +205,7 @@ OfferTexts OfferWording()
     Word(&t.bodyCare, "popup.body.care");
     Word(&t.bodyRescue, "popup.body.rescue");
     Word(&t.bodyJoins, "popup.body.joins");
+    Word(&t.bodySubmitted, "popup.body.submitted");
 
     Word(&t.haggleLabel, "popup.haggle.label");
     Word(&t.haggleOdds, "popup.haggle.odds");

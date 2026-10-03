@@ -136,6 +136,42 @@ bool SafeGameHours(double* out)
     TR_CATCH { return false; }
 }
 
+bool SafeIsPaused(bool* out)
+{
+    TR_TRY
+    {
+        if (ou == NULL)
+        {
+            return false;
+        }
+        *out = ou->isPaused();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+int SafePlayerCharacters(Character** out, int max)
+{
+    TR_TRY
+    {
+        if (ou == NULL || ou->player == NULL || out == NULL)
+        {
+            return 0;
+        }
+        const lektor<Character*>& roster = ou->player->playerCharacters;
+        int count = 0;
+        for (unsigned int i = 0; i < roster.size() && count < max; ++i)
+        {
+            if (roster[i] != NULL)
+            {
+                out[count++] = roster[i];
+            }
+        }
+        return count;
+    }
+    TR_CATCH { return 0; }
+}
+
 bool SafeIsPlayerCharacter(Character* character, bool* out)
 {
     TR_TRY { *out = character->isPlayerCharacter(); return true; }

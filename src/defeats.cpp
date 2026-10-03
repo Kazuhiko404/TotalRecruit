@@ -335,6 +335,18 @@ int DefeatCount(Character* character)
     return LedgerGet(key);
 }
 
+void ClearDefeats(Character* character)
+{
+    CharKey key;
+    if (character == NULL || !SafeFindCharKey(character, &key))
+    {
+        return;
+    }
+    LedgerSet(key, 0);
+    g_records.erase(key);
+    LogInfo("[defeat] " + CharacterName(character) + ": defeats cleared");
+}
+
 bool CanBeatPrisoner(Character* character, double* outHoursLeft)
 {
     if (outHoursLeft) *outHoursLeft = 0.0;

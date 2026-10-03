@@ -15,6 +15,7 @@
 #include "plea_tracker.h"
 #include "cats_purse.h"
 #include "money_rules.h"
+#include "character_facts.h"
 
 #include <set>
 
@@ -281,6 +282,13 @@ void OfferMercy(Character* npc)
     // The exclusion list still rules: someone the player has told the mod to
     // leave alone does not get to beg their way in.
     if (!IsRecruitable(npc, NULL))
+    {
+        return;
+    }
+
+    // Rejected after asking to join: the reject cooldown closes every route in,
+    // the plea included (rules.cpp checks it for the rest).
+    if (ReadRejectCooldown(npc, NULL))
     {
         return;
     }
