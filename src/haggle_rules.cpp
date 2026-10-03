@@ -75,6 +75,40 @@ int ClampOffer(int offer, const HaggleBounds& bounds)
     return ClampInt(snapped, bounds.minOffer, bounds.maxOffer);
 }
 
+int HaggleStepCount(const HaggleBounds& bounds)
+{
+    if (bounds.maxOffer <= bounds.minOffer || bounds.step <= 0)
+    {
+        return 0;
+    }
+    return (bounds.maxOffer - bounds.minOffer + bounds.step - 1) / bounds.step;
+}
+
+int OfferAtStep(const HaggleBounds& bounds, int step)
+{
+    const int count = HaggleStepCount(bounds);
+    if (step <= 0) return bounds.minOffer;
+    if (step >= count) return bounds.maxOffer;
+    const int offer = bounds.minOffer + step * bounds.step;
+    return offer > bounds.maxOffer ? bounds.maxOffer : offer;
+}
+
+int StepOfOffer(const HaggleBounds& bounds, int offer)
+{
+    const int count = HaggleStepCount(bounds);
+    if (count == 0)
+    {
+        return 0;
+    }
+    const int held = ClampOffer(offer, bounds);
+    if (held >= bounds.maxOffer)
+    {
+        return count;
+    }
+    const int step = (held - bounds.minOffer + bounds.step / 2) / bounds.step;
+    return ClampInt(step, 0, count);
+}
+
 int HagglePersonalityShift(Temperament personality)
 {
     switch (personality)

@@ -41,3 +41,4 @@ void RunOfferViewTests();
 void RunScreenProjectionTests();
 void RunHaggleRulesTests();
 void RunCardDismissRulesTests();
+void RunFlatSliderTests();

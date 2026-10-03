@@ -27,6 +27,14 @@ namespace totalrecruit
 // Returns false when the window could not be created (logged).
 bool ShowOffer(Character* npc, const OfferView& view);
 
+// The same window for a verdict, built here from its input so the haggle slider
+// can rebuild the view (BuildOfferView) as it moves: a move changes the offer
+// text, the odds line, the purse colour and the button row, never the window's
+// size. OFRECER (an offer below the ask) answers through CompleteHaggle; ACEPTAR
+// through CompleteOffer as before. With input.haggle.enabled false it is ShowOffer
+// of BuildOfferView(input, texts).
+bool ShowPricedOffer(Character* npc, const OfferInput& input, const OfferTexts& texts);
+
 // True while the offer is on screen. The context-menu overlay hides itself
 // during that time so the two do not fight for the same corner.
 bool IsOfferOpen();

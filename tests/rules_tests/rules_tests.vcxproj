@@ -69,6 +69,7 @@
     <ClCompile Include="screen_projection_tests.cpp" />
     <ClCompile Include="haggle_rules_tests.cpp" />
     <ClCompile Include="card_dismiss_rules_tests.cpp" />
+    <ClCompile Include="flat_slider_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />

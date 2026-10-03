@@ -101,6 +101,65 @@ void ClampOfferHoldsTheSlider()
     CHECK(ClampOffer(150, odd) == 150);
 }
 
+void SliderStepsRunFromTheFloorToTheAsk()
+{
+    const char* name = "haggle steps: position 0 is the floor, the last is the ask";
+    const HaggleBounds b = HaggleSliderBounds(9570, kPrices);
+    CHECK(b.minOffer == 4790);
+    CHECK(HaggleStepCount(b) == 478);
+    CHECK(OfferAtStep(b, 0) == 4790);
+    CHECK(OfferAtStep(b, 1) == 4800);
+    CHECK(OfferAtStep(b, 286) == 7650);
+    CHECK(OfferAtStep(b, 477) == 9560);
+    CHECK(OfferAtStep(b, 478) == 9570);
+    CHECK(OfferAtStep(b, -5) == 4790);
+    CHECK(OfferAtStep(b, 999) == 9570);
+
+    CHECK(StepOfOffer(b, 4790) == 0);
+    CHECK(StepOfOffer(b, 7650) == 286);
+    CHECK(StepOfOffer(b, 9570) == 478);
+    CHECK(StepOfOffer(b, 100) == 0);
+    CHECK(StepOfOffer(b, 99999) == 478);
+}
+
+void SliderStepsReachAnOffGridAsk()
+{
+    const char* name = "haggle steps: an ask off the 10 grid is the last step";
+    const HaggleBounds odd = HaggleSliderBounds(205, kPrices);
+    // 110, 120, ... 200, then 205.
+    CHECK(odd.minOffer == 110);
+    CHECK(HaggleStepCount(odd) == 10);
+    CHECK(OfferAtStep(odd, 9) == 200);
+    CHECK(OfferAtStep(odd, 10) == 205);
+    CHECK(StepOfOffer(odd, 205) == 10);
+    CHECK(StepOfOffer(odd, 200) == 9);
+
+    // Every step maps back to itself.
+    const HaggleBounds b = HaggleSliderBounds(1234, kPrices);
+    const int n = HaggleStepCount(b);
+    bool roundTrips = true;
+    for (int i = 0; i <= n; ++i)
+    {
+        if (StepOfOffer(b, OfferAtStep(b, i)) != i) roundTrips = false;
+    }
+    CHECK(roundTrips);
+}
+
+void SliderStepsOfNothingAreOnePosition()
+{
+    const char* name = "haggle steps: no range is a single position";
+    const HaggleBounds none = HaggleSliderBounds(0, kPrices);
+    CHECK(HaggleStepCount(none) == 0);
+    CHECK(OfferAtStep(none, 3) == 0);
+    CHECK(StepOfOffer(none, 50) == 0);
+
+    Prices full = kPrices;
+    full.haggleMinFraction = 1.0f;
+    const HaggleBounds flat = HaggleSliderBounds(500, full);
+    CHECK(HaggleStepCount(flat) == 0);
+    CHECK(OfferAtStep(flat, 0) == 500);
+}
+
 // ---------------------------------------------------------------- odds
 
 void FullPriceIsCertain()
@@ -329,6 +388,9 @@ void RunHaggleRulesTests()
     BoundsNeverInvert();
     RoundUpToStepRounds();
     ClampOfferHoldsTheSlider();
+    SliderStepsRunFromTheFloorToTheAsk();
+    SliderStepsReachAnOffGridAsk();
+    SliderStepsOfNothingAreOnePosition();
     FullPriceIsCertain();
     OddsAreTheFormula();
     OddsFallAsTheDiscountGrows();

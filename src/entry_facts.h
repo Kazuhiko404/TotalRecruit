@@ -113,6 +113,26 @@ struct HaggleFact
     HaggleFact() : offended(false) {}
 };
 
+// What one haggle attempt needs from the engine (character_facts ReadHaggleTerms):
+// the same roll key and day the join roll is drawn on (MintRollKey), whether the
+// NPC is offended today, who they are, and the talking player's weight. The
+// talking player is the squad leader, the same character whose purse pays.
+struct HaggleTerms
+{
+    RollFact roll;
+    bool locked;
+    int npcLevel;
+    Temperament temperament;
+    bool speakerKnown;
+    int speakerBestStat;
+
+    HaggleTerms()
+        : roll(), locked(false), npcLevel(1), temperament(Temperament_Normal),
+          speakerKnown(false), speakerBestStat(0)
+    {
+    }
+};
+
 // What the animal route needs beyond the core.
 struct AnimalExtra
 {

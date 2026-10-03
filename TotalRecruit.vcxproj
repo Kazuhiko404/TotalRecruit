@@ -78,6 +78,7 @@
     <ClCompile Include="src\offer_popup.cpp" />
     <ClCompile Include="src\offer_view.cpp" />
     <ClCompile Include="src\ui_style.cpp" />
+    <ClCompile Include="src\flat_slider.cpp" />
     <ClCompile Include="src\feeding.cpp" />
     <ClCompile Include="src\cursor_hint.cpp" />
     <ClCompile Include="src\talk_hint_cache.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="src\offer_popup.h" />
     <ClInclude Include="src\offer_view.h" />
     <ClInclude Include="src\ui_style.h" />
+    <ClInclude Include="src\flat_slider.h" />
     <ClInclude Include="src\feeding.h" />
     <ClInclude Include="src\cursor_hint.h" />
     <ClInclude Include="src\talk_hint_cache.h" />

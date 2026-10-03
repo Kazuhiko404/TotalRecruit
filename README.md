@@ -141,6 +141,14 @@ in red, plus the one thing you can do about it when there is one (feed them,
 beat them). Money only moves when you press Accept. The text is the `popup`
 block of `messages.json`.
 
+**Haggling.** A price in cats comes with a slider, from half the ask
+(`haggleMinFraction`) up to the ask, and the live odds that they take your
+offer. At the ask it is Accept as before; below it the button reads Offer and
+you get one try, on the same daily seed as the join roll. They take it and you
+pay what you offered, or they are offended: no more haggling with them that
+in-game day and the ask goes up 20% (`haggleOffenceMarkup`). Your purse is
+checked against the offer. Turn it off with `haggleEnabled`.
+
 ### The readout card
 
 Select an NPC with a left click (or press Hablar on them) and a small card appears

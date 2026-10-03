@@ -41,6 +41,14 @@ void RefundPrice(Character* character, int cats, const std::string& name);
 // changes. Money only ever moves here, so walking away costs nothing.
 void CompleteOffer(Character* character, bool accepted);
 
+// The player pressed OFRECER: `offer` cats instead of the asking price. One
+// attempt, drawn on the same daily seed as the join roll (ResolveHaggle with the
+// key and day MintRollKey gives now). Accepted: the offer is charged and they
+// join. Refused: they are offended for the rest of the in-game day (no haggling,
+// a raised ask) and the window reopens on that. An offer at the ask is
+// CompleteOffer.
+void CompleteHaggle(Character* character, int offer);
+
 // Acts on what a captive is short of rather than answering their refusal --
 // feeding them, for now. Reopens the offer afterwards so the player sees what
 // changed without working through the context menu again.

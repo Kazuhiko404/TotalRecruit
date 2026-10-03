@@ -44,6 +44,15 @@ HaggleBounds HaggleSliderBounds(int ask, const Prices& prices);
 // when it is not a multiple of the step.
 int ClampOffer(int offer, const HaggleBounds& bounds);
 
+// The slider's positions: 0 is minOffer, each next one `step` cats more, and the
+// last (HaggleStepCount) is maxOffer even when the ask is off the step grid. A
+// range with nothing in it (min == max) is a single position, 0.
+int HaggleStepCount(const HaggleBounds& bounds);
+// The offer at slider position `step` (clamped to 0..HaggleStepCount).
+int OfferAtStep(const HaggleBounds& bounds, int step);
+// The slider position an offer sits at, after ClampOffer.
+int StepOfOffer(const HaggleBounds& bounds, int offer);
+
 // What the NPC's temperament does to the odds of accepting a lowball. The
 // Temperament enum has no "proud", so the design's "honourable/proud -15" maps to
 // Temperament_Honorable alone:

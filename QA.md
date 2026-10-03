@@ -618,3 +618,22 @@ Kenshi no limpia la seleccion al caminar con clic derecho, asi que la tarjeta qu
 | C7 | Con la tarjeta a la vista, clic derecho sobre el NPC | Se abre el menu (la tarjeta se oculta mientras esta abierto, como antes); al cerrarlo con Esc vuelve | (sin `dismissed`) |
 | C8 | Con la tarjeta guardada, clic derecho en el NPC y `Hablar` | La tarjeta vuelve al lado de la oferta; clics en el mundo con la oferta abierta no la guardan; se va con la oferta | `shown again: ... (hablar)` |
 | C9 | Guardar la tarjeta y cargar un save | Nada queda guardado: el primer NPC que se seleccione muestra su tarjeta | `[identity] load begin ...` |
+
+### 12.18 Regateo en la ventana de reclutamiento (haggle-and-daily-roll T4)
+
+Solo para precios en cats (soborno en el mundo libre y la ruta de cautiverio con precio). Mockup: `ui-mockup/readout.html` seccion 5, estados 2 a 4 (el slider se arrastra). Con `probeOnClick` cada OFRECER deja `[haggle] <nombre> ask=.. offer=.. odds=..% -> accepted|offended`. Config por defecto: `haggleEnabled` true, minimo 0.5 del pedido, peso del descuento 2.0, ofensa +20%.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| H1 | `Hablar` con un prisionero o mercenario que pide cats y te alcanza | Debajo de la caja de datos: OFERTA, el slider con el pulgar a la derecha, el pedido en ambar, el minimo y el maximo debajo, "Probabilidad de aceptar: 100%" en verde; botones ACEPTAR + CANCELAR | — |
+| H2 | Arrastrar el pulgar (y hacer clic en otro punto de la fila) | El valor baja de a 10 cats, la probabilidad baja en vivo y cambia de color (verde >= 70, ambar 30-69, rojo < 30); bajo el pedido el boton dice OFRECER; la ventana no cambia de tamano ni parpadea | — |
+| H3 | Volver el pulgar al extremo derecho | Vuelve a decir ACEPTAR y 100% | — |
+| H4 | ACEPTAR en el pedido | Igual que antes: cobra el precio pedido y se une | `Charged N cats for ...` |
+| H5 | OFRECER con probabilidad alta (dejarlo cerca del pedido) hasta que uno acepte | Cobra **la oferta**, no el pedido: `pagaste <oferta> cats` y "<nombre>: acepta <oferta> cats y se une a tu grupo" | `[haggle] ... -> accepted`, `Charged <oferta> cats` |
+| H6 | OFRECER con probabilidad baja | "<nombre>: se ofende con tu oferta"; la ventana se reabre sin slider, con "Se ofendio: hoy no regatea" en rojo y el PRECIO subido un 20% | `[haggle] ... -> offended` |
+| H7 | Mismo dia: cerrar y volver a `Hablar` | Sigue ofendido: sin slider, precio subido; la tarjeta tambien muestra el precio subido | — |
+| H8 | Esperar a la medianoche del juego (o dormir) y volver a `Hablar` | Sin ofensa: slider de vuelta y el precio normal | — |
+| H9 | Mismo dia, misma oferta, otro intento tras cargar el save | La ofensa se olvida al cargar (solo memoria); la misma oferta el mismo dia da el mismo resultado (semilla diaria) | `[haggle] ...` igual que antes de cargar |
+| H10 | Un mercenario que pide mas de lo que tenes | Al abrir: TIENES en rojo, "No te alcanzan para esa oferta (te faltan N)" en la linea del slider y solo CANCELAR; bajando la oferta por debajo de tu bolsa aparece OFRECER | — |
+| H11 | Rescate, piedad, rendicion / sometido y un rechazo sin precio | Ninguno tiene slider ni linea de regateo | — |
+| H12 | `haggleEnabled` en false (Mod Hub "Regateo: activo") y `Hablar` a alguien con precio | La ventana de siempre, sin slider | — |

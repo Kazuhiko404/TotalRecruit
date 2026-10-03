@@ -983,6 +983,22 @@
       "care": "{name} te debe la comida y las curas, y desea unirse a tu grupo.",
       "rescue": "{name} te debe la vida y desea unirse a tu grupo.",
       "joins": "{name} desea unirse a tu grupo."
+    },
+    "haggle": {
+      "_comment": "Regateo (solo precios en cats). {pct} = probabilidad de que acepte la oferta, {cats} = lo que falta para esa oferta.",
+      "label": "OFERTA",
+      "odds": "Probabilidad de aceptar: {pct}%",
+      "offer": "OFRECER",
+      "offended": "Se ofendio: hoy no regatea",
+      "short": "No te alcanzan para esa oferta (te faltan {cats})"
     }
+  },
+  "haggle": {
+    "accepted": [
+      "{name}: acepta {cats} cats y se une a tu grupo"
+    ],
+    "offended": [
+      "{name}: se ofende con tu oferta de {cats} cats"
+    ]
   }
 }

@@ -66,6 +66,12 @@ CageExtra GatherCageExtra(Character* character, const CoreFacts& core,
 // stats cannot be read; the leverage math itself is HaggleLeverage (haggle_rules.h).
 bool SafeSpeakerBestStat(Character* speaker, int* out);
 
+// Everything a haggle over this NPC's price reads from the engine (entry_facts.h
+// HaggleTerms). Mints the roll id like a decision does: only called for a
+// cats offer the player is looking at, never for a peek. roll.haveKey false (no
+// id or no clock) means there is no stable seed and so no haggle.
+HaggleTerms ReadHaggleTerms(Character* npc);
+
 // Why a character was judged out cold, in the log. Written whenever a verdict
 // turns on medical state, because those are the calls that have been wrong before
 // and the headers cannot say which flag lied.

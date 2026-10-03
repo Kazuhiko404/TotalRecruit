@@ -17,6 +17,9 @@
 #include "defeats.h"
 #include "cats_purse.h"
 #include "money_rules.h"
+#include "character_facts.h"
+#include "haggle_rules.h"
+#include "haggle_ledger.h"
 
 #include <algorithm>
 
@@ -286,6 +289,45 @@ OfferRemedy RemedyFor(Character* character, const Verdict& verdict, bool again)
     return OfferRemedy_None;
 }
 
+// A cats quote: the only kind of verdict a haggle can be about (a yes with a
+// price, or the "not yet" that is only the purse).
+bool IsCatsQuote(const Verdict& verdict)
+{
+    return verdict.currency == Currency_Cats && verdict.cats > 0 &&
+           (verdict.willJoin || verdict.reasonKey == Reason_CatsAsk);
+}
+
+// What the popup's haggle section needs (offer_view.h OfferHaggleInput): off
+// unless haggling is on, the verdict is a cats quote and the engine gave a roll
+// key and a clock to seed the attempt with. `outTerms` (optional) receives the
+// engine reads, so the attempt draws on the very key and day shown.
+OfferHaggleInput HaggleInputFor(Character* character, const Verdict& verdict, HaggleTerms* outTerms)
+{
+    const Prices& prices = GetConfig().prices;
+    OfferHaggleInput haggle;
+    haggle.prices = prices;
+    if (!prices.haggleEnabled || !IsCatsQuote(verdict))
+    {
+        return haggle;
+    }
+    const HaggleTerms terms = ReadHaggleTerms(character);
+    if (outTerms != NULL)
+    {
+        *outTerms = terms;
+    }
+    if (!terms.roll.haveKey)
+    {
+        return haggle;
+    }
+    haggle.enabled = true;
+    haggle.locked = terms.locked;
+    haggle.leverage = terms.speakerKnown
+                          ? HaggleLeverage(terms.speakerBestStat, terms.npcLevel, prices)
+                          : 0;
+    haggle.personality = terms.temperament;
+    return haggle;
+}
+
 // What the player is carrying: the squad leader's purse (cats_purse.h).
 bool ReadPlayerPurse(int* out)
 {
@@ -311,7 +353,32 @@ bool PresentOffer(Character* character, const Verdict& verdict, bool afterRemedy
     in.purseKnown = ReadPlayerPurse(&in.purse);
     in.remedy = RemedyFor(character, verdict, afterRemedy);
     in.afterRemedy = afterRemedy;
-    return ShowOffer(character, BuildOfferView(in, OfferWording()));
+    in.haggle = HaggleInputFor(character, verdict, NULL);
+    return ShowPricedOffer(character, in, OfferWording());
+}
+
+// Pays `cats` and recruits, putting the money back when the engine refuses the
+// recruit. `joined` is the line the player reads on success.
+void PayAndRecruit(Character* character, int cats, const std::string& name,
+                   const std::string& joined)
+{
+    // Money only moves here. Declining, or walking away, costs nothing.
+    if (!SettlePrice(character, cats, name))
+    {
+        return;
+    }
+
+    std::string message;
+    if (Recruit(character, &message))
+    {
+        TellPlayer(joined, false);
+    }
+    else
+    {
+        // Paid but not delivered: the engine refused the recruit. Put the money back.
+        RefundPrice(character, cats, name);
+        TellPlayer(name + ": " + message, true);
+    }
 }
 } // namespace
 
@@ -641,24 +708,74 @@ void CompleteOffer(Character* character, bool accepted)
         return;
     }
 
-    // Money only moves here. Declining, or walking away, costs nothing.
-    const int due = CatsDue(verdict);
-    if (!SettlePrice(character, due, name))
+    PayAndRecruit(character, CatsDue(verdict), name, name + ": " + verdict.reason);
+}
+
+void CompleteHaggle(Character* character, int offer)
+{
+    if (character == NULL)
     {
         return;
     }
 
-    std::string message;
-    if (Recruit(character, &message))
+    const std::string name = CharacterName(character);
+
+    // Re-evaluated, like CompleteOffer: the attempt is about the price asked now.
+    const Verdict verdict = Evaluate(character);
+    if (!IsCatsQuote(verdict))
     {
-        TellPlayer(name + ": " + verdict.reason, false);
+        TellPlayer(name + ": " + verdict.reason, true);
+        return;
     }
-    else
+
+    // The same key and day the join roll uses (MintRollKey), read at this moment.
+    HaggleTerms terms;
+    const OfferHaggleInput haggle = HaggleInputFor(character, verdict, &terms);
+    if (!haggle.enabled || haggle.locked)
     {
-        // Paid but not delivered: the engine refused the recruit. Put the money back.
-        RefundPrice(character, due, name);
-        TellPlayer(name + ": " + message, true);
+        // Nothing to haggle any more (offended meanwhile, or no seed): show the
+        // window as it stands now instead of drawing on nothing.
+        PresentOffer(character, verdict, false);
+        return;
     }
+
+    const int ask = verdict.cats;
+    const int held = ClampOffer(offer, HaggleSliderBounds(ask, haggle.prices));
+    if (held >= ask)
+    {
+        // The ask itself is not a haggle.
+        CompleteOffer(character, true);
+        return;
+    }
+
+    const int odds = AcceptOdds(ask, held, haggle.leverage, haggle.personality, haggle.prices);
+    const HaggleOutcome outcome = ResolveHaggle(odds, terms.roll.key, terms.roll.dayIndex);
+    if (GetConfig().probeOnClick)
+    {
+        LogInfo("[haggle] " + name + " ask=" + IntToString(ask) + " offer=" + IntToString(held) +
+                " odds=" + IntToString(odds) + "% -> " +
+                (outcome == Haggle_Accepted ? "accepted" : "offended"));
+    }
+
+    if (outcome == Haggle_Accepted)
+    {
+        // The offer is the price: SettlePrice re-checks the purse against it and
+        // money.paid names it.
+        PayAndRecruit(character, held, name,
+                      Fill(Say("haggle.accepted", "{name}: acepta {cats} cats y se une a tu grupo",
+                               character),
+                           name, held, 0));
+        return;
+    }
+
+    // Offended: no more haggling today, and the ask goes up (ApplyCatsOffer reads
+    // the ledger), so the window reopens locked at the raised price.
+    SessionHaggleLedger().RecordOffence(terms.roll.key, terms.roll.dayIndex);
+    TellPlayer(Fill(Say("haggle.offended", "{name}: se ofende con tu oferta de {cats} cats",
+                        character),
+                    name, held, 0),
+               true);
+    PresentOffer(character, Evaluate(character), false);
 }
 
 bool SettlePrice(Character* character, int cats, const std::string& name)

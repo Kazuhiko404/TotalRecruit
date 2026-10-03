@@ -297,6 +297,212 @@ void DefaultsAreComplete()
     CHECK(t.shortPurse.find("{cats}") != std::string::npos);
     CHECK(t.bodyCats.find("{name}") != std::string::npos);
     CHECK(t.bodyRefused.find("{name}") != std::string::npos);
+    CHECK(!t.haggleLabel.empty() && !t.haggleOffer.empty() && !t.haggleOffended.empty());
+    CHECK(t.haggleOdds.find("{pct}") != std::string::npos);
+    CHECK(t.haggleShort.find("{cats}") != std::string::npos);
+}
+
+// ------------------------------------------------------------------ haggle
+// ui-mockup/readout.html section 5, states 2-4 (js/popup_data.js).
+
+OfferInput HaggleKareem(int offer)
+{
+    OfferInput in;
+    in.name = "Kareem";
+    in.verdict = CatsVerdict(true, 9570, 0);
+    in.verdict.viaCaptivity = true;
+    in.purseKnown = true;
+    in.purse = 12000;
+    in.haggle.enabled = true;
+    in.haggle.leverage = 8;
+    in.haggle.personality = Temperament_Normal;
+    in.haggle.offer = offer;
+    return in;
+}
+
+void OddsTonesSplitAtSeventyAndThirty()
+{
+    const char* name = "haggle odds tone: ready >= 70, amber 30-69, danger < 30";
+    CHECK(OddsToneOf(100) == OddsTone_Ready);
+    CHECK(OddsToneOf(70) == OddsTone_Ready);
+    CHECK(OddsToneOf(69) == OddsTone_Amber);
+    CHECK(OddsToneOf(30) == OddsTone_Amber);
+    CHECK(OddsToneOf(29) == OddsTone_Danger);
+    CHECK(OddsToneOf(0) == OddsTone_Danger);
+}
+
+void HaggleOffKeepsTheTakeItOrLeaveItWindow()
+{
+    const char* name = "haggle off: no slider, no line, ACEPTAR as before";
+    OfferInput in = HaggleKareem(7650);
+    in.haggle.enabled = false;
+    const OfferTexts t = Texts();
+    const OfferView v = BuildOfferView(in, t);
+    CHECK(!v.showSlider);
+    CHECK(v.haggleLine.empty());
+    CHECK(!v.haggleLocked);
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(!v.acceptIsOffer);
+}
+
+void SliderStartsAtTheAskWithAccept()
+{
+    const char* name = "haggle: the slider starts at the ask, 100%, ACEPTAR";
+    const OfferTexts t = Texts();
+    const OfferView v = BuildOfferView(HaggleKareem(0), t);
+    CHECK(v.showSlider);
+    CHECK(v.haggleLabel == t.haggleLabel);
+    CHECK(v.haggleBounds.minOffer == 4790 && v.haggleBounds.maxOffer == 9570);
+    CHECK(v.sliderSteps == 478);
+    CHECK(v.sliderStep == 478);
+    CHECK(v.offerCats == 9570);
+    CHECK(v.offerText == "9.570 cats");
+    CHECK(v.minText == "4.790");
+    CHECK(v.maxText == "9.570");
+    CHECK(v.oddsPercent == 100);
+    CHECK(v.haggleTone == OddsTone_Ready);
+    CHECK(v.haggleLine == "Probabilidad de aceptar: 100%");
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(!v.acceptIsOffer);
+    CHECK(v.affordable);
+    CHECK(v.reasonText.empty());
+    CHECK(v.priceCats == 9570);
+}
+
+void OfferBelowTheAskIsAnOffer()
+{
+    const char* name = "haggle: an offer below the ask reads OFRECER with its odds";
+    const OfferTexts t = Texts();
+    const OfferView v = BuildOfferView(HaggleKareem(7650), t);
+    CHECK(v.showSlider);
+    CHECK(v.offerCats == 7650);
+    CHECK(v.sliderStep == 286);
+    CHECK(v.offerText == "7.650 cats");
+    // 100 - 20% * 2 + 8 = 68
+    CHECK(v.oddsPercent == 68);
+    CHECK(v.haggleTone == OddsTone_Amber);
+    CHECK(v.haggleLine == "Probabilidad de aceptar: 68%");
+    CHECK(v.acceptLabel == t.haggleOffer);
+    CHECK(v.acceptIsOffer);
+    CHECK(v.cancelLabel == t.cancel);
+    CHECK(v.affordable);
+    CHECK(v.reasonText.empty());
+    // The price row still says what they asked.
+    CHECK(v.priceText == "9.570 cats");
+
+    const OfferView low = BuildOfferView(HaggleKareem(4790), t);
+    CHECK(low.oddsPercent == 8);
+    CHECK(low.haggleTone == OddsTone_Danger);
+}
+
+void OfferIsHeldOnTheSlider()
+{
+    const char* name = "haggle: an offer outside the slider is clamped and snapped";
+    const OfferView floorView = BuildOfferView(HaggleKareem(100), Texts());
+    CHECK(floorView.offerCats == 4790);
+    CHECK(floorView.sliderStep == 0);
+    const OfferView snapped = BuildOfferView(HaggleKareem(7656), Texts());
+    CHECK(snapped.offerCats == 7660);
+}
+
+void UnaffordableOfferHidesOffer()
+{
+    const char* name = "haggle: the purse is checked against the offer";
+    OfferInput in = HaggleKareem(0);
+    in.verdict = CatsVerdict(false, 9570, 6000);
+    in.purse = 6000;
+    in.haggle.leverage = -6;
+    in.haggle.personality = Temperament_Brave;
+    const OfferTexts t = Texts();
+
+    const OfferView atAsk = BuildOfferView(in, t);
+    CHECK(atAsk.showSlider);
+    CHECK(!atAsk.affordable);
+    CHECK(atAsk.shortfall == 3570);
+    CHECK(atAsk.haggleLine == "No te alcanzan para esa oferta (te faltan 3.570)");
+    CHECK(atAsk.haggleTone == OddsTone_Danger);
+    CHECK(atAsk.acceptLabel.empty());
+    CHECK(!atAsk.acceptIsOffer);
+    // The shortfall lives in the slider's line, never on the reason plate, so a
+    // drag never changes the window's height.
+    CHECK(atAsk.reasonText.empty());
+    CHECK(atAsk.cancelLabel == t.cancel);
+
+    in.haggle.offer = 5640;
+    const OfferView within = BuildOfferView(in, t);
+    CHECK(within.affordable);
+    CHECK(within.shortfall == 0);
+    CHECK(within.acceptIsOffer);
+    CHECK(within.acceptLabel == t.haggleOffer);
+    CHECK(within.reasonText.empty());
+}
+
+void OffendedTodayShowsTheLockNotTheSlider()
+{
+    const char* name = "haggle: offended today -> locked line, no slider, ACEPTAR at the raised price";
+    OfferInput in = HaggleKareem(7650);
+    in.verdict = CatsVerdict(true, 11490, 0);
+    in.haggle.locked = true;
+    const OfferTexts t = Texts();
+    const OfferView v = BuildOfferView(in, t);
+    CHECK(!v.showSlider);
+    CHECK(v.haggleLocked);
+    CHECK(v.haggleLine == t.haggleOffended);
+    CHECK(v.haggleTone == OddsTone_Danger);
+    CHECK(v.priceCats == 11490);
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(!v.acceptIsOffer);
+
+    // Locked and short: the purse plate as before, plus the lock line.
+    in.purse = 3200;
+    const OfferView shortLocked = BuildOfferView(in, t);
+    CHECK(shortLocked.haggleLocked);
+    CHECK(!shortLocked.affordable);
+    CHECK(shortLocked.acceptLabel.empty());
+    CHECK(!shortLocked.reasonText.empty());
+}
+
+void FreeRoutesNeverHaggle()
+{
+    const char* name = "haggle: rescue, field yield, refusals and mercy have no slider";
+    const OfferTexts t = Texts();
+
+    OfferInput rescue;
+    rescue.name = "Esclavo";
+    rescue.verdict.willJoin = true;
+    rescue.verdict.viaRescue = true;
+    rescue.haggle.enabled = true;
+    OfferView v = BuildOfferView(rescue, t);
+    CHECK(!v.showSlider && v.haggleLine.empty());
+
+    OfferInput yield;
+    yield.name = "Soldado";
+    yield.verdict.willJoin = true;
+    yield.verdict.currency = Currency_Submission;
+    yield.verdict.reasonKey = Reason_FieldYieldJoins;
+    yield.haggle.enabled = true;
+    v = BuildOfferView(yield, t);
+    CHECK(!v.showSlider && v.haggleLine.empty());
+
+    OfferInput refused;
+    refused.name = "Paladin";
+    refused.verdict.reasonKey = Reason_MilitaryLoyalty;
+    refused.haggle.enabled = true;
+    refused.haggle.locked = true;
+    v = BuildOfferView(refused, t);
+    CHECK(!v.showSlider && v.haggleLine.empty() && !v.haggleLocked);
+
+    OfferInput animal;
+    animal.name = "Garru";
+    animal.verdict.isAnimal = true;
+    animal.verdict.currency = Currency_Care;
+    animal.verdict.cats = 40;
+    animal.haggle.enabled = true;
+    v = BuildOfferView(animal, t);
+    CHECK(!v.showSlider && v.haggleLine.empty());
+
+    v = BuildMercyOfferView("Bandido", "Bandido: Piedad.", true, t);
+    CHECK(!v.showSlider && v.haggleLine.empty() && !v.acceptIsOffer);
 }
 } // namespace
 
@@ -316,4 +522,12 @@ void RunOfferViewTests()
     AnimalStomachIsNotMoney();
     MercyHasThreeAnswers();
     DefaultsAreComplete();
+    OddsTonesSplitAtSeventyAndThirty();
+    HaggleOffKeepsTheTakeItOrLeaveItWindow();
+    SliderStartsAtTheAskWithAccept();
+    OfferBelowTheAskIsAnOffer();
+    OfferIsHeldOnTheSlider();
+    UnaffordableOfferHidesOffer();
+    OffendedTodayShowsTheLockNotTheSlider();
+    FreeRoutesNeverHaggle();
 }

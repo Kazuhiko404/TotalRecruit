@@ -658,6 +658,38 @@ CageExtra GatherCageExtra(Character* character, const CoreFacts& core, GatherMod
     return extra;
 }
 
+HaggleTerms ReadHaggleTerms(Character* npc)
+{
+    HaggleTerms terms;
+    if (npc == NULL)
+    {
+        return terms;
+    }
+    terms.roll = MintRollKey(npc);
+    terms.locked = terms.roll.haveKey &&
+                   SessionHaggleLedger().IsHaggleLocked(terms.roll.key, terms.roll.dayIndex);
+
+    int level = 1;
+    if (SafeRoughLevel(npc, &level))
+    {
+        terms.npcLevel = level;
+    }
+    Traits traits;
+    if (SafeReadTraits(npc, &traits))
+    {
+        terms.temperament = traits.temperament;
+    }
+
+    Character* speaker = NULL;
+    int best = 0;
+    if (SafePlayerLeader(&speaker) && SafeSpeakerBestStat(speaker, &best))
+    {
+        terms.speakerKnown = true;
+        terms.speakerBestStat = best;
+    }
+    return terms;
+}
+
 // Why a character was judged down or dead, in the log.
 void LogUnconsciousCondition(Character* character)
 {

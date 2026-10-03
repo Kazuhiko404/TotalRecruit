@@ -15,12 +15,17 @@
 //  - Any refusal shows its reason in red and hides ACEPTAR. A remedy the player
 //    can deliver (food, a beating) adds its button.
 //  - A free join says so; the odds appear only when the verdict rolled.
+//  - A cats price can be haggled (OfferHaggleInput): a slider from the floor to
+//    the ask, the live odds of AcceptOdds, the purse checked against the offer,
+//    OFRECER below the ask and ACEPTAR at it. Offended today: the lock line and
+//    no slider. Never for a free route.
 //
 // The words come in as OfferTexts (messages.json "popup" block, resolved by
 // npc_speech.cpp), so this stays testable and a translation changes no rule.
 
 #include <string>
 
+#include "haggle_rules.h"
 #include "readout_model.h"
 #include "verdict.h"
 
@@ -74,6 +79,46 @@ struct OfferTexts
     std::string bodyCare;
     std::string bodyRescue;
     std::string bodyJoins;
+
+    // The haggle section (popup.haggle.*).
+    std::string haggleLabel;    // "OFERTA"
+    std::string haggleOdds;     // "Probabilidad de aceptar: {pct}%"
+    std::string haggleOffer;    // "OFRECER", the amber button below the ask
+    std::string haggleOffended; // "Se ofendio: hoy no regatea"
+    std::string haggleShort;    // "No te alcanzan para esa oferta (te faltan {cats})"
+};
+
+// The colour of the line under the slider: ready from 70%, amber 30-69, danger
+// under 30 (the shortfall and offended lines are danger too).
+enum OddsTone
+{
+    OddsTone_Ready,
+    OddsTone_Amber,
+    OddsTone_Danger
+};
+
+OddsTone OddsToneOf(int percent);
+
+// What a haggle needs beyond the verdict. Read by the caller (recruit_core.cpp,
+// from character_facts ReadHaggleTerms); `enabled` false = take it or leave it.
+struct OfferHaggleInput
+{
+    // haggleEnabled, and a roll key and a game clock were there to seed the draw.
+    bool enabled;
+    // Offended today (haggle_ledger.h): no slider, the lock line instead.
+    bool locked;
+    // HaggleLeverage of the talking player against the NPC.
+    int leverage;
+    Temperament personality;
+    Prices prices;
+    // The slider's offer in cats; 0 or less = start at the ask.
+    int offer;
+
+    OfferHaggleInput()
+        : enabled(false), locked(false), leverage(0), personality(Temperament_Normal),
+          prices(), offer(0)
+    {
+    }
 };
 
 // The built-in Spanish, used for any key messages.json does not have.
@@ -89,9 +134,10 @@ struct OfferInput
     OfferRemedy remedy;
     // Reopened after a remedy: Cancel reads "not now" instead.
     bool afterRemedy;
+    OfferHaggleInput haggle;
 
     OfferInput() : name(), verdict(), purseKnown(false), purse(0),
-                   remedy(OfferRemedy_None), afterRemedy(false)
+                   remedy(OfferRemedy_None), afterRemedy(false), haggle()
     {
     }
 };
@@ -136,10 +182,35 @@ struct OfferView
     std::string extraLabel;
     std::string cancelLabel;
 
+    // The haggle section (cats prices only, ui-mockup section 5 states 2-4). With
+    // the slider, `affordable` / `shortfall` are against the OFFER, and the
+    // shortfall is the slider's line, never the reason plate: a drag must not
+    // change the window's height.
+    bool showSlider;
+    HaggleBounds haggleBounds;
+    // Slider positions 0..sliderSteps (haggle_rules.h OfferAtStep).
+    int sliderSteps;
+    int sliderStep;
+    int offerCats;
+    std::string haggleLabel;
+    std::string offerText;
+    std::string minText;
+    std::string maxText;
+    int oddsPercent;
+    // The line under the slider -- the odds, the shortfall for the offer, or the
+    // offended lock. Empty = no haggle section at all.
+    std::string haggleLine;
+    OddsTone haggleTone;
+    bool haggleLocked;
+    // The amber button is OFRECER (one haggle attempt), not ACEPTAR.
+    bool acceptIsOffer;
+
     OfferView()
         : route(ReadoutRoute_Free), showPrice(false), priceFree(false), priceCats(0),
           showPurse(false), purseKnown(false), purseCats(0), affordable(true), shortfall(0),
-          showChance(false), chancePercent(0), reasonRefused(false)
+          showChance(false), chancePercent(0), reasonRefused(false),
+          showSlider(false), haggleBounds(), sliderSteps(0), sliderStep(0), offerCats(0),
+          oddsPercent(100), haggleTone(OddsTone_Ready), haggleLocked(false), acceptIsOffer(false)
     {
     }
 };

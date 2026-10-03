@@ -204,6 +204,12 @@ OfferTexts OfferWording()
     Word(&t.bodyCare, "popup.body.care");
     Word(&t.bodyRescue, "popup.body.rescue");
     Word(&t.bodyJoins, "popup.body.joins");
+
+    Word(&t.haggleLabel, "popup.haggle.label");
+    Word(&t.haggleOdds, "popup.haggle.odds");
+    Word(&t.haggleOffer, "popup.haggle.offer");
+    Word(&t.haggleOffended, "popup.haggle.offended");
+    Word(&t.haggleShort, "popup.haggle.short");
     return t;
 }
 

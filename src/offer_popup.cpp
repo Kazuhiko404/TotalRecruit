@@ -8,6 +8,8 @@
 #include "log.h"
 #include "mercy.h"
 #include "ui_style.h"
+#include "flat_slider.h"
+#include "haggle_rules.h"
 
 #include <kenshi/gui/PortraitManager.h>
 #include <mygui/MyGUI_ImageBox.h>
@@ -37,6 +39,7 @@ const char* const kAcceptName   = "TR_OfferAccept";
 const char* const kDeclineName  = "TR_OfferDecline";
 const char* const kExtraName    = "TR_OfferExtra";
 const char* const kPortraitName = "TR_OfferPortrait";
+const char* const kSliderName   = "TR_OfferSlider";
 
 // The native context menu sits on the Popup layer, so this goes above it.
 const char* const kLayer = "Info";
@@ -64,6 +67,13 @@ const int kButtonHeight = 32;
 const int kButtonGap    = 8;
 const int kAloneButtonW = 150;
 const int kInfoRows     = 3;
+// The haggle section (POPUP_LAYOUT haggle*).
+const int kHaggleRowH   = 24;
+const int kHaggleLabelW = 84;
+const int kHaggleValueW = 110;
+const int kHaggleGap    = 8;
+const int kHaggleScaleH = 16;
+const int kHaggleLineH  = 20;
 
 // The frame the skin adds around the client area, measured once at build.
 int g_frameW = 16;
@@ -95,9 +105,29 @@ struct Popup
     MyGUI::TextBox* infoValue[kInfoRows];
     MyGUI::EditBox* body;
     MyGUI::EditBox* reason;
+
+    // The haggle section, over the slider's fills.
+    MyGUI::TextBox* haggleLabel;
+    MyGUI::TextBox* offerValue;
+    MyGUI::TextBox* minLabel;
+    MyGUI::TextBox* maxLabel;
+    MyGUI::TextBox* haggleLine;
 };
 
 Popup g_ui = { 0 };
+
+// Kept apart from Popup: its delegates are bound to this instance's address.
+FlatSlider g_slider;
+
+// A priced offer keeps what it was built from, so a slider move rebuilds the view
+// (BuildOfferView) and relays only what changed. Off for mercy and plain views.
+bool g_haggleLive = false;
+OfferInput g_input;
+OfferTexts g_texts;
+OfferView g_view;
+// Where the last layout put the buttons, and which info row is the purse (-1 none).
+int g_buttonY = 0;
+int g_purseRow = -1;
 
 MyGUI::delegates::IDelegate2<MyGUI::Window*, const std::string&>* g_closeDelegate = NULL;
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_acceptDelegate = NULL;
@@ -279,6 +309,7 @@ bool BuildBodyUnguarded()
     MakeFlatButtonPlates(c, kAmber, NULL, &p.accept);
     MakeFlatButtonPlates(c, kSumi, &kAmber, &p.extra);
     MakeFlatButtonPlates(c, kLine, &kGoldDim, &p.cancel);
+    g_slider.MakeFills(c);
 
     p.portrait = c->createWidget<MyGUI::ImageBox>(
         "ImageBox", MyGUI::IntCoord(kMargin + 1, kMargin + 1, kPortraitSide, kPortraitSide),
@@ -298,10 +329,18 @@ bool BuildBodyUnguarded()
     }
     p.body = MakeWrapText(c, kBodyName, kMediumFont, kText);
     p.reason = MakeWrapText(c, kReasonName, kMediumFont, kSoftDanger);
+    p.haggleLabel = MakeLabel(c, kBodyFont, kMuted);
+    p.offerValue = MakeLabel(c, kMediumFont, kAmber);
+    if (p.offerValue != NULL) p.offerValue->setTextAlign(MyGUI::Align::Right | MyGUI::Align::VCenter);
+    p.minLabel = MakeLabel(c, kSmallFont, kMuted);
+    p.maxLabel = MakeLabel(c, kSmallFont, kMuted);
+    if (p.maxLabel != NULL) p.maxLabel->setTextAlign(MyGUI::Align::Right | MyGUI::Align::VCenter);
+    p.haggleLine = MakeLabel(c, kBodyFont, kReady);
 
     MakeFlatButtonCaption(c, kAcceptName, kMediumFont, kLacquer, &p.accept);
     MakeFlatButtonCaption(c, kExtraName, kMediumFont, kAmber, &p.extra);
     MakeFlatButtonCaption(c, kDeclineName, kMediumFont, kText, &p.cancel);
+    g_slider.MakeSurface(c, kSliderName);
 
     // The caption is the engine's title bar; only its colour is the mockup's.
     MyGUI::TextBox* caption = p.root->getCaptionWidget();
@@ -324,9 +363,11 @@ void OnAccept(MyGUI::Widget* sender);
 void OnDecline(MyGUI::Widget* sender);
 void OnWindowButton(MyGUI::Window* sender, const std::string& button);
 void OnExtra(MyGUI::Widget* sender);
+void OnSliderChange(int step);
 
 bool BindButtons()
 {
+    g_slider.SetOnChange(&OnSliderChange);
     TR_TRY
     {
         // Kenshi_WindowCX draws a close cross in its title bar; it means the
@@ -363,6 +404,7 @@ void Unbind()
     {
         g_ui.root->eventWindowButtonPressed -= g_closeDelegate;
     }
+    g_slider.Forget();
 }
 
 void SafeUnbind()
@@ -435,13 +477,108 @@ void HideAllUnguarded()
 {
     Popup& p = g_ui;
     MyGUI::Widget* fills[] = { p.rule, p.infoFrame, p.infoPlate, p.reasonPlate, p.reasonBar,
-                               p.name, p.tag, p.body, p.reason };
+                               p.name, p.tag, p.body, p.reason, p.haggleLabel, p.offerValue,
+                               p.minLabel, p.maxLabel, p.haggleLine };
     for (size_t i = 0; i < sizeof(fills) / sizeof(fills[0]); ++i) Hide(fills[i]);
     for (int i = 0; i < 4; ++i) { Hide(p.portraitFrame[i]); Hide(p.tagFrame[i]); }
     for (int i = 0; i < kInfoRows; ++i) { Hide(p.infoLabel[i]); Hide(p.infoValue[i]); }
     ShowButton(p.accept, false);
     ShowButton(p.extra, false);
     ShowButton(p.cancel, false);
+    g_slider.Hide();
+}
+
+MyGUI::Colour ToneColour(OddsTone tone)
+{
+    switch (tone)
+    {
+    case OddsTone_Ready:  return kReady;
+    case OddsTone_Amber:  return kAmber;
+    case OddsTone_Danger:
+    default:              return kSoftDanger;
+    }
+}
+
+// The haggle texts and colours that a slider move changes (the rectangles do not).
+void ApplyHaggleTextsUnguarded(const OfferView& view)
+{
+    Popup& p = g_ui;
+    p.haggleLabel->setCaption(view.haggleLabel);
+    p.offerValue->setCaption(view.offerText);
+    p.minLabel->setCaption(view.minText);
+    p.maxLabel->setCaption(view.maxText);
+    p.haggleLine->setCaption(view.haggleLine);
+    p.haggleLine->setTextColour(ToneColour(view.haggleTone));
+    if (g_purseRow >= 0)
+    {
+        p.infoValue[g_purseRow]->setTextColour(view.affordable ? kText : kSoftDanger);
+    }
+}
+
+// js/popup.js layoutOffer, the haggle section: OFERTA | slider | value, the min and
+// max under the slider's ends, then the line (odds, shortfall, offended). Fixed
+// height, so a slider move never resizes the window. Returns the y under it.
+int LayoutHaggleUnguarded(const OfferView& view, int y)
+{
+    Popup& p = g_ui;
+    if (!view.showSlider && view.haggleLine.empty())
+    {
+        return y;
+    }
+    const int W = kClientWidth;
+    const int m = kMargin;
+    y += kSectionGap;
+    if (view.showSlider)
+    {
+        const int sx = m + kHaggleLabelW;
+        const int sw = W - 2 * m - kHaggleLabelW - kHaggleGap - kHaggleValueW;
+        Place(p.haggleLabel, m, y, kHaggleLabelW, kHaggleRowH);
+        g_slider.SetRange(view.sliderSteps);
+        g_slider.SetValue(view.sliderStep);
+        g_slider.Place(sx, y, sw, kHaggleRowH);
+        Place(p.offerValue, W - m - kHaggleValueW, y, kHaggleValueW, kHaggleRowH);
+        y += kHaggleRowH;
+        const int half = sw / 2;
+        Place(p.minLabel, sx, y, half, kHaggleScaleH);
+        Place(p.maxLabel, sx + half, y, sw - half, kHaggleScaleH);
+        y += kHaggleScaleH;
+    }
+    Place(p.haggleLine, m, y, W - 2 * m, kHaggleLineH);
+    y += kHaggleLineH;
+    ApplyHaggleTextsUnguarded(view);
+    return y;
+}
+
+// Accept (or OFRECER), Extra, Cancel share the row; Cancel alone sits on the right.
+void LayoutButtonsUnguarded(const OfferView& view, int y)
+{
+    Popup& p = g_ui;
+    const int W = kClientWidth;
+    const int m = kMargin;
+    ShowButton(p.accept, false);
+    ShowButton(p.extra, false);
+    ShowButton(p.cancel, false);
+
+    const FlatButton* order[3] = { NULL, NULL, NULL };
+    const std::string* captions[3] = { NULL, NULL, NULL };
+    int count = 0;
+    if (!view.acceptLabel.empty()) { order[count] = &p.accept; captions[count] = &view.acceptLabel; ++count; }
+    if (!view.extraLabel.empty())  { order[count] = &p.extra;  captions[count] = &view.extraLabel;  ++count; }
+    order[count] = &p.cancel;
+    captions[count] = &view.cancelLabel;
+    ++count;
+    if (count == 1)
+    {
+        SetButtonCaption(p.cancel, view.cancelLabel);
+        PlaceButton(p.cancel, W - m - kAloneButtonW, y, kAloneButtonW, kButtonHeight);
+        return;
+    }
+    const int bw = (W - 2 * m - (count - 1) * kButtonGap) / count;
+    for (int i = 0; i < count; ++i)
+    {
+        SetButtonCaption(*order[i], *captions[i]);
+        PlaceButton(*order[i], m + i * (bw + kButtonGap), y, bw, kButtonHeight);
+    }
 }
 
 MyGUI::Colour TagColour(ReadoutRoute route)
@@ -506,8 +643,10 @@ int LayoutUnguarded(const OfferView& view)
         inks[rows] = view.priceFree ? kReady : kAmber;
         ++rows;
     }
+    g_purseRow = -1;
     if (view.showPurse)
     {
+        g_purseRow = rows;
         labels[rows] = &view.purseLabel;
         values[rows] = &view.purseText;
         inks[rows] = view.affordable ? kText : kSoftDanger;
@@ -540,6 +679,8 @@ int LayoutUnguarded(const OfferView& view)
 
     if (y < m + P + 2) y = m + P + 2;
 
+    y = LayoutHaggleUnguarded(view, y);
+
     // The reason: a dark plate across the window, a red bar when it is a no.
     if (!view.reasonText.empty())
     {
@@ -557,28 +698,8 @@ int LayoutUnguarded(const OfferView& view)
 
     // Buttons: Accept, Extra, Cancel share the row; Cancel alone sits right.
     y += kSectionGap;
-    const FlatButton* order[3] = { NULL, NULL, NULL };
-    const std::string* captions[3] = { NULL, NULL, NULL };
-    int count = 0;
-    if (!view.acceptLabel.empty()) { order[count] = &p.accept; captions[count] = &view.acceptLabel; ++count; }
-    if (!view.extraLabel.empty())  { order[count] = &p.extra;  captions[count] = &view.extraLabel;  ++count; }
-    order[count] = &p.cancel;
-    captions[count] = &view.cancelLabel;
-    ++count;
-    if (count == 1)
-    {
-        SetButtonCaption(p.cancel, view.cancelLabel);
-        PlaceButton(p.cancel, W - m - kAloneButtonW, y, kAloneButtonW, kButtonHeight);
-    }
-    else
-    {
-        const int bw = (W - 2 * m - (count - 1) * kButtonGap) / count;
-        for (int i = 0; i < count; ++i)
-        {
-            SetButtonCaption(*order[i], *captions[i]);
-            PlaceButton(*order[i], m + i * (bw + kButtonGap), y, bw, kButtonHeight);
-        }
-    }
+    g_buttonY = y;
+    LayoutButtonsUnguarded(view, y);
     const int H = y + kButtonHeight + m;
 
     // The plate last to be sized, first in paint order (created first).
@@ -641,6 +762,7 @@ void Close()
 {
     g_open = false;
     g_subject = NULL;
+    g_haggleLive = false;
     SafeSetVisible(g_ui.root, false);
     // Whatever way the window ends -- an answer, the title-bar cross, the HUD
     // hiding it, shutdown -- no plea is on screen any more. A pending plea
@@ -654,6 +776,9 @@ void OnAccept(MyGUI::Widget* /*sender*/)
 {
     Character* npc = g_subject;
     const bool plea = IsMercyPending(npc);
+    // OFRECER rides on the same button: below the ask it is one haggle attempt.
+    const bool offering = g_haggleLive && g_view.acceptIsOffer;
+    const int offer = g_view.offerCats;
     Close();
 
     if (npc != NULL)
@@ -663,6 +788,10 @@ void OnAccept(MyGUI::Widget* /*sender*/)
         if (plea)
         {
             AcceptMercy(npc);
+        }
+        else if (offering)
+        {
+            CompleteHaggle(npc, offer);
         }
         else
         {
@@ -752,6 +881,44 @@ void SafePlayChime()
     TR_TRY { ou->playNotification(NULL); }
     TR_CATCH { }
 }
+
+// A slider move: only the haggle texts, the purse colour and the button row change
+// (the section has a fixed height), so nothing is re-measured or re-placed above.
+void RefreshHaggleUnguarded()
+{
+    ApplyHaggleTextsUnguarded(g_view);
+    LayoutButtonsUnguarded(g_view, g_buttonY);
+}
+
+void SafeRefreshHaggle()
+{
+    TR_TRY { RefreshHaggleUnguarded(); }
+    TR_CATCH { }
+}
+
+// FlatSlider's change callback: fired only when the position actually moved.
+void OnSliderChange(int step)
+{
+    if (!g_open || !g_haggleLive)
+    {
+        return;
+    }
+    g_input.haggle.offer = OfferAtStep(g_view.haggleBounds, step);
+    g_view = BuildOfferView(g_input, g_texts);
+    if (!g_view.showSlider)
+    {
+        return;
+    }
+    SafeRefreshHaggle();
+}
+
+// The haggle widgets all exist (the window still opens without them, plain).
+bool HaggleWidgetsBuilt()
+{
+    const Popup& p = g_ui;
+    return g_slider.IsBuilt() && p.haggleLabel != NULL && p.offerValue != NULL &&
+           p.minLabel != NULL && p.maxLabel != NULL && p.haggleLine != NULL;
+}
 } // namespace
 
 bool IsOfferOpen()
@@ -769,7 +936,8 @@ void HideOffer()
     Close();
 }
 
-bool ShowOffer(Character* npc, const OfferView& view)
+// Lays the view out and shows the window for `npc`.
+static bool OpenWith(Character* npc, const OfferView& view)
 {
     if (npc == NULL)
     {
@@ -811,6 +979,33 @@ bool ShowOffer(Character* npc, const OfferView& view)
     SafePlayChime();
     SafeSetVisible(g_ui.root, true);
     return true;
+}
+
+bool ShowOffer(Character* npc, const OfferView& view)
+{
+    g_haggleLive = false;
+    return OpenWith(npc, view);
+}
+
+bool ShowPricedOffer(Character* npc, const OfferInput& input, const OfferTexts& texts)
+{
+    g_haggleLive = false;
+    if (npc == NULL || !Build())
+    {
+        return false;
+    }
+    g_input = input;
+    // Without its widgets the slider cannot be drawn: the plain window, ACEPTAR at
+    // the ask, rather than none.
+    if (!HaggleWidgetsBuilt())
+    {
+        g_input.haggle.enabled = false;
+    }
+    g_texts = texts;
+    g_view = BuildOfferView(g_input, g_texts);
+    const bool opened = OpenWith(npc, g_view);
+    g_haggleLive = opened && g_view.showSlider;
+    return opened;
 }
 
 void ShutdownOfferPopup()

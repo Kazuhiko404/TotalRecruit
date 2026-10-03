@@ -47,6 +47,13 @@ std::string Percent(int value)
     return std::string(buffer);
 }
 
+std::string PercentNumber(int value)
+{
+    char buffer[16] = { 0 };
+    _snprintf_s(buffer, sizeof(buffer), _TRUNCATE, "%d", value);
+    return std::string(buffer);
+}
+
 std::string RouteTag(ReadoutRoute route, const OfferTexts& t)
 {
     switch (route)
@@ -100,6 +107,52 @@ std::string RemedyLabel(OfferRemedy remedy, const OfferTexts& t)
     }
 }
 
+// The haggle step of BuildOfferView (ui-mockup/js/haggle.js applyHaggle): the
+// slider, the line under it and the amber button, for a cats price. False when
+// the slider has no range (a floor at the ask), which leaves the plain window.
+bool ApplyHaggle(const OfferInput& in, const OfferTexts& t, OfferView* view)
+{
+    const int ask = in.verdict.cats;
+    const HaggleBounds bounds = HaggleSliderBounds(ask, in.haggle.prices);
+    if (bounds.minOffer >= bounds.maxOffer)
+    {
+        return false;
+    }
+    const int offer = in.haggle.offer > 0 ? ClampOffer(in.haggle.offer, bounds)
+                                          : bounds.maxOffer;
+
+    view->showSlider = true;
+    view->haggleBounds = bounds;
+    view->sliderSteps = HaggleStepCount(bounds);
+    view->sliderStep = StepOfOffer(bounds, offer);
+    view->offerCats = offer;
+    view->haggleLabel = t.haggleLabel;
+    view->offerText = Fill(t.catsValue, in.name, offer);
+    view->minText = FormatCats(bounds.minOffer);
+    view->maxText = FormatCats(bounds.maxOffer);
+    view->oddsPercent = AcceptOdds(ask, offer, in.haggle.leverage, in.haggle.personality,
+                                   in.haggle.prices);
+
+    if (view->purseKnown && view->purseCats < offer)
+    {
+        view->affordable = false;
+        view->shortfall = offer - view->purseCats;
+        view->haggleLine = Fill(t.haggleShort, in.name, view->shortfall);
+        view->haggleTone = OddsTone_Danger;
+        return true;
+    }
+
+    std::string odds = t.haggleOdds;
+    ReplaceAll(&odds, "{pct}", PercentNumber(view->oddsPercent));
+    view->haggleLine = odds;
+    view->haggleTone = OddsToneOf(view->oddsPercent);
+    // At the ask it is the plain ACEPTAR (CompleteOffer re-evaluates, so a "not
+    // yet" the purse now covers joins); below it, one haggle attempt.
+    view->acceptIsOffer = offer < ask;
+    view->acceptLabel = view->acceptIsOffer ? t.haggleOffer : t.accept;
+    return true;
+}
+
 OfferView Frame(const std::string& name, ReadoutRoute route, const OfferTexts& t)
 {
     OfferView view;
@@ -151,7 +204,20 @@ OfferTexts DefaultOfferTexts()
     t.bodyCare = "{name} te debe la comida y las curas, y desea unirse a tu grupo.";
     t.bodyRescue = "{name} te debe la vida y desea unirse a tu grupo.";
     t.bodyJoins = "{name} desea unirse a tu grupo.";
+
+    t.haggleLabel = "OFERTA";
+    t.haggleOdds = "Probabilidad de aceptar: {pct}%";
+    t.haggleOffer = "OFRECER";
+    t.haggleOffended = "Se ofendio: hoy no regatea";
+    t.haggleShort = "No te alcanzan para esa oferta (te faltan {cats})";
     return t;
+}
+
+OddsTone OddsToneOf(int percent)
+{
+    if (percent >= 70) return OddsTone_Ready;
+    if (percent >= 30) return OddsTone_Amber;
+    return OddsTone_Danger;
 }
 
 ReadoutRoute OfferRouteOf(const Verdict& verdict)
@@ -207,6 +273,25 @@ OfferView BuildOfferView(const OfferInput& in, const OfferTexts& t)
         {
             view.showPurse = true;
             view.purseText = Fill(t.catsValue, in.name, view.purseCats);
+        }
+
+        // Haggling: the slider takes over the purse check and the buttons.
+        if (in.haggle.enabled)
+        {
+            if (in.haggle.locked)
+            {
+                view.haggleLocked = true;
+                view.haggleLine = t.haggleOffended;
+                view.haggleTone = OddsTone_Danger;
+            }
+            else if (ApplyHaggle(in, t, &view))
+            {
+                return view;
+            }
+        }
+
+        if (view.purseKnown)
+        {
             if (view.purseCats < v.cats)
             {
                 view.affordable = false;
