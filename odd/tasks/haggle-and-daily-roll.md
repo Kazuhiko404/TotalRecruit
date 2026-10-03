@@ -60,14 +60,14 @@ Two additions the user approved on 2026-10-03:
   - Config keys and Mod Hub controls.
   - Tests first.
   - Route: delegated.
-- [ ] **T3 Haggle mockup.**
+- [x] **T3 Haggle mockup.** (bda8719)
   - Slider row in the popup states:
     - affordable;
     - offer below ask, with live odds;
     - unaffordable offer;
     - offended / locked.
   - Route: delegated.
-- [ ] **T4 Slider port + popup wiring.**
+- [x] **T4 Slider port + popup wiring.** (3bf2e03)
   - Port TotalSparring's slider into a TotalRecruit module.
   - Add an OfferView slider section.
   - Offer button flow: haggle → pay / offend → popup refresh.
@@ -79,5 +79,9 @@ Two additions the user approved on 2026-10-03:
 - **T2** (delegated; d3ecd52): `haggle_rules` (bounds, clamp, odds, leverage, temperament shift, `ResolveHaggle` under `kHaggleRollSalt`, `OffendedAsk`) and `haggle_ledger` (`SessionHaggleLedger()`, cleared in `load_boundary`). Config keys on `Prices` (`haggleEnabled`, `haggleMinFraction`, `haggleDiscountWeight`, `haggleLeverageWeight`, `haggleOffenceMarkup`) with clamps, Mod Hub controls after the price controls, keys added to the shipped config.json. Markup wired once: `ApplyCatsOffer(..., HaggleFact, prices)` in route_cats.cpp; `HaggleFact` read with `SafeFindCharKey` in `GatherFreeExtra`/`GatherCageExtra`. `SafeSpeakerBestStat` added to character_facts. RED: C1083 (missing header); GREEN: rules_tests 27/27 suites, 0/61180 checks failed; plugin build clean. Size: ~826 changed lines, about half of them tests; above the 400-line heuristic because tests and config plumbing ship with the rules.
 - Personality shifts are fixed constants in haggle_rules (Fearful +15; Brave/ColdCruel/Maniacal -10; Honorable -15; no "proud" temperament exists), not config keys: a possible R0.4 follow-up if the user wants them tunable.
 
+- **T3** (delegated; bda8719): `ui-mockup/readout.html` section 5 states 2-4 (haggle below the ask, offer the purse cannot meet, offended/locked), live drag via `js/haggle.js` (JS twin of the haggle rules, slider pixel math and the view's haggle step). Fixed-height section: OFERTA | slider | value, min/max, one line (odds / shortfall / offended). Chrome: no text overflow, no horizontal page scroll, drag keeps the window height (278 px / 276 px); `node --check` clean on all JS.
+- **T4** (delegated; 3bf2e03): TotalSparring `src/shared/ui/flat_slider.{h,cpp}` + `flat_slider_math.h` ported to `src/flat_slider.{h,cpp}` (ui_style fills, TR_TRY, two-step creation; pure math inline in the MyGUI-free header). `HaggleStepCount/OfferAtStep/StepOfOffer` in haggle_rules. `OfferView` haggle section (`OfferHaggleInput`, `OddsToneOf`, `acceptIsOffer`). `ShowPricedOffer` keeps the input and on a slider move rebuilds the view and relays only texts, purse colour and the button row. `CompleteHaggle` (recruit_core): re-evaluate, `ReadHaggleTerms` (MintRollKey key/day), `ResolveHaggle`; accepted → `PayAndRecruit(offer)`; offended → `RecordOffence` + reopen locked at the raised ask. Messages: `popup.haggle.*`, `haggle.accepted/offended` (added only). RED: test build failed on the missing API (C2039 etc.); GREEN: rules_tests 29/29 suites, 0/61339 checks failed; plugin Rebuild clean (no warnings outside KenshiLib headers). Docs: QA 12.18, DEVELOPING rows, README. Size ~1000 changed lines incl. tests and mockup (above the 400 heuristic: the slider port, view section and flow ship together with their tests).
+- In-game QA pending: QA.md 12.18 H1-H12 (drag feel and MyGUI drag events on the surface are engine-only).
+
 ## Next step
-T3 (haggle mockup in `ui-mockup/`).
+T5 (docs + deploy): ship the DLL and messages.json, run QA.md 12.18 in game.
