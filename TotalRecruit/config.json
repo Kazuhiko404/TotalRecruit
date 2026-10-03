@@ -22,8 +22,8 @@
   "animalsEnabled": true,
 
   "easyHoursCaged": 6.0,
-  "catsPerLevel": 90,
-  "catsCeiling": 28000,
+  "catsPerLevel": 32,
+  "catsCeiling": 10000,
   "priceCurveSteepness": 0.09,
   "priceCurveMidpoint": 31.0,
   "catsMinimum": 200,
@@ -36,6 +36,7 @@
   "talentWeight": 1.0,
   "uniqueMultiplier": 2.0,
   "talentMaxMultiplier": 1.5,
+  "premiumMaxMultiplier": 1.6,
 
   "dialoguePackage": "",
   "dialogueRescue": "",

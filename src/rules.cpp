@@ -45,10 +45,11 @@ void LogPriceBreakdown(Character* character, const PriceInputs& in, int cats)
     char buf[256] = { 0 };
     _snprintf_s(buf, sizeof(buf), _TRUNCATE,
                 "[price] level=%d base=%.0f talent=x%.2f unique=x%.2f personality=x%.2f "
-                "faction=x%.2f -> %d cats (floor %d, cap %d)",
+                "premium=x%.2f faction=x%.2f -> %d cats (floor %d, cap %d)",
                 in.level, BasePriceInCats(in.level, prices), in.talentMultiplier,
                 in.unique ? prices.uniqueMultiplier : 1.0f,
                 PersonalityPriceMultiplier(in.personality, prices),
+                PremiumMultiplier(in, prices),
                 in.factionMultiplier, cats, prices.catsMinimum, prices.catsHardCap);
     LogInfo(CharacterName(character) + " " + buf);
 }

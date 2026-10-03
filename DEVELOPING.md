@@ -137,7 +137,7 @@ qué existe — leelo antes que el `.cpp`.
 | `hold_tracking.cpp/.h`, `insistence.cpp/.h`, `rescue_memory.cpp/.h`, `pacify.cpp/.h` | El reloj de encierro, la insistencia (R2.4), la deuda del rescate y la pacificación: estado por-sesión o memoria del motor, cada uno en su archivo. |
 | `route_rules.cpp/.h` | **Puro.** Qué ruta contesta primero (`ChooseEntryRoute`, sobre los hechos de `MakeRouteFacts`). El orden de precedencia vive solo acá. |
 | `chance_rules.cpp/.h` | **Puro.** El motor de chance (`JoinChance`, `ChanceFrom*`, el roll estable). |
-| `price_rules.cpp/.h` | **Puro.** La curva de precio, los multiplicadores (talento, personalidad, facción) y el precio final: redondeo, mínimo y tope (`FinalPriceInCats`). |
+| `price_rules.cpp/.h` | **Puro.** La curva de precio (calibrada a precios tipo vanilla: nivel 13 con nombre y talento ~2.500 cats), los multiplicadores (talento, personalidad, facción), la prima conjunta talento x único x carácter con tope `premiumMaxMultiplier` (`PremiumMultiplier`) y el precio final: redondeo, mínimo y tope (`FinalPriceInCats`). |
 | `money_rules.cpp/.h` | **Puro.** Cobrar y mover cats entre bolsas (`ChargePrice`, `TransferCats`): todo o nada, sin acuñar ni perder cats si un paso falla. |
 | `cats_purse.cpp/.h` | La bolsa respaldada por el motor (`CharacterPurse`): el único lugar que conoce `getMoney` / `takeMoney` / `Ownerships::addMoney`. |
 | `char_key.h`, `temperament.h` | **Puros.** La clave de personaje (`CharKey`: id persistido, o handle de respaldo) y el enum de personalidad sin motor. `temperament_map.cpp` hace el único mapeo desde `PT_*` y `OT_*`. |

@@ -253,6 +253,7 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "factionWeight", &c.prices.factionWeight);
     AddFloat(f, "talentWeight", &c.prices.talentWeight);
     AddFloat(f, "talentMaxMultiplier", &c.prices.talentMaxMultiplier);
+    AddFloat(f, "premiumMaxMultiplier", &c.prices.premiumMaxMultiplier);
     AddFloat(f, "uniqueMultiplier", &c.prices.uniqueMultiplier);
     AddFloat(f, "talentCraftWeight", &c.prices.craftFamilyWeight);
     AddFloat(f, "talentShadowWeight", &c.prices.shadowFamilyWeight);
@@ -424,6 +425,7 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.prices.talentWeight, 0.0f, 10.0f);
     ClampFloat(&g_config.prices.uniqueMultiplier, 0.0f, 50.0f);
     ClampFloat(&g_config.prices.talentMaxMultiplier, 1.0f, 50.0f);
+    ClampFloat(&g_config.prices.premiumMaxMultiplier, 1.0f, 50.0f);
 
     // The numbers that used to be literals in the rules. A hand-edited value that
     // would break the arithmetic (a negative weight, a table entry that swamps the

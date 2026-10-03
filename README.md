@@ -51,10 +51,13 @@ simply joins. The wait is **6 game hours, flat for everyone** (`easyHoursCaged`;
 it used to be 12). The clock starts when the prisoner is first seen in your cage
 and is dropped when they leave it.
 
-**Price.** Quotes follow one calibrated curve by the recruit's own level, roughly
-1k at level 5, 3k at 10, 10k at 20, 32k at 40, 57k at 60 and 76k at 75, for an
-ordinary character. Talent (up to x1.5), uniqueness (x2), personality (coward x0.6,
-brave/cruel x1.6) and faction standing multiply it, the result is rounded to the
+**Price.** Quotes follow one calibrated curve by the recruit's own level, at
+vanilla-like prices: roughly 380 at level 5, 1k at 10, 1.6k at 13, 3.4k at 20,
+11.5k at 40, 20k at 60 and 27k at 75, for an ordinary character. Talent (up to
+x1.5), uniqueness (x2) and personality (coward x0.6, brave/cruel x1.6) multiply it
+together, capped at `premiumMaxMultiplier` (x1.6; a coward's discount still
+applies), so a level-13 named, talented NPC costs ~2,600. Faction standing
+multiplies after that cap. The result is rounded to the
 nearest 10, floored at `catsMinimum` and capped at `catsHardCap` (150,000). Your own
 level is not part of the price: it already drives the join chance. A charge is
 all-or-nothing, and if the engine refuses the recruit afterwards the cats are

@@ -1,7 +1,7 @@
 #pragma once
 
-// The price curve, without the engine. Talent, faction and uniqueness multiply
-// on top of this in rules.cpp because they read the character.
+// The price curve, without the engine. Talent, faction and uniqueness are read
+// from the character elsewhere and arrive here as PriceInputs.
 
 #include "config.h"
 #include "temperament.h"
@@ -60,9 +60,15 @@ struct PriceInputs
     }
 };
 
+// talent x unique x personality, together, capped from above at
+// prices.premiumMaxMultiplier (a value below 1.0 in the config reads as 1.0).
+// Only the top is capped: a coward's 0.6 still discounts. Faction is not part of
+// it; FinalPriceInCats applies it after.
+float PremiumMultiplier(const PriceInputs& inputs, const Prices& prices);
+
 // The price the player is asked for, in whole cats.
 //
-// base curve x talent x unique x personality x faction, rounded to the nearest
+// base curve x PremiumMultiplier x faction, rounded to the nearest
 // 10 cats (so a quote reads as a price, not as a float's tail), then held between
 // prices.catsMinimum and prices.catsHardCap. The floor and the ceiling come last
 // on purpose: applied before the multipliers, a coward's 0.6 undercut the minimum

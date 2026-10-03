@@ -14,11 +14,11 @@ const float kPriceStep = 10.0f;
 const float kAbsoluteMaxCats = 1.0e9f;
 } // namespace
 
-// The raw curve, calibrated against the published Recruit-Prisoners-for-Cats
-// tiers by base stats (level here): weak NPCs 1-6k, modest fighters 6-25k,
-// 40-50 stats 30-50k, 55-65 stats 50-60k, 70-80+ stats ~80k. Shipped values give
-// ~1.1k at 5, ~3k at 10, ~9.6k at 20, ~14k at 25, ~32k at 40, ~45k at 50,
-// ~57k at 60 and ~76k at 75 (see the feature document for the fit).
+// The raw curve, calibrated to vanilla-like prices: a level-13 named, talented
+// NPC quotes ~2500 cats (never above 3000) once the capped premium applies, and
+// the strongest ordinary characters approach ~27k. Shipped values give ~380 at
+// 5, ~1.05k at 10, ~1.6k at 13, ~3.4k at 20, ~11.5k at 40, ~20.3k at 60 and
+// ~27.2k at 75.
 float BasePriceInCats(int level, const Prices& prices)
 {
     if (level < 1)
@@ -90,15 +90,27 @@ float FactionPriceMultiplier(float relation, const Prices& prices)
     return multiplier;
 }
 
+float PremiumMultiplier(const PriceInputs& inputs, const Prices& prices)
+{
+    float premium = inputs.talentMultiplier;
+    if (inputs.unique)
+    {
+        premium *= prices.uniqueMultiplier;
+    }
+    premium *= PersonalityPriceMultiplier(inputs.personality, prices);
+
+    const float most = (prices.premiumMaxMultiplier > 1.0f) ? prices.premiumMaxMultiplier : 1.0f;
+    if (premium > most)
+    {
+        premium = most;
+    }
+    return premium;
+}
+
 int FinalPriceInCats(const PriceInputs& inputs, const Prices& prices)
 {
     float cats = BasePriceInCats(inputs.level, prices);
-    cats *= inputs.talentMultiplier;
-    if (inputs.unique)
-    {
-        cats *= prices.uniqueMultiplier;
-    }
-    cats *= PersonalityPriceMultiplier(inputs.personality, prices);
+    cats *= PremiumMultiplier(inputs, prices);
     cats *= inputs.factionMultiplier;
 
     // Rounded to a price, then held between the floor and the ceiling. The

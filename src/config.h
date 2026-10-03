@@ -51,10 +51,12 @@ struct Prices
     // Route B: cats demanded, scaled from the NPC's rough level.
     // Price = (catsPerLevel/10) * level^2 + catsCeiling * logistic(level).
     // The square term keeps low levels affordable; the logistic carries the top
-    // and flattens instead of running away. Calibrated in price_rules.cpp against
-    // the Recruit-Prisoners-for-Cats tiers; the quote is that curve times talent,
-    // uniqueness, personality and faction, rounded to 10 and held between
-    // catsMinimum and catsHardCap (FinalPriceInCats).
+    // and flattens instead of running away. Calibrated in price_rules.cpp to
+    // vanilla-like prices (a level-13 named, talented NPC ~2500 cats, the
+    // strongest ordinary ~27k); the quote is that curve times the capped premium
+    // (talent x uniqueness x personality, at most premiumMaxMultiplier) and
+    // faction, rounded to 10 and held between catsMinimum and catsHardCap
+    // (FinalPriceInCats).
     int catsPerLevel;
     // What the strongest ordinary characters approach. Not a hard cap: talent,
     // faction, personality and uniqueness still multiply on top, until catsHardCap.
@@ -89,12 +91,17 @@ struct Prices
     // Hard ceiling on the final price after every multiplier. Multipliers stack
     // (talent x unique x personality x faction), so without one a single
     // character could be quoted millions. 0 removes the ceiling (the price is
-    // still kept inside the int range). The reference mod's strongest uniques sit
-    // at 100-150k, which is what the default allows.
+    // still kept inside the int range). A safety net for hand-edited configs: the
+    // premium cap below already keeps shipped quotes far under it.
     int catsHardCap;
     // The most the talent multiplier may add. 1.5 means a specialist costs at most
     // half again what their level alone says.
     float talentMaxMultiplier;
+    // The most talent x uniqueness x personality may multiply the base curve by,
+    // together. Capped from above only: a coward's discount still applies. The
+    // faction multiplier is separate and applies after. 1.6 keeps a named,
+    // talented NPC at 1.6x their level price instead of 1.5 x 2.0 x 1.6 = 4.8x.
+    float premiumMaxMultiplier;
     // How rare each family of skill is, as the weight the talent edge is scaled
     // by. Combat is the baseline (1.0): Kenshi hands you fighters constantly. A
     // craftsman is worth more than a swordsman of the same level because
@@ -104,8 +111,8 @@ struct Prices
 
     Prices()
         : easyHoursCaged(6.0f),
-          catsPerLevel(90),
-          catsCeiling(28000),
+          catsPerLevel(32),
+          catsCeiling(10000),
           priceCurveSteepness(0.09f),
           priceCurveMidpoint(31.0f),
           catsMinimum(200),
@@ -118,6 +125,7 @@ struct Prices
           uniqueMultiplier(2.0f),
           catsHardCap(150000),
           talentMaxMultiplier(1.5f),
+          premiumMaxMultiplier(1.6f),
           craftFamilyWeight(1.6f),
           shadowFamilyWeight(1.3f)
     {

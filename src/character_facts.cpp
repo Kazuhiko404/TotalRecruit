@@ -363,8 +363,8 @@ PriceInputs GatherPrice(Character* character, const CoreFacts& core,
     }
 
     // A named character is not just a strong one: they are the only one there is.
-    // The reference mod puts its uniques at 100-150k against ~80k for the strongest
-    // ordinary fighter, and that gap is the whole point of a name.
+    // The name multiplies the price (uniqueMultiplier), but together with talent
+    // and personality it stays under premiumMaxMultiplier (PremiumMultiplier).
     inputs.unique = core.unique;
     inputs.factionMultiplier = FactionMultiplier(relation, config);
     return inputs;
