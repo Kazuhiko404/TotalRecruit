@@ -1,4 +1,4 @@
-# ui-mockup (TotalRecruit readout)
+# ui-mockup (TotalRecruit readout and recruit popup)
 
 Interactive HTML mockup the in-game readout is built from (source of truth, 1:1 with the game).
 Open `readout.html` straight from disk in Chrome: no server, no build. Same conventions as
@@ -7,11 +7,14 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 
 | File | What it holds | C++ it mirrors |
 |---|---|---|
-| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / press Hablar), the per-route table, the Mod Hub controls | -- |
-| `css/base.css` | palette tokens | `readout_ui.cpp` colours |
+| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / press Hablar), the per-route table, the Mod Hub controls, the recruit popup gallery (section 5) | -- |
+| `css/base.css` | palette tokens | `ui_style.h` / `ui_style.cpp` colours |
 | `css/readout.css` | the card: widths, padding, bar heights, segment colours | `kCardWidth`, `kCardWidthCompact`, `kPad`, `kBarH` ... |
 | `js/data.js` | one view-model per state (the facts that produce it are in a comment above each); `PLACEMENT` timings and gaps; `HUB` rows | `readout_model.cpp` output (`ReadoutView`); `readout.cpp` / `readout_ui.cpp` constants; `mod_hub_integration.cpp` |
-| `js/readout.js` | draws a view-model as the card; `placeCard` (beside the offer); the offer window | `readout_ui.cpp` (`MoveUnguarded`, `StepAside`); `offer_popup.cpp` |
+| `js/readout.js` | draws a view-model as the card; `placeCard` (beside the offer); `offerRect` (the popup centred) | `readout_ui.cpp` (`MoveUnguarded`, `StepAside`); `offer_popup.cpp` (`ChoosePosition`) |
+| `css/popup.css` | the recruit popup: fonts and colours of each slot, flat buttons | `offer_popup.cpp` (widgets from `ui_style.cpp`) |
+| `js/popup_data.js` | `POPUP_LAYOUT` (every px of the popup) and one `OfferView` per state, the facts above each | `offer_popup.cpp` constants; `offer_view.cpp` output (`OfferView`) |
+| `js/popup.js` | `layoutOffer`: every rectangle of the popup, text measured first | `offer_popup.cpp` (`LayoutOffer`, `MeasureWrapped`) |
 
 ## Design decisions
 
@@ -48,6 +51,26 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
    is the fallback); a tint multiplies against the skin underneath, so nothing foreground is dimmed. The card lives
    on the `ToolTip` layer, which has `Pick=false`, and every widget has `setNeedMouseFocus(false)`: it cannot take a click.
 9. **Player-facing text** is the `readout` block of `messages.json` (Spanish, no accents, like the rest of the file).
+
+### Recruit popup (section 5)
+
+10. **One window for every Hablar outcome.** (User request 2026-10-03: "en vez de mostrar una notificacion de cuanto
+    cuesta, muestra un popup con la informacion y Aceptar o Cancelar".) Yes, a price, a price the purse cannot meet,
+    a refusal, a refusal with a remedy, a mercy plea and a rescue all open it; nothing ends in a notification.
+    `money.short` survives only as the last-second re-check when ACEPTAR is pressed.
+11. **Kenshi frame, mockup content.** `Kenshi_WindowCX` on the `Info` layer keeps the title bar, the X (= Cancel)
+    and dragging; the client area gets a lacquer plate and flat art over it (TotalSparring `duel_popup`). Fills are
+    created and textured before anything drawn on top of them.
+12. **Layout.** Framed 110 px portrait on the left; on the right the name in brass with the route tag, a brass
+    rule, the body line (wrapped and measured, never guessed), then an info box with only the rows that apply:
+    PRECIO (amber, or `Gratis` in green), TIENES (red when short), PROBABILIDAD (when the verdict rolled). Under
+    that, full width, the reason on a dark plate with a red bar, then the buttons. The window height is the sum.
+13. **Buttons.** ACEPTAR = amber plate, dark text; the remedy / IGNORAR = amber edge, amber text; CANCELAR /
+    CERRAR / RECHAZAR = line plate, golddim edge. Visible buttons share the row in that order; Cancel alone sits
+    on the right at 150 px.
+14. **Short purse = no ACEPTAR.** A cats price above the purse turns TIENES red, adds "No te alcanzan los cats
+    (te faltan N)" and hides ACEPTAR. Any refusal hides ACEPTAR and shows its reason in red.
+15. **Text** is the `popup` block of `messages.json`; the route tag reuses `readout.route.*`.
 
 ## Checking a change
 

@@ -94,18 +94,9 @@ function placeCard(anchor, size, view, avoid) {
   return { left: left, top: top };
 }
 
-// The offer window as src/offer_popup.cpp centres it (ChoosePosition).
-function offerRect(view) {
-  var o = PLACEMENT.offer;
-  return { left: Math.floor((view.w - o.width) / 2), top: Math.floor((view.h - o.height) / 2),
-           width: o.width, height: o.height };
-}
-
-function offerHTML(r, npcLine) {
-  var bw = Math.floor((r.width - 16 * 3) / 2);
-  return '<div class="offer" style="left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width +
-    'px;height:' + r.height + 'px"><div class="ttl">Reclutamiento</div><div class="pt"></div>' +
-    '<div class="txt">' + esc(npcLine) + '</div>' +
-    '<div class="btn" style="left:16px;width:' + bw + 'px">ACEPTAR</div>' +
-    '<div class="btn" style="left:' + (32 + bw) + 'px;width:' + bw + 'px">RECHAZAR</div></div>';
+// The recruit popup as src/offer_popup.cpp centres it (ChoosePosition), given its
+// measured size (popup.js draws it).
+function offerRect(view, size) {
+  return { left: Math.floor((view.w - size.w) / 2), top: Math.floor((view.h - size.h) / 2),
+           width: size.w, height: size.h };
 }

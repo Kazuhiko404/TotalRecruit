@@ -107,8 +107,7 @@ var PLACEMENT = {
   screenMargin: 4,      // kScreenMargin
   anchorLift: 70,       // kAnchorLiftPx (readout_target.cpp)
   pinTimeoutMs: 8000,   // kPinTimeoutMs
-  selectionRefreshMs: 2000, // kSelectionRefreshMs
-  offer: { width: 620, height: 260 } // kBaseWidth, kBaseHeightNoExtra
+  selectionRefreshMs: 2000 // kSelectionRefreshMs
 };
 
 // Mod Hub rows, word for word as src/mod_hub_integration.cpp registers them, with the

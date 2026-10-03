@@ -1,0 +1,47 @@
+/* The recruit popup (src/offer_popup.cpp, drawn from an OfferView: src/offer_view.h).
+   Every px here is the C++ constant of the same name in offer_popup.cpp; the colours are
+   the palette tokens of base.css (= src/ui_style.h). Positions are not CSS flow: js/popup.js
+   computes every rectangle with the same arithmetic as LayoutOffer, measuring the wrapped
+   text the way the C++ asks MyGUI for getTextSize(). */
+:root{
+  --pp-client-w:540px;   /* kClientWidth */
+  --pp-title-h:26px;     /* Kenshi_WindowCX caption bar: drawn by the engine skin */
+  --soft-danger:#f08a7c; /* kSoftDanger: red text that stays readable on lacquer */
+}
+/* The Kenshi_WindowCX frame: the engine draws it, the mod only sets the caption colour. */
+.pp{position:relative;background:#1b1713;border:1px solid var(--golddim);box-shadow:0 8px 24px #000c;
+  width:calc(var(--pp-client-w) + 2px)}
+.pp .ttl{height:var(--pp-title-h);line-height:var(--pp-title-h);padding:0 10px;background:var(--sumi);
+  color:var(--brass);font:600 14px Georgia,serif;letter-spacing:.06em;border-bottom:1px solid var(--line);
+  display:flex;justify-content:space-between}
+.pp .ttl .x{color:var(--muted);font:700 13px sans-serif}
+/* The client area: every child is absolutely placed by popup.js. */
+.pp .cl{position:relative;width:var(--pp-client-w)}
+.pp .f{position:absolute}                       /* a tinted tr_white.png fill */
+.pp .t{position:absolute;white-space:nowrap;overflow:hidden;line-height:1}
+.pp .w{position:absolute;white-space:normal;overflow-wrap:break-word}  /* word-wrapping EditBox */
+.pp .portrait{position:absolute;background:
+  radial-gradient(circle at 50% 38%,#8a7660 0 22%,transparent 23%),
+  radial-gradient(ellipse at 50% 100%,#5a4a3a 0 45%,transparent 46%),#2a2521}
+/* fonts: kNameFont = Kenshi_PaintedTextFont_Small, kBodyFont = Kenshi_StandardFont_Medium @ kBodyPx,
+   kSmallFont = Kenshi_StandardFont_Small */
+.pp .nm{font:600 17px Georgia,serif;color:var(--brass);letter-spacing:.04em;display:flex;align-items:center}
+.pp .tag{font:600 11px "Trebuchet MS",sans-serif;letter-spacing:.08em;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center}
+.pp .body{font:16px/20px "Trebuchet MS",sans-serif;color:var(--text)}
+.pp .lbl{font:13px "Trebuchet MS",sans-serif;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;
+  display:flex;align-items:center}
+.pp .val{font:600 16px "Trebuchet MS",sans-serif;display:flex;align-items:center;font-variant-numeric:tabular-nums}
+.pp .why{font:16px/20px "Trebuchet MS",sans-serif;color:var(--soft-danger);text-shadow:1px 1px 0 #000}
+.pp .why.plain{color:var(--text)}
+/* Flat buttons: a coloured plate (and an optional 1px edge under it) with a skinless
+   Kenshi_TextBoxEmptySkin button carrying the caption on top. */
+.pp .btn{position:absolute;display:flex;align-items:center;justify-content:center;
+  font:600 15px "Trebuchet MS",sans-serif;letter-spacing:.06em;cursor:pointer}
+
+/* ------------- gallery ------------- */
+.ppgal{display:flex;flex-wrap:wrap;gap:28px 26px;align-items:flex-start}
+.ppgal figure{margin:0;display:flex;flex-direction:column;gap:8px}
+.ppgal figcaption{font-size:12px;color:var(--muted);max-width:542px}
+.ppgal figcaption b{color:var(--brass)}
+.ppgal figcaption code{color:var(--text)}

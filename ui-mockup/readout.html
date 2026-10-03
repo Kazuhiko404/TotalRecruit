@@ -5,6 +5,7 @@
 <title>TotalRecruit - readout mockup</title>
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/readout.css">
+<link rel="stylesheet" href="css/popup.css">
 </head>
 <body>
 <h1>TotalRecruit readout</h1>
@@ -58,8 +59,27 @@ asked as a bystander and remembered per NPC for 2 s (<code>src/talk_hint_cache.h
 <h2 class="sec">4. Mod Hub controls</h2>
 <div class="gal" id="hub"></div>
 
+<h2 class="sec">5. The recruit popup</h2>
+<p class="lead">Every <i>Hablar</i> outcome opens this one window: a yes with its price, a price the purse cannot meet, a
+refusal and why, a refusal the player can act on, a plea for mercy, a rescue. Nothing ends in a notification any more.
+It keeps Kenshi's own <code>Kenshi_WindowCX</code> frame on the <code>Info</code> layer (title bar and X, drawn by the
+engine) and paints the mockup's flat art over the client area, the way TotalSparring's duel popup does. Source of truth
+for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_view.cpp</code>.</p>
+<div class="note"><b>Rules the view applies.</b><ul>
+  <li>A cats price is always shown with the purse it is checked against. Purse below price: the purse turns red, the red
+    line says how much is missing, and ACEPTAR is hidden (only CANCELAR).</li>
+  <li>Any refusal: the reason in red, ACEPTAR hidden. A remedy the player can act on adds its button (DARLE COMIDA /
+    GOLPEARLO).</li>
+  <li>A free join says <i>Gratis</i> in green; <i>Probabilidad</i> appears only when the verdict rolled.</li>
+  <li>The X in the title bar is Cancel. Money only moves on ACEPTAR, and the price is re-checked at that moment
+    (<code>money.short</code> is now only that last-second check).</li>
+</ul></div>
+<div class="ppgal" id="popups"></div>
+
 <script src="js/data.js"></script>
 <script src="js/readout.js"></script>
+<script src="js/popup_data.js"></script>
+<script src="js/popup.js"></script>
 <script>
 (function () {
   var gallery = document.getElementById('gallery');
@@ -142,16 +162,23 @@ asked as a bystander and remembered per NPC for 2 s (<code>src/talk_hint_cache.h
       return;
     }
     // Default: the player pressed Hablar on the caged bandit in the middle of the screen.
-    var offer = offerRect(VIEW);
     h += '<div class="cage" style="left:605px"></div><div class="npc" style="left:623px"></div>';
     h += '<div class="npc" style="left:200px"></div><div class="npc" style="left:1180px"></div>';
-    h += offerHTML(offer, 'Por 9.570 cats me voy contigo. Ni uno menos.');
     h += '<div class="callout" style="left:16px;top:16px;max-width:300px">Pressing Hablar opens the offer and pins the card ' +
          'beside it. It would cover the offer above his head, so it steps to the right of the window. When the offer closes ' +
          '(or after ' + (PLACEMENT.pinTimeoutMs / 1000) + ' s when none opened) it stays only if he is still selected.</div>';
     h += '<div class="callout" style="left:16px;top:' + (VIEW.h - 64) + 'px;max-width:300px">No card for the other NPCs: ' +
          'only the selected one (or the one Hablar was pressed on) gets a card.</div>';
     scene.innerHTML = h;
+    // The recruit popup (section 5), measured and centred as ChoosePosition does.
+    var pop = document.createElement('div');
+    pop.className = 'placed';
+    pop.innerHTML = popupHTML(POPUP_STATES[0].vm);
+    scene.appendChild(pop);
+    var pbox = pop.firstChild.getBoundingClientRect();
+    var offer = offerRect(VIEW, { w: Math.round(pbox.width), h: Math.round(pbox.height) });
+    pop.style.left = offer.left + 'px';
+    pop.style.top = offer.top + 'px';
     placeInto(readoutHTML(cage, compact, true), anchorOf(623), offer);
   }
   var sceneMode = 'select';
@@ -169,6 +196,11 @@ asked as a bystander and remembered per NPC for 2 s (<code>src/talk_hint_cache.h
     return '<figure><div class="rd noarrow" style="pointer-events:auto"><div class="hd"><span class="nm">' + r[0] +
       '</span><span class="tag r-libre">' + r[2] + '</span></div><div class="why" style="border:0">' + r[3] +
       '</div></div><figcaption><code>' + r[1] + '</code></figcaption></figure>';
+  }).join('');
+
+  document.getElementById('popups').innerHTML = POPUP_STATES.map(function (s, i) {
+    return '<figure>' + popupHTML(s.vm) + '<figcaption><b>' + (i + 1) + '. ' + s.title + '.</b> ' + s.note +
+      '</figcaption></figure>';
   }).join('');
 })();
 </script>
