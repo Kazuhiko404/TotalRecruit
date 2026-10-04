@@ -120,7 +120,7 @@ void TickCageCommands();
 bool ClaimOrderedKnockoutCredit(Character* victim);
 
 // Load boundary: lets the watched actor go (CleanUpKnockoutOrder, while the
-// characters still exist), drops the watch (raw engine pointers) and the pending
-// credits.
+// characters still exist and still resolve to their keys), drops the watch and the
+// pending credits.
 void ForgetCageCommands();
 } // namespace totalrecruit

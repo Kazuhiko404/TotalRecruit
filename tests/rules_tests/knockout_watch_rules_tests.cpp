@@ -270,6 +270,32 @@ void TheWatchClockStopsWhileThePauseIsOn()
     f.elapsedMs = elapsed;
     CHECK(NextKnockoutWatchStep(f, 1500, 120000, 3000) == KnockoutStep_Wait);
 }
+
+// The watch keeps keys, not trusted pointers: each tick re-resolves both. An actor
+// that no longer resolves (unloaded, freed) drops the watch with no cleanup --
+// there is nobody to clean -- ahead of anything else; a target that no longer
+// resolves reads as unreadable and still lets the actor go.
+void AVanishedActorDropsTheWatchWithNoCleanup()
+{
+    const char* name = "knockout watch: an actor that no longer resolves drops the watch, no cleanup";
+    KnockoutWatchFacts f = Fresh();
+    f.actorGone = true;
+    CHECK(NextKnockoutWatchStep(f, 1500, 120000, 3000) == KnockoutStep_ActorGone);
+    f.targetUnreadable = true;
+    f.elapsedMs = 200000;
+    CHECK(NextKnockoutWatchStep(f, 1500, 120000, 3000) == KnockoutStep_ActorGone);
+    CHECK(KnockoutStepEndsWatch(KnockoutStep_ActorGone));
+    CHECK(!KnockoutStepCleansUp(KnockoutStep_ActorGone));
+    CHECK(KnockoutStepCleansUp(KnockoutStep_CleanupDown));
+    CHECK(KnockoutStepCleansUp(KnockoutStep_Fallback));
+    CHECK(KnockoutStepCleansUp(KnockoutStep_Abandoned));
+    CHECK(KnockoutStepCleansUp(KnockoutStep_CleanupTimeout));
+    CHECK(KnockoutStepName(KnockoutStep_ActorGone)[0] != '?');
+
+    f = Fresh();
+    f.targetUnreadable = true;
+    CHECK(NextKnockoutWatchStep(f, 1500, 120000, 3000) == KnockoutStep_CleanupDown);
+}
 } // namespace
 
 void RunKnockoutWatchRulesTests()
@@ -284,5 +310,6 @@ void RunKnockoutWatchRulesTests()
     OnlyOurOwnKnockoutOrderAloneIsDropped();
     AnAbandonedOrderEndsTheWaitEarly();
     TheWatchClockStopsWhileThePauseIsOn();
+    AVanishedActorDropsTheWatchWithNoCleanup();
     TheSweepRunsEveryPeriod();
 }

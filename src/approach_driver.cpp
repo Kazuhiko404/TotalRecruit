@@ -99,12 +99,7 @@ WalkUp::WalkUp()
 
 Character* WalkUpNpc(const WalkUp& walk)
 {
-    if (walk.npc == NULL)
-        return NULL;
-    CharKey key;
-    if (!SafeFindCharKey(walk.npc, &key) || !(key == walk.key))
-        return NULL;
-    return walk.npc;
+    return StillSameCharacter(walk.npc, walk.key);
 }
 
 void ReassertCalm(WalkUp* walk, Character* npc)

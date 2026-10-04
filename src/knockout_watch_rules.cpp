@@ -22,6 +22,10 @@ KnockoutWatchStep NextKnockoutWatchStep(const KnockoutWatchFacts& facts,
                                         unsigned int takeTimeoutMs, unsigned int landWindowMs,
                                         unsigned int abandonMs)
 {
+    if (facts.actorGone)
+    {
+        return KnockoutStep_ActorGone;
+    }
     if (facts.targetDown || facts.targetUnreadable)
     {
         return KnockoutStep_CleanupDown;
@@ -64,7 +68,13 @@ bool ShouldDropKnockoutOrder(const KnockoutOrderQueue& queue)
 bool KnockoutStepEndsWatch(KnockoutWatchStep step)
 {
     return step == KnockoutStep_Fallback || step == KnockoutStep_CleanupDown ||
-           step == KnockoutStep_CleanupTimeout || step == KnockoutStep_Abandoned;
+           step == KnockoutStep_CleanupTimeout || step == KnockoutStep_Abandoned ||
+           step == KnockoutStep_ActorGone;
+}
+
+bool KnockoutStepCleansUp(KnockoutWatchStep step)
+{
+    return KnockoutStepEndsWatch(step) && step != KnockoutStep_ActorGone;
 }
 
 const char* KnockoutStepName(KnockoutWatchStep step)
@@ -77,6 +87,7 @@ const char* KnockoutStepName(KnockoutWatchStep step)
     case KnockoutStep_CleanupDown:    return "target down";
     case KnockoutStep_CleanupTimeout: return "land window passed";
     case KnockoutStep_Abandoned:      return "order abandoned";
+    case KnockoutStep_ActorGone:      return "actor gone";
     }
     return "?";
 }

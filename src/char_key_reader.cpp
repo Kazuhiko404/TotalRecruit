@@ -95,4 +95,18 @@ bool SafeFindCharKey(Character* character, CharKey* out)
 {
     return ReadKey(character, out, false);
 }
+
+Character* StillSameCharacter(Character* character, const CharKey& key)
+{
+    if (character == NULL)
+    {
+        return NULL;
+    }
+    CharKey now;
+    if (!SafeFindCharKey(character, &now) || !(now == key))
+    {
+        return NULL;
+    }
+    return character;
+}
 } // namespace totalrecruit

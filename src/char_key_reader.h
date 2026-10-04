@@ -25,4 +25,10 @@ bool SafeCharKey(Character* character, CharKey* out);
 // for them. A character without an id yet has no id-keyed state, so a miss is
 // the correct answer.
 bool SafeFindCharKey(Character* character, CharKey* out);
+
+// `character` while the key read back from it still is `key`, else NULL. An
+// address is not an identity: a pointer held across frames (a walk-up, the
+// knockout watch) is only used while it still reads as the same character, and a
+// freed or reused address resolves to NULL (the read is guarded).
+Character* StillSameCharacter(Character* character, const CharKey& key);
 } // namespace totalrecruit

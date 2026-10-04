@@ -42,7 +42,8 @@ enum KnockoutWatchStep
     KnockoutStep_Fallback,        // never taken: the engine's own knockout, then the cleanup
     KnockoutStep_CleanupDown,     // the prisoner is down, dead or gone: clean up, end
     KnockoutStep_CleanupTimeout,  // taken, but nothing landed inside the window: clean up, end
-    KnockoutStep_Abandoned        // taken, then the actor left the order: clean up, end (no fallback)
+    KnockoutStep_Abandoned,       // taken, then the actor left the order: clean up, end (no fallback)
+    KnockoutStep_ActorGone        // the actor no longer resolves (unloaded, freed): end, no cleanup
 };
 
 // How long after the order the watch waits for the knockout to land before it lets
@@ -67,15 +68,17 @@ struct KnockoutWatchFacts
     bool orderQueued;        // a STEALTH_KNOCKOUT player order is still queued
     bool goalCurrent;        // the AI's current goal is the knockout
     unsigned int abandonedMs; // how long in a row the actor has been off the order
+    bool actorGone;          // the actor's key no longer resolves to the watched pointer
 
     KnockoutWatchFacts()
         : phase(KnockoutPhase_AwaitingTake), taskBefore(0), ordered(0), readTask(false),
           taskNow(0), targetDown(false), targetUnreadable(false), elapsedMs(0),
-          orderQueued(false), goalCurrent(false), abandonedMs(0) {}
+          orderQueued(false), goalCurrent(false), abandonedMs(0), actorGone(false) {}
 };
 
-// A target down, dead or unreadable ends the watch in either phase (there is
-// nothing left to knock out). AwaitingTake: JudgeOrderWatch decides between
+// An actor that no longer resolves ends the watch first, with no cleanup (there is
+// nobody to clean up). A target down, dead, unreadable or no longer resolving ends
+// the watch in either phase (there is nothing left to knock out). AwaitingTake: JudgeOrderWatch decides between
 // waiting, taken and the fallback. AwaitingDown: abandoned once the actor has been
 // off the order for abandonMs in a row, else wait until the land window.
 KnockoutWatchStep NextKnockoutWatchStep(const KnockoutWatchFacts& facts,
@@ -125,8 +128,11 @@ struct KnockoutOrderQueue
 // re-think are what let the actor go then.
 bool ShouldDropKnockoutOrder(const KnockoutOrderQueue& queue);
 
-// True for the steps after which the watch is closed (and the actor cleaned up).
+// True for the steps after which the watch is closed.
 bool KnockoutStepEndsWatch(KnockoutWatchStep step);
+
+// True for the closing steps that clean the actor up: all but ActorGone.
+bool KnockoutStepCleansUp(KnockoutWatchStep step);
 
 // For logs only.
 const char* KnockoutStepName(KnockoutWatchStep step);

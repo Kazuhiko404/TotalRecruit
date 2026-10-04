@@ -132,14 +132,19 @@ bool SafeSetPartHealth(HealthPart* part, float health)
 // second one replaces it -- the player changed their mind -- and the first actor
 // is cleaned up. The watch stays on after the order is taken, until the target is
 // down or the land window passes (knockout_watch_rules.h), and every way it ends
-// lets the actor go (knockout_order_cleanup.h). Raw pointers, only read behind
-// guards and dropped at a load (ForgetCageCommands).
+// lets the actor go (knockout_order_cleanup.h). The pointers are never trusted on
+// their own: each tick re-resolves them against the keys read when the order went
+// in (StillSameCharacter), so an unloaded or freed character is never acted on. An
+// actor that no longer resolves drops the watch with no cleanup; a target that no
+// longer resolves reads as unreadable and the actor is let go.
 struct OrderWatch
 {
     bool active;
     KnockoutWatchPhase phase;
     Character* actor;
     Character* target;
+    CharKey actorKey;
+    CharKey targetKey;
     int taskBefore;
     // The actor was sneaking when the order went in: the cleanup leaves it on.
     bool stealthBefore;
@@ -279,6 +284,7 @@ void RememberCredit(Character* target)
 
 // Closes the watch (if any) and lets its actor go. Copied out and closed before
 // acting, so nothing it calls can run it twice.
+// An actor who no longer resolves is not cleaned up: there is nobody to clean.
 void EndWatch(const char* why)
 {
     if (!g_watch.active)
@@ -287,25 +293,41 @@ void EndWatch(const char* why)
     }
     const OrderWatch watch = g_watch;
     g_watch = OrderWatch();
-    CleanUpKnockoutOrder(watch.actor, watch.target, watch.stealthBefore, why);
+    Character* actor = StillSameCharacter(watch.actor, watch.actorKey);
+    if (actor == NULL)
+    {
+        if (GetConfig().probeOnClick)
+        {
+            LogInfo(std::string("[cage] knockout watch dropped (actor gone) ") + why);
+        }
+        return;
+    }
+    CleanUpKnockoutOrder(actor, StillSameCharacter(watch.target, watch.targetKey),
+                         watch.stealthBefore, why);
 }
 
-// This frame's facts for the knockout watch.
-KnockoutWatchFacts ReadWatchFacts(const OrderWatch& watch)
+// This frame's facts for the knockout watch, for its actor and target as they
+// resolve this tick (NULL: no longer the same character).
+KnockoutWatchFacts ReadWatchFacts(const OrderWatch& watch, Character* actor, Character* target)
 {
     KnockoutWatchFacts facts;
+    facts.actorGone = actor == NULL;
+    if (facts.actorGone)
+    {
+        return facts;
+    }
     facts.phase = watch.phase;
     facts.taskBefore = watch.taskBefore;
     facts.ordered = (int)STEALTH_KNOCKOUT;
-    facts.readTask = SafeCurrentTask(watch.actor, &facts.taskNow);
+    facts.readTask = SafeCurrentTask(actor, &facts.taskNow);
     bool out = false;
     bool dead = false;
-    const bool readOut = SafeIsKnockedOut(watch.target, &out);
-    const bool readDead = SafeIsDead(watch.target, &dead);
+    const bool readOut = target != NULL && SafeIsKnockedOut(target, &out);
+    const bool readDead = target != NULL && SafeIsDead(target, &dead);
     facts.targetUnreadable = !readOut && !readDead;
     facts.targetDown = (readOut && out) || (readDead && dead);
     facts.elapsedMs = watch.elapsedMs;
-    ReadKnockoutPursuit(watch.actor, &facts.orderQueued, &facts.goalCurrent);
+    ReadKnockoutPursuit(actor, &facts.orderQueued, &facts.goalCurrent);
     facts.abandonedMs = watch.abandonedMs;
     return facts;
 }
@@ -384,6 +406,15 @@ bool IssueKnockoutOrder(Character* actor, Character* target)
         return false;
     }
 
+    // The watch keeps these keys and re-resolves both characters every tick.
+    CharKey actorKey;
+    CharKey targetKey;
+    if (!SafeCharKey(actor, &actorKey) || !SafeCharKey(target, &targetKey))
+    {
+        LogFailure(actor, target, "knockout", "character key unreadable");
+        return false;
+    }
+
     int taskBefore = (int)NULL_TASK;
     SafeCurrentTask(actor, &taskBefore);
     bool stealthBefore = false;
@@ -414,6 +445,8 @@ bool IssueKnockoutOrder(Character* actor, Character* target)
     g_watch.phase = KnockoutPhase_AwaitingTake;
     g_watch.actor = actor;
     g_watch.target = target;
+    g_watch.actorKey = actorKey;
+    g_watch.targetKey = targetKey;
     g_watch.taskBefore = taskBefore;
     g_watch.stealthBefore = stealthBefore;
     g_watch.elapsedMs = 0;
@@ -556,12 +589,14 @@ std::string KnockoutButtonLabel(Character* target)
 void TickCageCommands()
 {
     // Heals actors stuck with a knockout goal no watch owns (rate-limited inside).
-    SweepStrayKnockoutGoals(g_watch.active ? g_watch.actor : NULL);
+    Character* actor = g_watch.active ? StillSameCharacter(g_watch.actor, g_watch.actorKey) : NULL;
+    SweepStrayKnockoutGoals(actor);
 
     if (!g_watch.active)
     {
         return;
     }
+    Character* target = StillSameCharacter(g_watch.target, g_watch.targetKey);
 
     // The watch's clock first: nothing passes while the game is paused.
     const DWORD now = GetTickCount();
@@ -571,7 +606,7 @@ void TickCageCommands()
     g_watch.lastTickMs = now;
     g_watch.elapsedMs += frameMs;
 
-    KnockoutWatchFacts facts = ReadWatchFacts(g_watch);
+    KnockoutWatchFacts facts = ReadWatchFacts(g_watch, actor, target);
     // The abandoned streak: off the order for kKnockoutAbandonMs in a row ends the
     // wait with a cleanup and no fallback.
     g_watch.abandonedMs = NextAbandonedMs(g_watch.abandonedMs, ActorAbandonedKnockout(facts),
@@ -595,15 +630,25 @@ void TickCageCommands()
     // Copied out before acting: the fallback must run once, and the cleanup
     // closes the watch.
     const OrderWatch watch = g_watch;
+    if (!KnockoutStepCleansUp(step))
+    {
+        // The actor no longer resolves: nothing to clean, nothing to act on.
+        g_watch = OrderWatch();
+        if (GetConfig().probeOnClick)
+        {
+            LogInfo(std::string("[cage] knockout watch dropped (") + KnockoutStepName(step) + ")");
+        }
+        return;
+    }
     if (step == KnockoutStep_Fallback)
     {
-        if (KnockoutFallback(watch.actor, watch.target))
+        if (KnockoutFallback(actor, target))
         {
             LogKnockoutResolved(watch, "fallback");
         }
         else
         {
-            LogFailure(watch.actor, watch.target, "knockout", "fallback raised");
+            LogFailure(actor, target, "knockout", "fallback raised");
         }
     }
     const std::string why = std::string("after ") + KnockoutStepName(step);
