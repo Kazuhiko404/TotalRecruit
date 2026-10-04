@@ -1,6 +1,7 @@
 // Tests for src/helper_rules.cpp: the free helper -- who may offer, the daily roll and
-// the days, the contract's step (expiry, warning, the ways it ends), the escort ladder,
-// who it fights for the player, and the table of helpers (HelperBook).
+// the days, the contract's step (expiry, warning, the ways it ends), the native
+// contract's hours and watch, the fallback escort (pace, spot, assist renewal), who it
+// fights for the player, and the table of helpers (HelperBook).
 
 #include "test_support.h"
 #include "helper_rules.h"
@@ -256,25 +257,90 @@ void DeathAndJoiningEndItQuietly()
         CHECK(HelperEndText((HelperEnd)e)[0] != '\0');
 }
 
-void TheEscortLadderClimbsWhenLeftBehind()
+void TheNativeContractRunsForTheHoursLeft()
 {
-    const char* name = "escort: far for 3 checks climbs bodyguard -> follow -> walk; near resets";
-    int far = 0;
-    far = NextFarChecks(far, 20.0f, false);
-    CHECK(far == 1);
-    far = NextFarChecks(far, 20.0f, false);
-    far = NextFarChecks(far, 20.0f, false);
-    CHECK(far == 3);
-    CHECK(NextFarChecks(far, 20.0f, true) == 3);
-    CHECK(NextFarChecks(far, -1.0f, false) == 3);
-    CHECK(NextFarChecks(far, 5.0f, false) == 0);
+    const char* name = "native: contract hours = the whole hours left, rounded up, at least 1";
+    CHECK(HelperContractHours(1048, 1000.0) == 48);
+    CHECK(HelperContractHours(1048, 1000.5) == 48);
+    CHECK(HelperContractHours(1048, 1047.9) == 1);
+    CHECK(HelperContractHours(1048, 1048.0) == 1);
+    CHECK(HelperContractHours(1048, 2000.0) == 1);
+    CHECK(HelperContractHours(0, 10.0) == 1);
+}
 
-    CHECK(NextEscortRung(EscortRung_Bodyguard, 2) == EscortRung_Bodyguard);
-    CHECK(NextEscortRung(EscortRung_Bodyguard, 3) == EscortRung_FollowOrder);
-    CHECK(NextEscortRung(EscortRung_FollowOrder, 3) == EscortRung_Walk);
-    CHECK(NextEscortRung(EscortRung_Walk, 9) == EscortRung_Walk);
-    CHECK(NextEscortRung(EscortRung_FollowOrder, 0) == EscortRung_FollowOrder);
-    CHECK(EscortRungName(EscortRung_Bodyguard)[0] != '\0');
+void TheNativeWatchReassignsOnceThenFallsBack()
+{
+    const char* name = "native: contract present keeps; gone reassigns once; gone again falls back";
+    CHECK(NativeWatchStep(true, false) == NativeWatch_Keep);
+    CHECK(NativeWatchStep(true, true) == NativeWatch_Keep);
+    CHECK(NativeWatchStep(false, false) == NativeWatch_Reassign);
+    CHECK(NativeWatchStep(false, true) == NativeWatch_FallBack);
+    CHECK(NativeWatchText(NativeWatch_Keep)[0] != '\0');
+    CHECK(NativeWatchText(NativeWatch_Reassign)[0] != '\0');
+    CHECK(NativeWatchText(NativeWatch_FallBack)[0] != '\0');
+}
+
+void ALoneHelperKeepsItsPlatoon()
+{
+    const char* name = "native: a helper in a squad of others gets a platoon of its own first";
+    CHECK(!HelperNeedsOwnPlatoon(0));
+    CHECK(!HelperNeedsOwnPlatoon(1));
+    CHECK(HelperNeedsOwnPlatoon(2));
+    CHECK(HelperNeedsOwnPlatoon(8));
+}
+
+void TheFallbackEscortRepathsEverySecond()
+{
+    const char* name = "fallback: the escort is re-checked every second";
+    CHECK(kHelperEscortRepathMs == 1000u);
+}
+
+void TheFallbackRunsWhenFarAndWalksWhenClose()
+{
+    const char* name = "fallback: near stays, mid walks, far runs, unknown walks to the leader";
+    EscortPlan p = PlanEscort(kHelperNearMeters);
+    CHECK(!p.move);
+    p = PlanEscort(1.0f);
+    CHECK(!p.move && !p.run);
+    p = PlanEscort(kHelperNearMeters + 0.5f);
+    CHECK(p.move && !p.run);
+    p = PlanEscort(kHelperRunMeters);
+    CHECK(p.move && !p.run);
+    p = PlanEscort(kHelperRunMeters + 0.5f);
+    CHECK(p.move && p.run);
+    p = PlanEscort(200.0f);
+    CHECK(p.move && p.run);
+    p = PlanEscort(-1.0f);
+    CHECK(p.move && !p.run);
+    CHECK(kHelperNearMeters < kHelperRunMeters);
+}
+
+void EachHelperTakesItsOwnSpotByTheLeader()
+{
+    const char* name = "fallback: the offset is a small ring around the leader, one spot per slot";
+    float x0 = 0.0f, z0 = 0.0f, x1 = 0.0f, z1 = 0.0f, x4 = 0.0f, z4 = 0.0f;
+    EscortOffsetMeters(0, &x0, &z0);
+    EscortOffsetMeters(1, &x1, &z1);
+    EscortOffsetMeters(4, &x4, &z4);
+    CHECK(x0 != x1 || z0 != z1);
+    CHECK(x0 == x4 && z0 == z4);
+    const float r2 = x0 * x0 + z0 * z0;
+    CHECK(r2 > 1.0f && r2 <= kHelperEscortOffsetMeters * kHelperEscortOffsetMeters + 0.01f);
+    // A spot by the leader must count as "near", or the helper would walk forever.
+    CHECK(kHelperEscortOffsetMeters < kHelperNearMeters);
+    float xn = 9.0f, zn = 9.0f;
+    EscortOffsetMeters(-3, &xn, &zn);
+    CHECK(xn * xn + zn * zn > 1.0f);
+}
+
+void TheAssistOrderIsRenewedWhenItLapses()
+{
+    const char* name = "fallback: the attack sequence is re-issued on a new target, out of combat, or every few checks";
+    CHECK(ShouldReissueAssist(true, true, 0));
+    CHECK(ShouldReissueAssist(false, false, 0));
+    CHECK(!ShouldReissueAssist(false, true, 0));
+    CHECK(!ShouldReissueAssist(false, true, kHelperAssistReissueChecks - 1));
+    CHECK(ShouldReissueAssist(false, true, kHelperAssistReissueChecks));
 }
 
 void TheHelperFightsTheLeadersEnemyOnly()
@@ -375,7 +441,13 @@ void RunHelperRulesTests()
     TheExpiryWarningComesOnce();
     TheSquadTurningOnThemEndsIt();
     DeathAndJoiningEndItQuietly();
-    TheEscortLadderClimbsWhenLeftBehind();
+    TheNativeContractRunsForTheHoursLeft();
+    TheNativeWatchReassignsOnceThenFallsBack();
+    ALoneHelperKeepsItsPlatoon();
+    TheFallbackEscortRepathsEverySecond();
+    TheFallbackRunsWhenFarAndWalksWhenClose();
+    EachHelperTakesItsOwnSpotByTheLeader();
+    TheAssistOrderIsRenewedWhenItLapses();
     TheHelperFightsTheLeadersEnemyOnly();
     TheBookKeepsContractsCooldownsAndRolls();
     TheSaveBridgeRoundTrips();

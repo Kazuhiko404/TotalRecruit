@@ -120,36 +120,67 @@ bool HelperEndIsBetrayal(HelperEnd end)
     return end == HelperEnd_Attacked || end == HelperEnd_KnockedOut;
 }
 
-const char* EscortRungName(EscortRung rung)
+// ------------------------------------------------------- The native contract
+int HelperContractHours(int expiryHour, double nowHours)
 {
-    switch (rung)
+    const double left = (double)expiryHour - nowHours;
+    if (left <= 1.0)
+        return 1;
+    const int whole = (int)left;
+    return ((double)whole < left) ? whole + 1 : whole;
+}
+
+NativeWatch NativeWatchStep(bool contractPresent, bool reassignedOnce)
+{
+    if (contractPresent)
+        return NativeWatch_Keep;
+    return reassignedOnce ? NativeWatch_FallBack : NativeWatch_Reassign;
+}
+
+const char* NativeWatchText(NativeWatch step)
+{
+    switch (step)
     {
-    case EscortRung_Bodyguard:   return "BODYGUARD";
-    case EscortRung_FollowOrder: return "FOLLOW_PLAYER_ORDER";
-    case EscortRung_Walk:        return "walk (MOVE_CUS_ORDERED)";
+    case NativeWatch_Keep:     return "contract holds";
+    case NativeWatch_Reassign: return "contract gone, assigning it again";
+    case NativeWatch_FallBack: return "contract gone again, code-driven escort takes over";
     }
     return "unknown";
 }
 
-int NextFarChecks(int farChecks, float distanceMeters, bool inCombat)
+bool HelperNeedsOwnPlatoon(int platoonMembers)
 {
-    if (inCombat || distanceMeters < 0.0f)
-        return farChecks;
-    if (distanceMeters <= kHelperFarMeters)
-        return 0;
-    return farChecks + 1;
+    return platoonMembers > 1;
 }
 
-EscortRung NextEscortRung(EscortRung rung, int farChecks)
+// ------------------------------------------------------- The fallback escort
+EscortPlan PlanEscort(float distanceMeters)
 {
-    if (farChecks < kHelperFarChecksToEscalate)
-        return rung;
-    switch (rung)
+    EscortPlan plan;
+    if (distanceMeters < 0.0f)
     {
-    case EscortRung_Bodyguard:   return EscortRung_FollowOrder;
-    case EscortRung_FollowOrder: return EscortRung_Walk;
-    default:                     return EscortRung_Walk;
+        plan.move = true;
+        return plan;
     }
+    plan.move = distanceMeters > kHelperNearMeters;
+    plan.run = distanceMeters > kHelperRunMeters;
+    return plan;
+}
+
+void EscortOffsetMeters(int slot, float* dxMeters, float* dzMeters)
+{
+    // Right, left, behind, ahead of the leader (world x / z), in that order.
+    static const float kRing[4][2] = { { 1.0f, 0.0f }, { -1.0f, 0.0f }, { 0.0f, -1.0f }, { 0.0f, 1.0f } };
+    int index = slot % 4;
+    if (index < 0)
+        index += 4;
+    *dxMeters = kRing[index][0] * kHelperEscortOffsetMeters;
+    *dzMeters = kRing[index][1] * kHelperEscortOffsetMeters;
+}
+
+bool ShouldReissueAssist(bool targetChanged, bool helperInCombat, int checksSinceOrder)
+{
+    return targetChanged || !helperInCombat || checksSinceOrder >= kHelperAssistReissueChecks;
 }
 
 bool ShouldAssist(const AssistFacts& f)

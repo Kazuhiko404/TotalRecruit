@@ -520,6 +520,10 @@ struct Helpers
     // Debug: a Windows virtual-key code (119 = F8). Pressed, the selected NPC offers
     // at once, past the roll, the level and the personality. 0 = off.
     int debugKey;
+    // The escort is the engine's own Bodyguard contract (AI package 5090-gamedata.base,
+    // the player squad leader as employer), like a hired mercenary. False, or when
+    // the contract cannot be assigned: the code-driven escort (helper.h fallback).
+    bool nativeBodyguard;
 
     Helpers()
         : enabled(true),
@@ -529,7 +533,8 @@ struct Helpers
           daysMax(5),
           rejectCooldownDays(3),
           expiryWarningHours(12.0f),
-          debugKey(0)
+          debugKey(0),
+          nativeBodyguard(true)
     {
     }
 };

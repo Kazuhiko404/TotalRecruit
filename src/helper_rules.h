@@ -20,10 +20,14 @@
 //     days * 24, rounded up; temp_member_rules.h), "me ire pronto" once
 //     expiryWarningHours before it, and the ways it ends -- dead, recruited into the
 //     squad, knocked out by the squad, attacked by the squad, time up, in that order.
-//   - The escort ladder (NextEscortRung): BODYGUARD first; left behind (farther than
-//     kHelperFarMeters, out of combat) for kHelperFarChecksToEscalate checks in a row
-//     it climbs to FOLLOW_PLAYER_ORDER, then to the walk-up's own move order (the one
-//     order this mod has seen work on a foreign NPC). The rung never comes down.
+//   - The native contract (helper_contract.h): its hours (HelperContractHours), the
+//     platoon of its own a helper in a squad needs first (HelperNeedsOwnPlatoon), and
+//     what each watch does when the contract is gone (NativeWatchStep: reassign once,
+//     then fall back).
+//   - The fallback escort, when the native contract is off or failed: re-checked every
+//     kHelperEscortRepathMs; PlanEscort stays near, walks, or runs when far; each
+//     helper aims at its own spot on a small ring around the leader
+//     (EscortOffsetMeters); ShouldReissueAssist renews the attack sequence.
 //   - Whom it fights for the player (ShouldAssist): the leader's own target while the
 //     leader is fighting, never one of the squad, itself, its own faction, or someone
 //     already down.
@@ -49,10 +53,6 @@ const unsigned int kHelperDaysSalt  = 0x48444159u;   // "HDAY"
 
 // Who is close enough to walk up and offer.
 const float kHelperTriggerMeters = 40.0f;
-// Farther than this from the leader, out of combat, counts as left behind.
-const float kHelperFarMeters = 15.0f;
-// Left behind this many escort checks in a row climbs one rung.
-const int kHelperFarChecksToEscalate = 3;
 // A helper whose pointer was lost (a load) is looked for this close to the leader.
 const float kHelperRearmMeters = 100.0f;
 
@@ -177,22 +177,64 @@ const char* HelperEndText(HelperEnd end);
 // The squad turned on them: an angry farewell and the reject cooldown.
 bool HelperEndIsBetrayal(HelperEnd end);
 
-enum EscortRung
+// ------------------------------------------------------- The native contract
+// The hours the engine's Bodyguard contract is given: what is left of the help, in
+// whole hours rounded up, never under 1 (the engine ends a 0-hour contract at once).
+int HelperContractHours(int expiryHour, double nowHours);
+
+// What one watch does with a helper on the native contract.
+enum NativeWatch
 {
-    EscortRung_Bodyguard,
-    EscortRung_FollowOrder,
-    EscortRung_Walk
+    // The platoon still carries the contract.
+    NativeWatch_Keep,
+    // It is gone (a load, the engine dropped it): assign it again, once.
+    NativeWatch_Reassign,
+    // Gone again after the one reassignment: the code-driven escort takes over.
+    NativeWatch_FallBack
 };
 
-const char* EscortRungName(EscortRung rung);
+NativeWatch NativeWatchStep(bool contractPresent, bool reassignedOnce);
+const char* NativeWatchText(NativeWatch step);
 
-// The left-behind streak after one check: unknown distance or a fight keeps it, near
-// (kHelperFarMeters or closer) resets it, far adds one.
-int NextFarChecks(int farChecks, float distanceMeters, bool inCombat);
+// A contract belongs to the whole platoon: a helper standing in a squad of others is
+// moved to a platoon of its own first, or the whole squad would escort the player.
+bool HelperNeedsOwnPlatoon(int platoonMembers);
 
-// The rung after one check: one up once the streak reaches
-// kHelperFarChecksToEscalate (the caller resets the streak); Walk is the top.
-EscortRung NextEscortRung(EscortRung rung, int farChecks);
+// ------------------------------------------------------- The fallback escort
+// When the native contract is off (helperNativeBodyguard false) or could not be
+// assigned: the code-driven escort, re-checked this often (real milliseconds).
+const unsigned int kHelperEscortRepathMs = 1000;
+// At or within this distance of the leader it stays where it is.
+const float kHelperNearMeters = 5.0f;
+// Farther than this it runs to catch up; between the two it walks.
+const float kHelperRunMeters = 12.0f;
+// The radius of the ring of spots around the leader the helpers walk to.
+const float kHelperEscortOffsetMeters = 3.0f;
+// While it fights for the leader on the same target, the attack sequence is renewed
+// every this many checks anyway (an order the engine dropped would leave it idle).
+const int kHelperAssistReissueChecks = 3;
+
+struct EscortPlan
+{
+    // Issue a move to the leader's spot this check.
+    bool move;
+    // At a run (else at a walk).
+    bool run;
+
+    EscortPlan() : move(false), run(false) {}
+};
+
+// The plan for one check, from the distance to the leader (negative = unread: walk to
+// the leader, the safe guess).
+EscortPlan PlanEscort(float distanceMeters);
+
+// The helper's spot by the leader, in metres from the leader: one of four points on a
+// ring of kHelperEscortOffsetMeters, by `slot` (the helper's index; any int).
+void EscortOffsetMeters(int slot, float* dxMeters, float* dzMeters);
+
+// Whether the attack sequence is issued again this check: a new target, the helper no
+// longer fighting, or kHelperAssistReissueChecks checks since the last one.
+bool ShouldReissueAssist(bool targetChanged, bool helperInCombat, int checksSinceOrder);
 
 // What decides whether the helper goes for the leader's target.
 struct AssistFacts

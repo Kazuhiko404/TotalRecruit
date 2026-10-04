@@ -1,6 +1,7 @@
 #include "common.h"
 #include "helper.h"
 #include "helper_rules.h"
+#include "ai_packages.h"
 #include "temp_member_rules.h"
 #include "approach_driver.h"
 #include "submission_rules.h"
@@ -32,12 +33,9 @@ namespace totalrecruit
 namespace
 {
 const int kMaxSquad = 256;
-// How often an offer is looked for, and how often each contract is watched and its
-// escort order re-issued (real milliseconds).
+// How often an offer is looked for (real milliseconds). Each contract is watched
+// every kHelperEscortRepathMs (helper_rules.h).
 const unsigned int kOfferSweepMs = 5000;
-const unsigned int kEscortTickMs = 3000;
-// The walk rung re-issues its move order only while farther than this.
-const float kWalkRungMeters = 6.0f;
 
 // ------------------------------------------------- The locked table
 HelperBook g_book;
@@ -85,14 +83,20 @@ std::vector<CharKey> ContractKeys()
 struct Live
 {
     Character* npc;
-    EscortRung rung;
-    int farChecks;
-    Character* assistTarget;
-    int lastTask;
+    // On the engine's Bodyguard contract (else the code-driven fallback escort).
+    bool native;
+    // The one reassignment of a lost contract was used (NativeWatchStep).
+    bool reassigned;
+    // Fallback: running now, and whether a move order was ever given.
+    bool running;
     bool ordered;
+    // Fallback: whom it fights for the leader, and the checks since the last order.
+    Character* assistTarget;
+    int assistChecks;
+    int lastTask;
 
-    Live() : npc(NULL), rung(EscortRung_Bodyguard), farChecks(0), assistTarget(NULL), lastTask(-1),
-             ordered(false)
+    Live() : npc(NULL), native(false), reassigned(false), running(false), ordered(false),
+             assistTarget(NULL), assistChecks(0), lastTask(-1)
     {
     }
 };
@@ -272,8 +276,54 @@ bool StartOffer(Character* npc, Character* leader, int days, const char* why)
     return true;
 }
 
-// ------------------------------------------------------------- The contract
-void IssueEscort(Character* npc, Character* leader, Live* live);
+/// ------------------------------------------------------------- The contract
+void Escort(Character* npc, Character* leader, Live* live, int slot);
+
+// The engine's Bodyguard contract toward the leader for the hours left (ai_packages.h).
+// A helper standing in a squad of others gets a platoon of its own first, or the whole
+// squad would escort. True when the contract was read back in place.
+bool AssignNative(Character* npc, Character* leader, int expiryHour, double nowHours, const char* why)
+{
+    const std::string name = CharacterName(npc);
+    if (leader == NULL)
+    {
+        Log(name + " native bodyguard contract -> (no leader) failed: no squad leader [" + why + "]");
+        return false;
+    }
+    int members = 0;
+    if (AiPackages::PlatoonMembers(npc, &members) && HelperNeedsOwnPlatoon(members))
+    {
+        const AiPackages::Outcome own = AiPackages::DetachToOwnPlatoon(npc);
+        Log(name + ": in a platoon of " + Num("%.0f", (double)members) + "; " +
+            (own.ok ? "moved to a platoon of its own (package " + own.package + ")"
+                    : "could not get a platoon of its own: " + own.why));
+        if (!own.ok)
+        {
+            Log(name + " native bodyguard contract -> " + CharacterName(leader) +
+                " failed: the contract would take its whole squad [" + why + "]");
+            return false;
+        }
+    }
+    const int hours = HelperContractHours(expiryHour, nowHours);
+    const AiPackages::Outcome o = AiPackages::AssignBodyguard(npc, leader, hours);
+    Log(name + " native bodyguard contract -> " + CharacterName(leader) + " (" + Num("%.0f", (double)hours) +
+        "h) " + (o.ok ? "ok" : "failed") + ": " + o.why + "; package " +
+        (o.package.empty() ? std::string("(none)") : o.package) + " [" + why + "]");
+    if (!o.ok && AiPackages::HasContract(npc, NULL))
+    {
+        const AiPackages::Outcome undo = AiPackages::EndContract(npc);
+        Log(name + ": half-set contract removed: " + undo.why);
+    }
+    return o.ok;
+}
+
+// Ends a native contract and gives the platoon its own packages back.
+void EndNative(Character* npc, const char* why)
+{
+    const AiPackages::Outcome o = AiPackages::EndContract(npc);
+    Log(CharacterName(npc) + " native bodyguard contract removed (" + why + ") " + (o.ok ? "ok" : "failed") +
+        ": " + o.why + "; package now " + (o.package.empty() ? std::string("(none)") : o.package));
+}
 
 void StartContract(Character* npc, int days)
 {
@@ -291,22 +341,39 @@ void StartContract(Character* npc, int days)
         Lock lock;
         g_book.Start(key, expiry);
     }
+    Character* leader = Leader();
     Live live;
     live.npc = npc;
+    if (GetConfig().helpers.nativeBodyguard)
+    {
+        live.native = AssignNative(npc, leader, expiry, now, "start");
+        if (!live.native)
+            Log(name + ": native contract failed; the code-driven escort takes over");
+    }
+    else
+    {
+        Log(name + ": helperNativeBodyguard is off; code-driven escort");
+    }
     g_live[key] = live;
 
     RaiseHeadNotice(npc, Say("helper.notice.start", "Te cubro las espaldas", npc), HeadNoticeKind_Info);
     TellPlayer(Line("helper.started", "{name} te acompanara {days} dias. No acepta ordenes.", npc, days),
                false);
     Log(name + " escorts the player for " + Num("%.0f", (double)days) + " days (until hour " +
-        Num("%.0f", (double)expiry) + ") [key " + key.ToString() + "]");
+        Num("%.0f", (double)expiry) + ", " + (live.native ? "native contract" : "code-driven") + ") [key " +
+        key.ToString() + "]");
 
-    IssueEscort(npc, Leader(), &g_live[key]);
+    if (!live.native && leader != NULL)
+        Escort(npc, leader, &g_live[key], 0);
 }
 
 void EndContract(Character* npc, const CharKey& key, HelperEnd end, double nowHours)
 {
     const std::string name = npc != NULL ? CharacterName(npc) : key.ToString();
+    bool native = false;
+    std::map<CharKey, Live>::const_iterator it = g_live.find(key);
+    if (it != g_live.end())
+        native = it->second.native;
     {
         Lock lock;
         g_book.End(key);
@@ -314,8 +381,14 @@ void EndContract(Character* npc, const CharKey& key, HelperEnd end, double nowHo
     g_live.erase(key);
     Log(name + " stops helping: " + HelperEndText(end));
 
+    // Dead, or one of the player's now (their old platoon keeps nobody): nothing to undo.
     if (end == HelperEnd_Died || end == HelperEnd_Joined || npc == NULL)
         return;
+
+    if (native || AiPackages::HasContract(npc, NULL))
+        EndNative(npc, HelperEndText(end));
+    else
+        NpcMotion::SetPace(npc, false);
 
     if (HelperEndIsBetrayal(end))
     {
@@ -336,18 +409,40 @@ void EndContract(Character* npc, const CharKey& key, HelperEnd end, double nowHo
     NpcMotion::ResumeRoutine(npc);
 }
 
-// ------------------------------------------------------------- Escort
+// ------------------------------------------------------------- Native watch
+// The contract is looked at every watch: gone (a load the engine did not keep it
+// through, or the engine ended it early) it is assigned again once; gone again, the
+// code-driven escort takes over.
+void WatchNative(Character* npc, Character* leader, Live* live, int expiryHour, double nowHours)
+{
+    const NativeWatch step = NativeWatchStep(AiPackages::HasContract(npc, NULL), live->reassigned);
+    if (step == NativeWatch_Keep)
+        return;
+    Log(CharacterName(npc) + ": " + NativeWatchText(step));
+    if (step == NativeWatch_Reassign)
+    {
+        live->reassigned = true;
+        if (AssignNative(npc, leader, expiryHour, nowHours, "reassign"))
+            return;
+    }
+    live->native = false;
+    Log(CharacterName(npc) + ": code-driven escort from now on");
+}
+
+// ------------------------------------------------------------- Fallback escort
 void LogTaskChange(Character* npc, Live* live)
 {
     int task = -1;
     if (!SafeCurrentTask(npc, &task) || task == live->lastTask)
         return;
     live->lastTask = task;
-    Log(CharacterName(npc) + ": engine task now " + Num("%.0f", (double)task) + " on rung " +
-        EscortRungName(live->rung));
+    Log(CharacterName(npc) + ": engine task now " + Num("%.0f", (double)task) +
+        (live->running ? " (running)" : ""));
 }
 
-// Fights the leader's target when ShouldAssist says so. True when it did.
+// Fights the leader's target when ShouldAssist says so: TotalSparring's fight_starter
+// sequence (npc_motion.h EngageFor), renewed when ShouldReissueAssist says so. True
+// while it assists.
 bool Assist(Character* npc, Character* leader, Live* live)
 {
     Character* target = NULL;
@@ -364,78 +459,76 @@ bool Assist(Character* npc, Character* leader, Live* live)
     }
     if (!ShouldAssist(a))
     {
+        if (live->assistTarget != NULL)
+            Log(CharacterName(npc) + ": the leader's fight is over");
         live->assistTarget = NULL;
+        live->assistChecks = 0;
         return false;
     }
-    if (target != live->assistTarget || !SafeInCombat(npc))
+    const bool changed = target != live->assistTarget;
+    if (!ShouldReissueAssist(changed, SafeInCombat(npc), live->assistChecks))
     {
-        const bool ordered = NpcMotion::AttackFor(npc, target);
-        if (target != live->assistTarget)
-            Log(CharacterName(npc) + ": fights for the leader against " + CharacterName(target) +
-                (ordered ? "" : " (order FAILED)"));
-        live->assistTarget = target;
+        ++live->assistChecks;
+        return true;
     }
+    if (live->running)
+    {
+        NpcMotion::SetPace(npc, false);
+        live->running = false;
+    }
+    const bool ordered = NpcMotion::EngageFor(npc, target);
+    Log(CharacterName(npc) + (changed ? ": fights for the leader against " : ": renews the attack on ") +
+        CharacterName(target) + (ordered ? "" : " (order FAILED)"));
+    live->assistTarget = target;
+    live->assistChecks = 0;
     return true;
 }
 
-void IssueEscort(Character* npc, Character* leader, Live* live)
+// The code-driven escort: assist, else its own fight, else keep to its spot by the
+// leader, running when far (PlanEscort, EscortOffsetMeters).
+void Escort(Character* npc, Character* leader, Live* live, int slot)
 {
     if (npc == NULL || leader == NULL)
         return;
-
-    // At peace with the squad: no temporary-enemy marks either way.
-    Character* squad[kMaxSquad];
-    const int count = SafePlayerCharacters(squad, kMaxSquad);
-    SafeClearTempEnemies(npc, squad, count);
-
-    if (Assist(npc, leader, live))
+    if (Assist(npc, leader, live) || SafeInCombat(npc))
     {
         LogTaskChange(npc, live);
         return;
     }
-    const bool fighting = SafeInCombat(npc);
+
     float meters = -1.0f;
     NpcMotion::DistanceMeters(npc, leader, &meters);
-    live->farChecks = NextFarChecks(live->farChecks, meters, fighting);
-    const EscortRung next = NextEscortRung(live->rung, live->farChecks);
-    if (next != live->rung)
+    const EscortPlan plan = PlanEscort(meters);
+    if (!plan.move)
     {
-        Log(CharacterName(npc) + ": left behind (" + Num("%.1f", (double)meters) + " m), escort " +
-            EscortRungName(live->rung) + " -> " + EscortRungName(next));
-        live->rung = next;
-        live->farChecks = 0;
-    }
-    if (fighting)
-    {
-        // Its own fight (someone went for it, or for the leader): let it finish.
+        if (live->running)
+        {
+            NpcMotion::SetPace(npc, false);
+            live->running = false;
+            Log(CharacterName(npc) + ": caught up (" + Num("%.1f", (double)meters) + " m), walks");
+        }
         LogTaskChange(npc, live);
         return;
     }
 
-    bool ok = true;
-    switch (live->rung)
-    {
-    case EscortRung_Bodyguard:
-        ok = NpcMotion::GuardLeader(npc, leader, NpcMotion::BodyguardTask());
-        break;
-    case EscortRung_FollowOrder:
-        ok = NpcMotion::GuardLeader(npc, leader, NpcMotion::FollowPlayerTask());
-        break;
-    case EscortRung_Walk:
-        if (meters < 0.0f || meters > kWalkRungMeters)
-            ok = NpcMotion::MoveTo(npc, leader);
-        break;
-    }
-    if (!live->ordered || !ok)
-    {
-        Log(CharacterName(npc) + ": escort order " + EscortRungName(live->rung) + (ok ? " given" : " FAILED"));
-        live->ordered = ok;
-    }
+    float dx = 0.0f, dz = 0.0f;
+    EscortOffsetMeters(slot, &dx, &dz);
+    bool moved = NpcMotion::MoveBeside(npc, leader, MetersToWorldUnits(dx), MetersToWorldUnits(dz));
+    if (!moved)
+        moved = NpcMotion::MoveTo(npc, leader);
+    // A new move order may reset the pace: it is set after the order, every time.
+    const bool paced = NpcMotion::SetPace(npc, plan.run);
+    if (!live->ordered || !moved || !paced || plan.run != live->running)
+        Log(CharacterName(npc) + ": escort " + (plan.run ? "runs" : "walks") + " to the leader (" +
+            Num("%.1f", (double)meters) + " m)" + (moved ? "" : "; move order FAILED") +
+            (paced ? "" : "; pace FAILED"));
+    live->ordered = moved;
+    live->running = plan.run;
     LogTaskChange(npc, live);
 }
 
 // After a load the table is back but the pointers are not: whoever is near again
-// gets their escort back.
+// gets their escort back. The native contract is checked on the next watch.
 void Rearm(Character* leader)
 {
     const std::vector<CharKey> keys = ContractKeys();
@@ -450,6 +543,7 @@ void Rearm(Character* leader)
     if (!NpcMotion::Position(leader, &x, &y, &z) ||
         !CharactersNear(Ogre::Vector3(x, y, z), MetersToWorldUnits(kHelperRearmMeters), &nearby))
         return;
+    const bool native = GetConfig().helpers.nativeBodyguard;
     for (unsigned int i = 0; i < nearby.size(); ++i)
     {
         CharKey key;
@@ -458,10 +552,16 @@ void Rearm(Character* leader)
             continue;
         Live live;
         live.npc = nearby[i];
+        live.native = native;
+        const bool held = AiPackages::HasContract(nearby[i], NULL);
+        if (!native && held)
+            EndNative(nearby[i], "helperNativeBodyguard is off");
         g_live[key] = live;
         RaiseHeadNotice(nearby[i], Say("helper.notice.rearmed", "Sigo contigo", nearby[i]),
                         HeadNoticeKind_Info);
-        Log(CharacterName(nearby[i]) + ": re-armed after a load [key " + key.ToString() + "]");
+        Log(CharacterName(nearby[i]) + ": re-armed after a load (" +
+            (native ? (held ? "native contract kept" : "native contract gone") : std::string("code-driven")) +
+            ") [key " + key.ToString() + "]");
     }
 }
 
@@ -492,6 +592,8 @@ void WatchContracts()
         Rearm(leader);
 
     const Helpers& config = GetConfig().helpers;
+    Character* squad[kMaxSquad];
+    const int count = SafePlayerCharacters(squad, kMaxSquad);
     const std::vector<CharKey> keys = ContractKeys();
     for (unsigned int i = 0; i < keys.size(); ++i)
     {
@@ -517,8 +619,14 @@ void WatchContracts()
             Log(CharacterName(npc) + ": expiry warning (" + Num("%.0f", (double)c.expiryHour - now) + " h left)");
         }
         std::map<CharKey, Live>::iterator live = g_live.find(keys[i]);
-        if (live != g_live.end() && NpcMotion::IsUp(leader))
-            IssueEscort(npc, leader, &live->second);
+        if (live == g_live.end() || !NpcMotion::IsUp(leader))
+            continue;
+        // At peace with the squad: no temporary-enemy marks either way.
+        SafeClearTempEnemies(npc, squad, count);
+        if (live->second.native)
+            WatchNative(npc, leader, &live->second, c.expiryHour, now);
+        if (!live->second.native)
+            Escort(npc, leader, &live->second, (int)i);
     }
 }
 
@@ -654,6 +762,38 @@ bool GameHasFocus()
     return process == GetCurrentProcessId();
 }
 
+// The debug key on someone already helping: the native path, read and exercised. The
+// contract's state and package are logged; a missing contract is assigned now.
+void DebugNative(Character* npc, Character* leader, const CharKey& key)
+{
+    HelperContract c;
+    double now = 0.0;
+    if (!FindContract(key, &c) || !SafeGameHours(&now))
+        return;
+    const bool held = AiPackages::HasContract(npc, NULL);
+    const bool forLeader = held && AiPackages::HasContract(npc, leader);
+    const std::string package = AiPackages::CurrentPackageName(npc);
+    std::map<CharKey, Live>::iterator live = g_live.find(key);
+    const bool tracked = live != g_live.end();
+    Log("debug key on helper " + CharacterName(npc) + ": " + (tracked && live->second.native ? "native" : "code-driven") +
+        ", contract " + (held ? (forLeader ? "held for the leader" : "held for someone else") : "missing") +
+        ", package " + (package.empty() ? std::string("(none)") : package) + ", " +
+        Num("%.0f", (double)c.expiryHour - now) + " h left");
+    if (!GetConfig().helpers.nativeBodyguard)
+    {
+        Log("debug key: helperNativeBodyguard is off; nothing assigned");
+        return;
+    }
+    if (held)
+        return;
+    const bool ok = AssignNative(npc, leader, c.expiryHour, now, "debug key");
+    if (tracked)
+    {
+        live->second.native = ok;
+        live->second.reassigned = false;
+    }
+}
+
 void DebugOffer()
 {
     const Config& config = GetConfig();
@@ -666,6 +806,14 @@ void DebugOffer()
                    true);
         return;
     }
+    CharKey helperKey;
+    if (SafeFindCharKey(npc, &helperKey) && IsHelperKey(helperKey))
+    {
+        DebugNative(npc, leader, helperKey);
+        return;
+    }
+    Log(std::string("debug key: accepting runs the ") +
+        (GetConfig().helpers.nativeBodyguard ? "native bodyguard contract" : "code-driven escort (native off)"));
     double now = 0.0;
     SafeGameHours(&now);
     const int day = DayIndexFromHours(now);
@@ -736,7 +884,7 @@ void HelperTick()
     const DWORD now = GetTickCount();
     if ((LONG)(now - g_nextEscort) >= 0)
     {
-        g_nextEscort = now + kEscortTickMs;
+        g_nextEscort = now + kHelperEscortRepathMs;
         bool paused = false;
         if (!(SafeIsPaused(&paused) && paused))
             WatchContracts();

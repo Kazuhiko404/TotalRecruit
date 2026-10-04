@@ -340,6 +340,7 @@ std::vector<Field> ConfigFields(Config& c)
     AddInt(f, "helperRejectCooldownDays", &c.helpers.rejectCooldownDays);
     AddFloat(f, "helperExpiryWarningHours", &c.helpers.expiryWarningHours);
     AddInt(f, "helperDebugKey", &c.helpers.debugKey);
+    AddBool(f, "helperNativeBodyguard", &c.helpers.nativeBodyguard);
     AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
     AddFloat(f, "relationRefuseAll", &c.relationRefuseAll);
     AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);

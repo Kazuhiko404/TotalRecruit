@@ -4,6 +4,7 @@
 
 #include <kenshi/AI/AITaskSystem.h>
 #include <kenshi/CharMovement.h>
+#include <kenshi/combat/CombatClass.h>
 
 #include <cmath>
 
@@ -100,19 +101,52 @@ bool ResumeGuarded(Character* npc)
     return true;
 }
 
-bool GuardGuarded(Character* npc, Character* leader, TaskType task)
+// TotalSparring fight_starter.cpp SetCombatStanceGuarded: a fighter left on Hold or
+// Passive does not fight even with a valid target.
+bool CombatStanceGuarded(Character* npc)
 {
-    const Ogre::Vector3 at = leader->getPosition();
-    npc->addOrder(NULL, task, leader, false, true, at);
+    npc->setStandingOrder(MessageForB::M_SET_ORDER_PASSIVE, false);
+    npc->setStandingOrder(MessageForB::M_SET_ORDER_HOLD, false);
+    npc->setStandingOrder(MessageForB::M_SET_ORDER_DEF, true);
+    npc->setStandingOrder(MessageForB::M_SET_ORDER_AGG, true);
     return true;
 }
 
-bool AttackForGuarded(Character* npc, Character* target)
+// fight_starter.cpp MarkTempEnemyGuarded + IssueAttackOrderGuarded: the order's
+// location is the attacker's own position (C2712: built in this plain helper).
+bool EngageGuarded(Character* npc, Character* target)
 {
+    npc->rememberCharacter(target, ST_TEMPORARY_ENEMY);
     const Ogre::Vector3 at = npc->getPosition();
     npc->addOrder(NULL, FOCUSED_MELEE_ATTACK, target, false, true, at);
     npc->attackTarget(target);
+    target->attackingYou(npc, true, true);
     return true;
+}
+
+// fight_starter.cpp InitCombatModeGuarded: initCombatMode through the vtable.
+bool CombatModeGuarded(Character* npc, Character* target)
+{
+    CombatClass* combat = npc->getCombatClass();
+    if (combat == NULL)
+        return false;
+    const hand subject(target);
+    combat->initCombatMode(subject, 0, true);
+    return true;
+}
+
+bool SafeSetWalk(Character* npc)
+{
+    TR_TRY
+    {
+        CharMovement* movement = npc->getMovement();
+        if (movement == NULL)
+            return false;
+        movement->setDesiredSpeedOrders(WALK);
+        movement->setDesiredSpeed(WALK);
+        return true;
+    }
+    TR_CATCH { return false; }
 }
 
 bool SafeReadSpeedOrders(Character* npc, MoveSpeed* out)
@@ -198,6 +232,17 @@ bool MoveTo(Character* npc, Character* target)
     return SafeIssueMove(npc, building, x, y, z);
 }
 
+bool MoveBeside(Character* npc, Character* target, float dxUnits, float dzUnits)
+{
+    if (npc == NULL || target == NULL)
+        return false;
+    float x = 0.0f, y = 0.0f, z = 0.0f;
+    Building* building = NULL;
+    if (!Position(target, &x, &y, &z) || !SafeBuildingOf(target, &building))
+        return false;
+    return SafeIssueMove(npc, building, x + dxUnits, y, z + dzUnits);
+}
+
 bool MoveToPoint(Character* npc, float x, float y, float z)
 {
     if (npc == NULL)
@@ -274,30 +319,25 @@ void EndRun(Character* npc)
     SafeRestoreSpeed(npc, g_savedSpeed);
 }
 
-bool GuardLeader(Character* npc, Character* leader, int task)
+bool SetPace(Character* npc, bool run)
 {
-    if (npc == NULL || leader == NULL)
+    if (npc == NULL)
         return false;
-    TR_TRY { return GuardGuarded(npc, leader, (TaskType)task); }
-    TR_CATCH { return false; }
+    return run ? SafeSetRun(npc) : SafeSetWalk(npc);
 }
 
-bool AttackFor(Character* npc, Character* target)
+bool EngageFor(Character* npc, Character* target)
 {
     if (npc == NULL || target == NULL)
         return false;
-    TR_TRY { return AttackForGuarded(npc, target); }
+    TR_TRY { CombatStanceGuarded(npc); }
+    TR_CATCH { }
+    bool ordered = false;
+    TR_TRY { ordered = EngageGuarded(npc, target); }
     TR_CATCH { return false; }
-}
-
-int BodyguardTask()
-{
-    return (int)BODYGUARD;
-}
-
-int FollowPlayerTask()
-{
-    return (int)FOLLOW_PLAYER_ORDER;
+    TR_TRY { CombatModeGuarded(npc, target); }
+    TR_CATCH { }
+    return ordered;
 }
 } // namespace NpcMotion
 } // namespace totalrecruit

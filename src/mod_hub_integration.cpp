@@ -268,6 +268,7 @@ static bool DoRegisterModHub()
     regInt(api, mod, "helper_reject_days", "Ayudante: dias tras rechazo", "Dias sin volver a ofrecerse si lo rechazas o tu grupo lo ataca", 0, 30, 1, &c.helpers.rejectCooldownDays);
     regFloat(api, mod, "helper_expiry_warning", "Ayudante: aviso antes de irse", "Cuantas horas antes de irse avisa que se va pronto", 0.0f, 72.0f, 1.0f, 0, &c.helpers.expiryWarningHours);
     regInt(api, mod, "helper_debug_key", "Ayudante: tecla de prueba", "Codigo de tecla de Windows (119 = F8). Con un NPC seleccionado, se ofrece al instante. 0 = apagado", 0, 255, 1, &c.helpers.debugKey);
+    regBool(api, mod, "helper_native_bodyguard", "Ayudante: contrato nativo", "Te escolta con el contrato de guardaespaldas del juego, como un mercenario. Apagado (o si falla), lo guia el mod: te sigue corriendo y ataca a quien ataca a tu lider", &c.helpers.nativeBodyguard);
     regBool(api, mod, "cheat_needs_cage","Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
     regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame (0.02 = un minuto)", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
     regInt(api, mod, "rescue_base_bonus", "Rescate: peso de la deuda", "Cuanto pesa haberle salvado la vida, antes de contar la cura", 0, 90, 5, &c.rescueBaseBonus);
