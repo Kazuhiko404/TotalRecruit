@@ -63,6 +63,9 @@ private:
 std::deque<DuelBoutRecord> g_queue;
 // Bouts dropped because the queue was full; reported by the frame tick.
 int g_dropped = 0;
+// One more for every bout TotalSparring reported (TsBoutGeneration). Never reset:
+// it only has to differ from what a reader saw last.
+unsigned g_boutGeneration = 0;
 
 // ------------------------------------------------- Guarded calls into TS
 // Each one is a plain frame (no C++ objects) around one call through the table, so
@@ -192,6 +195,7 @@ void CopyBoutUnguarded(const TS_BoutEvent* ev)
         ++g_dropped;
     }
     g_queue.push_back(record);
+    ++g_boutGeneration;
 }
 
 void GuardedCopyBout(const TS_BoutEvent* ev)
@@ -418,6 +422,12 @@ void TsTakeBoutEvents(std::vector<DuelBoutRecord>* out)
     {
         LogError("[ts-bridge] " + Code(dropped) + " bout(s) dropped: the queue was full.");
     }
+}
+
+unsigned TsBoutGeneration()
+{
+    QueueLock lock;
+    return g_boutGeneration;
 }
 
 void ForgetTsBoutEvents()

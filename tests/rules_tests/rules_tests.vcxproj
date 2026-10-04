@@ -82,6 +82,7 @@
     <ClCompile Include="leave_homing_rules_tests.cpp" />
     <ClCompile Include="overlay_visibility_rules_tests.cpp" />
     <ClCompile Include="duel_challenge_rules_tests.cpp" />
+    <ClCompile Include="duel_record_cache_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -130,6 +131,7 @@
     <ClCompile Include="..\..\src\leave_homing_rules.cpp" />
     <ClCompile Include="..\..\src\overlay_visibility_rules.cpp" />
     <ClCompile Include="..\..\src\duel_challenge_rules.cpp" />
+    <ClCompile Include="..\..\src\duel_record_cache_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

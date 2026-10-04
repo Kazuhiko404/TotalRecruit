@@ -70,6 +70,12 @@ TsOpenResult TsOpenDuel(Character* npc, Character* challenger);
 // first. Game thread (the frame tick).
 void TsTakeBoutEvents(std::vector<DuelBoutRecord>* out);
 
+// Goes up by one for every bout TotalSparring reports (spar or duel), counted when
+// the listener copies it: by then TotalSparring has written the bout to its history,
+// so a duel record read after a change sees it. A reader keeps the value it read at
+// and reads again when it differs (duel_record_cache_rules.h). Any thread.
+unsigned TsBoutGeneration();
+
 // Load begin: bouts of the abandoned world are dropped.
 void ForgetTsBoutEvents();
 

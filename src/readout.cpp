@@ -19,6 +19,8 @@
 #include "temp_member.h"
 #include "helper.h"
 #include "cage_commands.h"
+#include "duel_record_cache_rules.h"
+#include "ts_bridge.h"
 
 #include <cstdio>
 
@@ -58,20 +60,21 @@ bool g_offerSeen = false;
 std::string g_lastLogged;
 
 // The head-to-head duel record the card last read (TotalSparring's history database,
-// recruit_core.h ReadDuelRecord), and for which pair. Read again only when the NPC or
-// the selected squad member changes, never on the 2 s refresh. Raw pointers, compared
-// only, never dereferenced, cleared at a load.
+// recruit_core.h ReadDuelRecord), and for which pair at which bout generation
+// (duel_record_cache_rules.h). Read again only when the NPC or the selected squad
+// member changes or TotalSparring reported a bout since, never just for the 2 s
+// refresh. Raw pointers, compared only, never dereferenced, cleared at a load.
 struct DuelRecordCache
 {
-    bool valid;
-    Character* npc;
-    Character* challenger;
+    DuelRecordStamp stamp;
     bool known;
     int wins;
     int losses;
     int draws;
+
+    DuelRecordCache() : stamp(), known(false), wins(0), losses(0), draws(0) {}
 };
-DuelRecordCache g_duelRecord = { false, NULL, NULL, false, 0, 0, 0 };
+DuelRecordCache g_duelRecord;
 
 // A click elsewhere put the card away (card_dismiss_rules.h). Kept apart from the
 // mode: the card is still worked out for its NPC, only not drawn.
@@ -160,7 +163,8 @@ void LogReadout(Character* character, const ReadoutView& view, const ReadoutText
 }
 
 // The duel record line of a challengeable ally (duel_challenge_rules.h): only when the
-// duel is on offer, and read from TotalSparring only when the pair changed.
+// duel is on offer, and read from TotalSparring only when the pair changed or a bout
+// ended since the last read.
 void AddDuelRecord(Character* character, ReadoutInput* input)
 {
     if (!DuelOfferedFor(character, input->verdict))
@@ -173,11 +177,13 @@ void AddDuelRecord(Character* character, ReadoutInput* input)
         return;
     }
     DuelRecordCache& c = g_duelRecord;
-    if (!c.valid || c.npc != character || c.challenger != challenger)
+    const unsigned generation = TsBoutGeneration();
+    if (DuelRecordNeedsRead(c.stamp, character, challenger, generation))
     {
-        c.valid = true;
-        c.npc = character;
-        c.challenger = challenger;
+        c.stamp.valid = true;
+        c.stamp.npc = character;
+        c.stamp.challenger = challenger;
+        c.stamp.generation = generation;
         c.wins = 0;
         c.losses = 0;
         c.draws = 0;
@@ -663,8 +669,7 @@ void ForgetReadout()
     g_lastLogged.clear();
     g_anchorLogTarget = NULL;
     g_anchorLogged = 0;
-    const DuelRecordCache none = { false, NULL, NULL, false, 0, 0, 0 };
-    g_duelRecord = none;
+    g_duelRecord = DuelRecordCache();
     ForgetDismissal();
 }
 

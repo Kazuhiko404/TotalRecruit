@@ -153,6 +153,7 @@
     <ClCompile Include="src\helper.cpp" />
     <ClCompile Include="src\ai_packages.cpp" />
     <ClCompile Include="src\duel_challenge_rules.cpp" />
+    <ClCompile Include="src\duel_record_cache_rules.cpp" />
     <ClCompile Include="src\ts_bridge.cpp" />
     <ClCompile Include="src\approach_driver.cpp" />
     <ClCompile Include="src\squad_leave.cpp" />
@@ -172,6 +173,7 @@
   <ItemGroup>
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\duel_challenge_rules.h" />
+    <ClInclude Include="src\duel_record_cache_rules.h" />
     <ClInclude Include="src\ts_bridge.h" />
     <ClInclude Include="src\third_party\ts_api.h" />
     <ClInclude Include="src\recruit_overlay.h" />

@@ -54,3 +54,4 @@ void RunHelperRulesTests();
 void RunLeaveHomingRulesTests();
 void RunOverlayVisibilityRulesTests();
 void RunDuelChallengeRulesTests();
+void RunDuelRecordCacheRulesTests();
