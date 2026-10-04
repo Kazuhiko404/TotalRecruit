@@ -127,6 +127,7 @@ T1..T7 abajo. Solo reglas puras de Balanced (`src/*_rules.cpp`), sus claves de c
 - [ ] Coherencia lore: un animal salvaje respeta la fuerza; uno domestico/ajeno sigue excluido como hoy. Animal domado por duelo o sometimiento entra igual que el domado con comida.
 - [ ] Hoja: filas nuevas en `tests/balance_sheet` para las dos vias; tarjeta y popup con maqueta primero ("Te respeta", "Sometido").
 - [ ] Cheat no cambia: animal en jaula + 1 min y se une.
+
 ## Criterios de aceptacion
 - Tabla objetivo de T1 acordada y escrita en este documento.
 - La hoja regenerada despues de cada tarea calza con la tabla objetivo (columna "quebrado" y "cuidado" dentro de +-1 dia del objetivo, nivel +0).
@@ -157,6 +158,7 @@ Pasos de cierre: QA en juego -> merge de `feat/balanced-tuning` a `main` -> push
 ## Progreso
 - `80ca99b`: generador de la hoja de balance (`tests/balance_sheet`), hoja en `odd/balance/balance-sheet.md` sobre las reglas de `7bf8750`.
 - Este documento y `odd/balance/START-PROMPT.md` creados. Ningun numero cambiado todavia.
+- `133d08b`: T7 agregado (animales por duelo o sometimiento), pedido del usuario.
 
 ## Proximo paso
 T1: confirmar la tabla objetivo con el usuario; despues T2-T4, luego T5, luego T6, luego T7 (animales: duelo y sometimiento).
