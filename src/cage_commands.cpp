@@ -143,15 +143,16 @@ struct OrderWatch
     int taskBefore;
     // The actor was sneaking when the order went in: the cleanup leaves it on.
     bool stealthBefore;
-    DWORD startedMs;
-    // The last tick read and how long in a row the actor has been off the order
-    // (knockout_watch_rules.h NextAbandonedMs).
+    // The watch's own clock (WatchFrameMs: real time that stops while the game is
+    // paused): watch time since the order, the real tick it was last advanced at,
+    // and how long in a row the actor has been off the order (NextAbandonedMs).
+    unsigned int elapsedMs;
     DWORD lastTickMs;
     unsigned int abandonedMs;
 
     OrderWatch()
         : active(false), phase(KnockoutPhase_AwaitingTake), actor(NULL), target(NULL),
-          taskBefore(0), stealthBefore(false), startedMs(0), lastTickMs(0), abandonedMs(0) {}
+          taskBefore(0), stealthBefore(false), elapsedMs(0), lastTickMs(0), abandonedMs(0) {}
 };
 
 OrderWatch g_watch;
@@ -303,7 +304,7 @@ KnockoutWatchFacts ReadWatchFacts(const OrderWatch& watch)
     const bool readDead = SafeIsDead(watch.target, &dead);
     facts.targetUnreadable = !readOut && !readDead;
     facts.targetDown = (readOut && out) || (readDead && dead);
-    facts.elapsedMs = GetTickCount() - watch.startedMs;
+    facts.elapsedMs = watch.elapsedMs;
     ReadKnockoutPursuit(watch.actor, &facts.orderQueued, &facts.goalCurrent);
     facts.abandonedMs = watch.abandonedMs;
     return facts;
@@ -415,8 +416,8 @@ bool IssueKnockoutOrder(Character* actor, Character* target)
     g_watch.target = target;
     g_watch.taskBefore = taskBefore;
     g_watch.stealthBefore = stealthBefore;
-    g_watch.startedMs = GetTickCount();
-    g_watch.lastTickMs = g_watch.startedMs;
+    g_watch.elapsedMs = 0;
+    g_watch.lastTickMs = GetTickCount();
     g_watch.abandonedMs = 0;
     return true;
 }
@@ -562,13 +563,19 @@ void TickCageCommands()
         return;
     }
 
-    KnockoutWatchFacts facts = ReadWatchFacts(g_watch);
-    // The abandoned streak first: off the order for kKnockoutAbandonMs in a row
-    // ends the wait with a cleanup and no fallback.
+    // The watch's clock first: nothing passes while the game is paused.
     const DWORD now = GetTickCount();
-    g_watch.abandonedMs = NextAbandonedMs(g_watch.abandonedMs, ActorAbandonedKnockout(facts),
-                                          now - g_watch.lastTickMs);
+    bool paused = false;
+    SafeIsPaused(&paused);
+    const unsigned int frameMs = WatchFrameMs(now - g_watch.lastTickMs, paused);
     g_watch.lastTickMs = now;
+    g_watch.elapsedMs += frameMs;
+
+    KnockoutWatchFacts facts = ReadWatchFacts(g_watch);
+    // The abandoned streak: off the order for kKnockoutAbandonMs in a row ends the
+    // wait with a cleanup and no fallback.
+    g_watch.abandonedMs = NextAbandonedMs(g_watch.abandonedMs, ActorAbandonedKnockout(facts),
+                                          frameMs);
     facts.abandonedMs = g_watch.abandonedMs;
 
     const KnockoutWatchStep step = NextKnockoutWatchStep(

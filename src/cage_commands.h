@@ -14,7 +14,8 @@
 //            the prisoner out of the cage, so neither is used.
 //   Noquear  addOrder(STEALTH_KNOCKOUT) + addGoal, so whether the knockout lands
 //            is the engine's. Fallback, when the actor has not changed task
-//            within kOrderWatchTimeoutMs: the engine's own
+//            within kOrderWatchTimeoutMs (watch time: WatchFrameMs stops it while
+//            the game is paused, like the land window): the engine's own
 //            MedicalSystem::knockout on the target, with the actor's
 //            assassination skill (0..1, SkillFraction).
 //            It acts once: the goal is persistent, and left in place the actor's

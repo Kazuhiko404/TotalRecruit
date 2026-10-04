@@ -14,6 +14,8 @@
 // actor up.
 //
 //   NextKnockoutWatchStep         what the watch does this frame.
+//   WatchFrameMs                  how much one frame advances the watch's clock
+//                                 (nothing while the game is paused).
 //   ActorAbandonedKnockout        whether the actor is off the order this frame
 //   NextAbandonedMs               (and for how long in a row).
 //   ShouldDropKnockoutOrder       whether the cleanup may drop the queued order.
@@ -61,7 +63,7 @@ struct KnockoutWatchFacts
     int taskNow;
     bool targetDown;         // unconscious or dead
     bool targetUnreadable;   // its state could not be read at all
-    unsigned int elapsedMs;  // since the order (GetTickCount differences wrap safely)
+    unsigned int elapsedMs;  // watch time since the order (WatchFrameMs: paused = none)
     bool orderQueued;        // a STEALTH_KNOCKOUT player order is still queued
     bool goalCurrent;        // the AI's current goal is the knockout
     unsigned int abandonedMs; // how long in a row the actor has been off the order
@@ -79,6 +81,15 @@ struct KnockoutWatchFacts
 KnockoutWatchStep NextKnockoutWatchStep(const KnockoutWatchFacts& facts,
                                         unsigned int takeTimeoutMs, unsigned int landWindowMs,
                                         unsigned int abandonMs);
+
+// The watch's clock. Real milliseconds, but none while the game is paused -- a
+// pause must neither force the fallback (the 1.5 s take timeout would read as an
+// actor who never moved) nor run out the land window -- and at most
+// kWatchMaxFrameMs per frame (a hitch or a load is not a minute of watching). Real
+// time and not game time, like the submission event's clock: the take timeout and
+// the abandon streak are about the engine reacting, not about in-game hours.
+extern const unsigned int kWatchMaxFrameMs;
+unsigned int WatchFrameMs(unsigned int realDeltaMs, bool paused);
 
 // The actor is off the order this frame: the order was taken (AwaitingDown), and
 // now the task is not the knockout, no knockout order is queued (walking to it

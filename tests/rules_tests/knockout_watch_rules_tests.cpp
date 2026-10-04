@@ -247,6 +247,29 @@ void TheSweepRunsEveryPeriod()
     CHECK(StrayGoalSweepDue(0xFFFFF000u, 0xFFFFF100u, 3000) == false);
     CHECK(kStrayGoalSweepMs == 3000);
 }
+
+// The watch's own clock: a frame adds its real time, nothing while the game is
+// paused (a pause must not force the fallback or run out the land window), and at
+// most kWatchMaxFrameMs (a hitch or a long load is not a minute of watching).
+void TheWatchClockStopsWhileThePauseIsOn()
+{
+    const char* name = "knockout watch: the clock adds frame time, nothing while paused, capped";
+    CHECK(WatchFrameMs(16, false) == 16);
+    CHECK(WatchFrameMs(16, true) == 0);
+    CHECK(WatchFrameMs(600000, true) == 0);
+    CHECK(WatchFrameMs(5000, false) == kWatchMaxFrameMs);
+    CHECK(kWatchMaxFrameMs == 1000);
+
+    // A long pause on a fresh order: still waiting, no fallback.
+    unsigned int elapsed = 0;
+    for (int i = 0; i < 1000; ++i)
+    {
+        elapsed += WatchFrameMs(16, true);
+    }
+    KnockoutWatchFacts f = Fresh();
+    f.elapsedMs = elapsed;
+    CHECK(NextKnockoutWatchStep(f, 1500, 120000, 3000) == KnockoutStep_Wait);
+}
 } // namespace
 
 void RunKnockoutWatchRulesTests()
@@ -260,5 +283,6 @@ void RunKnockoutWatchRulesTests()
     AStrayGoalIsClearedOnlyWhenItCannotBeWanted();
     OnlyOurOwnKnockoutOrderAloneIsDropped();
     AnAbandonedOrderEndsTheWaitEarly();
+    TheWatchClockStopsWhileThePauseIsOn();
     TheSweepRunsEveryPeriod();
 }

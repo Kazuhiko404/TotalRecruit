@@ -7,6 +7,16 @@ const unsigned int kStrayGoalSweepMs = 3000;
 // A few seconds: long enough to ride out the frames between a task ending and the
 // next one starting, short enough to let a re-ordered actor go at once.
 const unsigned int kKnockoutAbandonMs = 3000;
+const unsigned int kWatchMaxFrameMs = 1000;
+
+unsigned int WatchFrameMs(unsigned int realDeltaMs, bool paused)
+{
+    if (paused)
+    {
+        return 0;
+    }
+    return realDeltaMs < kWatchMaxFrameMs ? realDeltaMs : kWatchMaxFrameMs;
+}
 
 KnockoutWatchStep NextKnockoutWatchStep(const KnockoutWatchFacts& facts,
                                         unsigned int takeTimeoutMs, unsigned int landWindowMs,
