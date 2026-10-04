@@ -237,7 +237,8 @@ struct Chance
 // prisoner is a taste question, not a design one.
 struct Submission
 {
-    // Count knockouts the player inflicted. Off makes submission depend on
+    // Count knockouts the player inflicted (not those Golpear / Noquear cause in
+    // the player's cage: those are beating stress). Off makes submission depend on
     // present condition alone, as it did before.
     // One knockout counts once (defeat_episode_rules) and the count is saved in
     // the character's own save state (defeat_ledger), so neither a debounce nor

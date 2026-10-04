@@ -14,7 +14,7 @@ Engram project: `totalrecruit` (`.engram/config.json`). This document is mirrore
 Status tags:
 - `verified in game`: seen working in a real game with the log line that proves it (ESTADO "Jugado"). It predates the later rounds and is not a formal QA pass.
 - `play-tested informally`: the user played it and reported it working. No QA row was marked.
-- `not verified`: built and unit-tested (`tests/rules_tests`, 46 suites), not yet seen in game. The QA.md section to run is given.
+- `not verified`: built and unit-tested (`tests/rules_tests`, 47 suites), not yet seen in game. The QA.md section to run is given.
 
 Nothing has a formal QA pass mark.
 
@@ -37,7 +37,7 @@ Nothing has a formal QA pass mark.
 | Feature | Status |
 |---|---|
 | Daily join roll: re-seeded once per game day, no reroll on click (R0.3) | `not verified` (12.18, QA C8) |
-| Stress derived from hunger, wounds and tiredness (never stored) | `not verified` (12.8) |
+| Stress derived from hunger, wounds and tiredness (never stored), plus the saved, fading beating stress (cage-beating-stress, 12.32) | `not verified` (12.8) |
 | Readout card over the selected NPC: route, stress bar, chance, defeats, stomach, one blocking line, hours left | `not verified` (12.8, 12.11, 12.16) |
 | `EvaluatePeek`: the card asks the same decision with no side effects; a rescue's peek rolls from the existing id, so card and menu agree | `not verified` (12.8 U17, §6 R6) |
 | Card pinned beside the offer on Hablar; dismissed by a click elsewhere | `not verified` (12.9, 12.17) |
@@ -69,12 +69,13 @@ Nothing has a formal QA pass mark.
 |---|---|
 | Hold clock: starts when caged, dropped on leaving, resets if the game clock goes back | `not verified` (12.3) |
 | Captives call out when ready (`hail.cpp`), on the game clock | `not verified` (§10 G7, 12.23 N1) |
-| Golpear and Noquear: Golpear lands one direct capped blow (prisoner stays caged, never killed), Noquear is the native stealth knockout order; a knockout either causes is credited to the player | `not verified` (12.19) |
+| Golpear and Noquear: Golpear lands one direct capped blow (prisoner stays caged, never killed), Noquear is the native stealth knockout order; a knockout either causes is recognised even when the engine names no winner, and since cage-beating-stress it is beating stress, not a defeat | `not verified` (12.19) |
 | Noquear acts once: the watch stays until the prisoner is down, then the actor is let go (goal removed, stealth off if the order turned it on); stray knockout goals from older saves are healed | `not verified` (12.19 C10-C10e) |
 | Noquear's cleanup keeps the player's other orders (the order is dropped only when it is ours and alone in the queue); the sweep removes goals only, only for a prisoner in the player's cage; an abandoned order ends the watch clean | `not verified` (12.19 C10e-C10g) |
 | Noquear's watch clock stops while the game is paused (no fallback, no land-window timeout during a pause) | `not verified` (12.19 C10h) |
 | Noquear's watch keeps character keys and re-resolves them each tick; a vanished actor drops the watch with no cleanup | `not verified` (12.19 C10i) |
-| R2.3 interval between beatings: Golpear rests `submissionBeatingCooldownHours` per prisoner after a blow and shows the wait in the block and the popup; every click re-reads the facts | `not verified` (12.19 C3c-C3g, 12.13 K6) |
+| R2.3 interval between beatings: Golpear rests `submissionBeatingCooldownHours` (1 h) per prisoner after a blow, Noquear `submissionKnockoutCooldownHours` (1 h) after a knockout that landed; both show the wait in the block and the popup; every click re-reads the facts | `not verified` (12.19 C3c-C3g, 12.13 K6) |
+| Beating stress (cage-beating-stress): each blow and each Noquear knockout adds `clamp(base x levels / resolve, 0.02, 0.25)`, saved with the character, fading over 24 game hours; the fourth stress term (card "Golpes"); cage-command knockouts are no longer defeats | `not verified` (12.32) |
 | Golpear never raises health: a part already at or below the floor gets no blow and is not touched | `not verified` (12.19 C3h) |
 | A blow's knockout credit lasts 5 s around the hit (only for a blow that landed); Noquear keeps 2 min | `not verified` (12.19 C5, C5b) |
 | Caged popup offers GOLPEAR / NOQUEAR, never IGNORAR / PERDONAR | `not verified` (12.22) |

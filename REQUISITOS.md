@@ -147,6 +147,25 @@ el menú del juego abre dos columnas (el personaje y la jaula: ABRIR CON LLAVE,
 DESMANTELAR, PONER EN LIBERTAD). El bloque Hablar / Golpear / Noquear se ubica
 fuera de las dos; con una sola columna queda donde siempre.
 
+*Estado (2026-10-04, cage-beating-stress):* **descansos de 1 h y estrés por
+golpes.** Golpear descansa `submissionBeatingCooldownHours` (ahora 1 h por
+defecto) y Noquear también descansa: `submissionKnockoutCooldownHours` (1 h,
+Mod Hub "Sumision: horas entre noqueos"), contado desde una orden de Noquear que
+tumbó al preso; por preso y solo de sesión. Los botones muestran la espera
+("Golpear (1 h)", "Noquear (1 h)" en lugar del %) y un clic la dice ("Podrás
+volver a noquearlo en 1 h"). Los noqueos de Golpear y Noquear ya **no son
+derrotas** (ver R3.2): cada golpe que pega y cada noqueo de Noquear suman
+**estrés por golpes**, un cuarto término del estrés junto al hambre, las heridas
+y el cansancio. Cuánto: `clamp(base x factorNiveles / aguante, min, max)`, con
+base `submissionBeatStressBase` (0,08) o `submissionKnockoutStressBase` (0,15),
+factorNiveles = nivel del líder del jugador / nivel del preso acotado a
+0,5..1,5, aguante = el de R3.5 (miedoso 0,6, valiente 1,6, honorable 1,8), y el
+resultado acotado a 0,02..0,25. La barra va de 0 a 1 por preso, se guarda en el
+save del personaje (`total_recruit.beating_stress` y
+`total_recruit.beating_stress_hour`) y se desvanece en línea recta: una barra
+llena vuelve a 0 en `submissionBeatingStressFadeHours` (24) horas de juego. Se
+ve en la tarjeta ("Golpes N") y en la línea `[readout]`.
+
 **R2.4 — Cooldown de insistencia acumulativo y configurable.** *(P1)*
 Hoy funciona pero con horas fijas. Debe pasar a:
 - Horas base, configurables.
@@ -175,6 +194,14 @@ sumisión.
 
 *Verificado:* el motor tiene una llamada de noqueo interceptable, así que contar
 es posible.
+
+*Estado (2026-10-04, cage-beating-stress):* un noqueo que causan Golpear o
+Noquear sobre un preso de tu jaula **no cuenta como derrota** (ni alimenta la
+rendición en el campo): golpear a alguien encerrado no es vencerlo en una pelea.
+Suma estrés por golpes (R2.3) y su episodio queda marcado, así que el clic
+derecho tampoco lo cuenta. Los noqueos en el campo, sin comando de la jaula,
+cuentan igual que antes. Log: `[defeat] <nombre> cage knockout: not a defeat
+(stress +X%)`.
 
 **R3.3 — El conteo sobrevive la recarga.** *(P1; implementado en recruit-gating T1: el conteo vive en el save del propio personaje)*
 Un contador propio vive en memoria y una recarga lo borra. La solución es la de
