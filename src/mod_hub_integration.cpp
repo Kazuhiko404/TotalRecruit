@@ -269,10 +269,15 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "helper_expiry_warning", "Ayudante: aviso antes de irse", "Cuantas horas antes de irse avisa que se va pronto", 0.0f, 72.0f, 1.0f, 0, &c.helpers.expiryWarningHours);
     regInt(api, mod, "helper_debug_key", "Ayudante: tecla de prueba", "Codigo de tecla de Windows (119 = F8). Con un NPC seleccionado, se ofrece al instante. 0 = apagado", 0, 255, 1, &c.helpers.debugKey);
     regBool(api, mod, "helper_native_bodyguard", "Ayudante: contrato nativo", "Te escolta con el contrato de guardaespaldas del juego, como un mercenario. Apagado (o si falla), lo guia el mod: te sigue corriendo y ataca a quien ataca a tu lider", &c.helpers.nativeBodyguard);
-    // Reto a duelo: un aliado 80+ se une para siempre si le ganas un duelo de TotalSparring.
-    regBool(api, mod, "duel_enabled", "Duelo: retar aliados 80+", "Con TotalSparring instalado, la ventana de un aliado de nivel temporal (80+) ofrece RETAR A DUELO: si tu peleador gana, se une para siempre (solo Balanced)", &c.duelChallenges.enabled);
+    // Reto a duelo: un NPC 80+ puede unirse si le ganas un duelo de TotalSparring.
+    regBool(api, mod, "duel_enabled", "Duelo: retar NPC 80+", "Con TotalSparring instalado, la ventana de un NPC de nivel 80+ ofrece RETAR A DUELO (Balanced: aliados con niveles; Cheat: cualquier persona). Ganar da una chance de que se una (Cheat: se une)", &c.duelChallenges.enabled);
     regFloat(api, mod, "duel_cooldown_hours", "Duelo: horas tras perder", "Horas de juego sin poder retarlo otra vez despues de perder o empatar", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.cooldownHours);
     regFloat(api, mod, "duel_expiry_hours", "Duelo: horas que espera el reto", "Si el duelo no termina en estas horas de juego, el reto se olvida", 0.5f, 168.0f, 0.5f, 1, &c.duelChallenges.expiryHours);
+    regInt(api, mod, "duel_join_base_chance", "Duelo: chance base al ganar", "Porcentaje de que se una tras tu primera victoria contra el (solo Balanced)", 0, 100, 5, &c.duelChallenges.joinBaseChance);
+    regInt(api, mod, "duel_join_chance_per_win", "Duelo: chance extra por victoria", "Cuanto sube la chance por cada victoria anterior contra el (25, 45, 65, 85, 100 por defecto)", 0, 100, 5, &c.duelChallenges.joinChancePerWin);
+    regFloat(api, mod, "duel_win_cooldown_min_hours", "Duelo: horas minimas tras ganar", "Si le ganas y no se une, horas minimas antes de poder retarlo otra vez", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.winCooldownMinHours);
+    regFloat(api, mod, "duel_win_cooldown_max_hours_under100", "Duelo: horas maximas tras ganar (80-99)", "Si le ganas y no se une, horas maximas de espera para un NPC de nivel 80 a 99", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.winCooldownMaxHoursUnder100);
+    regFloat(api, mod, "duel_win_cooldown_max_hours", "Duelo: horas maximas tras ganar (100+)", "Si le ganas y no se une, horas maximas de espera para un NPC de nivel 100 o mas", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.winCooldownMaxHours);
     regBool(api, mod, "cheat_needs_cage","Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
     regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame (0.02 = un minuto)", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
     regInt(api, mod, "rescue_base_bonus", "Rescate: peso de la deuda", "Cuanto pesa haberle salvado la vida, antes de contar la cura", 0, 90, 5, &c.rescueBaseBonus);

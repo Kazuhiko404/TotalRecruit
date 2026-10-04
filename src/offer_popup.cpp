@@ -75,8 +75,9 @@ const int kAloneButtonW = 150;
 // More buttons than this and the closing one wraps alone to a second row, on the
 // right (POPUP_LAYOUT buttonsPerRow): five across would not hold DARLE COMIDA.
 const int kButtonsPerRow = 3;
-// Price, purse, chance and the duel record (OfferView::showDuelRecord).
-const int kInfoRows     = 4;
+// Price, purse, chance, the duel record (OfferView::showDuelRecord) and what the next
+// win does (OfferView::showDuelJoin).
+const int kInfoRows     = 5;
 // The haggle section (POPUP_LAYOUT haggle*).
 const int kHaggleRowH   = 24;
 const int kHaggleLabelW = 84;
@@ -706,9 +707,9 @@ int LayoutUnguarded(const OfferView& view)
 
     // Info box: only the rows that apply.
     int rows = 0;
-    const std::string* labels[kInfoRows] = { NULL, NULL, NULL, NULL };
-    const std::string* values[kInfoRows] = { NULL, NULL, NULL, NULL };
-    MyGUI::Colour inks[kInfoRows] = { kText, kText, kText, kText };
+    const std::string* labels[kInfoRows] = { NULL, NULL, NULL, NULL, NULL };
+    const std::string* values[kInfoRows] = { NULL, NULL, NULL, NULL, NULL };
+    MyGUI::Colour inks[kInfoRows] = { kText, kText, kText, kText, kText };
     // A Balanced ally's friendship discount rides beside the price ("1.840 cats  -14%").
     const std::string priceShown =
         view.priceTag.empty() ? view.priceText : view.priceText + "  " + view.priceTag;
@@ -741,6 +742,14 @@ int LayoutUnguarded(const OfferView& view)
         labels[rows] = &view.duelRecordLabel;
         values[rows] = &view.duelRecordText;
         inks[rows] = kAmber;
+        ++rows;
+    }
+    // What the next win does ("SI LE GANAS  65% de que se una"; Cheat "se une").
+    if (view.showDuelJoin && rows < kInfoRows)
+    {
+        labels[rows] = &view.duelJoinLabel;
+        values[rows] = &view.duelJoinText;
+        inks[rows] = kText;
         ++rows;
     }
     if (rows > 0)

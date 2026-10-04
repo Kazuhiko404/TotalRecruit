@@ -905,13 +905,16 @@
     ]
   },
   "duel": {
-    "_comment": "Reto a duelo a un aliado 80+ (necesita TotalSparring). notice.* va sobre su cabeza: una linea corta y sin acentos. {name} = su nombre, {hours} = horas hasta poder retarlo otra vez.",
+    "_comment": "Reto a duelo a un NPC 80+ (necesita TotalSparring). notice.* va sobre su cabeza: una linea corta y sin acentos. {name} = su nombre, {hours} = horas hasta poder retarlo otra vez, {chance} = el % de que se uniera al ganarle (Balanced).",
     "notice": {
       "joined": [
         "Me ganaste. Me uno a ti"
       ],
       "lost": [
         "Vuelve cuando seas mas fuerte"
+      ],
+      "stays": [
+        "Buena pelea. Retame otra vez"
       ]
     },
     "challenged": [
@@ -922,6 +925,9 @@
     ],
     "lost": [
       "{name} gano el duelo. Vuelve cuando seas mas fuerte (podras retarlo en {hours} h)."
+    ],
+    "stays": [
+      "{name} perdio el duelo, pero no se une ({chance}% de que se uniera). Podras retarlo otra vez en {hours} h."
     ],
     "died": [
       "{name} murio en el duelo."
@@ -1131,7 +1137,11 @@
       },
       "duel": {
         "record": "Duelos: {food}-{need}",
-        "recordDraws": "Duelos: {food}-{need}-{chance}"
+        "recordDraws": "Duelos: {food}-{need}-{chance}",
+        "recordChance": "Duelos: {food}-{need}, si ganas {chance}% se une",
+        "recordDrawsChance": "Duelos: {food}-{need}-{purse}, si ganas {chance}%",
+        "recordSure": "Duelos: {food}-{need}, si ganas se une",
+        "recordDrawsSure": "Duelos: {food}-{need}-{chance}, si ganas se une"
       },
       "faction": {
         "honour": "Su honor no trata con tu reputacion",
@@ -1204,7 +1214,10 @@
       "chance": "PROBABILIDAD",
       "free": "Gratis",
       "cats": "{cats} cats",
-      "duels": "DUELOS"
+      "duels": "DUELOS",
+      "duelJoin": "SI LE GANAS",
+      "duelJoinChance": "{chance}% de que se una",
+      "duelJoinSure": "se une"
     },
     "shortPurse": "No te alcanzan los cats (te faltan {cats})",
     "body": {

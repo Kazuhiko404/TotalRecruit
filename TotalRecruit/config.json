@@ -76,6 +76,11 @@
   "duelChallengeEnabled": true,
   "duelChallengeCooldownHours": 24.0,
   "duelChallengeExpiryHours": 6.0,
+  "duelJoinBaseChance": 25,
+  "duelJoinChancePerWin": 20,
+  "duelWinCooldownMinHours": 24.0,
+  "duelWinCooldownMaxHoursUnder100": 72.0,
+  "duelWinCooldownMaxHours": 120.0,
 
   "submissionEventEnabled": true,
   "submissionApproachSeconds": 60.0,

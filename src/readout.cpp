@@ -162,7 +162,8 @@ void LogReadout(Character* character, const ReadoutView& view, const ReadoutText
     }
 }
 
-// The duel record line of a challengeable ally (duel_challenge_rules.h): only when the
+// The duel record line of a challengeable NPC (duel_challenge_rules.h), carrying what
+// the next win does (duel_join_rules.h): only when the
 // duel is on offer, and read from TotalSparring only when the pair changed or a bout
 // ended since the last read.
 void AddDuelRecord(Character* character, ReadoutInput* input)
@@ -193,6 +194,12 @@ void AddDuelRecord(Character* character, ReadoutInput* input)
     input->duelWins = c.wins;
     input->duelLosses = c.losses;
     input->duelDraws = c.draws;
+    // What the next win does (duel_join_rules.h): computed from the cached wins every
+    // time, so a Mod Hub change of the chance shows at once.
+    const DuelJoinOdds odds = DuelNextWinOddsNow(c.known ? c.wins : 0);
+    input->duelJoinKnown = c.known;
+    input->duelJoinSure = odds.sure;
+    input->duelJoinChance = odds.chance;
 }
 
 // Works the card out for this character: the one full evaluation. False when there

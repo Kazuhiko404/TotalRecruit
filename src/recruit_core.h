@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "duel_join_rules.h"
 #include "verdict.h"
 
 class Character;
@@ -57,13 +58,20 @@ void CompleteHaggle(Character* character, int offer);
 void HelpCaptive(Character* character);
 
 // ------------------------------------------------------------ Duel challenge
-// An elite Balanced ally can be challenged to a TotalSparring duel and joins for
-// good on a win (duel_challenge_rules.h has the rules, ts_bridge.h the plumbing).
+// An elite NPC (Balanced: a tiered ally; Cheat: any person) can be challenged to a
+// TotalSparring duel. A win joins for good in Cheat and is a seeded join chance in
+// Balanced (duel_challenge_rules.h and duel_join_rules.h have the rules, ts_bridge.h
+// the plumbing).
 
 // Whether RETAR A DUELO is on offer for `npc` with this verdict now: CanOfferDuel over
-// duelChallengeEnabled, TsAvailable, the tiered-ally verdict, the elite cut level and
-// the NPC's cooldown.
+// duelChallengeEnabled, TsAvailable, the tiered-ally verdict or the Cheat preset, the
+// NPC's level (SafeNpcLevel, the number TotalSparring shows) against the elite cut,
+// and the NPC's cooldown (a lost duel's or a won one's that did not join).
 bool DuelOfferedFor(Character* npc, const Verdict& verdict);
+
+// What the next win against an NPC would do, for the popup and the card, given the
+// head-to-head wins so far: sure in Cheat, DuelJoinChance(winsSoFar + 1) in Balanced.
+DuelJoinOdds DuelNextWinOddsNow(int winsSoFar);
 
 // TotalSparring's head-to-head record of `challenger` (a squad member) against `npc`.
 // Reads its history database: call it on an event only (popup open, selection change).
@@ -75,6 +83,7 @@ bool ReadDuelRecord(Character* challenger, Character* npc, int* wins, int* losse
 void ChallengeToDuel(Character* npc);
 
 // The frame tick: attaches to TotalSparring, expires stale challenges and acts on the
-// bouts TotalSparring reported (a win recruits for good, a loss starts the cooldown).
+// bouts TotalSparring reported (a win joins or, in Balanced, may only start the win
+// cooldown; a loss or a draw starts the duel cooldown).
 void DuelChallengeTick();
 } // namespace totalrecruit

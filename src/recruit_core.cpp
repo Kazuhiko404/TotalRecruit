@@ -23,6 +23,8 @@
 #include "haggle_ledger.h"
 #include "temp_member.h"
 #include "duel_challenge_rules.h"
+#include "duel_join_rules.h"
+#include "npc_level.h"
 #include "ts_bridge.h"
 #include "head_notice.h"
 #include "npc_motion.h"
@@ -342,8 +344,9 @@ OfferHaggleInput HaggleInputFor(Character* character, const Verdict& verdict, Ha
     return haggle;
 }
 
-// RETAR A DUELO and the record row (offer_view.h OfferDuelInput): offered by
-// DuelOfferedFor; the record is read once, now, as the window opens.
+// RETAR A DUELO, the record row and SI LE GANAS (offer_view.h OfferDuelInput): offered
+// by DuelOfferedFor; the record is read once, now, as the window opens. What the next
+// win does needs the record in Balanced (the chance grows with the wins); Cheat is sure.
 OfferDuelInput DuelInputFor(Character* character, const Verdict& verdict)
 {
     OfferDuelInput duel;
@@ -358,6 +361,10 @@ OfferDuelInput DuelInputFor(Character* character, const Verdict& verdict)
         duel.recordKnown = ReadDuelRecord(challenger, character, &duel.wins, &duel.losses,
                                           &duel.draws);
     }
+    const DuelJoinOdds odds = DuelNextWinOddsNow(duel.recordKnown ? duel.wins : 0);
+    duel.joinKnown = odds.sure || duel.recordKnown;
+    duel.joinSure = odds.sure;
+    duel.joinChance = odds.chance;
     return duel;
 }
 
@@ -916,8 +923,87 @@ const char* ResolutionWord(DuelResolution resolution)
     }
 }
 
-// A won duel: the NPC joins for good -- a plain Recruit, never a temporary stay.
-void OnDuelWon(const DuelResolveResult& result)
+// The player's character carrying `key`, or NULL.
+Character* FindSquadMember(const CharKey& key)
+{
+    Character* members[kDuelSearchMembers] = { NULL };
+    const int count = SafePlayerCharacters(members, kDuelSearchMembers);
+    for (int m = 0; m < count; ++m)
+    {
+        CharKey found;
+        if (members[m] != NULL && SafeFindCharKey(members[m], &found) && found == key)
+        {
+            return members[m];
+        }
+    }
+    return NULL;
+}
+
+// The winner's head-to-head wins against `npc` as TotalSparring has them, the bout
+// that just ended included (it writes its history before it tells its listeners).
+// The winner is side A; the challenger is the fallback. An unreadable record counts
+// as the first win, so the chance is never higher than the player earned.
+int WinsAgainst(const DuelResolveResult& result, Character* npc, std::string* winnerName)
+{
+    Character* winner = FindSquadMember(result.winner);
+    if (winner == NULL)
+    {
+        winner = FindSquadMember(result.challenger);
+    }
+    if (winner != NULL)
+    {
+        *winnerName = CharacterName(winner);
+    }
+    int wins = 0;
+    int losses = 0;
+    int draws = 0;
+    if (winner == NULL || !TsDuelStats(winner, npc, &wins, &losses, &draws))
+    {
+        LogError("[duel] the record against " + result.npc.ToString() +
+                 " could not be read: counting this as the first win.");
+        return 1;
+    }
+    return wins < 1 ? 1 : wins;
+}
+
+std::string WithChance(const std::string& text, int chance)
+{
+    std::string out = text;
+    const std::string key = "{chance}";
+    const std::string value = IntToString(chance);
+    std::string::size_type at = 0;
+    while ((at = out.find(key, at)) != std::string::npos)
+    {
+        out.replace(at, key.size(), value);
+        at += value.size();
+    }
+    return out;
+}
+
+// A won duel that did not roll the join (Balanced): a good fight, come back later.
+// The win cooldown goes into the duel cooldown book, saved with the NPC like a lost
+// duel's.
+void OnDuelWonStays(Character* npc, const std::string& name, const DuelResolveResult& result,
+                    const DuelWinDecision& decision, double nowHours)
+{
+    SetDuelCooldownUntil(result.npc, decision.cooldownUntilHour);
+    const double left = (double)decision.cooldownUntilHour - nowHours;
+    const int hours = left > 0.0 ? (int)(left + 0.999) : 0;
+    RaiseHeadNotice(npc, Say("duel.notice.stays", "Buena pelea. Retame otra vez", npc),
+                    HeadNoticeKind_Info);
+    TellPlayer(WithChance(Fill(Say("duel.stays",
+                                   "{name} perdio el duelo, pero no se une ({chance}% de que se uniera). "
+                                   "Podras retarlo otra vez en {hours} h.",
+                                   npc),
+                              name, 0, hours),
+                          decision.chance),
+               false);
+}
+
+// A won duel: Cheat joins for good; Balanced rolls the seeded join chance
+// (duel_join_rules.h) and either joins for good -- a plain Recruit, never a temporary
+// stay -- or starts the win cooldown.
+void OnDuelWon(const DuelResolveResult& result, double nowHours)
 {
     Character* npc = FindNearSquad(result.npc);
     if (npc == NULL)
@@ -936,6 +1022,32 @@ void OnDuelWon(const DuelResolveResult& result)
         TellPlayer(Fill(Say("duel.died", "{name} murio en el duelo.", npc), name, 0, 0), false);
         return;
     }
+
+    const Config& config = GetConfig();
+    std::string winnerName = "?";
+    DuelWinFacts facts;
+    facts.cheat = config.preset == Preset_Cheat;
+    facts.npc = result.npc;
+    facts.wins = WinsAgainst(result, npc, &winnerName);
+    facts.npcLevel = config.allyTiers.eliteFromLevel;
+    SafeNpcLevel(npc, &facts.npcLevel);
+    facts.nowHours = nowHours;
+    const DuelWinDecision decision = DecideDuelWin(facts, config.duelChallenges);
+    const std::string head = "[duel] " + winnerName + " won (wins " + IntToString(facts.wins) +
+                             "): join chance " + IntToString(decision.chance) + "%, roll " +
+                             IntToString(decision.roll) + " -> ";
+    if (!decision.joins)
+    {
+        char hours[32] = { 0 };
+        _snprintf_s(hours, sizeof(hours), _TRUNCATE, "%.1f", decision.cooldownHours);
+        LogInfo(head + "stays (cooldown " + hours + " h until hour " +
+                IntToString(decision.cooldownUntilHour) + ") vs " + name + " level " +
+                IntToString(facts.npcLevel) + " [key " + result.npc.ToString() + "]");
+        OnDuelWonStays(npc, name, result, decision, nowHours);
+        return;
+    }
+    LogInfo(head + "joined vs " + name + " [key " + result.npc.ToString() + "]");
+
     std::string message;
     if (!Recruit(npc, &message))
     {
@@ -995,15 +1107,35 @@ bool DuelOfferedFor(Character* npc, const Verdict& verdict)
     const Config& config = GetConfig();
     DuelOfferFacts facts;
     facts.enabled = config.duelChallenges.enabled;
-    facts.tsAvailable = TsAvailable();
     facts.allyTiered = verdict.allyTiered;
+    // Cheat has no ally tiers: the level alone decides, for any person.
+    facts.cheatPreset = config.preset == Preset_Cheat;
+    if (!facts.enabled || !(facts.allyTiered || facts.cheatPreset))
+    {
+        return false;
+    }
+    facts.tsAvailable = TsAvailable();
     facts.isAnimal = verdict.isAnimal;
+    bool animal = false;
+    if (facts.cheatPreset && !facts.isAnimal && SafeIsAnimal(npc, &animal))
+    {
+        // The Cheat verdict never reads who they are, so it does not know.
+        facts.isAnimal = animal;
+    }
+    // The level TotalSparring shows (npc_level.h); the tier's own read otherwise.
     facts.npcLevel = verdict.allyLevel;
+    SafeNpcLevel(npc, &facts.npcLevel);
     facts.eliteFromLevel = config.allyTiers.eliteFromLevel;
     CharKey key;
     double now = 0.0;
     facts.onCooldown = SafeFindCharKey(npc, &key) && SafeGameHours(&now) && DuelOnCooldown(key, now);
     return CanOfferDuel(facts);
+}
+
+DuelJoinOdds DuelNextWinOddsNow(int winsSoFar)
+{
+    const Config& config = GetConfig();
+    return DuelNextWinOdds(config.preset == Preset_Cheat, winsSoFar, config.duelChallenges);
 }
 
 bool ReadDuelRecord(Character* challenger, Character* npc, int* wins, int* losses, int* draws)
@@ -1101,7 +1233,7 @@ void DuelChallengeTick()
         LogBout(bouts[i], result.resolution);
         if (result.resolution == DuelResolution_Won)
         {
-            OnDuelWon(result);
+            OnDuelWon(result, now);
         }
         else if (result.resolution == DuelResolution_Lost)
         {
