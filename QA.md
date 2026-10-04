@@ -145,7 +145,7 @@ Con `chancePerDefeat=12`, la derrota suma `12 / resolve`:
 
 ## 4. Golpear al prisionero (R2.3)
 
-> Superado por 12.19 y 12.22: GOLPEARLO (desmayo forzado con enfriamiento) ya no existe; la ventana ofrece GOLPEAR / NOQUEAR, las ordenes nativas.
+> Superado por 12.19 y 12.22: GOLPEARLO (desmayo forzado con enfriamiento) ya no existe; la ventana ofrece GOLPEAR (un golpe directo con tope) y NOQUEAR (la orden nativa).
 
 | # | Qué hacer | Esperado | Falla si |
 |---|---|---|---|
@@ -642,19 +642,20 @@ Solo para precios en cats (soborno en el mundo libre y la ruta de cautiverio con
 
 ### 12.19 Golpear y Noquear al preso de tu jaula (cage-animals-submission T1)
 
-Golpear y Noquear son ordenes del propio juego (`BEAT_CAGE_OCCUPANT`, `STEALTH_KNOCKOUT`) que da el personaje **seleccionado**: el mod no calcula daño ni probabilidad. Si en 1,5 s el personaje no cambio de tarea, corre el respaldo (Golpear: el ataque de TotalSparring `FOCUSED_MELEE_ATTACK`; Noquear: `MedicalSystem::knockout` con su habilidad de asesinato). Mockup: `ui-mockup/readout.html` seccion 2, "Menu on your prisoner". Reemplaza A1-A3 (12.7) y K6 (12.13): el viejo GOLPEARLO (desmayo forzado de 60 s) ya no existe y la clave `submissionBeatingKnockoutSeconds` no se lee. Con `probeOnClick`.
+Golpear y Noquear los da el personaje **seleccionado**. Golpear (desde `fix/cage-beat-direct-hit`) es **un** golpe directo, en el acto y sin ordenes: el daño de ataque del motor para ese personaje, solo contundente, al torso del preso, con tope (la parte nunca baja de -0,5 x su vida maxima: puede noquear, nunca matar); el preso no sale de la jaula. Noquear es la orden del propio juego (`STEALTH_KNOCKOUT`): si en 1,5 s el personaje no cambio de tarea, corre el respaldo `MedicalSystem::knockout` con su habilidad de asesinato. Mockup: `ui-mockup/readout.html` seccion 2, "Menu on your prisoner". Reemplaza A1-A3 (12.7) y K6 (12.13): el viejo GOLPEARLO (desmayo forzado de 60 s) ya no existe y la clave `submissionBeatingKnockoutSeconds` no se lee. Con `probeOnClick`.
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
 | C1 | Seleccionar a uno de los tuyos, clic derecho sobre un preso **despierto** en tu jaula | Al lado del menu, un bloque de tres: Hablar, Golpear, "Noquear NN%" (o "Noquear" si el juego no da probabilidad); el bloque no tapa los botones de TotalSparring / TotalLoot | `Context menu: <nombre> -> ... [cage commands]` |
 | C2 | Clic derecho sobre un NPC libre, un preso inconsciente, o con `allowBeating` apagado | Solo Hablar | sin `[cage commands]` |
-| C3 | Golpear (clic izquierdo, y otra vez con el gesto: mantener clic derecho, deslizar, soltar) | El seleccionado va a la jaula y lo golpea con sus propios golpes; una sola orden por gesto | `[cage] <tuyo> -> <preso> beat ordered (task 475, was N, checkPlayerOrderForProblems=...)` y luego `[cage] ... beat via task` (o `via fallback`) |
+| C3 | Golpear (clic izquierdo, y otra vez con el gesto: mantener clic derecho, deslizar, soltar) | Un solo golpe en el acto por gesto: la vida del torso del preso baja; el preso **sigue en la jaula** (nadie se pone a pelear, la lectura no pasa a `route=free`) | `[cage] <tuyo> -> <preso> beat hit (blunt X, part health A -> B)` con B < A |
+| C3b | Golpear muchas veces seguidas al mismo preso | Puede quedar inconsciente; **nunca muere** ni sangra hasta morir; los golpes cuando la parte ya esta en el piso no bajan nada | `beat hit (blunt 0.0, part health -N -> -N)` en el piso (N = la mitad de la vida maxima de la parte) |
 | C4 | Noquear | El seleccionado intenta el noqueo sigiloso; sale o no segun su habilidad (el % del boton) | `[cage] ... knockout ordered (task 507, ...)` y `... knockout via task` o `via fallback` |
 | C5 | Cuando el preso cae por C3 o C4 | La derrota cuenta para el jugador aunque el juego no nombre a nadie como ganador | `[defeat-hook] knockout fired for <preso>`, `[defeat] credited to the player explicitly (cage command): <preso>` (o un `defeated by the player` normal) |
 | C6 | Golpear o Noquear sin nadie de tu grupo seleccionado | "Selecciona a alguien de tu grupo para hacerlo"; no pasa nada mas | — |
-| C7 | Rechazo en la ventana de un preso de tu jaula: **GOLPEAR** o **NOQUEAR** (ver 12.22) | La ventana se cierra y el seleccionado va a golpearlo / noquearlo (la misma orden que C3 / C4); sin seleccionado, el mensaje de C6 | igual que C3 / C4 |
-| C8 | Anotar si alguna vez aparece `via fallback` y para que orden | Evidencia: si el juego no toma `BEAT_CAGE_OCCUPANT` / `STEALTH_KNOCKOUT` desde un plugin, el respaldo es lo que se ve; reportar tambien el valor de `checkPlayerOrderForProblems` | `via fallback` |
-| C9 | Dar la orden y cargar un save antes de que se resuelva | Nada queda apuntando a nadie | `load begin: session state cleared (... cage command watch and credits ...)` |
+| C7 | Rechazo en la ventana de un preso de tu jaula: **GOLPEAR** o **NOQUEAR** (ver 12.22) | La ventana se cierra; GOLPEAR da el golpe de C3, NOQUEAR la orden de C4; sin seleccionado, el mensaje de C6 | igual que C3 / C4 |
+| C8 | Anotar si alguna vez aparece `knockout via fallback` | Evidencia: si el juego no toma `STEALTH_KNOCKOUT` desde un plugin, el respaldo es lo que se ve; reportar tambien el valor de `checkPlayerOrderForProblems` | `knockout via fallback` |
+| C9 | Dar la orden de Noquear y cargar un save antes de que se resuelva | Nada queda apuntando a nadie | `load begin: session state cleared (... cage command watch and credits ...)` |
 
 ### 12.20 Los animales solo se doman con tu comida (cage-animals-submission T2)
 

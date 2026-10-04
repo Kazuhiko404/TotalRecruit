@@ -259,10 +259,11 @@ struct Submission
     float braveResolve;
     float honourableResolve;
     // R2.3 -- roughing up a prisoner in your own cage (allowBeating,
-    // beatingCooldownHours). The beating is the engine's own BEAT_CAGE_OCCUPANT
-    // order (cage_commands.h), so how long they stay down is the engine's; the
-    // cooldown only gates the popup's GOLPEARLO remedy. The old
-    // submissionBeatingKnockoutSeconds key is no longer read.
+    // beatingCooldownHours). Golpear is one direct, capped blow from the
+    // selected character (cage_commands.h): it may knock the prisoner out, never
+    // kills, and how long they stay down is the engine's; the cooldown only gates
+    // the popup's GOLPEARLO remedy. The old submissionBeatingKnockoutSeconds key
+    // is no longer read.
     // Route C -- yielding in the field, with no cage involved. How many times
     // the player has to beat the same person before they will consider giving
     // in. This is the route the spec asks for and it had become unreachable:

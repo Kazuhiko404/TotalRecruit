@@ -1,6 +1,7 @@
 // Tests for src/cage_command_rules: the button block beside the context menu, the
-// watch that decides when a native order needs its fallback, the credit bridge
-// for knockouts the player ordered, and the "NOQUEAR 72%" label.
+// watch that decides when the knockout order needs its fallback, the credit bridge
+// for knockouts the player ordered, the "NOQUEAR 72%" label and Golpear's one
+// capped blow.
 
 #include "test_support.h"
 #include "cage_command_rules.h"
@@ -147,6 +148,96 @@ void TheFallbackKnockoutReadsTheSkillAsAFraction()
     CHECK(SkillFraction(140.0f) == 1.0f);
     CHECK(SkillFraction(-5.0f) == 0.0f);
 }
+
+bool Near(float a, float b)
+{
+    const float d = a - b;
+    return d > -0.001f && d < 0.001f;
+}
+
+void TheBeatHitIsTheAttackersOwnDamageAsBlunt()
+{
+    const char* name = "beat hit: the engine's cut + blunt + pierce for this attacker lands as blunt";
+    CHECK(Near(BeatBlunt(true, 0.0f, 12.0f, 0.0f), 12.0f));
+    CHECK(Near(BeatBlunt(true, 30.0f, 5.0f, 2.0f), 37.0f));
+    // Negative components (never seen, but read raw) do not lower the blow.
+    CHECK(Near(BeatBlunt(true, -4.0f, 10.0f, 0.0f), 10.0f));
+}
+
+void AnUnreadableAttackFallsBackToTheDefaultBlow()
+{
+    const char* name = "beat hit: unreadable or zero attack damage -> kBeatDefaultBlunt";
+    CHECK(kBeatDefaultBlunt > 0.0f);
+    CHECK(Near(BeatBlunt(false, 30.0f, 5.0f, 2.0f), kBeatDefaultBlunt));
+    CHECK(Near(BeatBlunt(true, 0.0f, 0.0f, 0.0f), kBeatDefaultBlunt));
+}
+
+void TheHealthFloorIsHalfTheMaxBelowZero()
+{
+    const char* name = "beat hit: the part never goes below -0.5 x its max health";
+    CHECK(Near(kBeatHealthFloorFraction, 0.5f));
+    CHECK(Near(BeatHealthFloor(100.0f), -50.0f));
+    CHECK(Near(BeatHealthFloor(80.0f), -40.0f));
+    // An unreadable max gives the safest floor there is: zero.
+    CHECK(Near(BeatHealthFloor(0.0f), 0.0f));
+    CHECK(Near(BeatHealthFloor(-10.0f), 0.0f));
+}
+
+void TheBlowIsCappedAtTheFloor()
+{
+    const char* name = "beat hit: the blow lands whole above the floor, capped at it, nothing below it";
+    // Plenty of health: the whole blow.
+    CHECK(Near(CapBeatBlunt(20.0f, 100.0f, 100.0f), 20.0f));
+    // Would cross the floor (-50): only down to it.
+    CHECK(Near(CapBeatBlunt(80.0f, 10.0f, 100.0f), 60.0f));
+    CHECK(Near(CapBeatBlunt(80.0f, -30.0f, 100.0f), 20.0f));
+    // Already at or below the floor: nothing lands.
+    CHECK(Near(CapBeatBlunt(20.0f, -50.0f, 100.0f), 0.0f));
+    CHECK(Near(CapBeatBlunt(20.0f, -70.0f, 100.0f), 0.0f));
+    // A negative blow never heals.
+    CHECK(Near(CapBeatBlunt(-5.0f, 50.0f, 100.0f), 0.0f));
+    // Ten blows in a row never get below the floor.
+    float health = 100.0f;
+    for (int i = 0; i < 10; ++i)
+    {
+        health -= CapBeatBlunt(37.0f, health, 100.0f);
+    }
+    CHECK(health >= BeatHealthFloor(100.0f) - 0.001f);
+    CHECK(Near(health, -50.0f));
+}
+
+BeatPartFacts Part(int type, bool fatal)
+{
+    BeatPartFacts p;
+    p.present = true;
+    p.type = type;
+    p.fatal = fatal;
+    return p;
+}
+
+void TheBlowLandsOnTheTorso()
+{
+    const char* name = "beat hit: first torso part, else first fatal part, else none";
+    const int head = 3;
+    const int leg = 1;
+    BeatPartFacts body[4] = { Part(head, true), Part(kBeatTorsoPartType, true),
+                              Part(kBeatTorsoPartType, true), Part(leg, false) };
+    CHECK(kBeatTorsoPartType == 0);
+    CHECK(PickBeatPart(body, 4) == 1);
+
+    // A missing slot is skipped.
+    body[1].present = false;
+    CHECK(PickBeatPart(body, 4) == 2);
+
+    // No torso at all: the first fatal part.
+    BeatPartFacts odd[3] = { Part(leg, false), Part(head, true), Part(leg, true) };
+    CHECK(PickBeatPart(odd, 3) == 1);
+
+    BeatPartFacts limbs[2] = { Part(leg, false), Part(leg, false) };
+    CHECK(PickBeatPart(limbs, 2) == -1);
+    CHECK(PickBeatPart(limbs, 0) == -1);
+    CHECK(PickBeatPart(NULL, 3) == -1);
+}
 } // namespace
 
 void RunCageCommandRulesTests()
@@ -161,4 +252,9 @@ void RunCageCommandRulesTests()
     ANewOrderRestartsTheWindow();
     TheKnockoutLabelCarriesTheNativeOdds();
     TheFallbackKnockoutReadsTheSkillAsAFraction();
+    TheBeatHitIsTheAttackersOwnDamageAsBlunt();
+    AnUnreadableAttackFallsBackToTheDefaultBlow();
+    TheHealthFloorIsHalfTheMaxBelowZero();
+    TheBlowIsCappedAtTheFloor();
+    TheBlowLandsOnTheTorso();
 }

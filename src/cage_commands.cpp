@@ -7,10 +7,8 @@
 #include "log.h"
 #include "messages.h"
 
-// OrdersReceiver (clearOrders / clearJobs). It defines taskPriority, as Tasker.h
-// does, so the actor's current task is read in engine_reads.cpp instead.
-#include <kenshi/AI/AITaskSystem.h>
 #include <kenshi/CharStats.h>
+#include <kenshi/Damages.h>
 
 namespace totalrecruit
 {
@@ -20,45 +18,130 @@ namespace
 // each guard keeps a POD-only frame -- C2712 counts every C++ object in the
 // whole function, not just those inside the __try block.
 
-enum CageCommand
+typedef MedicalSystem::HealthPartStatus HealthPart;
+
+// --- Golpear: one direct, capped blow ----------------------------------------
+//
+// No orders at all: the native BEAT_CAGE_OCCUPANT order was never taken from a
+// plugin, and the attack fallback started a real fight that pulled the prisoner
+// out of the cage. The blow is the actor's own attack damage, landed as blunt on
+// the prisoner's torso and capped by the pure rules (cage_command_rules.h).
+
+const int kBeatPartScan = 32;
+
+struct AttackNumbers
 {
-    Command_Beat,
-    Command_Knockout
+    float cut;
+    float blunt;
+    float pierce;
 };
 
-// The one native order being watched: the last one the player gave. A second
-// command replaces it -- the player changed their mind, and the actor's task is
-// then about the new one. Raw pointers, only read behind guards and dropped at a
-// load (ForgetCageCommands).
+// Unguarded: getTotalAttackDamageFor returns a Damages, a C++ object (C2712).
+// SafeAttackDamage holds the guard.
+bool ReadAttackDamageUnguarded(Character* actor, Character* target, AttackNumbers* out)
+{
+    CharStats* stats = actor->getStats();
+    if (stats == NULL)
+    {
+        return false;
+    }
+    const Damages damage = stats->getTotalAttackDamageFor(target);
+    out->cut = damage.cut;
+    out->blunt = damage.blunt;
+    out->pierce = damage.pierce;
+    return true;
+}
+
+bool SafeAttackDamage(Character* actor, Character* target, AttackNumbers* out)
+{
+    TR_TRY { return ReadAttackDamageUnguarded(actor, target, out); }
+    TR_CATCH { return false; }
+}
+
+// The torso part the blow lands on (PickBeatPart over the anatomy).
+bool SafeBeatPart(Character* target, HealthPart** out)
+{
+    TR_TRY
+    {
+        MedicalSystem* medical = target->getMedical();
+        if (medical == NULL)
+        {
+            return false;
+        }
+        BeatPartFacts facts[kBeatPartScan];
+        int count = (int)medical->anatomy.size();
+        if (count > kBeatPartScan)
+        {
+            count = kBeatPartScan;
+        }
+        for (int i = 0; i < count; ++i)
+        {
+            HealthPart* part = medical->anatomy[(uint32_t)i];
+            facts[i].present = part != NULL;
+            facts[i].type = part != NULL ? (int)part->whatAmI : -1;
+            facts[i].fatal = part != NULL && part->fatal;
+        }
+        const int index = PickBeatPart(facts, count);
+        if (index < 0)
+        {
+            return false;
+        }
+        *out = medical->anatomy[(uint32_t)index];
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+bool SafePartHealth(HealthPart* part, float* health, float* maxHealth)
+{
+    TR_TRY
+    {
+        *health = part->flesh;
+        *maxHealth = part->maxHealth();
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// The Damages is built by the caller: this guarded frame holds no C++ object.
+bool SafeApplyDamage(HealthPart* part, const Damages& damage)
+{
+    TR_TRY
+    {
+        part->applyDamage(damage);
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+bool SafeSetPartHealth(HealthPart* part, float health)
+{
+    TR_TRY
+    {
+        part->flesh = health;
+        return true;
+    }
+    TR_CATCH { return false; }
+}
+
+// --- the knockout order and its fallback -------------------------------------
+
+// The one native order being watched: the last knockout the player gave. A
+// second one replaces it -- the player changed their mind. Raw pointers, only
+// read behind guards and dropped at a load (ForgetCageCommands).
 struct OrderWatch
 {
     bool active;
-    CageCommand command;
     Character* actor;
     Character* target;
-    int ordered;
     int taskBefore;
     DWORD startedMs;
 
-    OrderWatch()
-        : active(false), command(Command_Beat), actor(NULL), target(NULL),
-          ordered(0), taskBefore(0), startedMs(0)
-    {
-    }
+    OrderWatch() : active(false), actor(NULL), target(NULL), taskBefore(0), startedMs(0) {}
 };
 
 OrderWatch g_watch;
 OrderedKnockoutCredit g_credit;
-
-const char* VerbOf(CageCommand command)
-{
-    return command == Command_Beat ? "beat" : "knockout";
-}
-
-TaskType TaskOf(CageCommand command)
-{
-    return command == Command_Beat ? BEAT_CAGE_OCCUPANT : STEALTH_KNOCKOUT;
-}
 
 bool SafePosition(Character* character, Ogre::Vector3* out)
 {
@@ -95,58 +178,6 @@ bool SafeOrder(Character* actor, TaskType task, Character* target, const Ogre::V
     TR_CATCH { return false; }
 }
 
-// --- the beating fallback: TotalSparring's fight_starter, step by step --------
-//
-// Without its last step, initCombatMode: CombatClass.h includes "Enums.h"
-// relative to the kenshi folder, which this project's include path does not
-// list, and the method is virtual, so it cannot be declared locally (notes
-// section 11). TotalSparring's own comment calls the addOrder the essential part.
-
-bool SafeDropCurrentActivity(Character* actor)
-{
-    TR_TRY
-    {
-        OrdersReceiver* orders = actor->getOrdersReciever();
-        if (orders != NULL)
-        {
-            orders->clearOrders();
-            orders->clearJobs();
-        }
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-// The order's location is the attacker's own position (Sparring reference parity).
-bool SafeAttackOrder(Character* actor, Character* target, const Ogre::Vector3& where)
-{
-    TR_TRY
-    {
-        actor->addOrder(NULL, FOCUSED_MELEE_ATTACK, target, false, true, where);
-        actor->attackTarget(target);
-        target->attackingYou(actor, true, true);
-        return true;
-    }
-    TR_CATCH { return false; }
-}
-
-bool BeatFallback(Character* actor, Character* target)
-{
-    Ogre::Vector3 where;
-    if (!SafePosition(actor, &where))
-    {
-        return false;
-    }
-    SafeDropCurrentActivity(actor);
-    if (!SafeAttackOrder(actor, target, where))
-    {
-        return false;
-    }
-    return true;
-}
-
-// --- the knockout fallback: the engine's own knockout -------------------------
-
 bool SafeAssassinationLevel(Character* actor, float* out)
 {
     TR_TRY
@@ -177,6 +208,7 @@ bool SafeKnockout(Character* target, float skill01)
     TR_CATCH { return false; }
 }
 
+// The engine's own knockout.
 bool KnockoutFallback(Character* actor, Character* target)
 {
     // Already out (the order landed after all, or someone else got there): a
@@ -193,19 +225,30 @@ bool KnockoutFallback(Character* actor, Character* target)
 
 // --- logging -----------------------------------------------------------------
 
-void LogResolved(const OrderWatch& watch, const char* via)
+void LogFailure(Character* actor, Character* target, const char* verb, const char* what)
+{
+    LogError("[cage] " + CharacterName(actor) + " -> " + CharacterName(target) + " " + verb +
+             " failed: " + what);
+}
+
+void LogKnockoutResolved(const OrderWatch& watch, const char* via)
 {
     if (GetConfig().probeOnClick)
     {
         LogInfo("[cage] " + CharacterName(watch.actor) + " -> " + CharacterName(watch.target) +
-                " " + VerbOf(watch.command) + " via " + via);
+                " knockout via " + via);
     }
 }
 
-void LogFailure(Character* actor, Character* target, CageCommand command, const char* what)
+void LogBeatHit(Character* actor, Character* target, float blunt, float before, float after)
 {
-    LogError("[cage] " + CharacterName(actor) + " -> " + CharacterName(target) + " " +
-             VerbOf(command) + " failed: " + what);
+    if (GetConfig().probeOnClick)
+    {
+        char line[96];
+        _snprintf_s(line, sizeof(line), _TRUNCATE,
+                    " beat hit (blunt %.1f, part health %.1f -> %.1f)", blunt, before, after);
+        LogInfo("[cage] " + CharacterName(actor) + " -> " + CharacterName(target) + line);
+    }
 }
 
 void RememberCredit(Character* target)
@@ -217,7 +260,63 @@ void RememberCredit(Character* target)
     }
 }
 
-bool Issue(CageCommand command, Character* actor, Character* target)
+// --- the two commands ----------------------------------------------------------
+
+bool LandBeatHit(Character* actor, Character* target)
+{
+    if (actor == NULL || target == NULL)
+    {
+        return false;
+    }
+
+    HealthPart* part = NULL;
+    if (!SafeBeatPart(target, &part))
+    {
+        LogFailure(actor, target, "beat", "no torso part readable");
+        return false;
+    }
+    float before = 0.0f;
+    float maxHealth = 0.0f;
+    if (!SafePartHealth(part, &before, &maxHealth))
+    {
+        LogFailure(actor, target, "beat", "part health unreadable");
+        return false;
+    }
+
+    AttackNumbers attack = { 0.0f, 0.0f, 0.0f };
+    const bool readable = SafeAttackDamage(actor, target, &attack);
+    const float landed = CapBeatBlunt(BeatBlunt(readable, attack.cut, attack.blunt, attack.pierce),
+                                      before, maxHealth);
+
+    // Before the blow: a knockout it causes may fire the hook at once.
+    RememberCredit(target);
+
+    if (landed > 0.0f)
+    {
+        // A fist: blunt only, no bleeding, no armour penetration.
+        const Damages blow(0.0f, landed, 0.0f, 0.0f, 0.0f);
+        if (!SafeApplyDamage(part, blow))
+        {
+            LogFailure(actor, target, "beat", "applyDamage raised");
+            return false;
+        }
+    }
+
+    // CapBeatBlunt assumes the engine takes the blunt off one to one; whatever it
+    // did, the part is held at the floor.
+    const float floor = BeatHealthFloor(maxHealth);
+    float after = before;
+    float maxAfter = maxHealth;
+    if (SafePartHealth(part, &after, &maxAfter) && after < floor)
+    {
+        after = floor;
+        SafeSetPartHealth(part, after);
+    }
+    LogBeatHit(actor, target, landed, before, after);
+    return true;
+}
+
+bool IssueKnockoutOrder(Character* actor, Character* target)
 {
     if (actor == NULL || target == NULL)
     {
@@ -227,20 +326,19 @@ bool Issue(CageCommand command, Character* actor, Character* target)
     Ogre::Vector3 where;
     if (!SafePosition(target, &where))
     {
-        LogFailure(actor, target, command, "target position unreadable");
+        LogFailure(actor, target, "knockout", "target position unreadable");
         return false;
     }
 
-    const TaskType task = TaskOf(command);
     int taskBefore = (int)NULL_TASK;
     SafeCurrentTask(actor, &taskBefore);
 
     bool problems = false;
-    const bool askedProblems = SafeOrderProblems(actor, task, target, &problems);
+    const bool askedProblems = SafeOrderProblems(actor, STEALTH_KNOCKOUT, target, &problems);
 
-    if (!SafeOrder(actor, task, target, where))
+    if (!SafeOrder(actor, STEALTH_KNOCKOUT, target, where))
     {
-        LogFailure(actor, target, command, "addOrder raised");
+        LogFailure(actor, target, "knockout", "addOrder raised");
         return false;
     }
 
@@ -248,45 +346,20 @@ bool Issue(CageCommand command, Character* actor, Character* target)
     {
         char line[96];
         _snprintf_s(line, sizeof(line), _TRUNCATE,
-                    " ordered (task %d, was %d, checkPlayerOrderForProblems=%s)",
-                    (int)task, taskBefore,
+                    " knockout ordered (task %d, was %d, checkPlayerOrderForProblems=%s)",
+                    (int)STEALTH_KNOCKOUT, taskBefore,
                     askedProblems ? (problems ? "true" : "false") : "unreadable");
-        LogInfo("[cage] " + CharacterName(actor) + " -> " + CharacterName(target) + " " +
-                VerbOf(command) + line);
+        LogInfo("[cage] " + CharacterName(actor) + " -> " + CharacterName(target) + line);
     }
 
     RememberCredit(target);
 
     g_watch.active = true;
-    g_watch.command = command;
     g_watch.actor = actor;
     g_watch.target = target;
-    g_watch.ordered = (int)task;
     g_watch.taskBefore = taskBefore;
     g_watch.startedMs = GetTickCount();
     return true;
-}
-
-void RunFallback(const OrderWatch& watch)
-{
-    const bool ok = (watch.command == Command_Beat) ? BeatFallback(watch.actor, watch.target)
-                                                    : KnockoutFallback(watch.actor, watch.target);
-    if (!ok)
-    {
-        LogFailure(watch.actor, watch.target, watch.command, "fallback raised");
-        return;
-    }
-    LogResolved(watch, "fallback");
-}
-
-CageCommandResult OrderSelected(CageCommand command, Character* target)
-{
-    Character* actor = SelectedSquadActor(target);
-    if (actor == NULL)
-    {
-        return CageCommand_NoActor;
-    }
-    return Issue(command, actor, target) ? CageCommand_Issued : CageCommand_Failed;
 }
 
 bool SafeSelectedCharacter(Character** out)
@@ -366,22 +439,32 @@ Character* SelectedSquadActor(Character* target)
 
 bool IssueBeat(Character* actor, Character* target)
 {
-    return Issue(Command_Beat, actor, target);
+    return LandBeatHit(actor, target);
 }
 
 bool IssueKnockout(Character* actor, Character* target)
 {
-    return Issue(Command_Knockout, actor, target);
+    return IssueKnockoutOrder(actor, target);
 }
 
 CageCommandResult OrderSelectedToBeat(Character* target)
 {
-    return OrderSelected(Command_Beat, target);
+    Character* actor = SelectedSquadActor(target);
+    if (actor == NULL)
+    {
+        return CageCommand_NoActor;
+    }
+    return LandBeatHit(actor, target) ? CageCommand_Issued : CageCommand_Failed;
 }
 
 CageCommandResult OrderSelectedToKnockout(Character* target)
 {
-    return OrderSelected(Command_Knockout, target);
+    Character* actor = SelectedSquadActor(target);
+    if (actor == NULL)
+    {
+        return CageCommand_NoActor;
+    }
+    return IssueKnockoutOrder(actor, target) ? CageCommand_Issued : CageCommand_Failed;
 }
 
 std::string CageCommandProblem(CageCommandResult result)
@@ -420,7 +503,7 @@ void TickCageCommands()
     int taskNow = (int)NULL_TASK;
     const bool readNow = SafeCurrentTask(g_watch.actor, &taskNow);
     const OrderWatchVerdict verdict =
-        JudgeOrderWatch(g_watch.taskBefore, g_watch.ordered, readNow, taskNow,
+        JudgeOrderWatch(g_watch.taskBefore, (int)STEALTH_KNOCKOUT, readNow, taskNow,
                         GetTickCount() - g_watch.startedMs, kOrderWatchTimeoutMs);
     if (verdict == OrderWatch_Pending)
     {
@@ -433,10 +516,15 @@ void TickCageCommands()
 
     if (verdict == OrderWatch_Taken)
     {
-        LogResolved(watch, "task");
+        LogKnockoutResolved(watch, "task");
         return;
     }
-    RunFallback(watch);
+    if (!KnockoutFallback(watch.actor, watch.target))
+    {
+        LogFailure(watch.actor, watch.target, "knockout", "fallback raised");
+        return;
+    }
+    LogKnockoutResolved(watch, "fallback");
 }
 
 bool ClaimOrderedKnockoutCredit(Character* victim)

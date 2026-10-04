@@ -94,10 +94,17 @@ decidir si se limita a la jaula y cómo se presenta.
 
 *Estado (2026-10-03, cage-animals-submission T1):* se limita a tu jaula y se
 presenta como dos botones junto a Hablar, **Golpear** y **Noquear**, que da el
-personaje seleccionado con las órdenes del propio juego (`BEAT_CAGE_OCCUPANT`,
-`STEALTH_KNOCKOUT`). El daño, el estrés y si el noqueo sale son del motor, no
-números del mod; el desmayo forzado de 60 s se retiró. El techo es el del motor
-(la paliza de jaula está pensada para noquear, no para matar): se confirma en
+personaje seleccionado. El desmayo forzado de 60 s se retiró.
+
+*Estado (2026-10-04, cage-beat-direct-hit):* **Golpear** es un golpe directo del
+personaje seleccionado, en el acto y sin órdenes de combate: el daño es el del
+motor para ese atacante (`getTotalAttackDamageFor`), aplicado solo como
+contundente (no sangra) al torso del preso. El techo es explícito: el golpe
+nunca deja esa parte por debajo de -0,5 x su vida máxima, así que puede noquear
+pero nunca matar, y el preso se queda en la jaula. La orden nativa
+`BEAT_CAGE_OCCUPANT` se retiró: el actor nunca la tomaba y su respaldo armaba una
+pelea que sacaba al preso de la jaula. **Noquear** sigue siendo la orden del
+propio juego (`STEALTH_KNOCKOUT`): si sale lo decide el motor. Se confirma en
 juego (`QA.md` 12.19).
 
 **R2.4 — Cooldown de insistencia acumulativo y configurable.** *(P1)*

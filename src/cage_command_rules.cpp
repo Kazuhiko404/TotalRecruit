@@ -5,7 +5,7 @@
 namespace totalrecruit
 {
 const unsigned int kOrderWatchTimeoutMs = 1500;
-// Two real minutes: the actor walks to the cage, the door, then the blows.
+// Two real minutes: the knockout order walks the actor to the cage and the door.
 const unsigned int kOrderedKnockoutWindowMs = 120000;
 
 bool CageCommandsAllowed(const CageCommandFacts& facts)
@@ -92,5 +92,68 @@ float SkillFraction(float statLevel)
     if (fraction < 0.0f) return 0.0f;
     if (fraction > 1.0f) return 1.0f;
     return fraction;
+}
+
+// A bare-fist punch is in the low teens of blunt; this one only stands in when
+// the engine's own number cannot be read.
+const float kBeatDefaultBlunt = 15.0f;
+// Half the death threshold: deep enough for the blow to knock a prisoner out
+// (a torso collapses below zero), far enough from -max to never kill.
+const float kBeatHealthFloorFraction = 0.5f;
+const int kBeatTorsoPartType = 0;
+
+namespace
+{
+float NotNegative(float value)
+{
+    return value > 0.0f ? value : 0.0f;
+}
+} // namespace
+
+float BeatBlunt(bool readable, float cut, float blunt, float pierce)
+{
+    if (!readable)
+    {
+        return kBeatDefaultBlunt;
+    }
+    const float total = NotNegative(cut) + NotNegative(blunt) + NotNegative(pierce);
+    return total > 0.0f ? total : kBeatDefaultBlunt;
+}
+
+float BeatHealthFloor(float maxHealth)
+{
+    return maxHealth > 0.0f ? -kBeatHealthFloorFraction * maxHealth : 0.0f;
+}
+
+float CapBeatBlunt(float blunt, float health, float maxHealth)
+{
+    const float room = NotNegative(health - BeatHealthFloor(maxHealth));
+    const float wanted = NotNegative(blunt);
+    return wanted < room ? wanted : room;
+}
+
+int PickBeatPart(const BeatPartFacts* parts, int count)
+{
+    if (parts == NULL)
+    {
+        return -1;
+    }
+    int firstFatal = -1;
+    for (int i = 0; i < count; ++i)
+    {
+        if (!parts[i].present)
+        {
+            continue;
+        }
+        if (parts[i].type == kBeatTorsoPartType)
+        {
+            return i;
+        }
+        if (firstFatal < 0 && parts[i].fatal)
+        {
+            firstFatal = i;
+        }
+    }
+    return firstFatal;
 }
 } // namespace totalrecruit

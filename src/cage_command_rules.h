@@ -1,11 +1,13 @@
 #pragma once
 
 // PURE: the decisions behind the cage commands (Golpear / Noquear), without the
-// engine. cage_commands.cpp is the engine side: it reads the facts, issues the
-// native orders and asks these rules what the facts mean.
+// engine. cage_commands.cpp is the engine side: it reads the facts, lands the
+// blow or issues the knockout order and asks these rules what the facts mean.
 //
 //   ComposeContextBlock     which buttons stand beside the context menu.
-//   JudgeOrderWatch         did the actor take the native order, or does the
+//   BeatBlunt .. PickBeatPart  Golpear's one capped blow: how hard, where, and
+//                           the floor it never crosses.
+//   JudgeOrderWatch         did the actor take the knockout order, or does the
 //                           fallback have to run.
 //   OrderedKnockoutCredit   a knockout the player ordered through the mod counts
 //                           as the player's, even when the engine names nobody.
@@ -70,7 +72,7 @@ OrderWatchVerdict JudgeOrderWatch(int taskBefore, int ordered, bool readNow, int
 // --- the credit bridge -----------------------------------------------------
 
 // How long after the order a knockout still counts as the one the player ordered.
-// A native beating walks to the cage and lands several blows first.
+// A knockout order walks to the cage first; a blow that knocks out is immediate.
 extern const unsigned int kOrderedKnockoutWindowMs;
 
 // The knockouts the player ordered through the mod and that have not landed yet,
@@ -108,4 +110,51 @@ std::string KnockoutLabel(const std::string& base, bool haveOdds, float probabil
 // MedicalSystem::knockout takes the attacker's skill as 0..1; CharStats::getStat
 // reads a skill level, 0..100 (more with gear). Clamped into 0..1.
 float SkillFraction(float statLevel);
+
+// --- Golpear: one capped blow ----------------------------------------------
+//
+// Golpear is one direct hit from the actor on the prisoner's torso, no orders:
+// a fight would pull the prisoner out of the cage. The blow is a fist's -- blunt
+// only, nothing cut or pierced, so nothing bleeds -- and it is capped so the part
+// it lands on never drops below a floor well above the death threshold (a fatal
+// part dies at -max health). It may knock the prisoner out; it never kills.
+
+// The blow when the engine's attack damage for this attacker cannot be read.
+extern const float kBeatDefaultBlunt;
+
+// The part never goes below -kBeatHealthFloorFraction x its max health.
+extern const float kBeatHealthFloorFraction;
+
+// MedicalSystem::HealthPartStatus::PART_TORSO as an int (the enum's first value).
+extern const int kBeatTorsoPartType;
+
+// The blunt the blow carries: the engine's whole attack damage for this attacker
+// (CharStats::getTotalAttackDamageFor: cut + blunt + pierce, negatives read as
+// zero) landed as blunt. kBeatDefaultBlunt when unreadable or zero.
+float BeatBlunt(bool readable, float cut, float blunt, float pierce);
+
+// The lowest health the blow may leave the part at: -fraction x maxHealth. Zero
+// (the safest floor) when maxHealth is unreadable (<= 0).
+float BeatHealthFloor(float maxHealth);
+
+// The blunt that actually lands on a part at `health`: the blow, cut down so the
+// part stops at BeatHealthFloor(maxHealth); zero when it is already there or
+// below, and never negative (a blow never heals). Assumes the engine takes the
+// blunt off the part's health one to one; the engine side re-checks after the
+// hit and holds the part at the floor if it went further.
+float CapBeatBlunt(float blunt, float health, float maxHealth);
+
+// One slot of the target's anatomy, as read from the engine. POD: it is filled
+// inside a guarded frame.
+struct BeatPartFacts
+{
+    bool present;   // the slot holds a part
+    int type;       // HealthPartStatus::whatAmI as an int
+    bool fatal;     // HealthPartStatus::fatal
+};
+
+// The part the blow lands on: the first torso part (in anatomy order, the chest
+// before the stomach on the races checked), else the first fatal part (an
+// anatomy with no torso), else -1.
+int PickBeatPart(const BeatPartFacts* parts, int count);
 } // namespace totalrecruit

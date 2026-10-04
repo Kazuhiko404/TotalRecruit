@@ -1,33 +1,39 @@
 #pragma once
 
 // The cage commands, engine side: Golpear and Noquear for a prisoner in the
-// player's own cage, done by one of the player's characters with Kenshi's own
-// orders, so the outcome (wounds, stress, whether the knockout lands) is the
-// engine's and not arithmetic of this mod.
+// player's own cage, done by one of the player's characters.
 //
-//   Golpear  addOrder(BEAT_CAGE_OCCUPANT) + addGoal on the actor. Fallback, when
-//            the actor has not changed task within kOrderWatchTimeoutMs:
-//            TotalSparring's attack sequence (clear orders/jobs, addOrder
-//            FOCUSED_MELEE_ATTACK, attackTarget, attackingYou; not its
-//            initCombatMode, see cage_commands.cpp).
-//   Noquear  addOrder(STEALTH_KNOCKOUT) + addGoal. Fallback: the engine's own
+//   Golpear  one direct blow, at once and with no order at all: the actor's own
+//            attack damage (CharStats::getTotalAttackDamageFor) landed as blunt
+//            on the prisoner's torso (HealthPartStatus::applyDamage), capped so
+//            the part never drops below -0.5 x its max health (BeatBlunt,
+//            CapBeatBlunt, PickBeatPart in cage_command_rules.h). It may knock
+//            the prisoner out; it never kills, and the prisoner stays in the
+//            cage. The native BEAT_CAGE_OCCUPANT order was never taken from the
+//            plugin, and its attack fallback started a real fight that pulled
+//            the prisoner out of the cage, so neither is used.
+//   Noquear  addOrder(STEALTH_KNOCKOUT) + addGoal, so whether the knockout lands
+//            is the engine's. Fallback, when the actor has not changed task
+//            within kOrderWatchTimeoutMs: the engine's own
 //            MedicalSystem::knockout on the target, with the actor's
 //            assassination skill (0..1, SkillFraction).
 //
-// checkPlayerOrderForProblems is asked before every order and its answer is
-// logged, but it does not decide the fallback: which return value means "a
+// checkPlayerOrderForProblems is asked before the knockout order and its answer
+// is logged, but it does not decide the fallback: which return value means "a
 // problem" is not proven on a running game, and reading it the wrong way round
 // would send every order to the fallback. The order watch decides instead -- an
 // actor who never changes task did not take the order, whatever the reason.
 //
-// Credit: the knockout hook (defeats.cpp) counts the defeat. A knockout the
-// player ordered here is remembered for kOrderedKnockoutWindowMs, and the hook
-// claims it (ClaimOrderedKnockoutCredit), so it counts as the player's even when
-// the engine's lastGuyWhoDefeatedMe names nobody -- the fallback knockout is
-// exactly such a case. The pure parts live in cage_command_rules.h.
+// Credit: the knockout hook (defeats.cpp) counts the defeat. A blow or a
+// knockout the player gave here is remembered for kOrderedKnockoutWindowMs, and
+// the hook claims it (ClaimOrderedKnockoutCredit), so a knockout it causes counts
+// as the player's even when the engine's lastGuyWhoDefeatedMe names nobody --
+// the direct blow and the fallback knockout are exactly such cases. The pure
+// parts live in cage_command_rules.h.
 //
-// Log: "[cage] <actor> -> <target> beat|knockout via task|fallback" (probeOnClick),
-// failures always.
+// Log (probeOnClick): "[cage] <actor> -> <target> beat hit (blunt X, part health
+// A -> B)" and "[cage] <actor> -> <target> knockout via task|fallback"; failures
+// always.
 //
 // This module never tells the player anything itself: the callers (the context
 // menu buttons, the popup's GOLPEAR / NOQUEAR buttons) do, with
@@ -43,9 +49,10 @@ namespace totalrecruit
 {
 enum CageCommandResult
 {
-    CageCommand_Issued,    // the native order went in (the watch may still fall back)
+    CageCommand_Issued,    // the blow landed, or the knockout order went in (the
+                           // watch may still fall back)
     CageCommand_NoActor,   // nobody of the player's is selected and awake
-    CageCommand_Failed     // the order could not be given at all (logged)
+    CageCommand_Failed     // the blow or the order could not be given at all (logged)
 };
 
 // The facts CageCommandsAllowed judges, read for this character now: in the
@@ -66,8 +73,9 @@ bool ReadKnockoutOdds(Character* target, float* out);
 // usable is selected.
 Character* SelectedSquadActor(Character* target);
 
-// Orders `actor` to beat / knock out `target` and starts the watch that runs the
-// fallback from TickCageCommands. False when the order could not be given at all.
+// IssueBeat: `actor` lands one capped blow on `target` now (no order, no watch).
+// IssueKnockout: orders the knockout and starts the watch that runs the fallback
+// from TickCageCommands. False when the blow or the order could not be given.
 bool IssueBeat(Character* actor, Character* target);
 bool IssueKnockout(Character* actor, Character* target);
 
@@ -86,12 +94,12 @@ std::string CageCommandProblem(CageCommandResult result);
 std::string BeatButtonLabel();
 std::string KnockoutButtonLabel(Character* target);
 
-// The frame tick: watches the last native order and runs its fallback when the
+// The frame tick: watches the last knockout order and runs its fallback when the
 // actor never took it.
 void TickCageCommands();
 
-// For the knockout hook: true (once) when this knockout is one the player ordered
-// through a cage command a moment ago.
+// For the knockout hook: true (once) when this knockout follows a cage command
+// the player gave a moment ago (a blow or a knockout order).
 bool ClaimOrderedKnockoutCredit(Character* victim);
 
 // Load boundary: drops the watched order (raw engine pointers) and the pending

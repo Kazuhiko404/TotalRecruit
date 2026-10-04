@@ -68,7 +68,7 @@ Nothing has a formal QA pass mark.
 |---|---|
 | Hold clock: starts when caged, dropped on leaving, resets if the game clock goes back | `not verified` (12.3) |
 | Captives call out when ready (`hail.cpp`), on the game clock | `not verified` (§10 G7, 12.23 N1) |
-| Golpear and Noquear: native beat and stealth knockout orders, knockout credited to the player | `not verified` (12.19) |
+| Golpear and Noquear: Golpear lands one direct capped blow (prisoner stays caged, never killed), Noquear is the native stealth knockout order; a knockout either causes is credited to the player | `not verified` (12.19) |
 | Caged popup offers GOLPEAR / NOQUEAR, never IGNORAR / PERDONAR | `not verified` (12.22) |
 
 ### 6. Defeats, mercy and the submission event (4)
