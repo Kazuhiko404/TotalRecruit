@@ -708,8 +708,8 @@ struct Config
     // R1.1 / R1.2 -- Cheat keeps the ritual (a cage and a moment) and drops
     // every condition. Turn the cage off to get the old instant behaviour.
     bool cheatNeedsCage;
-    // Game hours in the cage before a Cheat prisoner calls out. A minute of
-    // game time by default: in Cheat the wait is a gesture, not a price.
+    // Game hours in the cage before a Cheat prisoner calls out. In Cheat every
+    // wait is at most one game minute (cheat_waits.h), so this only shortens it.
     float cheatHoursCaged;
     // R4.4 -- how much of the healing the player did counts towards the debt,
     // as a 0..1 fraction of health restored. Same shape as feeding an animal:

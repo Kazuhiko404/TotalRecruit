@@ -237,6 +237,10 @@ Poné `"preset": 0` y **reiniciá el juego**.
 | H4 | Probar con un único de nivel 90 | Igual: se une | Lo rechaza por nivel |
 | H5 | Probar con un animal | Igual: se une | — |
 | H6 | Poner `cheatNeedsCage: false` | Vuelve el comportamiento viejo | — |
+| H7 | Meterlo en tu jaula y esperar un minuto de juego sin hacer click (cerca, dentro de los 900 de la barrida) | Llama: "quiere hablar contigo" y el cartel sobre su cabeza (12.23 N1); lo repite cada minuto hasta `hailRepeats` | Tarda 24 h (`hailFirstHours`): P2 no esta |
+| H8 | Golpear (12.19 C3) o Noquear (12.19 C4) a un preso de tu jaula y volver a abrir el menu | Al minuto de juego Golpear/Noquear vuelven a estar listos (el boton dice "(1 h)" mientras tanto: la etiqueta redondea hacia arriba) | Descansa 1 h |
+| H9 | Con `cheatNeedsCage: false`, rechazar al sometido que se acerca (12.21) y volver a hablarle | Vuelve a aceptar en la proxima hora entera de juego (como mucho ~1 h), no en 72 h; el aviso dice "en 1 h" | Dice "en 72 h" |
+| H10 | Retar a duelo a un 80+ (12.29 J7) y perder | Se lo puede retar otra vez en la proxima hora entera de juego (como mucho ~1 h), no en 24 h | `no challenge until hour` 24 h despues |
 
 **H3 y H4 juntos son la definición de Cheat:** cualquiera, incluidos animales y
 únicos, sin ninguna condición más que el gesto.
@@ -705,7 +709,7 @@ Un NPC vencido que se rinde (derrotas >= `submissionDefeatsToBreak` y la tirada 
 | S4 | ACEPTAR | Se une al grupo; "<nombre>: se une a ti." | `[submission] <nombre>: accepted ...`, `joined the squad` |
 | S5 | (otro NPC) PERDONAR | "Gracias... no lo olvidare"; sale corriendo ~80 m en direccion contraria a ti y se queda tranquilo; durante 5 minutos no ataca y **Hablar** sigue funcionando con el | `forgiven ...`, `calm for 300 s, running off`, `ran off; stays calm` |
 | S6 | Esperar los 5 minutos de S5 | Vuelve a su rutina y a su velocidad normal; si era hostil, vuelve a ser hostil | `forgive window over after 300 s (time up)`, `forgive window over (from forgiven, hostile before yes)` |
-| S7 | (otro NPC) RECHAZAR | Dice "Entonces nos volveremos a ver" y vuelve a ser hostil al instante; "<nombre>: lo rechazaste. No querra saber nada de ti en 72 h." | `rejected ...`, `[defeat] <nombre>: defeats cleared`, `reject cooldown until game hour N (72 h)` |
+| S7 | (otro NPC) RECHAZAR | Dice "Entonces nos volveremos a ver" y vuelve a ser hostil al instante; "<nombre>: lo rechazaste. No querra saber nada de ti en 72 h." (Balanced; en Cheat ~1 h, 8 H9) | `rejected ...`, `[defeat] <nombre>: defeats cleared`, `reject cooldown until game hour N (72 h)` |
 | S8 | Tras S7, Hablar con el (o meterlo en tu jaula y Hablar) | Ventana de rechazo: "No quiere saber nada de ti"; la tarjeta dice lo mismo; tampoco ruega piedad si pierde un miembro | `Context menu: <nombre> -> refuses ... no quiere saber nada de ti` |
 | S9 | Tras S7, guardar, salir, volver a cargar y Hablar con el | Sigue en enfriamiento hasta que pasen las 72 h de juego; despues se puede volver a vencer y a reclutar | `first character id read back from the save` |
 | S10 | Cerrar la ventana de S3 con la X | Ninguna decision: se queda calmado donde esta durante 5 minutos y luego vuelve a lo suyo (como S6, sin correr) | `dismissed ...`, `calm for 300 s, in place` |
@@ -740,7 +744,7 @@ Pedido del usuario (2026-10-03): "el juego te avisa, pero si no lees el nombre n
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
-| N1 | Esperar a que un preso de tu jaula llame (`hailFirstHours`; o Cheat con `cheatHoursCaged` bajo) | Ademas del aviso en el registro, un cartel compacto sobre su cabeza: nombre en bronce, "Quiere hablar contigo" en ambar, borde ambar a la izquierda | `[notice] <nombre>: "Quiere hablar contigo" over the head [key ...] (prompt)` |
+| N1 | Esperar a que un preso de tu jaula llame (`hailFirstHours`; o en Cheat al minuto de juego, 8 H7) | Ademas del aviso en el registro, un cartel compacto sobre su cabeza: nombre en bronce, "Quiere hablar contigo" en ambar, borde ambar a la izquierda | `[notice] <nombre>: "Quiere hablar contigo" over the head [key ...] (prompt)` |
 | N2 | Mover la camara | El cartel sigue la cabeza cada cuadro; fuera de pantalla se oculta y vuelve al volver | — |
 | N3 | Abrir un menu contextual con el cartel visible | El cartel se oculta mientras el menu esta abierto | — |
 | N4 | Seleccionar (clic izquierdo) a **ese** NPC | El cartel se va para siempre y aparece la tarjeta normal; nunca los dos a la vez | `[notice] dismissed by selection [key ...]` (con `probeOnClick`) |
@@ -876,7 +880,7 @@ Diseno del usuario (2026-10-04). Preparacion como 12.28. Defaults: chance base 2
 | J6 | Recargar un save hecho justo antes de ganar y ganar de nuevo con el mismo historial | La misma respuesta (se une o no) y el mismo enfriamiento: la tirada se siembra con el NPC y el numero de victorias | misma `roll R` |
 | J7 | Preset Cheat: Hablar con un NPC no animal de nivel 80+ (TotalSparring presente) | La respuesta de Cheat de siempre (p. ej. "Metelo en una de tus jaulas...") mas RETAR A DUELO, DUELOS y SI LE GANAS "se une"; tarjeta "Duelos: W-L, si ganas se une"; nivel 79 o un animal: sin duelo | — |
 | J8 | Cheat: ganar el duelo | Se une para siempre siempre (chance 100, sin enfriamiento) | `join chance 100%, roll 0 -> joined` |
-| J9 | Perder o empatar (Balanced o Cheat) | Igual que 12.28 T9 (`duelChallengeCooldownHours`) | `-> lost` |
+| J9 | Perder o empatar (Balanced o Cheat) | Igual que 12.28 T9 (`duelChallengeCooldownHours`); en Cheat la espera es 1 minuto, redondeada a la proxima hora entera (8 H10) | `-> lost` |
 | J10 | Cambiar en Mod Hub la chance base o por victoria | La fila y la tarjeta cambian en el siguiente refresco (la tarjeta en <= 2 s) | — |
 
 ### 12.30 Ayudante con contrato nativo y temporal que vuelve a casa (native-ai-packages T2/T3)
@@ -922,10 +926,12 @@ Con `"probeOnClick": true` y los valores por defecto (descansos de 1 h; base 0,0
 
 ### 12.33 Dos presets, esperas de Cheat de 1 minuto y horas de jaula guardadas (v1-presets-close)
 
-Con `"probeOnClick": true`. Casos P (presets); W y H se agregan con sus tareas.
+Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat) y H (horas de jaula guardadas).
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
 | P1 | Mod Hub, fila "Dificultad (Preset)" | Va de 0 a 1 y dice "0: Cheat, 1: Balanced"; no hay fila "Peso de Faccion" | — |
 | P2 | Cerrar Kenshi, poner `"preset": 2` en el `config.json` desplegado, abrir | Corre Balanced (precios, aliados por nivel); el log lo dice una sola vez | `config.json preset 2 is not a preset (0: Cheat, 1: Balanced); running Balanced.` |
 | P3 | Dejar una clave `"factionWeight": 0.75` en el `config.json` desplegado y abrir | Nada cambia: la clave se ignora, sin errores ni avisos; el precio de un hostil y el de un amigo no aliado salen de la misma curva | sin lineas de `factionWeight` |
+| W1 | Cheat (`"preset": 0`): los casos 8 H2, H3, H7, H8, H9, H10 | Cada espera dura 1 minuto de juego; rechazo y duelo terminan en la proxima hora entera (como mucho ~1 h) | `[hold] clock started`, `called out to the player.`, `reject cooldown until game hour N (1 h)`, `no challenge until hour N` |
+| W2 | Balanced: Golpear (12.32 S4), llamado (`hailFirstHours`, 12.23 N1), rechazo (12.21 S7), duelo perdido (12.28 T9) | Sin cambios: 1 h, 24 h, 72 h, 24 h | igual que antes |

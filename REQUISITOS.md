@@ -53,6 +53,15 @@ Metido en la jaula, pasa un tiempo corto —del orden de un minuto de juego— y
 NPC llama al jugador para decir que quiere hablar y unirse. No son horas: en
 Cheat el tiempo es un gesto, no un precio.
 
+*Estado (v1-presets-close P2):* en Cheat **toda** espera que el jugador puede
+encontrar dura 1 minuto de juego (`kCheatWaitHours`, `src/cheat_waits.h`): la
+espera en la jaula, el llamado del preso (primero y repeticiones: llama apenas
+termina la espera), los descansos de Golpear y Noquear, el enfriamiento tras
+rechazarlo y el de un duelo perdido. Si lo configurado ya es menor (o 0), rige
+lo configurado. El enfriamiento de rechazo y el de duelo se guardan en horas
+enteras: en Cheat terminan en la proxima hora entera de juego (como mucho ~1 h).
+No se borro logica: cada lectura pasa por el modulo y Balanced no cambia.
+
 **R1.3 — Cero condiciones más.** *(P1)*
 Ni cats, ni comida, ni sumisión, ni nivel, ni relación. Cheat es "cualquiera,
 incluidos animales y únicos", y eso no cambia.

@@ -24,6 +24,7 @@
 #include "temp_member.h"
 #include "duel_challenge_rules.h"
 #include "duel_join_rules.h"
+#include "cheat_waits.h"
 #include "npc_level.h"
 #include "ts_bridge.h"
 #include "head_notice.h"
@@ -1216,7 +1217,10 @@ void DuelChallengeTick()
         return;
     }
 
-    const DuelChallenges& config = GetConfig().duelChallenges;
+    // The lost-duel cooldown is Cheat's minute in Cheat (cheat_waits.h); the rest of
+    // the duel settings are read as configured.
+    DuelChallenges config = GetConfig().duelChallenges;
+    config.cooldownHours = DuelLossCooldownHours(GetConfig());
     if (sweep)
     {
         g_lastDuelSweep = tick;

@@ -88,6 +88,7 @@ const Suite kSuites[] = {
     { "knockout_watch_rules", RunKnockoutWatchRulesTests },
     { "menu_anchor", RunMenuAnchorTests },
     { "preset_rules", RunPresetRulesTests },
+    { "cheat_waits", RunCheatWaitsTests },
 };
 } // namespace
 

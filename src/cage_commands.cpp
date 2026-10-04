@@ -1,6 +1,7 @@
 #include "common.h"
 #include "cage_commands.h"
 #include "cage_command_rules.h"
+#include "cheat_waits.h"
 #include "beating_stress.h"
 #include "char_key_reader.h"
 #include "config.h"
@@ -302,13 +303,12 @@ float CooldownHoursLeft(const CageCooldownLedger& ledger, Character* target, flo
 
 float BeatHoursLeft(Character* target)
 {
-    return CooldownHoursLeft(g_beatCooldown, target, GetConfig().submission.beatingCooldownHours);
+    return CooldownHoursLeft(g_beatCooldown, target, BeatingCooldownHours(GetConfig()));
 }
 
 float KnockoutHoursLeft(Character* target)
 {
-    return CooldownHoursLeft(g_knockoutCooldown, target,
-                             GetConfig().submission.knockoutCooldownHours);
+    return CooldownHoursLeft(g_knockoutCooldown, target, KnockoutCooldownHours(GetConfig()));
 }
 
 // A blow, or the knockout order: each kind has its own window (CreditWindowMs).

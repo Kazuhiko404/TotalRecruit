@@ -279,7 +279,7 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "duel_win_cooldown_max_hours_under100", "Duelo: horas maximas tras ganar (80-99)", "Si le ganas y no se une, horas maximas de espera para un NPC de nivel 80 a 99", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.winCooldownMaxHoursUnder100);
     regFloat(api, mod, "duel_win_cooldown_max_hours", "Duelo: horas maximas tras ganar (100+)", "Si le ganas y no se une, horas maximas de espera para un NPC de nivel 100 o mas", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.winCooldownMaxHours);
     regBool(api, mod, "cheat_needs_cage","Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
-    regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame (0.02 = un minuto)", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
+    regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame; en Cheat toda espera es como mucho 1 minuto", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
     regInt(api, mod, "rescue_base_bonus", "Rescate: peso de la deuda", "Cuanto pesa haberle salvado la vida, antes de contar la cura", 0, 90, 5, &c.rescueBaseBonus);
     regFloat(api, mod, "rescue_heal_weight", "Rescate: peso de la cura", "Cuanta chance suma haberlo curado del todo", 0.0f, 90.0f, 5.0f, 0, &c.rescueHealWeight);
 

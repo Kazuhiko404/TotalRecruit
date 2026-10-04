@@ -12,6 +12,7 @@
 #include "head_notice.h"
 #include "messages.h"
 #include "log.h"
+#include "cheat_waits.h"
 
 #include <map>
 
@@ -28,7 +29,9 @@ const float kHailRadius = 900.0f;
 
 // A captive who wants to talk keeps asking, on the game clock: the first call
 // after hailFirstHours, then one every hailRepeatHours, up to hailRepeats in
-// total. A single shout was too easy to walk past and miss.
+// total. A single shout was too easy to walk past and miss. In Cheat both waits
+// are one game minute (cheat_waits.h): the prisoner calls out as soon as the
+// cage wait is over.
 struct HailState
 {
     // Game hour at which the next call is due.
@@ -148,7 +151,7 @@ void SweepForHails(bool hailing)
             // First sighting only starts the clock. They have just been caged;
             // shouting immediately would make the wait meaningless.
             HailState fresh;
-            fresh.dueAt = now + config.hailFirstHours;
+            fresh.dueAt = now + HailFirstHours(config);
             g_hailed[key] = fresh;
             continue;
         }
@@ -169,7 +172,7 @@ void SweepForHails(bool hailing)
         }
 
         state.spoken += 1;
-        state.dueAt = now + config.hailRepeatHours;
+        state.dueAt = now + HailRepeatHours(config);
 
         SpeakAloud(npc, HailLine(npc));
         // The bubble floats over their head and fades; the roller keeps a line

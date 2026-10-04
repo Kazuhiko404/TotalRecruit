@@ -24,6 +24,7 @@
 #include "reason_catalog.h"
 #include "config.h"
 #include "log.h"
+#include "cheat_waits.h"
 
 #include <cstdio>
 
@@ -204,10 +205,13 @@ void Apply(SubmissionOutcome outcome)
         int until = 0;
         if (SafeCharKey(npc, &key) && SafeGameHours(&now))
         {
-            until = RejectCooldownUntilHour(now, config.submission.rejectCooldownHours);
+            until = RejectCooldownUntilHour(now, RejectCooldownHours(config));
             SetRejectCooldownUntil(key, until);
         }
-        const int hours = (int)(config.submission.rejectCooldownHours + 0.5f);
+        // What is really left: the cooldown ends at a whole game hour, so Cheat's
+        // minute (cheat_waits.h) reads as the hour it rounds up to.
+        const double left = (double)until - now;
+        const int hours = left > 0.0 ? (int)(left + 0.999) : 0;
         Log(name + Fmt(": reject cooldown until game hour %.0f (%.0f h)", (double)until,
                        (double)hours));
         SpeakAloud(npc, Say("submissionEvent.rejected", "Entonces nos volveremos a ver.", npc));

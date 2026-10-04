@@ -1,4 +1,5 @@
 #include "route_decisions.h"
+#include "cheat_waits.h"
 
 namespace totalrecruit
 {
@@ -27,7 +28,8 @@ Verdict DecideCheat(const CheatFacts& facts, const Config& config)
         return v;
     }
 
-    if (facts.hoursHeld < config.cheatHoursCaged)
+    // One game minute (cheat_waits.h), or cheatHoursCaged when that is shorter.
+    if (facts.hoursHeld < CageWaitHours(config))
     {
         v.currency = Currency_Refused;
         v.reasonKey = Reason_CheatWaiting;
