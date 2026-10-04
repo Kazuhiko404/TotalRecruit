@@ -55,5 +55,13 @@ Fix issues 2 and 3 of the 2026-10-03 handoff (`git show feat/ts-duel-bridge:odd/
 
 - T2 done (`e5e5f4b`), T3 done (`031eb37`); in-game QA pending.
 
+## Play-test fixes
+Route: delegated direct (one writer, 3 bugs, multiple files). Each fix in its own module; pure rules tested RED then GREEN.
+- [x] B1 readout card kept "Duelos: 0-0" after a duel (popup was right): the card cached the record per (NPC, challenger) pair and a duel does not change the pair. Fix: `TsBoutGeneration()` in ts_bridge (bumped by the bout listener), pure `DuelRecordNeedsRead` in `duel_record_cache_rules` (5 checks, RED observed with a stub, then GREEN); the card re-reads only on a new pair or a new bout. Commit `7cb5c1f`.
+- [x] B2 "Me ganaste. Me uno a ti" stayed ~90 s: the two duel notices (`duel.notice.joined`, `duel.notice.lost`) used the default Prompt kind; now `HeadNoticeKind_Info` (25 s). Other kind-less notices (hail wantsToTalk, helperOffer, submission approaching) ask the player to act and stay Prompt. Commit `1782ffa`.
+- [x] B3 popup "nivel 76" vs TotalSparring "Lv 84": TR read `getRoughLevel()`; TS reads `CharStats::getOverallSkillLevel_0_100()` rounded half away from zero. Fix: `npc_level` (`SafeNpcLevel`, rough-level fallback logged once) and pure `level_rules` `RoundLevel` identical to TS (11 checks, RED then GREEN). Feeds every level: chance gap, prices (base + talent edge), ally tiers, close-level temp gap, the 80+ duel gate, haggle leverage, helper level lead, animal taming, popup "nivel N". Commit `7727771`. Balance shift: levels now match TS's overall skill level, so all level-driven numbers move.
+- Evidence: rules_tests 43/43 suites, 0/63496 checks failed; TotalRecruit.dll Release x64 builds; 149 KenshiLib imports all present in KenshiLib.dll exports (new `?getOverallSkillLevel_0_100@CharStats@@QEBAMXZ`).
+- Docs pending (T4): QA.md (card record refresh after a duel, duel notice 25 s, level = TS level), DEVELOPING.md (new modules `duel_record_cache_rules`, `level_rules`, `npc_level`; ts_bridge `TsBoutGeneration`), ui-mockup if it shows a level.
+
 ## Next step
-Deploy for play-test (parent), then T4 docs.
+Deploy the play-test fixes for a re-test (parent), then T4 docs.
