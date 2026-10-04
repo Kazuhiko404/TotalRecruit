@@ -7,6 +7,7 @@
 #include "log.h"
 #include "mercy.h"
 #include "mouse_input.h"
+#include "native_windows.h"
 #include "offer_popup.h"
 #include "readout_model.h"
 #include "readout_target.h"
@@ -72,6 +73,7 @@ enum PresentOutcome
     Present_DeadReadFailed,
     Present_Dead,
     Present_MenuOpen,
+    Present_NativeWindow,
     Present_AnchorFailed,
     Present_OverHead,
     Present_BesideOffer,
@@ -251,6 +253,7 @@ void LogPresent(PresentOutcome outcome, const AnchorReading* anchor,
     case Present_DeadReadFailed: what = "over: the dead-read failed"; break;
     case Present_Dead:           what = "over: dead"; break;
     case Present_MenuOpen:       what = "hidden: right-click menu open"; break;
+    case Present_NativeWindow:   what = "hidden: dialogue or message window open"; break;
     case Present_AnchorFailed:   what = "hidden: anchor failed"; break;
     case Present_OverHead:       what = "shown over the head"; break;
     case Present_BesideOffer:    what = "shown beside the offer"; break;
@@ -317,6 +320,16 @@ bool Present(const ScreenRect* avoid, const char* source)
     // Put away by a click elsewhere: kept, not drawn.
     if (g_dismissed)
     {
+        HideUi();
+        return true;
+    }
+
+    // Kenshi's dialogue window (or a modal message) is open: the card sits on the
+    // ToolTip layer above it, so it hides, pinned or not, and comes back on the
+    // first frame after it closes (overlay_visibility_rules.h).
+    if (NativeWindowCoversOverlays())
+    {
+        LogPresent(Present_NativeWindow, NULL, NULL, NULL, source);
         HideUi();
         return true;
     }

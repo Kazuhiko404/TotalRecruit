@@ -78,6 +78,7 @@ const Suite kSuites[] = {
     { "ally_tier_rules", RunAllyTierRulesTests },
     { "temp_member_rules", RunTempMemberRulesTests },
     { "helper_rules", RunHelperRulesTests },
+    { "overlay_visibility_rules", RunOverlayVisibilityRulesTests },
 };
 } // namespace
 

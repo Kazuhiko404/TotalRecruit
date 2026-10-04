@@ -5,6 +5,7 @@
 #include "config.h"
 #include "engine_reads.h"
 #include "log.h"
+#include "native_windows.h"
 #include "offer_popup.h"
 #include "readout.h"
 #include "readout_target.h"
@@ -330,6 +331,7 @@ void DrawNotices(bool haveSelected, const CharKey& selectedKey)
 {
     NoticeFrameInput base;
     base.menuOpen = IsContextMenuOpen();
+    base.nativeWindowOpen = NativeWindowCoversOverlays();
     base.cardVisible = ReadoutCardOnScreen(&base.card);
     ScreenRect offer;
     const bool haveOffer =
@@ -349,7 +351,7 @@ void DrawNotices(bool haveSelected, const CharKey& selectedKey)
         in.selectedNow = haveSelected && notice.who == selectedKey;
 
         int left = 0, top = 0;
-        if (!in.selectedNow && !in.menuOpen && EnsureLayout(i, notice))
+        if (!in.selectedNow && !in.menuOpen && !in.nativeWindowOpen && EnsureLayout(i, notice))
         {
             const AnchorReading anchor = ReadoutAnchorFor((Character*)notice.subject);
             if (anchor.result == Anchor_Ok)

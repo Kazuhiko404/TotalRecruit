@@ -21,7 +21,8 @@
 //     is still the selection.
 // Either way the card follows the NPC every frame, is hidden while they are off the
 // screen and while a right-click menu is open (other mods' buttons flank the menu on
-// both sides, so there is no side to step to), and goes when they die. It never takes
+// both sides, so there is no side to step to) or while Kenshi's dialogue window or a
+// modal message is open (native_windows.h, pinned too), and goes when they die. It never takes
 // input (ToolTip layer, no mouse focus).
 //
 // A click elsewhere puts it away (card_dismiss_rules.h): while there is a card, the

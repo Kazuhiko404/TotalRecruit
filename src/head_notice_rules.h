@@ -96,6 +96,9 @@ struct NoticeFrameInput
     bool placed;
     // A right-click menu is open (the readout card hides under it too).
     bool menuOpen;
+    // One of Kenshi's own windows is open (OverlaysYieldToNativeWindow, the same
+    // answer the readout card hides on): the dialogue window or a modal message.
+    bool nativeWindowOpen;
     // The normal readout card is on the screen, at `card`.
     bool cardVisible;
     ScreenRect card;
@@ -103,14 +106,15 @@ struct NoticeFrameInput
     ScreenRect notice;
 
     NoticeFrameInput()
-        : selectedNow(false), placed(false), menuOpen(false), cardVisible(false), card(),
-          notice()
+        : selectedNow(false), placed(false), menuOpen(false), nativeWindowOpen(false),
+          cardVisible(false), card(), notice()
     {
     }
 };
 
-// Selection dismisses; otherwise drawn only when placed, no menu is open and it does
-// not touch the normal readout card (the normal card wins).
+// Selection dismisses; otherwise drawn only when placed, no menu and no native
+// window is open and it does not touch the normal readout card (the normal card
+// wins).
 NoticeFrame DecideNoticeFrame(const NoticeFrameInput& input);
 
 // True when the two rectangles share any pixel. Empty rectangles never overlap.

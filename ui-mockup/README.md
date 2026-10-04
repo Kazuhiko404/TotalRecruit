@@ -183,6 +183,17 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     Selecting a helper shows their card with one line, "Ayudante: le quedan 3 dias"
     (`readout.line.helper.daysLeft`), and nothing else.
 
+### Native windows (sections 2 and 5: the card and the head notices)
+
+24. **The card and the notices step aside for Kenshi's own dialogue** (user report 2026-10-03: "if I talk to the
+    NPC and a dialogue comes up, the tooltip doesn't hide and covers the dialogue"). Both overlays sit on the
+    `ToolTip` layer, above the native dialogue window, over a head in the middle of the screen. While a conversation
+    (`ForgottenGUI::inDialogue` or the `DialogueWindow` visible) or a modal message box is open, the readout card --
+    pinned by Hablar too -- and every head notice are hidden, not dismissed, and come back on the first frame after
+    it closes (`overlay_visibility_rules.h`, one rule for both). Nothing new is drawn, so the mockup has no new
+    state. Trade and inventory windows are not covered: the engine only says "some inventory is open", which is
+    also true for the player's own bag.
+
 ## Checking a change
 
 Mockup first, then C++. Measure in Chrome (`getBoundingClientRect`) and copy the px into the constants.

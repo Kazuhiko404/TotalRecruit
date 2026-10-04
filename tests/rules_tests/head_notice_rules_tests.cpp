@@ -147,6 +147,21 @@ void UnplacedOrUnderAMenuIsHiddenNotDropped()
     CHECK(DecideNoticeFrame(in) == NoticeFrame_Hide);
 }
 
+void UnderANativeWindowIsHiddenNotDropped()
+{
+    const char* name = "UnderANativeWindowIsHiddenNotDropped";
+    NoticeFrameInput in = Visible();
+    in.nativeWindowOpen = true;
+    CHECK(DecideNoticeFrame(in) == NoticeFrame_Hide);
+    // Closing the window brings it back.
+    in.nativeWindowOpen = false;
+    CHECK(DecideNoticeFrame(in) == NoticeFrame_Draw);
+    // Selecting that NPC still dismisses it, window or not.
+    in.nativeWindowOpen = true;
+    in.selectedNow = true;
+    CHECK(DecideNoticeFrame(in) == NoticeFrame_Dismiss);
+}
+
 void RectsOverlapOnSharedPixelsOnly()
 {
     const char* name = "RectsOverlapOnSharedPixelsOnly";
@@ -191,6 +206,7 @@ void RunHeadNoticeRulesTests()
     SelectingThatNpcDismissesTheNotice();
     TheNormalCardWinsACollision();
     UnplacedOrUnderAMenuIsHiddenNotDropped();
+    UnderANativeWindowIsHiddenNotDropped();
     RectsOverlapOnSharedPixelsOnly();
     SecondsAreClamped();
     TheConfigDefaultIsFiveMinutes();

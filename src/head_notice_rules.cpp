@@ -98,7 +98,7 @@ NoticeFrame DecideNoticeFrame(const NoticeFrameInput& input)
     {
         return NoticeFrame_Dismiss;
     }
-    if (!input.placed || input.menuOpen)
+    if (!input.placed || input.menuOpen || input.nativeWindowOpen)
     {
         return NoticeFrame_Hide;
     }

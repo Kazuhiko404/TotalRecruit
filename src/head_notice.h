@@ -14,7 +14,8 @@
 // the two never overlap. Selecting someone else does not touch it, and neither does a
 // click elsewhere. If the normal card (about another NPC) would cover it, the normal
 // card wins and the notice hides for that frame. It hides while the head is off the
-// screen and while a right-click menu is open, steps sideways beside the offer window
+// screen, while a right-click menu is open and while Kenshi's dialogue window or a
+// modal message is open (native_windows.h), steps sideways beside the offer window
 // (screen_projection.h PlaceCard), and is dropped when the NPC dies or joins the
 // squad. At most kHeadNoticeCap at once, one per NPC (head_notice_rules.h).
 //

@@ -795,3 +795,17 @@ Pedido del usuario (2026-10-03): aliados mas fuertes y de buena personalidad se 
 | H16 | Noquearlo con tu grupo | Igual que H15 | `stops helping: knocked out by the squad` |
 | H17 | Mientras un sometido camina hacia vos (12.x) | Ningun ayudante se ofrece hasta que termina, y al reves | — |
 | H18 | Mod Hub "Ayudante: activo" apagado, o preset 0/2 | Nadie se ofrece (los contratos en curso siguen hasta su fin) | — |
+
+### 12.27 La tarjeta y los carteles se ocultan con el dialogo de Kenshi (fix card-hide-on-dialogue)
+
+Reporte del usuario (2026-10-03): al hablar con el NPC y abrirse el dialogo, la tarjeta no se ocultaba y tapaba la conversacion. Ahora la tarjeta (tambien la fijada por Hablar) y los carteles sobre la cabeza se ocultan mientras hay una conversacion o un mensaje modal de Kenshi, y vuelven al cerrarse. Con `probeOnClick` el log dice `[native-window] open: dialogue=<0|1> window=<0|1> modal=<0|1>` al abrirse, `[native-window] closed` al cerrarse, y `[readout-anchor] <nombre> [select] hidden: dialogue or message window open`. Si D2 falla, el `open:` dice cual de las dos senales (`dialogue` = `inDialogue`, `window` = la `DialogueWindow` visible) no se encendio.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| D1 | Clic izquierdo en un NPC reclutable | Aparece la tarjeta sobre su cabeza | `[readout] ... [select]` |
+| D2 | Con la tarjeta a la vista, hablarle (clic derecho > Hablar de Kenshi, o que te hable el) | Se abre el dialogo de Kenshi; la tarjeta **no** se ve | `[native-window] open: dialogue=1 window=1 modal=0` y `hidden: dialogue or message window open` |
+| D3 | Cerrar el dialogo con el NPC todavia seleccionado | La tarjeta vuelve sobre su cabeza en el mismo cuadro | `[native-window] closed` |
+| D4 | Con un cartel "Quiere hablar contigo" sobre alguien (12.23), hablar con otro NPC | El cartel se oculta mientras dura el dialogo y vuelve al cerrarlo (no se descarta: sigue su tiempo) | `[native-window] open: ...` / `closed` |
+| D5 | Hablar con el NPC que tiene el cartel, sin seleccionarlo antes | El cartel se oculta durante el dialogo; al cerrarlo vuelve (solo seleccionarlo lo descarta) | — |
+| D6 | Abrir el inventario propio o comerciar con la tarjeta a la vista | La tarjeta sigue como antes (comercio/inventario no estan cubiertos a proposito) | (sin `open:`) |
+| D7 | Regresion: clic derecho sobre el NPC (menu) y Hablar de TotalRecruit | El menu la oculta como antes; con la oferta abierta la tarjeta queda al costado (12.9, 12.17 C8) | (sin `open:`) |
