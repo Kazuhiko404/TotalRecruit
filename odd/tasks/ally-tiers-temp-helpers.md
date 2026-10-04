@@ -113,4 +113,4 @@ The group mapping lives in one pure function and is documented in REQUISITOS.
 - In-game: pending (QA.md 12.26, H1-H18). Unproven: whether the engine honours BODYGUARD for a non-contracted NPC (the ladder falls back and logs it).
 
 ## Next step
-T4 (docs + deploy), after in-game QA 12.24-12.26.
+Shipped (`ac17ed7`). The helper escort and the temporary member's departure were reworked with native AI packages in `odd/tasks/native-ai-packages.md` (T2/T3). In-game QA 12.24-12.26 is still owed (temporary members and the helper were play-tested informally).
