@@ -44,8 +44,10 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
    selection on a right-click to walk); it comes back on a left click on that NPC, a new selection or Hablar, and a
    Hablar card beside an open offer ignores outside clicks (`card_dismiss_rules.cpp`, user report 2026-10-03).
 3. **It shows the engine's numbers, never its own.** Chance = `Verdict::chancePercent`; price = `Verdict::cats`;
-   stress = `StressFromState`, split into the three terms it is made of (hunger, wounds, exhaustion) which add up
-   to the bar; defeats against `defeatsToBreak`; animal bar = fullness against `TamingFullnessNeeded`.
+   stress = `StressFromState`, split into the four terms it is made of (hunger, wounds, exhaustion, beatings) which
+   add up to the bar -- the fourth, Golpes, is the beating stress Golpear and Noquear leave in the player's cage
+   (`beating_stress_rules.h`, fading over `submissionBeatingStressFadeHours`), its legend on a row of its own because
+   three legends already fill the card's width; defeats against `defeatsToBreak`; animal bar = fullness against `TamingFullnessNeeded`.
 4. **The card never reveals whether the roll passes, and never claims it failed.** The roll is stable and seeded from
    the character's id; showing its outcome would make the percent meaningless, and reading the id would mint one for
    a bystander. The readout is computed with no roll key (`EvaluatePeek`), so a route that rolled cannot say yes and
@@ -112,12 +114,17 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     Noquear shows the game's own odds ("Noquear 72%", `getPlayerTaskProbability`), plain "Noquear" when there are none.
     Labels are title case like Hablar (`cage.button.*` in `messages.json`). Each button arms its own press-and-release
     gesture.
-    **Golpear rests** (tab "Menu on your prisoner, Golpear resting"; R2.3, prisoner-module-fixes F6). After each blow
-    on a prisoner, Golpear rests for `submissionBeatingCooldownHours` game hours (Mod Hub "Sumision: horas entre
-    golpizas", 6 by default; per prisoner, session-only like the defeat episodes). The button stays in the block and
-    carries the hours left, rounded up: "Golpear (4 h)" (`BeatLabel`). A click only tells the wait ("Podrás volver a
-    golpearlo en 4 h", `cage.beatResting`). Every click re-reads the facts the block was built on: a prisoner freed,
-    knocked out or out of the cage since says "Ya no puedes hacerle eso" (`cage.notAllowed`). Noquear never rests.
+    **Golpear and Noquear rest** (tab "Menu on your prisoner, Golpear and Noquear resting"; R2.3,
+    prisoner-module-fixes F6, cage-beating-stress S1). After each blow on a prisoner, Golpear rests for
+    `submissionBeatingCooldownHours` game hours (Mod Hub "Sumision: horas entre golpizas"); after a knockout order
+    that put the prisoner down, Noquear rests for `submissionKnockoutCooldownHours` ("Sumision: horas entre noqueos").
+    Both 1 h by default, per prisoner, session-only like the defeat episodes (`CageCooldownLedger`). The buttons stay
+    in the block and carry the hours left, rounded up: "Golpear (1 h)" (`RestLabel`), "Noquear (1 h)" in place of the
+    odds (`KnockoutCaption`). A click only tells the wait ("Podrás volver a golpearlo en 1 h", `cage.beatResting`;
+    "Podrás volver a noquearlo en 1 h", `cage.knockoutResting`). Every click re-reads the facts the block was built
+    on: a prisoner freed, knocked out or out of the cage since says "Ya no puedes hacerle eso" (`cage.notAllowed`).
+    Neither command's knockout counts as a defeat any more: each blow and each knockout adds beating stress (the
+    card's Golpes).
     **Two native columns** (tab "Menu on your prisoner, two columns"; prisoner-module-fixes F4). A character inside a
     building opens two columns side by side: the character (`ContextMenu::menuGUI`) and the building (`menuGUI2`, e.g.
     "Jaula de Prisionero": ABRIR CON LLAVE, DESMANTELAR, PONER EN LIBERTAD). The block is placed beside the rectangle
@@ -130,8 +137,8 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     CERRAR; same orders, same selected actor, the same "Selecciona a alguien" line; the window closes. A yes keeps
     ACEPTAR / CANCELAR only, and the haggle slider owns its row, so neither carries them. Beating off: no buttons,
     and a defiant prisoner reads "Sigue desafiante: dejalo con hambre" (`popup.reason.defiantNoBeat`). The old
-    GOLPEARLO remedy is gone; GOLPEAR rests between blows exactly as in the block above ("GOLPEAR (4 h)", state
-    "Caged and defiant, GOLPEAR resting"). Someone who cannot leave (caged, shackled, carried) never gets IGNORAR
+    GOLPEARLO remedy is gone; GOLPEAR and NOQUEAR rest exactly as in the block above ("GOLPEAR (1 h)", "NOQUEAR
+    (1 h)", state "Caged and defiant, GOLPEAR and NOQUEAR resting"). Someone who cannot leave (caged, shackled, carried) never gets IGNORAR
     (mercy) or PERDONAR (submission). States "Caged and defiant", "Caged and hungry", "Mercy plea from someone who
     cannot leave".
 

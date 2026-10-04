@@ -161,9 +161,9 @@ var POPUP_STATES = [
   },
   {
     id: 'cagedResting',
-    title: 'Caged and defiant, GOLPEAR resting',
-    note: 'The same Holy Warden two game hours after a blow, with <code>submissionBeatingCooldownHours</code> = 6 (R2.3: an interval between beatings). GOLPEAR stays in the row and carries the hours left, rounded up (<code>BeatLabel</code>, <code>beatHoursLeft</code> from <code>BeatCooldownLedger</code>, session-only like the defeat episodes). A click closes the window and only says "Podrás volver a golpearlo en 4 h" (<code>cage.beatResting</code>); the click re-reads the facts, so a window left open while he was freed or knocked out says "Ya no puedes hacerle eso" (<code>cage.notAllowed</code>). NOQUEAR never rests.',
-    // facts: as cagedDefiant; cage.beatHoursLeft 3.2
+    title: 'Caged and defiant, GOLPEAR and NOQUEAR resting',
+    note: 'The same Holy Warden twenty game minutes after a blow and a knockout that landed, with <code>submissionBeatingCooldownHours</code> = <code>submissionKnockoutCooldownHours</code> = 1 (R2.3: an interval between beatings, and between knockouts). Both stay in the row and carry the hours left, rounded up (<code>RestLabel</code>; <code>beatHoursLeft</code> / <code>knockoutHoursLeft</code> from two <code>CageCooldownLedger</code>s, session-only like the defeat episodes); a resting NOQUEAR shows the wait instead of the odds (<code>KnockoutCaption</code>). Noquear rests only once the prisoner went down. A click closes the window and only says "Podrás volver a golpearlo en 1 h" (<code>cage.beatResting</code>) or "Podrás volver a noquearlo en 1 h" (<code>cage.knockoutResting</code>); the click re-reads the facts, so a window left open while he was freed or knocked out says "Ya no puedes hacerle eso" (<code>cage.notAllowed</code>).',
+    // facts: as cagedDefiant; cage.beatHoursLeft 0.66, cage.knockoutHoursLeft 0.66
     vm: {
       title: 'Reclutamiento', name: 'Holy Warden', route: 'cautiverio', routeTag: 'Cautiverio',
       body: 'Holy Warden no se une todavia.',
@@ -171,7 +171,7 @@ var POPUP_STATES = [
       showPurse: false, purseText: '', affordable: true,
       showChance: true, chanceText: '87%',
       reason: 'Sigue desafiante: dejalo con hambre o hierelo', reasonRed: true,
-      accept: '', extra: '', beat: 'GOLPEAR (4 h)', knockout: 'NOQUEAR 72%', cancel: 'CERRAR'
+      accept: '', extra: '', beat: 'GOLPEAR (1 h)', knockout: 'NOQUEAR (1 h)', cancel: 'CERRAR'
     }
   },
   {

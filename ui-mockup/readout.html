@@ -42,7 +42,7 @@ is shown on hover.</p>
   <button class="tab" data-s="menu" aria-pressed="false">Right-click menu open</button>
   <button class="tab" data-s="cagemenu" aria-pressed="false">Menu on your prisoner (Golpear / Noquear)</button>
   <button class="tab" data-s="cagemenu2" aria-pressed="false">Menu on your prisoner, two columns (character + cage)</button>
-  <button class="tab" data-s="cagemenuwait" aria-pressed="false">Menu on your prisoner, Golpear resting</button>
+  <button class="tab" data-s="cagemenuwait" aria-pressed="false">Menu on your prisoner, Golpear and Noquear resting</button>
   <button class="tab" data-s="hablar" aria-pressed="false">Press Hablar</button>
   <button class="tab" data-s="compact" aria-pressed="false">Press Hablar, compact</button>
   <button class="tab" data-s="notice" aria-pressed="false">Someone wants to talk (head notice)</button>
@@ -58,7 +58,7 @@ asked as a bystander and remembered per NPC for 2 s (<code>src/talk_hint_cache.h
 <table class="spec">
   <tr><th>Block</th><th>Shown for</th><th>Source</th></tr>
   <tr><td>Route tag</td><td>always</td><td>Rescate: out cold, dying, saved, healed up. Cautiverio: your cage. Sometido: field yield (beaten in the open). Rendicion: surrender rather than die. The grudge refusal outside the cage is Libre. Piedad: the plea on screen. Animal: any animal. Libre: the open world.</td></tr>
-  <tr><td>Estres bar + Hambre / Heridas / Cansancio</td><td>Cautiverio, Rendicion (the routes whose roll reads stress)</td><td><code>StressFromState</code>; the three parts are its three terms and add up to the bar</td></tr>
+  <tr><td>Estres bar + Hambre / Heridas / Cansancio / Golpes</td><td>Cautiverio, Rendicion (the routes whose roll reads stress)</td><td><code>StressFromState</code>; the four parts are its four terms and add up to the bar. Golpes is the beating stress (Golpear and Noquear in your cage, <code>beating_stress_rules.h</code>), fading over <code>submissionBeatingStressFadeHours</code>; its legend has a row of its own</td></tr>
   <tr><td>Chance bar</td><td>any route that rolled</td><td><code>Verdict::chancePercent</code> (JoinChance)</td></tr>
   <tr><td>Barriga bar + notch</td><td>animals</td><td>fullness and the fullness the animal needs (<code>TamingFullnessNeeded</code>)</td></tr>
   <tr><td>Derrotas pips</td><td>Cautiverio and Rendicion, or any NPC you have beaten</td><td>defeat count against <code>defeatsToBreak</code></td></tr>
@@ -219,9 +219,11 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       return;
     }
     if (mode === 'cagemenu' || mode === 'cagemenuwait') {
-      // cagemenuwait: the same block while Golpear rests (beatingCooldownHours since the
-      // last blow on this prisoner, cage_command_rules.h BeatCooldownLedger). The button
-      // stays where it is and carries the wait, rounded up (BeatLabel): "Golpear (4 h)".
+      // cagemenuwait: the same block while Golpear and Noquear rest (beatingCooldownHours
+      // since the last blow, knockoutCooldownHours since the last knockout order that put
+      // this prisoner down; cage_command_rules.h CageCooldownLedger). The buttons stay where
+      // they are and carry the wait, rounded up (RestLabel): "Golpear (1 h)"; a resting
+      // Noquear shows the wait instead of the odds (KnockoutCaption): "Noquear (1 h)".
       var resting = mode === 'cagemenuwait';
       // The prisoner is awake in the player's own cage and allowBeating is on: the block
       // is [Hablar, Golpear, Noquear] (cage_command_rules.cpp ComposeContextBlock), one
@@ -238,17 +240,21 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
            '<div>Atacar</div><div>Examinar</div></div>';
       h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + cy + 'px">Hablar</div>';
       h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + (cy + bh + gy) + 'px">' +
-           (resting ? 'Golpear (4 h)' : 'Golpear') + '</div>';
-      h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + (cy + 2 * (bh + gy)) + 'px">Noquear 72%</div>';
+           (resting ? 'Golpear (1 h)' : 'Golpear') + '</div>';
+      h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + (cy + 2 * (bh + gy)) + 'px">' +
+           (resting ? 'Noquear (1 h)' : 'Noquear 72%') + '</div>';
       h += '<div class="ctxbtn" style="left:' + (cx + 122 + gx) + 'px;top:' + cy + 'px">Sparring</div>';
       h += '<div class="callout" style="left:16px;top:16px;max-width:300px">Right-click on a prisoner awake in your cage. ' +
            'Golpear is one direct blow from the character you have selected (its own attack damage as blunt, capped so ' +
            'the prisoner is never killed and stays caged); Noquear is Kenshi\'s own order (STEALTH_KNOCKOUT), given once: ' +
            'when he is down the character is let go. Nobody selected says "Selecciona a alguien de tu grupo para ' +
            'hacerlo". The 72% is the game\'s.' +
-           (resting ? ' Golpear rests for beatingCooldownHours (Mod Hub "Sumision: horas entre golpizas", 6 by ' +
-                      'default) after each blow on this prisoner: the caption shows the game hours left, rounded up, ' +
-                      'and a click only says "Podrás volver a golpearlo en 4 h". Noquear never rests.' : '') +
+           (resting ? ' Golpear rests for beatingCooldownHours (Mod Hub "Sumision: horas entre golpizas", 1 by ' +
+                      'default) after each blow on this prisoner, and Noquear for knockoutCooldownHours ("Sumision: ' +
+                      'horas entre noqueos", 1 by default) after a knockout order that put him down: each caption ' +
+                      'shows the game hours left, rounded up, and a click only says "Podrás volver a golpearlo en ' +
+                      '1 h" / "Podrás volver a noquearlo en 1 h". Neither knockout counts as a defeat: each blow and ' +
+                      'each knockout adds beating stress (the card\'s Golpes).' : '') +
            '</div>';
       h += '<div class="callout" style="left:860px;top:16px;max-width:400px">Anyone else -- not caged, already down, ' +
            'or beating switched off -- gets the block of one, [Hablar], as in "Right-click menu open". The popup\'s ' +

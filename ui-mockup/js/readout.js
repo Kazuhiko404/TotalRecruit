@@ -16,13 +16,17 @@ function stressBlock(vm, compact) {
   var track = '<div class="track">' +
     '<div class="seg hunger" style="width:' + s.hunger + '%"></div>' +
     '<div class="seg wounds" style="width:' + s.wounds + '%"></div>' +
-    '<div class="seg tired" style="width:' + s.tired + '%"></div></div>';
+    '<div class="seg tired" style="width:' + s.tired + '%"></div>' +
+    // The fourth term: the beatings (beating_stress_rules.h), kSoftDanger in readout_ui.cpp.
+    '<div class="seg" style="background:#f08a7c;width:' + s.beaten + '%"></div></div>';
   var html = barRow('Estres', '<b>' + vm.stressPct + '%</b>', track);
   if (!compact) {
     html += '<div class="legend">' +
       '<span><i style="background:var(--hunger)"></i>Hambre ' + s.hunger + '</span>' +
       '<span><i style="background:var(--wounds)"></i>Heridas ' + s.wounds + '</span>' +
-      '<span><i style="background:var(--tired)"></i>Cansancio ' + s.tired + '</span></div>';
+      '<span><i style="background:var(--tired)"></i>Cansancio ' + s.tired + '</span></div>' +
+      // Its own second row: three legends already fill the card's width.
+      '<div class="legend"><span><i style="background:#f08a7c"></i>Golpes ' + s.beaten + '</span></div>';
   }
   return html;
 }

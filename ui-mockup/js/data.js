@@ -7,12 +7,12 @@ var STATES = [
   {
     id: 'cage',
     title: 'Caged bandit',
-    note: 'Cautiverio, easy wait on. Stress comes from an empty stomach and untreated wounds; the chance is JoinChance(...) and the price is FinalPriceInCats(...) -- the same numbers Evaluate uses. A cats-currency prisoner is the one case with two lines.',
+    note: 'Cautiverio, easy wait on. Stress comes from an empty stomach, untreated wounds and the beatings (Golpes: what Golpear and Noquear left in your cage, fading over 24 game hours); the chance is JoinChance(...) and the price is FinalPriceInCats(...) -- the same numbers Evaluate uses. A cats-currency prisoner is the one case with two lines.',
     // facts: route Cage, level 14 vs player 20, hunger raw 1.2/3, worstDamage .4, rested .7,
-    // defeats 1/2, held 3h of 6h, price 9570 (purse 12000)
+    // beaten .12 (beating stress, decayed), defeats 1/2, held 3h of 6h, price 9570 (purse 12000)
     vm: {
       name: 'Kareem el Tuerto', route: 'cautiverio', routeLabel: 'Cautiverio',
-      showStress: true, stressPct: 53, stress: { hunger: 30, wounds: 14, tired: 9 },
+      showStress: true, stressPct: 65, stress: { hunger: 30, wounds: 14, tired: 9, beaten: 12 },
       showChance: true, chancePct: 58, ready: false,
       showDefeats: true, defeats: 1, defeatsNeeded: 2,
       showFood: false,
@@ -27,7 +27,7 @@ var STATES = [
     // facts: route FieldYield, defeats 2/2, stress .35, chance 41, peek (no roll key), not in your cage
     vm: {
       name: 'Soldado Holy Nation', route: 'sometido', routeLabel: 'Sometido',
-      showStress: true, stressPct: 35, stress: { hunger: 5, wounds: 25, tired: 5 },
+      showStress: true, stressPct: 35, stress: { hunger: 5, wounds: 25, tired: 5, beaten: 0 },
       showChance: true, chancePct: 41, ready: false,
       showDefeats: true, defeats: 2, defeatsNeeded: 2,
       showFood: false,
@@ -42,7 +42,7 @@ var STATES = [
     // facts: Route Cage/Free animal, hunger raw 1.69/3 -> 56%, needed .80
     vm: {
       name: 'Perro hueso', route: 'animal', routeLabel: 'Animal',
-      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0 },
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
       showChance: false, chancePct: 0, ready: false,
       showDefeats: false, defeats: 0, defeatsNeeded: 0,
       showFood: true, foodPct: 56, foodNeededPct: 80,
@@ -57,7 +57,7 @@ var STATES = [
     // facts: Route GrudgeRefusal, temperament Honorable, grudge true, not in my cage
     vm: {
       name: 'Capitana Ilse', route: 'libre', routeLabel: 'Libre',
-      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0 },
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
       showChance: false, chancePct: 0, ready: false,
       showDefeats: false, defeats: 0, defeatsNeeded: 0,
       showFood: false,
@@ -72,7 +72,7 @@ var STATES = [
     // facts: Route FreeWorld, Balanced, relation +40, level 34 vs 20, Normal -> Paid 20%; cats 1840, willJoin
     vm: {
       name: 'Mercader Ostrel', route: 'libre', routeLabel: 'Libre',
-      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0 },
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
       showChance: false, chancePct: 0, ready: false,
       showDefeats: false, defeats: 0, defeatsNeeded: 0,
       showFood: false,
@@ -87,7 +87,7 @@ var STATES = [
     // facts: Route FreeWorld, Balanced, level 85 Honorable, Reason_AllyTemporary; duel offered, record 2-1-0; base 25, per win 20
     vm: {
       name: 'Beep el Sabio', route: 'libre', routeLabel: 'Libre',
-      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0 },
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
       showChance: false, chancePct: 0, ready: true,
       showDefeats: false, defeats: 0, defeatsNeeded: 0,
       showFood: false,
@@ -102,7 +102,7 @@ var STATES = [
     // facts: Route EasyHealthy / Surrendered / ... willJoin without a roll
     vm: {
       name: 'Dalia', route: 'rescate', routeLabel: 'Rescate',
-      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0 },
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
       showChance: false, chancePct: 0, ready: true,
       showDefeats: false, defeats: 0, defeatsNeeded: 0,
       showFood: false,
@@ -203,5 +203,19 @@ var HUB = [
   ['Duelo: horas maximas tras ganar (80-99)', 'duelWinCooldownMaxHoursUnder100', '72',
    'Si le ganas y no se une, horas maximas de espera para un NPC de nivel 80 a 99'],
   ['Duelo: horas maximas tras ganar (100+)', 'duelWinCooldownMaxHours', '120',
-   'Si le ganas y no se une, horas maximas de espera para un NPC de nivel 100 o mas']
+   'Si le ganas y no se une, horas maximas de espera para un NPC de nivel 100 o mas'],
+  ['Sumision: horas entre golpizas', 'submissionBeatingCooldownHours', '1',
+   'Horas de juego antes de poder volver a golpearlo'],
+  ['Sumision: horas entre noqueos', 'submissionKnockoutCooldownHours', '1',
+   'Horas de juego antes de poder volver a noquearlo (cuenta desde que cayo)'],
+  ['Estres: base por golpe', 'submissionBeatStressBase', '0.08',
+   'Cuanto estres suma un golpe de Golpear antes de niveles y personalidad'],
+  ['Estres: base por noqueo', 'submissionKnockoutStressBase', '0.15',
+   'Cuanto estres suma un noqueo de Noquear antes de niveles y personalidad'],
+  ['Estres: minimo por golpe', 'submissionBeatingStressMin', '0.02',
+   'Lo menos que suma un golpe o un noqueo'],
+  ['Estres: maximo por golpe', 'submissionBeatingStressMax', '0.25',
+   'Lo mas que suma un golpe o un noqueo'],
+  ['Estres: horas en desvanecerse', 'submissionBeatingStressFadeHours', '24',
+   'Horas de juego en que la barra entera de golpes vuelve a cero']
 ];
