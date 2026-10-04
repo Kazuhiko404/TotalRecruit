@@ -30,7 +30,7 @@ Nothing has a formal QA pass mark.
 | Rescue: `LT_MY_LIFESAVER` debt, offer on waking, parting gift paid once (R4) | `not verified` (§6) |
 | Grudge refusal by character (who cannot forgive what they saw) | `not verified` (12.7) |
 | Field yield ("Sometido"): beaten in the field; respects other cages, lockout and loyalty | `not verified` (12.14) |
-| Player defeats saved in the character save, one per knockout (`total_recruit.player_defeats`) | `not verified` (12.13) |
+| Player defeats saved in the character save, one per knockout (`total_recruit.player_defeats`); the hook's twin call inside 5 s is the same knockout | `not verified` (12.13 K4b) |
 | Cheat preset: cage plus a one-minute hold, nothing else (`cheatNeedsCage`) | `verified in game` (§8, R1.3) |
 
 ### 2. Chance, stress and the readout card (7)

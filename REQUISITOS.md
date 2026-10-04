@@ -159,7 +159,10 @@ TotalSparring:
    de esa partida (una partida vieja trae su conteo viejo).
 2. **Una derrota por noqueo:** un noqueo cuenta una vez aunque el motor lo
    anuncie varias veces o el jugador haga clic derecho sobre el cuerpo muchas
-   veces; verlo de pie de nuevo rearma el siguiente.
+   veces; verlo de pie de nuevo rearma el siguiente. Dentro de los 5 s (tiempo
+   real) que siguen a una derrota contada nada cuenta otra vez, aunque el motor
+   lo lea de pie: el gancho llega dos veces por noqueo, ~1,2 s aparte, y las dos
+   veces lo lee de pie (prisoner-module-fixes F2).
 3. **Respaldo por estado:** hambre y heridas actuales, que no dependen de ningún
    conteo.
 

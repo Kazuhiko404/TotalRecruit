@@ -542,6 +542,7 @@ Con `"probeOnClick": true`. El conteo vive en el save del personaje y un noqueo 
 | K2 | Tras K1, guardar, salir del juego, volver a entrar y cargar | La tarjeta y el clic siguen diciendo 2 derrotas | `first character id read back from the save` |
 | K3 | Cargar un save **anterior** a la segunda derrota | El conteo de ese save (1), no el de la sesion | |
 | K4 | Noquearlo una vez y, mientras sigue inconsciente un rato largo, hacer clic derecho varias veces | Cuenta **una** sola | un `defeated by the player`; los demas `[defeat-skip] ...: already counted this knockout` |
+| K4b | Noquearlo una vez (Noquear en la jaula o en el campo) y mirar el log (prisoner-module-fixes F2) | El conteo sube **uno**, aunque el gancho llegue dos veces | dos `[defeat-hook] knockout fired for <nombre> (was standing)` ~1,2 s aparte; el primero da `defeated by the player (...; count N ...)`, el segundo `[defeat-skip] <nombre>: already counted this knockout` (o un motivo de credito si el motor no nombra al jugador); nunca dos `defeated by the player` |
 | K5 | Un guardia que nunca venciste (ni en esta partida ni antes) | `defeats=0`; nunca `field-yield` | sin `defeated by the player` para el |
 | K6 | Golpearlo (`GOLPEARLO`) en tu jaula | Cuenta una; el enfriamiento corre | `credited to the player explicitly (beating)` o un solo `defeated by the player` |
 | K7 | Que otro NPC noquee a alguien y hacerle clic derecho mientras esta en el suelo | No cuenta | `[defeat-skip] ...: lastGuyWhoDefeatedMe is not yours` |

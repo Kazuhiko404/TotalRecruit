@@ -10,7 +10,9 @@
 //
 //   defeat_rules          who gets the credit (DecideDefeatCredit).
 //   defeat_episode_rules  one defeat per knockout: counted once while down,
-//                         re-armed only when they are seen standing again.
+//                         re-armed only when they are seen standing again,
+//                         and never twice inside the 5 s echo window (the
+//                         hook's twin call reads them standing too).
 //   defeat_ledger         how many, per CharKey. character_identity.cpp writes
 //                         it into the character's own save state next to the
 //                         persisted id and reads it back on load, so a reload

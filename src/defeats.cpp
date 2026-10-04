@@ -210,8 +210,11 @@ void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Si
     // One knockout raises several engine calls as the body settles, and the
     // right-click looks at the same body again on every click: only the first
     // sighting of the episode counts, and only seeing them up again re-arms it.
+    // Real time for the echo window: the hook's twin call ~1.2 s later reads them
+    // standing too, and must not count a second defeat.
+    const unsigned int nowMs = GetTickCount();
     Record& record = g_records[key];
-    const DefeatEpisode::Verdict verdict = DefeatEpisode::Judge(record.episode, sighting);
+    const DefeatEpisode::Verdict verdict = DefeatEpisode::Judge(record.episode, sighting, nowMs);
     if (!DefeatEpisode::CountsForPlayer(credit, verdict))
     {
         if (trace)
@@ -221,7 +224,7 @@ void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Si
         }
         return;
     }
-    record.episode = DefeatEpisode::AfterCount(record.episode);
+    record.episode = DefeatEpisode::AfterCount(record.episode, nowMs);
     record.lastHour = now;
     const int count = LedgerAdd(key);
 
