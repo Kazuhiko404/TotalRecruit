@@ -774,6 +774,9 @@ Un aliado Bueno o Neutral de nivel 80+ reclutado como en 12.24 A6. Preset 1 (Bal
 | T9 | Despues de T5 o T7, Hablar con el mismo NPC | "no quiere saber nada de ti" durante 7 dias de juego; no se lo puede volver a tomar como temporal | — |
 | T10 | Un miembro temporal golpeado por enemigos (no tu grupo) o noqueado por hambre | No suma falta | — |
 | T11 | Faccion de origen que no existe o es del jugador (raro) | Se va igual a "1233-gamedata.base" o a la faccion vacia | `left the squad for faction 1233-gamedata.base` |
+| T12 | Un temporal de 4+ dias, bien tratado: dejar pasar los dias de juego (duel-join-chance D5) | Una vez por dia de juego, cartel informativo (~25 s) "Me quedan N dias" (el ultimo dia "Me queda 1 dia"); **no** el dia en que se unio, **no** el dia de "Me ire pronto"; si ese paso hubo una falta, sale en el chequeo siguiente (2 s) | `[temp] <nombre> daily notice: N day(s) left (day D)` |
+| T13 | Guardar y cargar a mitad de un dia en que ya lo dijo | Lo repite una vez ese dia (el dia anunciado es de sesion); al dia siguiente, una vez | igual que T12 |
+| T14 | Mod Hub "Temporal: aviso diario de dias" apagado | Nunca "Me quedan N dias"; los demas carteles igual | — |
 
 ### 12.26 El ayudante gratis (ally-tiers-temp-helpers T3)
 
@@ -822,17 +825,56 @@ Pedido del usuario (2026-10-03): retar a un aliado 80+ a un duelo de TotalSparri
 |---|---|---|---|
 | T1 | Sin TotalSparring instalado: Hablar con el aliado 80+ | La ventana de siempre (temporal / precio / negativa), **sin** RETAR A DUELO ni fila DUELOS; la tarjeta sin "Duelos" | `[ts-bridge] TotalSparring duels unavailable: ...` (una vez, ~30 s despues de cargar) |
 | T2 | Con TotalSparring, partida cargada: Hablar con el aliado 80+ | La respuesta del tramo sigue, mas RETAR A DUELO y la fila DUELOS con el historial del seleccionado ("0-0" si nunca pelearon) | `[ts-bridge] attached to TotalSparring API v1 and listening for bouts.` |
-| T3 | Seleccionar el aliado 80+ (clic izquierdo) con uno de tu grupo seleccionado antes | La tarjeta muestra "Duelos: W-L" como segunda linea; cambiar de miembro seleccionado cambia el numero | — |
-| T4 | Aliado de nivel 79, o un no aliado, o preset Vanilla+/Cheat | Nunca RETAR A DUELO | — |
+| T3 | Seleccionar el aliado 80+ (clic izquierdo) con uno de tu grupo seleccionado antes | La tarjeta muestra "Duelos: W-L, si ganas X% se une" como segunda linea; cambiar de miembro seleccionado cambia el numero | — |
+| T4 | Aliado de nivel 79, o un no aliado, o preset Vanilla+ | Nunca RETAR A DUELO (Cheat si lo ofrece: 12.29 J7) | — |
 | T5 | RETAR A DUELO sin nadie de tu grupo seleccionado (o el seleccionado inconsciente) | Roller "Selecciona a alguien de tu grupo para hacerlo"; nada se abre | — |
 | T6 | RETAR A DUELO con tu luchador seleccionado | Se cierra la ventana de TotalRecruit y se abre la ventana **Dueling** de TotalSparring con ese luchador preseleccionado; roller "<nombre> acepta el reto: ..." | `[duel] <tuyo> challenges <nombre> [key ...]` |
 | T7 | Con la ventana Dueling ya abierta, volver a Hablar y RETAR A DUELO | Roller "Ya hay un duelo abierto en TotalSparring."; el reto nuevo se borra | `TotalSparring did not open the duel ... challenge withdrawn` |
-| T8 | Ganar el duelo (amistoso) | El NPC se une **para siempre** (no temporal: su tarjeta no dice "Temporal"); cartel "Me ganaste. Me uno a ti" sobre el; roller "<nombre> perdio el duelo y se une a tu grupo para siempre." | `[duel] bout duel outcome=1 ... -> joined` y `lost the duel and joins for good` |
+| T8 | Ganar el duelo (amistoso) | Balanced: se une solo si sale la chance (12.29); si se une, **para siempre** (no temporal: su tarjeta no dice "Temporal"), cartel "Me ganaste. Me uno a ti" sobre el y roller "<nombre> perdio el duelo y se une a tu grupo para siempre." | `[duel] bout duel outcome=1 ... -> won`, `[duel] <tuyo> won (wins N): join chance X%, roll R -> joined ...` y `lost the duel and joins for good` |
 | T9 | Perder (o empatar) el duelo | Cartel "Vuelve cuando seas mas fuerte"; roller con las horas; RETAR A DUELO desaparece por 24 h de juego | `-> lost` y `won the duel: no challenge until hour N` |
 | T10 | Despues de T9: guardar, salir, cargar, Hablar con el mismo NPC antes de 24 h | Sigue sin RETAR A DUELO (el enfriamiento viajo en el save); pasadas las 24 h vuelve | — |
 | T11 | Sparring (no duelo) entre tu luchador y ese NPC despues de retarlo | No cuenta: ni se une ni enfriamiento | `[duel] bout spar ...` solo con `probeOnClick` |
 | T12 | Retar y cancelar la ventana Dueling, o interrumpir el duelo | Nada pasa; el reto queda pendiente; un duelo terminado dentro de 6 h de juego todavia cuenta; despues de 6 h no | `-> ignored`; `challenge(s) expired unanswered` |
 | T13 | Duelo a muerte ganado | Si murio: roller "<nombre> murio en el duelo." y nadie se une | `died in the duel: nobody to recruit` |
 | T14 | La fila DUELOS contra el Fight Log de TotalSparring para ese par | Mismos ganados-perdidos (empates como tercer numero) | — |
-| T15 | Mod Hub "Duelo: retar aliados 80+" apagado | Nunca RETAR A DUELO | — |
+| T15 | Mod Hub "Duelo: retar NPC 80+" apagado | Nunca RETAR A DUELO | — |
 | T16 | Salir de la partida / cerrar el juego con TotalSparring cargado | Sin crash; TotalRecruit se descarga limpio (el listener se da de baja) | `stopPlugin called.` sin errores de `[ts-bridge]` |
+
+### 12.29 Ganar un duelo da una chance de que se una; Cheat tambien reta (duel-join-chance)
+
+Diseno del usuario (2026-10-04). Preparacion como 12.28. Defaults: chance base 25, +20 por victoria (25/45/65/85/100), enfriamiento tras ganar sin union 24-72 h (nivel 80-99) o 24-120 h (100+), horas de juego. Para probar rapido: Mod Hub "Duelo: horas minimas tras ganar" = 1 y las dos maximas = 1 (o `duelWinCooldown*Hours` = 1 en `config.json`); "Duelo: chance base al ganar" = 0 fuerza "no se une", = 100 fuerza "se une". Mockup: `ui-mockup/readout.html` seccion 5 "Ally 80+ can be challenged ...", "Cruel ally 80+ ...", "Cheat: an 80+ NPC ..." y seccion 1 "Ally 80+ you can challenge".
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| J1 | Balanced: Hablar con el aliado 80+ con un luchador que le gano 2 veces | Ventana: fila DUELOS "2-1" y debajo **SI LE GANAS** "65% de que se una"; tarjeta "Duelos: 2-1, si ganas 65% se une" | — |
+| J2 | Sin historial legible (TotalSparring no responde) | Sin fila DUELOS ni SI LE GANAS; RETAR A DUELO sigue | — |
+| J3 | Ganar un duelo con la chance en 0 (base 0, por victoria 0) | No se une. Cartel informativo "Buena pelea. Retame otra vez" (~25 s); roller "<nombre> perdio el duelo, pero no se une (0% de que se uniera). Podras retarlo otra vez en N h."; RETAR A DUELO desaparece | `[duel] <tuyo> won (wins N): join chance 0%, roll R -> stays (cooldown H h until hour T) vs <nombre> level L [key ...]` |
+| J4 | Con defaults, nivel 80-99: la H de J3 | Entre 24 y 72 h; nivel 100+: entre 24 y 120 h | igual que J3 |
+| J5 | Despues de J3: guardar, salir, cargar antes de la hora T | Sigue sin RETAR A DUELO (el enfriamiento viaja en el save, la misma fila que el de perder); pasada la hora vuelve, y la fila dice la chance de la victoria siguiente | — |
+| J6 | Recargar un save hecho justo antes de ganar y ganar de nuevo con el mismo historial | La misma respuesta (se une o no) y el mismo enfriamiento: la tirada se siembra con el NPC y el numero de victorias | misma `roll R` |
+| J7 | Preset Cheat: Hablar con un NPC no animal de nivel 80+ (TotalSparring presente) | La respuesta de Cheat de siempre (p. ej. "Metelo en una de tus jaulas...") mas RETAR A DUELO, DUELOS y SI LE GANAS "se une"; tarjeta "Duelos: W-L, si ganas se une"; nivel 79 o un animal: sin duelo | — |
+| J8 | Cheat: ganar el duelo | Se une para siempre siempre (chance 100, sin enfriamiento) | `join chance 100%, roll 0 -> joined` |
+| J9 | Perder o empatar (Balanced o Cheat) | Igual que 12.28 T9 (`duelChallengeCooldownHours`) | `-> lost` |
+| J10 | Cambiar en Mod Hub la chance base o por victoria | La fila y la tarjeta cambian en el siguiente refresco (la tarjeta en <= 2 s) | — |
+
+### 12.30 Ayudante con contrato nativo y temporal que vuelve a casa (native-ai-packages T2/T3)
+
+KenshiLib 0.5.0 vendorizado: el ayudante usa el paquete Bodyguard del juego (como un mercenario contratado) y el temporal que se va recibe el paquete del Wandering Squad. Preparacion como 12.25 / 12.26. Log `[helper]` y `[temp]` siempre.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| N1 | Aceptar un ayudante (12.26 H1/H4) con `helperNativeBodyguard` encendido | Te sigue a distancia de mercenario, corre si quedas lejos y pelea a quien te ataca | `[helper] <nombre> native bodyguard contract -> <lider> (N h) ok: ...; package ...` |
+| N2 | Ayudante que venia en un pelotón con otros | Antes del contrato pasa a un pelotón propio (sus companeros no te siguen) | `in a platoon of N; moved to a platoon of its own (package ...)` |
+| N3 | F8 sobre un ayudante ya activo | Loguea si es nativo o por codigo y le asigna el contrato nativo | `debug key on helper <nombre>: native|code-driven ...` |
+| N4 | Mod Hub "Ayudante: contrato nativo" apagado (o el contrato falla) | Escolta por codigo (mecanismo B): repath cada 1 s, camina cerca, corre si esta a mas de 12 m, se ubica a ~3 m del lider y ataca al blanco del lider | `helperNativeBodyguard is off; code-driven escort` / `native contract failed; the code-driven escort takes over`, `escort runs|walks to the leader (X m)`, `fights for the leader against <enemigo>` |
+| N5 | Fin del contrato (vencido o traicion) | El contrato nativo se termina y vuelve a su rutina | `native bodyguard contract removed (...) ok` y `stops helping: ...` |
+| N6 | Un temporal cumple su tiempo y se va (12.25 T7) | Camina o viaja (a su casa, una ciudad), no se queda parado | `[temp] <nombre> native wander package <paquete> assigned (...)` |
+| N7 | Si el paquete falla | Camina de vuelta al lugar donde se unio; llega a ~6 m o se rinde a los 240 s y vuelve a su IA | `native wander package failed: ...`, `[temp] <nombre> heading back to (x,z)`, luego `arrived` o `gave up` |
+
+### 12.31 Arreglos de la prueba en juego (native-ai-packages, play-test fixes)
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| F1 | Con la tarjeta de un aliado 80+ a la vista, pelear un duelo con el y volver a seleccionarlo (o esperar) | La linea "Duelos: W-L..." cambia en ~2 s sin cambiar de seleccion (antes quedaba "0-0") | — |
+| F2 | Ganar o perder un duelo (12.28 T8 / T9) | Los carteles "Me ganaste. Me uno a ti" / "Vuelve cuando seas mas fuerte" / "Buena pelea. Retame otra vez" duran ~25 s (informativos), no 90 | `[notice] ... (info)` |
+| F3 | Comparar el "nivel N" del popup con el "Lv N" de la tarjeta de duelo de TotalSparring para el mismo NPC | Mismo numero (nivel general de habilidad, redondeado como TotalSparring); precios, tramos y chances se mueven con ese nivel | si no se puede leer: `[level] The overall skill level could not be read; using the rough ...` (una vez) |

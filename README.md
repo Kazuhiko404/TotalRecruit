@@ -125,17 +125,23 @@ leave at once. Their card counts the days left, and they pick up again after a
 reload. A 15% chance per ally per day, `helper*` keys; `helperDebugKey` (a
 Windows key code, 119 = F8) makes the selected NPC offer at once for testing.
 
-With TotalSparring installed, an ally of level 80 or more
-can also be challenged to a duel. Their popup keeps its usual answer and adds
+With TotalSparring installed, an ally of level 80 or more (in Cheat, anyone of
+level 80 or more who is not an animal) can also be challenged to a duel. Their popup keeps its usual answer and adds
 **RETAR A DUELO**, with your selected fighter's head-to-head record against
 them ("DUELOS 2-1", also on their card as "Duelos: 2-1"). The button opens
 TotalSparring's own Dueling window with the character you have selected;
 TotalSparring decides whether it is friendly or to the death and fights it out.
-Win and they join you for good ("Me ganaste. Me uno a ti"); lose or draw and
-they tell you to come back stronger, and you cannot challenge them again for a
-day. A spar never counts, and a duel that was cancelled or interrupted leaves
+In Balanced a win is a chance that they join you for good: 25% for your first
+win against them, +20% for every win before it (45, 65, 85, 100), rolled once per
+win so reloading does not change it. The popup shows it ("SI LE GANAS 65% de que
+se una") and so does the card ("Duelos: 2-1, si ganas 65% se une"). Win and they
+join ("Me ganaste. Me uno a ti"), or say "Buena pelea. Retame otra vez" and wait
+1-3 days (level 100+: 1-5) before the next challenge. In Cheat a win always
+recruits. Lose or draw and they tell you to come back stronger, and you cannot
+challenge them again for a day. A spar never counts, and a duel that was cancelled or interrupted leaves
 the challenge open for six in-game hours. Without TotalSparring nothing
-changes. `duelChallenge*` keys in `config.json` and in Mod Hub.
+changes. `duelChallenge*`, `duelJoin*` and `duelWinCooldown*` keys in
+`config.json` and in Mod Hub.
 
 ### Refusal, with a reason
 

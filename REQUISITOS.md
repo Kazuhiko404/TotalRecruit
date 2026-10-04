@@ -272,7 +272,9 @@ acompañe". Se queda entre `allyTierTempMinDays` y `allyTierTempMaxDays` días
 - **Siempre avisa, sobre su cabeza.** Al unirse "Te acompañaré N días"; en cada
   falta "No me trates así" (hambre: "Tengo hambre…"); en la falta anterior a la
   última "Si sigues así me voy"; `tempMemberExpiryWarningHours` (12 h) antes del
-  final "Me iré pronto"; al irse "Me voy. Fue un honor" o, maltratado, "Me largo",
+  final "Me iré pronto"; una vez por día de juego "Me quedan N días" ("Me queda 1
+  día" el último; no el día en que se unió ni el de "Me iré pronto";
+  `tempMemberDailyNotice`); al irse "Me voy. Fue un honor" o, maltratado, "Me largo",
   más una línea en el roller con su nombre. La tarjeta del miembro seleccionado
   dice "Temporal: le quedan N días".
 - **La partida.** La secuencia de despido de KEP: vuelve a su facción (si no se
@@ -281,8 +283,9 @@ acompañe". Se queda entre `allyTierTempMinDays` y `allyTierTempMaxDays` días
   por `tempMemberRejoinCooldownDays` (7) días (el mismo enfriamiento del rechazo
   del sometido), así que no se lo puede volver a tomar enseguida.
 - **Límites.** Si lo reclutas por un diálogo FCS (vacío por defecto), entra como
-  miembro permanente. El blackboard de KEP no se limpia (no hay
-  `AI/Blackboard.h`): la rutina la da el pelotón nuevo.
+  miembro permanente. Con KenshiLib 0.5.0 el pelotón nuevo recibe el paquete
+  del Wandering Squad (el reset de blackboard de KEP); si falla, camina de
+  vuelta al lugar donde se unió.
 
 **R4b.6 — Ayudante gratis.** *(P1, T3 hecho; prueba en juego pendiente)*
 Pedido del usuario (2026-10-03): "que haya una chance de que NPCs aliados de
@@ -353,8 +356,19 @@ plugins".
   TotalSparring con ese retador. Ocupada, rechazada o no lista: una línea en el
   roller y el reto se borra.
 - **El resultado** (lo avisa TotalSparring al terminar cada pelea). Duelo ganado
-  por tu lado contra el NPC retado: se recluta **para siempre** (no temporal),
-  cartel "Me ganaste. Me uno a ti" y línea en el roller. Perdido o empate:
+  por tu lado contra el NPC retado: en Balanced es una chance (diseño del usuario
+  2026-10-04): `min(100, duelJoinBaseChance (25) + duelJoinChancePerWin (20) ×
+  (victorias − 1))`, con las victorias cara a cara que cuenta TotalSparring (la
+  nueva incluida); la tirada se siembra con el NPC y el número de victorias, así
+  que recargar no la cambia. Si sale, se recluta **para siempre** (no temporal),
+  cartel "Me ganaste. Me uno a ti" y línea en el roller; si no, cartel "Buena
+  pelea. Retame otra vez", línea con la chance y las horas, y un enfriamiento
+  sembrado entre `duelWinCooldownMinHours` (24) y
+  `duelWinCooldownMaxHoursUnder100` (72) para nivel 80-99 o
+  `duelWinCooldownMaxHours` (120) para 100+, guardado en la misma fila. La
+  ventana (fila **SI LE GANAS**) y la tarjeta muestran la chance de la próxima
+  victoria. En Cheat el duelo se ofrece a cualquier persona de nivel 80+ (no
+  animal) y ganar siempre recluta. Perdido o empate:
   cartel "Vuelve cuando seas más fuerte" y `duelChallengeCooldownHours` (24)
   horas sin el botón, guardadas con el personaje
   (`total_recruit.duel_cooldown_until`). Sparring, sin decidir (cancelado,

@@ -45,5 +45,8 @@ User request (2026-10-03): "The duel for the 80+ tier: challenge him to a duel s
 - The card's record is cached per pair: it refreshes on the next selection change after a duel, not instantly.
 - The FCS-dialogue accept path does not offer the duel (it never shows the popup).
 
+## Follow-up
+- 2026-10-04: a won duel is a join chance in Balanced and the duel is offered in Cheat too: `odd/tasks/duel-join-chance.md` (QA.md 12.29).
+
 ## Next step
 In-game QA 12.28 with TotalSparring's public-api build loaded, then deploy (`scripts/deploy.sh`) when the user decides.
