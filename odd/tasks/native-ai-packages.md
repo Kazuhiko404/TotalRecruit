@@ -34,7 +34,7 @@ Fix issues 2 and 3 of the 2026-10-03 handoff (`git show feat/ts-duel-bridge:odd/
 - No deploy, merge or push without the user.
 
 ## Checklist
-- [ ] T1 KenshiLib 0.5.0 build: vendor `Include/` (tag v0.5.0, commit `11cd65d`) and `Libraries/KenshiLib.lib` (release `KenshiLib_v0.5.0.zip`) under `deps/kenshilib-0.5.0/`; point `TotalRecruit.vcxproj` include/lib/forced-include paths there; fix the 0.4.0 -> 0.5.0 compile churn in `src/` without behaviour change; confirm `AI/Blackboard.h` compiles; imports of the DLL all resolve against the installed `KenshiLib.dll`. Route: delegated writer.
+- [x] T1 KenshiLib 0.5.0 build: vendor `Include/` (tag v0.5.0, commit `11cd65d`) and `Libraries/KenshiLib.lib` (release `KenshiLib_v0.5.0.zip`) under `deps/kenshilib-0.5.0/`; point `TotalRecruit.vcxproj` include/lib/forced-include paths there; fix the 0.4.0 -> 0.5.0 compile churn in `src/` without behaviour change; confirm `AI/Blackboard.h` compiles; imports of the DLL all resolve against the installed `KenshiLib.dll`. Route: delegated writer. Commit `dd159ba`. Evidence: 861 vendored files (11.6 MB, lib md5 `6ec1f2b4b6a269d494317a6fef8f8809`); release `KenshiLib.dll` md5 = installed md5 `210344fbf1bacfbd94a2644182a679ed`; Release|x64 Rebuild OK with no `src/` change (only the known `C4482` header warnings); `tests/rules_tests` stays pure (no KenshiLib), 39/39 suites, 0/63304 checks failed; `dumpbin -imports`: 138 KenshiLib.dll imports, 0 missing from the installed DLL's 10131 exports. Throwaway probe (reverted) calling `Platoon::blackboard->replaceAIPackage / addFallbackPackages / addPackages / endContractJob` compiled, linked and resolved against the installed DLL (142 imports, 0 missing). Ogre/MyGUI libs still from `KENSHILIB_DIR`.
 - [ ] T2 helper native bodyguard + improved code fallback. Route: TBD.
 - [ ] T3 leaving temp member native reset + walk-back fallback. Route: TBD.
 - [ ] T4 docs / QA / deploy. Route: TBD.
@@ -51,7 +51,7 @@ Fix issues 2 and 3 of the 2026-10-03 handoff (`git show feat/ts-duel-bridge:odd/
 - `dumpbin /imports x64/Release/TotalRecruit.dll` compared with the installed `KenshiLib.dll` exports.
 
 ## Progress
-- T1 in progress.
+- T1 done (`dd159ba`). Engram mirror `odd/native-ai-packages/tasks`: pending (engram project name is ambiguous in this workspace).
 
 ## Next step
-T1, then T2.
+T2: helper native Bodyguard package.
