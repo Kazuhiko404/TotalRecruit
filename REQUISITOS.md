@@ -119,6 +119,15 @@ quita la meta de noqueo de un personaje del jugador si ninguna vigilancia la
 tiene y su objetivo ya está caído o es un preso de tu jaula (un noqueo que el
 jugador ordena con el menú del juego es una orden, no esta meta, y no se toca).
 
+*Estado (2026-10-04, prisoner-module-fixes F5):* la limpieza ya no borra órdenes
+del jugador. KenshiLib no tiene una llamada para quitar una sola orden, así que
+la orden de noqueo se suelta solo cuando es la única en cola y apunta a nuestro
+preso; una orden en cola con Shift o una más nueva se respetan (la meta quitada
+y el repensar sueltan al actor igual). El curado periódico nunca toca órdenes y
+solo quita una meta cuyo objetivo es un preso de tu jaula (caído no basta). Si el
+actor abandona la orden (otra tarea, sin orden ni meta de noqueo, 3 s seguidos),
+la vigilancia termina limpia y sin respaldo.
+
 *Estado (2026-10-04, prisoner-module-fixes F4):* con un preso dentro de la jaula
 el menú del juego abre dos columnas (el personaje y la jaula: ABRIR CON LLAVE,
 DESMANTELAR, PONER EN LIBERTAD). El bloque Hablar / Golpear / Noquear se ubica

@@ -64,6 +64,18 @@ Noquear tiene que ablandar al preso una vez (R2.3), no convertir al actor en un 
   - Commit: `bb593db` (`fix(overlay): keep the button block outside both native menu columns`).
   - Decisiones: la primera columna se toma como antes (presente y con ancho, sin visibilidad: el hook de apertura puede correr antes de que el layout se muestre), asi una sola columna da el rectangulo de hoy; la segunda solo si es visible y tiene ancho (un `menuGUI2` oculto de un menu anterior no agranda nada). `nameText` (0xF0) no se lee: el bloque siempre se anclo a la lista de opciones. La maqueta tambien dejo de describir Golpear como `BEAT_CAGE_OCCUPANT` (pendiente de `cage-beat-direct-hit`).
 
+## Segunda pasada (auditoria): F5..F12
+Ruta: escritor delegado (un solo escritor acotado; 2+ archivos no triviales por arreglo). Un commit por arreglo, con tests y docs.
+
+- [ ] F5 La limpieza de Noquear no borra ordenes del jugador: nunca `clearOrders` a ciegas; la orden se suelta solo si es la unica en cola y es el noqueo sobre nuestro preso; el curado nunca toca ordenes y solo quita una meta cuyo objetivo es un preso de tu jaula; la espera termina limpia si el actor abandono la orden.
+- [ ] F9 Los relojes de la vigilancia no corren con el juego en pausa (el respaldo de 1,5 s y la ventana de 2 min).
+- [ ] F10 La vigilancia guarda la clave del actor y del preso y los vuelve a resolver cada tick; un actor que ya no resuelve suelta la vigilancia sin limpieza.
+- [ ] F6 Intervalo entre golpizas (R2.3): `beatingCooldownHours` limita Golpear por preso, desde el ultimo golpe; GOLPEAR muestra la espera en el menu y en la ventana; sale `CanBeatPrisoner`.
+- [ ] F7 Los botones vuelven a mirar los hechos al hacer clic (preso fuera de la jaula, caido, sin permiso, en espera); el golpe nunca sube la vida.
+- [ ] F8 El credito de Golpear dura una ventana corta alrededor del golpe y solo si el golpe pudo noquear; Noquear conserva sus 2 min.
+- [ ] F11 DARLE COMIDA a un preso esclavo con hambre: revisar la precedencia documentada (G3 "Liberar a un esclavo: se une").
+- [ ] F12 Docs y comentarios viejos alineados con el codigo tras F5..F11.
+
 ## Criterios de aceptacion
 - F1: tras un Noquear, el preso cae una vez; despues de caer, el actor no vuelve a ir por el (ninguna `[defeat-hook] knockout fired` nueva sin otra orden), sale del sigilo si no estaba en sigilo antes, y el log dice `[cage] <actor> knockout cleanup (goal removed, stealth off|kept)`. Una partida ya trabada se cura sola en segundos.
 - F2: un noqueo sube el conteo en uno aunque el gancho llegue dos veces "(was standing)" en ~1,2 s.

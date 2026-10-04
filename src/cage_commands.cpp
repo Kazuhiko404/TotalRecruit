@@ -144,10 +144,14 @@ struct OrderWatch
     // The actor was sneaking when the order went in: the cleanup leaves it on.
     bool stealthBefore;
     DWORD startedMs;
+    // The last tick read and how long in a row the actor has been off the order
+    // (knockout_watch_rules.h NextAbandonedMs).
+    DWORD lastTickMs;
+    unsigned int abandonedMs;
 
     OrderWatch()
         : active(false), phase(KnockoutPhase_AwaitingTake), actor(NULL), target(NULL),
-          taskBefore(0), stealthBefore(false), startedMs(0) {}
+          taskBefore(0), stealthBefore(false), startedMs(0), lastTickMs(0), abandonedMs(0) {}
 };
 
 OrderWatch g_watch;
@@ -282,7 +286,7 @@ void EndWatch(const char* why)
     }
     const OrderWatch watch = g_watch;
     g_watch = OrderWatch();
-    CleanUpKnockoutOrder(watch.actor, watch.stealthBefore, why);
+    CleanUpKnockoutOrder(watch.actor, watch.target, watch.stealthBefore, why);
 }
 
 // This frame's facts for the knockout watch.
@@ -300,6 +304,8 @@ KnockoutWatchFacts ReadWatchFacts(const OrderWatch& watch)
     facts.targetUnreadable = !readOut && !readDead;
     facts.targetDown = (readOut && out) || (readDead && dead);
     facts.elapsedMs = GetTickCount() - watch.startedMs;
+    ReadKnockoutPursuit(watch.actor, &facts.orderQueued, &facts.goalCurrent);
+    facts.abandonedMs = watch.abandonedMs;
     return facts;
 }
 
@@ -410,6 +416,8 @@ bool IssueKnockoutOrder(Character* actor, Character* target)
     g_watch.taskBefore = taskBefore;
     g_watch.stealthBefore = stealthBefore;
     g_watch.startedMs = GetTickCount();
+    g_watch.lastTickMs = g_watch.startedMs;
+    g_watch.abandonedMs = 0;
     return true;
 }
 
@@ -554,8 +562,17 @@ void TickCageCommands()
         return;
     }
 
+    KnockoutWatchFacts facts = ReadWatchFacts(g_watch);
+    // The abandoned streak first: off the order for kKnockoutAbandonMs in a row
+    // ends the wait with a cleanup and no fallback.
+    const DWORD now = GetTickCount();
+    g_watch.abandonedMs = NextAbandonedMs(g_watch.abandonedMs, ActorAbandonedKnockout(facts),
+                                          now - g_watch.lastTickMs);
+    g_watch.lastTickMs = now;
+    facts.abandonedMs = g_watch.abandonedMs;
+
     const KnockoutWatchStep step = NextKnockoutWatchStep(
-        ReadWatchFacts(g_watch), kOrderWatchTimeoutMs, kKnockoutLandWindowMs);
+        facts, kOrderWatchTimeoutMs, kKnockoutLandWindowMs, kKnockoutAbandonMs);
     if (step == KnockoutStep_Wait)
     {
         return;

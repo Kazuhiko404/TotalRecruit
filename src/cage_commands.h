@@ -20,14 +20,16 @@
 //            It acts once: the goal is persistent, and left in place the actor's
 //            AI knocked the prisoner out again every time he stood up. The watch
 //            stays on after the order is taken, until the target is down (or
-//            dead) or kKnockoutLandWindowMs passes (NextKnockoutWatchStep in
-//            knockout_watch_rules.h), and every way it ends -- down, window,
-//            fallback, a newer order, a load -- lets the actor go
+//            dead), the actor abandons the order (kKnockoutAbandonMs off it in a
+//            row) or kKnockoutLandWindowMs passes (NextKnockoutWatchStep in
+//            knockout_watch_rules.h), and every way it ends -- down, abandoned,
+//            window, fallback, a newer order, a load -- lets the actor go
 //            (CleanUpKnockoutOrder in knockout_order_cleanup.h: goal removed,
-//            the queued order cleared, sneaking off only if the order turned it
-//            on, the AI re-thinks). The frame tick also sweeps the player's
-//            characters for a stray knockout goal no watch owns (an older save)
-//            and removes it when its target is down or caged by the player.
+//            the order dropped only when it is ours and alone in the queue,
+//            sneaking off only if the order turned it on, the AI re-thinks). The
+//            frame tick also sweeps the player's characters for a stray knockout
+//            goal no watch owns (an older save) and removes the goal -- never an
+//            order -- when its target is a prisoner in the player's cage.
 //
 // checkPlayerOrderForProblems is asked before the knockout order and its answer
 // is logged, but it does not decide the fallback: which return value means "a

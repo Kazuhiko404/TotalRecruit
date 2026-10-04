@@ -4,9 +4,13 @@ namespace totalrecruit
 {
 const unsigned int kKnockoutLandWindowMs = kOrderedKnockoutWindowMs;
 const unsigned int kStrayGoalSweepMs = 3000;
+// A few seconds: long enough to ride out the frames between a task ending and the
+// next one starting, short enough to let a re-ordered actor go at once.
+const unsigned int kKnockoutAbandonMs = 3000;
 
 KnockoutWatchStep NextKnockoutWatchStep(const KnockoutWatchFacts& facts,
-                                        unsigned int takeTimeoutMs, unsigned int landWindowMs)
+                                        unsigned int takeTimeoutMs, unsigned int landWindowMs,
+                                        unsigned int abandonMs)
 {
     if (facts.targetDown || facts.targetUnreadable)
     {
@@ -23,13 +27,34 @@ KnockoutWatchStep NextKnockoutWatchStep(const KnockoutWatchFacts& facts,
         default:                  return KnockoutStep_Wait;
         }
     }
+    if (facts.abandonedMs >= abandonMs)
+    {
+        return KnockoutStep_Abandoned;
+    }
     return facts.elapsedMs >= landWindowMs ? KnockoutStep_CleanupTimeout : KnockoutStep_Wait;
+}
+
+bool ActorAbandonedKnockout(const KnockoutWatchFacts& facts)
+{
+    return facts.phase == KnockoutPhase_AwaitingDown && facts.readTask &&
+           facts.taskNow != facts.ordered && !facts.orderQueued && !facts.goalCurrent;
+}
+
+unsigned int NextAbandonedMs(unsigned int abandonedMs, bool abandonedNow, unsigned int deltaMs)
+{
+    return abandonedNow ? abandonedMs + deltaMs : 0;
+}
+
+bool ShouldDropKnockoutOrder(const KnockoutOrderQueue& queue)
+{
+    return queue.readable && queue.queued && queue.onlyOne && queue.firstKey == queue.ordered &&
+           queue.firstTargetIsOurs;
 }
 
 bool KnockoutStepEndsWatch(KnockoutWatchStep step)
 {
     return step == KnockoutStep_Fallback || step == KnockoutStep_CleanupDown ||
-           step == KnockoutStep_CleanupTimeout;
+           step == KnockoutStep_CleanupTimeout || step == KnockoutStep_Abandoned;
 }
 
 const char* KnockoutStepName(KnockoutWatchStep step)
@@ -41,6 +66,7 @@ const char* KnockoutStepName(KnockoutWatchStep step)
     case KnockoutStep_Fallback:       return "fallback";
     case KnockoutStep_CleanupDown:    return "target down";
     case KnockoutStep_CleanupTimeout: return "land window passed";
+    case KnockoutStep_Abandoned:      return "order abandoned";
     }
     return "?";
 }
@@ -56,7 +82,7 @@ bool ShouldClearStrayKnockoutGoal(const StrayKnockoutGoal& goal)
     {
         return false;
     }
-    return goal.targetDown || goal.targetInPlayerCage;
+    return goal.targetInPlayerCage;
 }
 
 bool StrayGoalSweepDue(unsigned int lastMs, unsigned int nowMs, unsigned int periodMs)

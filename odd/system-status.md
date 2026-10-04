@@ -71,6 +71,7 @@ Nothing has a formal QA pass mark.
 | Captives call out when ready (`hail.cpp`), on the game clock | `not verified` (§10 G7, 12.23 N1) |
 | Golpear and Noquear: Golpear lands one direct capped blow (prisoner stays caged, never killed), Noquear is the native stealth knockout order; a knockout either causes is credited to the player | `not verified` (12.19) |
 | Noquear acts once: the watch stays until the prisoner is down, then the actor is let go (goal removed, stealth off if the order turned it on); stray knockout goals from older saves are healed | `not verified` (12.19 C10-C10e) |
+| Noquear's cleanup keeps the player's other orders (the order is dropped only when it is ours and alone in the queue); the sweep removes goals only, only for a prisoner in the player's cage; an abandoned order ends the watch clean | `not verified` (12.19 C10e-C10g) |
 | Caged popup offers GOLPEAR / NOQUEAR, never IGNORAR / PERDONAR | `not verified` (12.22) |
 
 ### 6. Defeats, mercy and the submission event (4)

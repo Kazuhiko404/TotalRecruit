@@ -664,7 +664,9 @@ Golpear y Noquear los da el personaje **seleccionado**. Golpear (desde `fix/cage
 | C10b | Igual que C10 con tu personaje **ya en sigilo** antes de Noquear | Al caer el preso sigue en sigilo | `knockout cleanup (goal removed, stealth kept) after target down` |
 | C10c | Dar Noquear y, antes de que caiga, dar Noquear de nuevo (mismo u otro personaje) | El primer actor queda suelto antes de la orden nueva | `knockout cleanup (...) after replaced by a new order` y otro `knockout ordered` |
 | C10d | Cargar un save hecho con la version anterior en el que un personaje tuyo seguia noqueando al preso | En segundos deja de perseguirlo (el sigilo puede quedar puesto: apagarlo a mano una vez) | `[cage] <tuyo> knockout cleanup (goal removed, stealth kept) stray goal for <preso>` |
-| C10e | Con el menu **del juego** ordenar noquear a un NPC libre y de pie | El noqueo nativo sigue igual; el curado no lo toca | sin `stray goal` |
+| C10e | Con el menu **del juego** ordenar noquear a un NPC libre y de pie | El noqueo nativo sigue igual; el curado no lo toca (ni despues de que caiga: solo toca metas sobre un preso de tu jaula, y nunca ordenes) | sin `stray goal` |
+| C10f | Noquear y, mientras tu personaje camina hacia la jaula, darle con Shift otra orden en cola (o tener ya una en cola) | Al caer el preso (o vencer la ventana) la orden en cola sigue ahi y se cumple | `knockout cleanup (goal removed, stealth ...)` **sin** `order cleared` |
+| C10g | Noquear y, antes de que llegue, mandar a tu personaje a otro lado con una orden normal | En unos 3 s queda suelto (sin respaldo: el preso no cae) y cumple tu orden nueva | `knockout cleanup (...) after order abandoned`; sin `knockout via fallback` |
 
 ### 12.20 Los animales solo se doman con tu comida (cage-animals-submission T2)
 
