@@ -1223,6 +1223,31 @@ void ASlaveIsFreedNotBought()
     CHECK(v.reasonKey == Reason_FreedFollows);
 }
 
+// prisoner-module-fixes F11 (audit): a hungry enslaved prisoner gets no DARLE
+// COMIDA because freedom is chosen before hunger. That is the documented rule,
+// not a bug (QA G3 "Liberar a un esclavo: se une"; route_cage.cpp: someone freed
+// from slavers does not need convincing): starving or not, they join, so there is
+// no refusal for food to answer. Pinned here so the precedence is not "fixed" by
+// accident; the Slave archetype follows the same rule.
+void AStarvingSlaveStillFollowsWithoutFood()
+{
+    const char* name = "cage: a starving slave joins on freedom, before any food remedy";
+    CoreFacts core = Prisoner();
+    core.enslaved = true;
+    core.starving = true;
+    Verdict v = DecideCage(core, FailingTheRoll(core), kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.currency == Currency_Freedom);
+    CHECK(v.reasonKey == Reason_FreedFollows);
+
+    core.enslaved = false;
+    core.archetype = Archetype_Slave;
+    core.wounded = true;
+    v = DecideCage(core, FailingTheRoll(core), kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.reasonKey == Reason_FreedFollows);
+}
+
 void TheHurtAndHungryWantCare()
 {
     const char* name = "cage: starving, wounded or both want care, and say which";
@@ -1551,6 +1576,7 @@ void RunRouteDecisionsTests()
     IntimidationIsAStrongArgumentNotAVerdict();
     TheCageRollCountsTheGrudgeAndTheName();
     ASlaveIsFreedNotBought();
+    AStarvingSlaveStillFollowsWithoutFood();
     TheHurtAndHungryWantCare();
     TheKindAreCaredForAndJoin();
     AnAnimalInTheCageIsTamedByTheSameBar();

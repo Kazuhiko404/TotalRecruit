@@ -270,7 +270,7 @@ Pasame esa línea. Con ella puedo mapear los punteros que faltan y llamar a
 |---|---|---|
 | G1 | Comprar un recluta con cats | Cobra y se une |
 | G2 | Sin fondos suficientes | *"pide N cats y tienes M"* |
-| G3 | Liberar a un esclavo | Se une |
+| G3 | Liberar a un esclavo | Se une (aunque tenga hambre o este herido: la libertad va antes que el cuidado) |
 | G4 | Perder un miembro en combate | Ventana de piedad, 3 botones |
 | G5 | **IGNORAR** a uno que puede pagar | Te deja sus cats y se va sin agro |
 | G6 | **RECHAZAR** | Mantiene el agro, la pelea sigue |
@@ -727,6 +727,7 @@ Reporte del usuario (2026-10-03): un "Holy Warden" en tu jaula, Cautiverio 87%, 
 | W3 | NOQUEAR en W1 | La ventana se cierra; el seleccionado intenta el noqueo (como C4) | `[cage] ... knockout ordered ...` |
 | W4 | W2 / W3 sin nadie seleccionado | "Selecciona a alguien de tu grupo para hacerlo" | — |
 | W5 | El mismo preso con hambre, llevando comida | DARLE COMIDA, GOLPEAR, NOQUEAR en la primera fila y CERRAR solo a la derecha en una segunda | — |
+| W5b | Un preso **esclavo** (o de arquetipo esclavo) con hambre en tu jaula, llevando comida | Se une sin pedir comida (como G3: la libertad va antes que el hambre): solo ACEPTAR / CANCELAR, sin DARLE COMIDA | — |
 | W6 | Un preso de tu jaula que **si** se une (intimidado, alimentado y curado...) | Solo ACEPTAR / CANCELAR | — |
 | W7 | `allowBeating` apagado (Mod Hub "Sumision: permitir golpear") y W1 | Sin GOLPEAR ni NOQUEAR; el motivo dice "Sigue desafiante: dejalo con hambre" (no pide herirlo) | — |
 | W8 | Preso inconsciente en tu jaula, o un preso en la jaula de otro | Sin GOLPEAR ni NOQUEAR (como C2) | — |
