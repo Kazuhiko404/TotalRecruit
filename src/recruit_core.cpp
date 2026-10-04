@@ -728,9 +728,9 @@ void CompleteOffer(Character* character, bool accepted)
 
     const std::string name = CharacterName(character);
 
+    // A declined offer says nothing: the offer popup already shows the outcome.
     if (!accepted)
     {
-        TellPlayer(name + ": lo dejaste donde estaba.", false);
         return;
     }
 

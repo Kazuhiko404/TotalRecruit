@@ -595,7 +595,7 @@ Toda salida de Hablar abre la misma ventana; ninguna termina en una notificacion
 | P5 | Dejar a un enemigo lisiado para que pida piedad | Etiqueta "Piedad"; la suplica como cuerpo; ACEPTAR / IGNORAR / RECHAZAR (IGNORAR solo si su temperamento lo permite y no esta enjaulado, encadenado ni cargado) |
 | P6 | Rescatar a alguien (curarlo cuando esta tirado) y hablarle | Etiqueta "Rescate"; PRECIO "Gratis" en verde; ACEPTAR / CANCELAR |
 | P7 | Vencer 2 veces a un bandido hasta que se rinda y hablarle | Etiqueta "Sometido" (desde 12.16; "Rendicion" queda para el que se rinde antes que morir); PRECIO "Gratis"; PROBABILIDAD con el % tirado; ACEPTAR / CANCELAR |
-| P8 | En P1, la X del titulo | Igual que CANCELAR: "lo dejaste donde estaba", no cobra |
+| P8 | En P1, la X del titulo | Igual que CANCELAR: sin mensaje de sistema, no cobra |
 | P9 | En P1, gastar plata con la ventana abierta hasta quedar corto y apretar ACEPTAR | No lo suma; aviso `money.short` (el unico aviso de dinero que queda: el chequeo de ultimo momento) |
 | P10 | Un nombre largo o un motivo largo | El texto se parte en renglones y la ventana crece; nada queda cortado ni fuera del marco |
 | P11 | Editar `TotalRecruit/messages.json` bloque `popup` (por ejemplo `popup.button.cancel`) y reiniciar | La ventana usa el texto nuevo; borrar la clave vuelve al texto interno |
