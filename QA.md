@@ -714,23 +714,27 @@ Reporte del usuario (2026-10-03): un "Holy Warden" en tu jaula, Cautiverio 87%, 
 
 ### 12.23 Quien quiere hablar, sobre su cabeza (head notice)
 
-Pedido del usuario (2026-10-03): "el juego te avisa, pero si no lees el nombre no sabes quien quiere hablar". Quien te llama lleva un cartel sobre la cabeza: su nombre y "Quiere hablar contigo" (cautivo listo, `hail.cpp`) o "Se acerca para hablar contigo" (el sometido, `submission_director.cpp`). Dura `headNoticeSeconds` (300 por defecto, segundos reales, congelado en pausa). Mockup: `ui-mockup/readout.html` seccion 2, "Someone wants to talk" y "Select the one who called". Con `probeOnClick` el log dice `[notice]`.
+Pedido del usuario (2026-10-03): "el juego te avisa, pero si no lees el nombre no sabes quien quiere hablar". Quien te llama lleva un cartel sobre la cabeza: su nombre y "Quiere hablar contigo" (cautivo listo, `hail.cpp`) o "Se acerca para hablar contigo" (el sometido, `submission_director.cpp`). Dura `headNoticeSeconds` (90 por defecto, segundos reales, congelado en pausa) cuando pide algo al jugador ("Quiere hablar contigo", "Se acerca para hablar contigo", "Quiere ofrecerte ayuda"); un cartel de una linea que solo informa (miembro temporal: union, faltas, aviso, despedida; ayudante: inicio, aviso, despedida, traicion, "Sigo contigo") dura `headNoticeInfoSeconds` (25 por defecto). Arreglo del play test (fix/head-notice-lifetime): "Te acompanare 5 dias" "nunca se iba" con 300 s. Mockup: `ui-mockup/readout.html` seccion 2, "Someone wants to talk" y "Select the one who called". Con `probeOnClick` el log dice `[notice]`.
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
-| N1 | Esperar a que un preso de tu jaula llame (`hailFirstHours`; o Cheat con `cheatHoursCaged` bajo) | Ademas del aviso en el registro, un cartel compacto sobre su cabeza: nombre en bronce, "Quiere hablar contigo" en ambar, borde ambar a la izquierda | `[notice] <nombre>: "Quiere hablar contigo" over the head [key ...]` |
+| N1 | Esperar a que un preso de tu jaula llame (`hailFirstHours`; o Cheat con `cheatHoursCaged` bajo) | Ademas del aviso en el registro, un cartel compacto sobre su cabeza: nombre en bronce, "Quiere hablar contigo" en ambar, borde ambar a la izquierda | `[notice] <nombre>: "Quiere hablar contigo" over the head [key ...] (prompt)` |
 | N2 | Mover la camara | El cartel sigue la cabeza cada cuadro; fuera de pantalla se oculta y vuelve al volver | — |
 | N3 | Abrir un menu contextual con el cartel visible | El cartel se oculta mientras el menu esta abierto | — |
 | N4 | Seleccionar (clic izquierdo) a **ese** NPC | El cartel se va para siempre y aparece la tarjeta normal; nunca los dos a la vez | `[notice] dismissed by selection [key ...]` (con `probeOnClick`) |
 | N5 | Con el cartel sobre A, seleccionar a otro NPC B | B tiene la tarjeta normal; el cartel de A sigue | — |
 | N6 | Clic izquierdo o derecho en el suelo con el cartel visible | El cartel sigue (solo seleccionarlo o el tiempo lo quitan) | — |
 | N7 | B seleccionado justo al lado de A, de modo que la tarjeta de B tape el cartel de A | El cartel de A se oculta mientras se tocarian; la tarjeta gana | — |
-| N8 | No hacer nada `headNoticeSeconds` (bajar a 10 s en Mod Hub "Aviso: segundos sobre la cabeza" para probar) | El cartel se va solo | — |
+| N8 | No hacer nada `headNoticeSeconds` (90 s por defecto; bajar a 10 s en Mod Hub "Aviso: segundos sobre la cabeza" para probar) | El cartel se va solo, a los ~90 s con el valor por defecto | — |
 | N9 | Pausar el juego con el cartel visible | El tiempo del cartel se congela; al despausar sigue contando | — |
 | N10 | Evento del sometido (12.21) | Al empezar a caminar: cartel "Se acerca para hablar contigo"; se va cuando abre la ventana o si se cancela el evento | `[notice] <nombre>: "Se acerca para hablar contigo" ...` |
 | N11 | Que el NPC del cartel muera o se una al grupo | El cartel se va (en menos de 1 s) | — |
 | N12 | Cargar un save con carteles visibles | No queda ningun cartel | — |
 | N13 | Ventana de oferta abierta y el cartel caeria encima | Se corre de costado a la altura de la cabeza (como la tarjeta), u oculto sin lugar | — |
+| N14 | Tomar un miembro temporal (12.25) y no hacer nada | "Te acompanare N dias" se va solo a los ~25 s (`headNoticeInfoSeconds`), no a los 90 | `[notice] <nombre>: "Te acompanare N dias" over the head [key ...] (squad) (info)` |
+| N15 | Una falta o la despedida de un temporal; el inicio, aviso o despedida de un ayudante (12.26) | Cada linea dura ~25 s; la oferta del ayudante ("Quiere ofrecerte ayuda") dura ~90 s | `... (info)` para las lineas, `... (prompt)` para la oferta |
+| N16 | Mod Hub "Aviso: segundos de un cartel informativo" a 5 s | Los carteles informativos se van a los ~5 s; "Quiere hablar contigo" sigue usando "Aviso: segundos sobre la cabeza" | — |
+| N17 | Deploy (`bash scripts/deploy.sh`) sobre un `config.json` desplegado con `"headNoticeSeconds": 300` sin tocar | La salida dice `~ headNoticeSeconds: 300.0 -> 90.0 (still the old default)` y `+ headNoticeInfoSeconds`; con otro valor puesto a mano (p. ej. 120) dice `= headNoticeSeconds: 120.0 kept` y no lo cambia | — |
 
 ### 12.24 Aliados por nivel y descuento por amistad (ally-tiers-temp-helpers T1)
 

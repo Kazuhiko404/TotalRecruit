@@ -168,7 +168,8 @@ void Leave(Character* member, const CharKey& key, TempLeave why, double nowHours
 
     RaiseHeadNotice(member, mistreated
                                 ? Say("tempMember.notice.farewellMistreated", "Me largo", member)
-                                : Say("tempMember.notice.farewell", "Me voy. Fue un honor", member));
+                                : Say("tempMember.notice.farewell", "Me voy. Fue un honor", member),
+                    HeadNoticeKind_Info);
     TellPlayer(Fill(mistreated ? Say("tempMember.leftMistreated",
                                      "{name} se harto del maltrato y se fue de tu grupo.", member)
                                : Say("tempMember.left",
@@ -209,7 +210,7 @@ void WatchMember(Character* member, const CharKey& key, double nowHours, const T
     }
     const std::string notice = StepNotice(member, step);
     if (!notice.empty())
-        RaiseSquadHeadNotice(member, notice);
+        RaiseSquadHeadNotice(member, notice, HeadNoticeKind_Info);
 }
 } // namespace
 
@@ -234,7 +235,8 @@ void OnRecruitedTemporarily(Character* npc, int days, const std::string& homeFac
         g_homeFaction[key] = homeFactionId;
     }
     RaiseSquadHeadNotice(npc, WithDays(Say("tempMember.notice.join", "Te acompanare {days} dias", npc),
-                                       days));
+                                       days),
+                         HeadNoticeKind_Info);
 
     char note[96] = { 0 };
     _snprintf_s(note, sizeof(note), _TRUNCATE, " [temp] joined for %d days (until hour %d), home ",

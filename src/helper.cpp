@@ -295,7 +295,7 @@ void StartContract(Character* npc, int days)
     live.npc = npc;
     g_live[key] = live;
 
-    RaiseHeadNotice(npc, Say("helper.notice.start", "Te cubro las espaldas", npc));
+    RaiseHeadNotice(npc, Say("helper.notice.start", "Te cubro las espaldas", npc), HeadNoticeKind_Info);
     TellPlayer(Line("helper.started", "{name} te acompanara {days} dias. No acepta ordenes.", npc, days),
                false);
     Log(name + " escorts the player for " + Num("%.0f", (double)days) + " days (until hour " +
@@ -319,7 +319,7 @@ void EndContract(Character* npc, const CharKey& key, HelperEnd end, double nowHo
 
     if (HelperEndIsBetrayal(end))
     {
-        RaiseHeadNotice(npc, Say("helper.notice.betrayed", "No vuelvo a ayudarte", npc));
+        RaiseHeadNotice(npc, Say("helper.notice.betrayed", "No vuelvo a ayudarte", npc), HeadNoticeKind_Info);
         TellPlayer(Line("helper.betrayed", "{name} dejo de ayudarte: tu grupo lo ataco.", npc, 0), false);
         const int days = GetConfig().helpers.rejectCooldownDays;
         if (days > 0)
@@ -330,7 +330,7 @@ void EndContract(Character* npc, const CharKey& key, HelperEnd end, double nowHo
     }
     else
     {
-        RaiseHeadNotice(npc, Say("helper.notice.farewell", "Hasta aqui llego. Suerte", npc));
+        RaiseHeadNotice(npc, Say("helper.notice.farewell", "Hasta aqui llego. Suerte", npc), HeadNoticeKind_Info);
         TellPlayer(Line("helper.left", "{name} cumplio su palabra y sigue su camino.", npc, 0), false);
     }
     NpcMotion::ResumeRoutine(npc);
@@ -459,7 +459,8 @@ void Rearm(Character* leader)
         Live live;
         live.npc = nearby[i];
         g_live[key] = live;
-        RaiseHeadNotice(nearby[i], Say("helper.notice.rearmed", "Sigo contigo", nearby[i]));
+        RaiseHeadNotice(nearby[i], Say("helper.notice.rearmed", "Sigo contigo", nearby[i]),
+                        HeadNoticeKind_Info);
         Log(CharacterName(nearby[i]) + ": re-armed after a load [key " + key.ToString() + "]");
     }
 }
@@ -512,7 +513,7 @@ void WatchContracts()
         }
         if (step.expiryWarn)
         {
-            RaiseHeadNotice(npc, Say("helper.notice.expiring", "Me ire pronto", npc));
+            RaiseHeadNotice(npc, Say("helper.notice.expiring", "Me ire pronto", npc), HeadNoticeKind_Info);
             Log(CharacterName(npc) + ": expiry warning (" + Num("%.0f", (double)c.expiryHour - now) + " h left)");
         }
         std::map<CharKey, Live>::iterator live = g_live.find(keys[i]);

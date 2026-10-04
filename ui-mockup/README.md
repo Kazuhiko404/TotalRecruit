@@ -138,7 +138,9 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     card over the head: the readout card's lacquer plate and frame, a 3 px amber edge on the left, the name in brass
     over a gold rule and the line in amber (`.hn` in `css/readout.css` = the constants of `head_notice.cpp`; width =
     the wider text, 120..264 px). Same anchor and `PlaceCard` as the readout card, `ToolTip` layer, no mouse focus.
-    It stays `headNoticeSeconds` (default 300, real seconds frozen on pause) and goes by itself; selecting that NPC
+    It stays `headNoticeSeconds` (default 90, real seconds frozen on pause) when it asks the player to act (these
+    two, and a helper's offer), or `headNoticeInfoSeconds` (default 25) for a one-line informational notice (a
+    temporary member's or a helper's lines), and goes by itself; selecting that NPC
     dismisses it for good and the normal card takes the head, so the two never overlap. Selecting someone else or
     clicking elsewhere never dismisses it; if the normal card about another NPC would cover it, the card wins and the
     notice hides that frame. Up to 8 at once, one per NPC. Hidden off screen and under a right-click menu; dropped when
@@ -166,6 +168,7 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     (`tempMember.notice.*`): "Te acompanare 6 dias" on joining, "No me trates asi" on a strike (hunger: "Tengo
     hambre... no me trates asi"), "Si sigues asi me voy" on the strike before the last, "Me ire pronto" before the
     time is up, and after they left the squad "Me voy. Fue un honor" or "Me largo" (an ordinary notice by then).
+    All of these are informational: they stay `headNoticeInfoSeconds` (default 25 s), not `headNoticeSeconds`.
     Selecting a temporary member shows their card with one line, "Temporal: le quedan 4 dias"
     (`readout.line.temp.daysLeft`), and nothing else. Section 2, tab "Temporary member (squad notices)".
 
@@ -180,6 +183,8 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     (line plate, the cancel slot). No chance row. The X is no answer. During the escort the helper raises ordinary
     notices (`helper.notice.*`): "Te cubro las espaldas" on accepting, "Me ire pronto" before the end, "Hasta
     aqui llego. Suerte" or "No vuelvo a ayudarte" on leaving, "Sigo contigo" when found again after a load.
+    The offer stays `headNoticeSeconds` (default 90 s); the escort's lines are informational and stay
+    `headNoticeInfoSeconds` (default 25 s).
     Selecting a helper shows their card with one line, "Ayudante: le quedan 3 dias"
     (`readout.line.helper.daysLeft`), and nothing else.
 

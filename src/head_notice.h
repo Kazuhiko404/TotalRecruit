@@ -8,8 +8,13 @@
 // contigo", or the event's own words) -- in the readout card's look, on the same
 // ToolTip layer, never taking the mouse.
 //
-// It stays for headNoticeSeconds (config, default 300, Mod Hub), counted in real
-// seconds frozen while the game is paused, and then goes by itself. Selecting that
+// How long it stays depends on its kind (HeadNoticeKind, head_notice_rules.h): a
+// notice that asks the player to act (HeadNoticeKind_Prompt: a hail, a helper's
+// offer, the submission event's "approaching") stays headNoticeSeconds (config,
+// default 90, Mod Hub); a one-line informational notice (HeadNoticeKind_Info: a
+// temporary member's join / strike / farewell, a helper's start / farewell) stays
+// headNoticeInfoSeconds (config, default 25, Mod Hub). Both are counted in real
+// seconds frozen while the game is paused, and then it goes by itself. Selecting that
 // NPC (left click) dismisses it for good: the normal readout card takes the head, so
 // the two never overlap. Selecting someone else does not touch it, and neither does a
 // click elsewhere. If the normal card (about another NPC) would cover it, the normal
@@ -30,6 +35,8 @@
 // they are in the squad. Selecting a squad member never dismisses it either (the
 // selection that dismisses is the readout's SelectedNpc, never one of the player's).
 
+#include "head_notice_rules.h"
+
 #include <string>
 
 class Character;
@@ -39,14 +46,18 @@ namespace totalrecruit
 // Puts a notice over this NPC's head with their name and `text` (one short line,
 // player-facing, from messages.json). Raising again for the same NPC replaces the
 // line and restarts the time. Does nothing when the mod is off or the NPC cannot be
-// identified.
-void RaiseHeadNotice(Character* npc, const std::string& text);
+// identified. `kind` picks the lifetime: HeadNoticeKind_Prompt (headNoticeSeconds)
+// for a notice that asks the player to act, HeadNoticeKind_Info
+// (headNoticeInfoSeconds) for a one-line informational notice.
+void RaiseHeadNotice(Character* npc, const std::string& text,
+                     HeadNoticeKind kind = HeadNoticeKind_Prompt);
 
 // The same notice for one of the player's own characters (a temporary member,
 // temp_member.h): kept while they stay in the squad, where an ordinary notice is
 // dropped the moment its NPC joins. Raising an ordinary notice for them again makes
-// it ordinary.
-void RaiseSquadHeadNotice(Character* member, const std::string& text);
+// it ordinary. `kind` as for RaiseHeadNotice.
+void RaiseSquadHeadNotice(Character* member, const std::string& text,
+                          HeadNoticeKind kind = HeadNoticeKind_Prompt);
 
 // Takes this NPC's notice down now: the conversation it announced has happened or
 // was called off. Safe for an NPC without one.

@@ -597,10 +597,16 @@ struct Config
     bool readoutCompact;
     bool readoutOnSelect;
 
-    // How long the "wants to talk" card stays over the head of an NPC who called out
-    // (head_notice.h), in real seconds frozen on pause. Clamped on load to
-    // kHeadNoticeSecondsMin..kHeadNoticeSecondsMax (head_notice_rules.h).
+    // How long a notice that asks the player to act (the "wants to talk" card over
+    // the head of an NPC who called out, a helper's offer, the submission event's
+    // "approaching"; head_notice.h) stays, in real seconds frozen on pause. Default
+    // 90. Clamped on load to kHeadNoticeSecondsMin..kHeadNoticeSecondsMax
+    // (head_notice_rules.h).
     float headNoticeSeconds;
+    // The same for a one-line informational notice (a temporary member's join /
+    // strike / farewell, a helper's start / farewell). Default 25. Clamped on load to
+    // kHeadNoticeInfoSecondsMin..kHeadNoticeInfoSecondsMax (head_notice_rules.h).
+    float headNoticeInfoSeconds;
 
     int preset; // Preset enum
     // Route A: recruit someone you saved from dying. The one route no existing
@@ -666,7 +672,8 @@ struct Config
           readoutEnabled(true),
           readoutCompact(false),
           readoutOnSelect(true),
-          headNoticeSeconds(300.0f),
+          headNoticeSeconds(90.0f),
+          headNoticeInfoSeconds(25.0f),
           friendlyRelation(20.0f),
           relationRefuseGoodNatured(-15.0f),
           relationRefuseAll(-30.0f),

@@ -391,7 +391,7 @@ void DrawNotices(bool haveSelected, const CharKey& selectedKey)
     }
 }
 
-void Raise(Character* npc, const std::string& text, bool squad)
+void Raise(Character* npc, const std::string& text, bool squad, HeadNoticeKind kind)
 {
     const Config& config = GetConfig();
     if (npc == NULL || !config.enabled)
@@ -412,20 +412,22 @@ void Raise(Character* npc, const std::string& text, bool squad)
         g_squadNotices.erase(key);
     }
     const std::string name = CharacterName(npc);
-    g_board.Raise(key, npc, name, text, g_clock, ClampHeadNoticeSeconds(config.headNoticeSeconds));
+    const float seconds =
+        HeadNoticeSecondsFor(kind, config.headNoticeSeconds, config.headNoticeInfoSeconds);
+    g_board.Raise(key, npc, name, text, g_clock, seconds);
     LogInfo("[notice] " + name + ": \"" + text + "\" over the head [key " + key.ToString() + "]" +
-            (squad ? " (squad)" : ""));
+            (squad ? " (squad)" : "") + (kind == HeadNoticeKind_Info ? " (info)" : " (prompt)"));
 }
 } // namespace
 
-void RaiseHeadNotice(Character* npc, const std::string& text)
+void RaiseHeadNotice(Character* npc, const std::string& text, HeadNoticeKind kind)
 {
-    Raise(npc, text, false);
+    Raise(npc, text, false, kind);
 }
 
-void RaiseSquadHeadNotice(Character* member, const std::string& text)
+void RaiseSquadHeadNotice(Character* member, const std::string& text, HeadNoticeKind kind)
 {
-    Raise(member, text, true);
+    Raise(member, text, true, kind);
 }
 
 void DismissHeadNotice(Character* npc)

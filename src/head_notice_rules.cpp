@@ -131,4 +131,26 @@ float ClampHeadNoticeSeconds(float seconds)
     }
     return seconds;
 }
+
+float ClampHeadNoticeInfoSeconds(float seconds)
+{
+    if (!(seconds >= kHeadNoticeInfoSecondsMin))
+    {
+        return kHeadNoticeInfoSecondsMin;
+    }
+    if (seconds > kHeadNoticeInfoSecondsMax)
+    {
+        return kHeadNoticeInfoSecondsMax;
+    }
+    return seconds;
+}
+
+float HeadNoticeSecondsFor(HeadNoticeKind kind, float promptSeconds, float infoSeconds)
+{
+    if (kind == HeadNoticeKind_Info)
+    {
+        return ClampHeadNoticeInfoSeconds(infoSeconds);
+    }
+    return ClampHeadNoticeSeconds(promptSeconds);
+}
 } // namespace totalrecruit

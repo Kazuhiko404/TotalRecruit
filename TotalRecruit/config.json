@@ -12,7 +12,8 @@
   "hailFirstHours": 24.0,
   "hailRepeatHours": 6.0,
   "hailRepeats": 5,
-  "headNoticeSeconds": 300.0,
+  "headNoticeSeconds": 90.0,
+  "headNoticeInfoSeconds": 25.0,
 
   "preset": 1,
 

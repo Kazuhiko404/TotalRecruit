@@ -115,11 +115,15 @@ var PLACEMENT = {
 
 // The "wants to talk" notice over the head (src/head_notice.cpp, src/head_notice_rules.h). Raised by
 // hail.cpp (a ready captive calls out) and submission_director.cpp (a beaten NPC walks up); gone
-// after headNoticeSeconds, when that NPC is selected, when they die or join, or at a load.
+// after its lifetime, when that NPC is selected, when they die or join, or at a load.
 // temp_member.cpp raises squad notices (RaiseSquadHeadNotice) over a temporary member: kept while
 // they are in the squad, never dismissed by selecting them.
+// Lifetime by kind (HeadNoticeKind, head_notice_rules.h): a notice that asks the player to act
+// (wantsToTalk, approaching, helperOffer) stays headNoticeSeconds; a one-line informational notice
+// (temporary member's and helper's lines) stays headNoticeInfoSeconds.
 var HEAD_NOTICE = {
-  seconds: 300,          // headNoticeSeconds default (config.h), clamp 10..3600
+  seconds: 90,           // headNoticeSeconds default (config.h), clamp 10..3600: prompts
+  infoSeconds: 25,       // headNoticeInfoSeconds default (config.h), clamp 5..3600: informational lines
   cap: 8,                // kHeadNoticeCap: one per NPC, the oldest goes when full
   wantsToTalk: 'Quiere hablar contigo',          // messages.json headNotice.wantsToTalk
   approaching: 'Se acerca para hablar contigo'   // messages.json headNotice.approaching
@@ -159,6 +163,8 @@ var HUB = [
    'Version mas chica: sin el desglose del estres ni las derrotas'],
   ['Lectura: al seleccionar', 'readoutOnSelect', 'ON',
    'La lectura sigue al NPC que seleccionas con clic izquierdo. Apagado, solo aparece al apretar Hablar'],
-  ['Aviso: segundos sobre la cabeza', 'headNoticeSeconds', '300',
-   'Cuanto queda el cartel \'Quiere hablar contigo\' sobre quien te llama (seleccionarlo lo quita)']
+  ['Aviso: segundos sobre la cabeza', 'headNoticeSeconds', '90',
+   'Cuanto queda un cartel que pide algo (\'Quiere hablar contigo\', una oferta de ayuda) sobre quien te llama (90 por defecto; seleccionarlo lo quita)'],
+  ['Aviso: segundos de un cartel informativo', 'headNoticeInfoSeconds', '25',
+   'Cuanto queda un cartel de una linea que solo informa (\'Te acompanare N dias\', una falta, una despedida) (25 por defecto)']
 ];

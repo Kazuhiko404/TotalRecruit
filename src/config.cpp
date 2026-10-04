@@ -279,6 +279,7 @@ std::vector<Field> ConfigFields(Config& c)
     AddBool(f, "readoutCompact", &c.readoutCompact);
     AddBool(f, "readoutOnSelect", &c.readoutOnSelect);
     AddFloat(f, "headNoticeSeconds", &c.headNoticeSeconds);
+    AddFloat(f, "headNoticeInfoSeconds", &c.headNoticeInfoSeconds);
 
     AddInt(f, "preset", &c.preset);
     AddBool(f, "rescueEnabled", &c.rescueEnabled);
@@ -493,6 +494,7 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.hailRepeatHours, kHailRepeatHoursMin, kHailRepeatHoursMax);
     ClampInt(&g_config.hailRepeats, kHailRepeatsMin, kHailRepeatsMax);
     g_config.headNoticeSeconds = ClampHeadNoticeSeconds(g_config.headNoticeSeconds);
+    g_config.headNoticeInfoSeconds = ClampHeadNoticeInfoSeconds(g_config.headNoticeInfoSeconds);
 
     // Money tunables. A negative or absurd value would otherwise reach the price
     // arithmetic: a negative minimum or ceiling, a curve that never leaves zero.

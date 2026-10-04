@@ -30,10 +30,28 @@ namespace totalrecruit
 {
 const int kHeadNoticeCap = 8;
 
-// headNoticeSeconds: default and the clamp applied when config.json is read.
-const float kHeadNoticeSecondsDefault = 300.0f;
+// headNoticeSeconds: default and the clamp applied when config.json is read. The
+// lifetime of a notice that asks the player to act (HeadNoticeKind_Prompt).
+const float kHeadNoticeSecondsDefault = 90.0f;
 const float kHeadNoticeSecondsMin = 10.0f;
 const float kHeadNoticeSecondsMax = 3600.0f;
+
+// headNoticeInfoSeconds: the same for a one-line informational notice
+// (HeadNoticeKind_Info), read once and done with.
+const float kHeadNoticeInfoSecondsDefault = 25.0f;
+const float kHeadNoticeInfoSecondsMin = 5.0f;
+const float kHeadNoticeInfoSecondsMax = 3600.0f;
+
+// What a notice is for, which decides how long it stays.
+enum HeadNoticeKind
+{
+    // Asks the player to act: a hail ("wants to talk"), a helper's offer, the
+    // submission event's "approaching". Stays headNoticeSeconds.
+    HeadNoticeKind_Prompt,
+    // One informational line: a temporary member's join / strike / farewell, a
+    // helper's start / farewell. Stays headNoticeInfoSeconds.
+    HeadNoticeKind_Info
+};
 
 struct HeadNotice
 {
@@ -123,4 +141,13 @@ bool RectsOverlap(const ScreenRect& a, const ScreenRect& b);
 // headNoticeSeconds as read from config.json, pulled back into
 // [kHeadNoticeSecondsMin, kHeadNoticeSecondsMax].
 float ClampHeadNoticeSeconds(float seconds);
+
+// headNoticeInfoSeconds as read from config.json, pulled back into
+// [kHeadNoticeInfoSecondsMin, kHeadNoticeInfoSecondsMax].
+float ClampHeadNoticeInfoSeconds(float seconds);
+
+// How long a notice of this kind stays: promptSeconds (headNoticeSeconds) for a
+// prompt, infoSeconds (headNoticeInfoSeconds) for an informational line, each
+// through its own clamp.
+float HeadNoticeSecondsFor(HeadNoticeKind kind, float promptSeconds, float infoSeconds);
 } // namespace totalrecruit

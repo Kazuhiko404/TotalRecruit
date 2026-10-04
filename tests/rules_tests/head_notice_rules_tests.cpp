@@ -181,18 +181,51 @@ void SecondsAreClamped()
     CHECK(ClampHeadNoticeSeconds(1.0f) == kHeadNoticeSecondsMin);
     CHECK(ClampHeadNoticeSeconds(-5.0f) == kHeadNoticeSecondsMin);
     CHECK(ClampHeadNoticeSeconds(99999.0f) == kHeadNoticeSecondsMax);
-    CHECK(kHeadNoticeSecondsDefault == 300.0f);
+    CHECK(kHeadNoticeSecondsDefault == 90.0f);
 }
 
-void TheConfigDefaultIsFiveMinutes()
+void TheConfigDefaultIsNinetySeconds()
 {
-    const char* name = "TheConfigDefaultIsFiveMinutes";
+    const char* name = "TheConfigDefaultIsNinetySeconds";
     const Config config;
     CHECK(config.headNoticeSeconds == kHeadNoticeSecondsDefault);
+    CHECK(config.headNoticeSeconds == 90.0f);
     // A different value reaches the expiry.
     HeadNoticeBoard board;
     board.Raise(Key(1), 0, "a", "t", 0.0f, ClampHeadNoticeSeconds(60.0f));
     CHECK(board.Find(Key(1))->expiresAt == 60.0f);
+}
+
+void InfoSecondsAreClamped()
+{
+    const char* name = "InfoSecondsAreClamped";
+    CHECK(kHeadNoticeInfoSecondsDefault == 25.0f);
+    CHECK(kHeadNoticeInfoSecondsMin == 5.0f);
+    CHECK(kHeadNoticeInfoSecondsMax == 3600.0f);
+    CHECK(ClampHeadNoticeInfoSeconds(25.0f) == 25.0f);
+    CHECK(ClampHeadNoticeInfoSeconds(5.0f) == 5.0f);
+    CHECK(ClampHeadNoticeInfoSeconds(1.0f) == kHeadNoticeInfoSecondsMin);
+    CHECK(ClampHeadNoticeInfoSeconds(-5.0f) == kHeadNoticeInfoSecondsMin);
+    CHECK(ClampHeadNoticeInfoSeconds(99999.0f) == kHeadNoticeInfoSecondsMax);
+    const Config config;
+    CHECK(config.headNoticeInfoSeconds == kHeadNoticeInfoSecondsDefault);
+}
+
+void EachKindResolvesToItsOwnSeconds()
+{
+    const char* name = "EachKindResolvesToItsOwnSeconds";
+    // A prompt (wants to talk, helper offer, approaching) keeps headNoticeSeconds.
+    CHECK(HeadNoticeSecondsFor(HeadNoticeKind_Prompt, 90.0f, 25.0f) == 90.0f);
+    // A one-line informational notice uses headNoticeInfoSeconds.
+    CHECK(HeadNoticeSecondsFor(HeadNoticeKind_Info, 90.0f, 25.0f) == 25.0f);
+    // Each value goes through its own clamp.
+    CHECK(HeadNoticeSecondsFor(HeadNoticeKind_Prompt, 1.0f, 25.0f) == kHeadNoticeSecondsMin);
+    CHECK(HeadNoticeSecondsFor(HeadNoticeKind_Info, 90.0f, 1.0f) == kHeadNoticeInfoSecondsMin);
+    CHECK(HeadNoticeSecondsFor(HeadNoticeKind_Info, 90.0f, 99999.0f) == kHeadNoticeInfoSecondsMax);
+    // The shipped defaults: info is shorter than a prompt.
+    const Config config;
+    CHECK(HeadNoticeSecondsFor(HeadNoticeKind_Info, config.headNoticeSeconds, config.headNoticeInfoSeconds) <
+          HeadNoticeSecondsFor(HeadNoticeKind_Prompt, config.headNoticeSeconds, config.headNoticeInfoSeconds));
 }
 } // namespace
 
@@ -209,5 +242,7 @@ void RunHeadNoticeRulesTests()
     UnderANativeWindowIsHiddenNotDropped();
     RectsOverlapOnSharedPixelsOnly();
     SecondsAreClamped();
-    TheConfigDefaultIsFiveMinutes();
+    TheConfigDefaultIsNinetySeconds();
+    InfoSecondsAreClamped();
+    EachKindResolvesToItsOwnSeconds();
 }

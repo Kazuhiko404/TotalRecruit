@@ -225,7 +225,8 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
         ? 'Left-click on the captive who called: his notice is dismissed for good and the normal readout card ' +
           'takes his head (they never overlap). The bandit\'s notice stays: a click elsewhere never dismisses a notice.'
         : 'The roller said "Ana quiere hablar contigo"; the notice shows who. It stays ' + HEAD_NOTICE.seconds +
-          ' s of real time (headNoticeSeconds, frozen on pause), then goes by itself. The selected NPC in the middle ' +
+          ' s of real time (headNoticeSeconds, frozen on pause; it asks the player to act), then goes by itself. ' +
+          'One-line informational notices stay ' + HEAD_NOTICE.infoSeconds + ' s (headNoticeInfoSeconds). The selected NPC in the middle ' +
           'has the normal card; if it ever covered a notice, the normal card wins and the notice hides that frame.') +
         '</div>';
       scene.innerHTML = h;
@@ -250,7 +251,8 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
            'their notices are squad notices: kept while they are in the squad and never dismissed by selecting ' +
            'them. On joining: "' + TEMP_MEMBER.join + '". Each strike: "' + TEMP_MEMBER.mistreated + '" (hunger: "' +
            TEMP_MEMBER.hungry + '"). Leaving: "' + TEMP_MEMBER.farewell + '" or "' + TEMP_MEMBER.farewellMistreated +
-           '", plus a roller line with the name.</div>';
+           '", plus a roller line with the name. Each of these lines is informational: it stays ' +
+           HEAD_NOTICE.infoSeconds + ' s (headNoticeInfoSeconds), not ' + HEAD_NOTICE.seconds + ' s.</div>';
       scene.innerHTML = h;
       var temp = { name: 'Kira la Errante', route: 'libre', routeLabel: 'Libre', showStress: false,
                    showChance: false, showDefeats: false, showFood: false,
@@ -271,7 +273,9 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
            'so these are ordinary notices. Walking up: "' + HELPER.offer + '" (the popup "Free helper offers to ' +
            'escort you", section 5, opens on arrival). Accepted: "' + HELPER.start + '". Before the end: "' +
            HELPER.expiring + '". Leaving: "' + HELPER.farewell + '", or "' + HELPER.betrayed + '" when the squad ' +
-           'turned on them; after a load: "' + HELPER.rearmed + '". Each also has a roller line with the name.</div>';
+           'turned on them; after a load: "' + HELPER.rearmed + '". Each also has a roller line with the name. ' +
+           'The offer asks the player to act and stays ' + HEAD_NOTICE.seconds + ' s (headNoticeSeconds); the ' +
+           'other lines are informational and stay ' + HEAD_NOTICE.infoSeconds + ' s (headNoticeInfoSeconds).</div>';
       scene.innerHTML = h;
       var helper = { name: 'Beep el Sabio', route: 'libre', routeLabel: 'Libre', showStress: false,
                      showChance: false, showDefeats: false, showFood: false,
