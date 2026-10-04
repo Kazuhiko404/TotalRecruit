@@ -8,7 +8,8 @@
 //   BeatBlunt .. PickBeatPart  Golpear's one capped blow: how hard, where, and
 //                           the floor it never crosses.
 //   JudgeOrderWatch         did the actor take the knockout order, or does the
-//                           fallback have to run.
+//                           fallback have to run (the first phase of
+//                           knockout_watch_rules.h NextKnockoutWatchStep).
 //   OrderedKnockoutCredit   a knockout the player ordered through the mod counts
 //                           as the player's, even when the engine names nobody.
 //   KnockoutLabel           "NOQUEAR 72%" from the engine's own odds.

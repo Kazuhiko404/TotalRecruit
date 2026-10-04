@@ -84,6 +84,7 @@ const Suite kSuites[] = {
     { "level_rules", RunLevelRulesTests },
     { "duel_record_cache_rules", RunDuelRecordCacheRulesTests },
     { "duel_join_rules", RunDuelJoinRulesTests },
+    { "knockout_watch_rules", RunKnockoutWatchRulesTests },
 };
 } // namespace
 

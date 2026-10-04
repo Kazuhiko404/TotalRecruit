@@ -655,7 +655,12 @@ Golpear y Noquear los da el personaje **seleccionado**. Golpear (desde `fix/cage
 | C6 | Golpear o Noquear sin nadie de tu grupo seleccionado | "Selecciona a alguien de tu grupo para hacerlo"; no pasa nada mas | — |
 | C7 | Rechazo en la ventana de un preso de tu jaula: **GOLPEAR** o **NOQUEAR** (ver 12.22) | La ventana se cierra; GOLPEAR da el golpe de C3, NOQUEAR la orden de C4; sin seleccionado, el mensaje de C6 | igual que C3 / C4 |
 | C8 | Anotar si alguna vez aparece `knockout via fallback` | Evidencia: si el juego no toma `STEALTH_KNOCKOUT` desde un plugin, el respaldo es lo que se ve; reportar tambien el valor de `checkPlayerOrderForProblems` | `knockout via fallback` |
-| C9 | Dar la orden de Noquear y cargar un save antes de que se resuelva | Nada queda apuntando a nadie | `load begin: session state cleared (... cage command watch and credits ...)` |
+| C9 | Dar la orden de Noquear y cargar un save antes de que se resuelva | Nada queda apuntando a nadie; el actor queda suelto (sin meta de noqueo) | `[cage] <tuyo> knockout cleanup (...) after at load` y `load begin: session state cleared (... cage command watch and credits ...)` |
+| C10 | Noquear (prisoner-module-fixes F1) y esperar a que el preso caiga; despues esperar varios minutos a que se levante | El preso cae **una** vez; tu personaje sale del sigilo (si no estaba en sigilo antes de la orden) y no vuelve a ir por el cuando se levanta | `knockout via task` (o `via fallback`), luego `[cage] <tuyo> knockout cleanup (goal removed, stealth off) after target down`; ningun `[defeat-hook] knockout fired for <preso>` nuevo sin otra orden |
+| C10b | Igual que C10 con tu personaje **ya en sigilo** antes de Noquear | Al caer el preso sigue en sigilo | `knockout cleanup (goal removed, stealth kept) after target down` |
+| C10c | Dar Noquear y, antes de que caiga, dar Noquear de nuevo (mismo u otro personaje) | El primer actor queda suelto antes de la orden nueva | `knockout cleanup (...) after replaced by a new order` y otro `knockout ordered` |
+| C10d | Cargar un save hecho con la version anterior en el que un personaje tuyo seguia noqueando al preso | En segundos deja de perseguirlo (el sigilo puede quedar puesto: apagarlo a mano una vez) | `[cage] <tuyo> knockout cleanup (goal removed, stealth kept) stray goal for <preso>` |
+| C10e | Con el menu **del juego** ordenar noquear a un NPC libre y de pie | El noqueo nativo sigue igual; el curado no lo toca | sin `stray goal` |
 
 ### 12.20 Los animales solo se doman con tu comida (cage-animals-submission T2)
 

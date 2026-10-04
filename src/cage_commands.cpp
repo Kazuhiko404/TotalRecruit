@@ -4,6 +4,8 @@
 #include "char_key_reader.h"
 #include "config.h"
 #include "engine_reads.h"
+#include "knockout_order_cleanup.h"
+#include "knockout_watch_rules.h"
 #include "log.h"
 #include "messages.h"
 
@@ -127,17 +129,25 @@ bool SafeSetPartHealth(HealthPart* part, float health)
 // --- the knockout order and its fallback -------------------------------------
 
 // The one native order being watched: the last knockout the player gave. A
-// second one replaces it -- the player changed their mind. Raw pointers, only
-// read behind guards and dropped at a load (ForgetCageCommands).
+// second one replaces it -- the player changed their mind -- and the first actor
+// is cleaned up. The watch stays on after the order is taken, until the target is
+// down or the land window passes (knockout_watch_rules.h), and every way it ends
+// lets the actor go (knockout_order_cleanup.h). Raw pointers, only read behind
+// guards and dropped at a load (ForgetCageCommands).
 struct OrderWatch
 {
     bool active;
+    KnockoutWatchPhase phase;
     Character* actor;
     Character* target;
     int taskBefore;
+    // The actor was sneaking when the order went in: the cleanup leaves it on.
+    bool stealthBefore;
     DWORD startedMs;
 
-    OrderWatch() : active(false), actor(NULL), target(NULL), taskBefore(0), startedMs(0) {}
+    OrderWatch()
+        : active(false), phase(KnockoutPhase_AwaitingTake), actor(NULL), target(NULL),
+          taskBefore(0), stealthBefore(false), startedMs(0) {}
 };
 
 OrderWatch g_watch;
@@ -260,6 +270,39 @@ void RememberCredit(Character* target)
     }
 }
 
+// --- the watch's end -----------------------------------------------------------
+
+// Closes the watch (if any) and lets its actor go. Copied out and closed before
+// acting, so nothing it calls can run it twice.
+void EndWatch(const char* why)
+{
+    if (!g_watch.active)
+    {
+        return;
+    }
+    const OrderWatch watch = g_watch;
+    g_watch = OrderWatch();
+    CleanUpKnockoutOrder(watch.actor, watch.stealthBefore, why);
+}
+
+// This frame's facts for the knockout watch.
+KnockoutWatchFacts ReadWatchFacts(const OrderWatch& watch)
+{
+    KnockoutWatchFacts facts;
+    facts.phase = watch.phase;
+    facts.taskBefore = watch.taskBefore;
+    facts.ordered = (int)STEALTH_KNOCKOUT;
+    facts.readTask = SafeCurrentTask(watch.actor, &facts.taskNow);
+    bool out = false;
+    bool dead = false;
+    const bool readOut = SafeIsKnockedOut(watch.target, &out);
+    const bool readDead = SafeIsDead(watch.target, &dead);
+    facts.targetUnreadable = !readOut && !readDead;
+    facts.targetDown = (readOut && out) || (readDead && dead);
+    facts.elapsedMs = GetTickCount() - watch.startedMs;
+    return facts;
+}
+
 // --- the two commands ----------------------------------------------------------
 
 bool LandBeatHit(Character* actor, Character* target)
@@ -323,6 +366,10 @@ bool IssueKnockoutOrder(Character* actor, Character* target)
         return false;
     }
 
+    // A new order replaces the watched one: its actor is let go first, so the
+    // stealth read below is the actor's own and not what the old order left.
+    EndWatch("replaced by a new order");
+
     Ogre::Vector3 where;
     if (!SafePosition(target, &where))
     {
@@ -332,6 +379,8 @@ bool IssueKnockoutOrder(Character* actor, Character* target)
 
     int taskBefore = (int)NULL_TASK;
     SafeCurrentTask(actor, &taskBefore);
+    bool stealthBefore = false;
+    ReadStealthMode(actor, &stealthBefore);
 
     bool problems = false;
     const bool askedProblems = SafeOrderProblems(actor, STEALTH_KNOCKOUT, target, &problems);
@@ -355,9 +404,11 @@ bool IssueKnockoutOrder(Character* actor, Character* target)
     RememberCredit(target);
 
     g_watch.active = true;
+    g_watch.phase = KnockoutPhase_AwaitingTake;
     g_watch.actor = actor;
     g_watch.target = target;
     g_watch.taskBefore = taskBefore;
+    g_watch.stealthBefore = stealthBefore;
     g_watch.startedMs = GetTickCount();
     return true;
 }
@@ -495,36 +546,44 @@ std::string KnockoutButtonLabel(Character* target)
 
 void TickCageCommands()
 {
+    // Heals actors stuck with a knockout goal no watch owns (rate-limited inside).
+    SweepStrayKnockoutGoals(g_watch.active ? g_watch.actor : NULL);
+
     if (!g_watch.active)
     {
         return;
     }
 
-    int taskNow = (int)NULL_TASK;
-    const bool readNow = SafeCurrentTask(g_watch.actor, &taskNow);
-    const OrderWatchVerdict verdict =
-        JudgeOrderWatch(g_watch.taskBefore, (int)STEALTH_KNOCKOUT, readNow, taskNow,
-                        GetTickCount() - g_watch.startedMs, kOrderWatchTimeoutMs);
-    if (verdict == OrderWatch_Pending)
+    const KnockoutWatchStep step = NextKnockoutWatchStep(
+        ReadWatchFacts(g_watch), kOrderWatchTimeoutMs, kKnockoutLandWindowMs);
+    if (step == KnockoutStep_Wait)
     {
         return;
     }
+    if (step == KnockoutStep_Taken)
+    {
+        // Not the end: the goal stays until the knockout lands, then goes.
+        g_watch.phase = KnockoutPhase_AwaitingDown;
+        LogKnockoutResolved(g_watch, "task");
+        return;
+    }
 
-    // Copied out and closed before acting: the fallback must run once.
+    // Copied out before acting: the fallback must run once, and the cleanup
+    // closes the watch.
     const OrderWatch watch = g_watch;
-    g_watch = OrderWatch();
-
-    if (verdict == OrderWatch_Taken)
+    if (step == KnockoutStep_Fallback)
     {
-        LogKnockoutResolved(watch, "task");
-        return;
+        if (KnockoutFallback(watch.actor, watch.target))
+        {
+            LogKnockoutResolved(watch, "fallback");
+        }
+        else
+        {
+            LogFailure(watch.actor, watch.target, "knockout", "fallback raised");
+        }
     }
-    if (!KnockoutFallback(watch.actor, watch.target))
-    {
-        LogFailure(watch.actor, watch.target, "knockout", "fallback raised");
-        return;
-    }
-    LogKnockoutResolved(watch, "fallback");
+    const std::string why = std::string("after ") + KnockoutStepName(step);
+    EndWatch(why.c_str());
 }
 
 bool ClaimOrderedKnockoutCredit(Character* victim)
@@ -544,7 +603,9 @@ bool ClaimOrderedKnockoutCredit(Character* victim)
 
 void ForgetCageCommands()
 {
-    g_watch = OrderWatch();
+    // Load begin: the characters are still alive, so the watched actor is let go
+    // before its pointer is dropped (the goal would otherwise be saved with it).
+    EndWatch("at load");
     g_credit.Clear();
 }
 } // namespace totalrecruit

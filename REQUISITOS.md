@@ -107,6 +107,18 @@ pelea que sacaba al preso de la jaula. **Noquear** sigue siendo la orden del
 propio juego (`STEALTH_KNOCKOUT`): si sale lo decide el motor. Se confirma en
 juego (`QA.md` 12.19).
 
+*Estado (2026-10-04, prisoner-module-fixes F1):* **Noquear actúa una vez.** La
+orden deja en el actor una meta persistente (`addGoal`) que nadie quitaba: la IA
+la seguía persiguiendo, volvía a entrar en sigilo y noqueaba al preso cada vez
+que se levantaba. Ahora la vigilancia sigue después de que el actor toma la
+orden, hasta que el preso cae (o muere) o pasan 2 minutos, y en todo final
+(preso caído, ventana vencida, respaldo, una orden nueva, una carga) se suelta al
+actor: se quita la meta, la orden si sigue en cola, el sigilo solo si la orden lo
+encendió, y la IA repiensa. Las partidas ya trabadas se curan solas: cada 3 s se
+quita la meta de noqueo de un personaje del jugador si ninguna vigilancia la
+tiene y su objetivo ya está caído o es un preso de tu jaula (un noqueo que el
+jugador ordena con el menú del juego es una orden, no esta meta, y no se toca).
+
 **R2.4 — Cooldown de insistencia acumulativo y configurable.** *(P1)*
 Hoy funciona pero con horas fijas. Debe pasar a:
 - Horas base, configurables.

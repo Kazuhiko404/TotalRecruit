@@ -17,6 +17,17 @@
 //            within kOrderWatchTimeoutMs: the engine's own
 //            MedicalSystem::knockout on the target, with the actor's
 //            assassination skill (0..1, SkillFraction).
+//            It acts once: the goal is persistent, and left in place the actor's
+//            AI knocked the prisoner out again every time he stood up. The watch
+//            stays on after the order is taken, until the target is down (or
+//            dead) or kKnockoutLandWindowMs passes (NextKnockoutWatchStep in
+//            knockout_watch_rules.h), and every way it ends -- down, window,
+//            fallback, a newer order, a load -- lets the actor go
+//            (CleanUpKnockoutOrder in knockout_order_cleanup.h: goal removed,
+//            the queued order cleared, sneaking off only if the order turned it
+//            on, the AI re-thinks). The frame tick also sweeps the player's
+//            characters for a stray knockout goal no watch owns (an older save)
+//            and removes it when its target is down or caged by the player.
 //
 // checkPlayerOrderForProblems is asked before the knockout order and its answer
 // is logged, but it does not decide the fallback: which return value means "a
@@ -32,8 +43,9 @@
 // parts live in cage_command_rules.h.
 //
 // Log (probeOnClick): "[cage] <actor> -> <target> beat hit (blunt X, part health
-// A -> B)" and "[cage] <actor> -> <target> knockout via task|fallback"; failures
-// always.
+// A -> B)", "[cage] <actor> -> <target> knockout via task|fallback" and "[cage]
+// <actor> knockout cleanup (goal removed, stealth off|kept) after <why>";
+// failures always.
 //
 // This module never tells the player anything itself: the callers (the context
 // menu buttons, the popup's GOLPEAR / NOQUEAR buttons) do, with
@@ -74,8 +86,9 @@ bool ReadKnockoutOdds(Character* target, float* out);
 Character* SelectedSquadActor(Character* target);
 
 // IssueBeat: `actor` lands one capped blow on `target` now (no order, no watch).
-// IssueKnockout: orders the knockout and starts the watch that runs the fallback
-// from TickCageCommands. False when the blow or the order could not be given.
+// IssueKnockout: orders the knockout and starts the watch (TickCageCommands runs
+// the fallback and the cleanup); a watch already running is ended and its actor
+// cleaned up first. False when the blow or the order could not be given.
 bool IssueBeat(Character* actor, Character* target);
 bool IssueKnockout(Character* actor, Character* target);
 
@@ -94,15 +107,17 @@ std::string CageCommandProblem(CageCommandResult result);
 std::string BeatButtonLabel();
 std::string KnockoutButtonLabel(Character* target);
 
-// The frame tick: watches the last knockout order and runs its fallback when the
-// actor never took it.
+// The frame tick: watches the last knockout order (fallback when the actor never
+// took it, cleanup once the target is down or the window passes) and, every
+// kStrayGoalSweepMs, heals actors stuck with a stray knockout goal.
 void TickCageCommands();
 
 // For the knockout hook: true (once) when this knockout follows a cage command
 // the player gave a moment ago (a blow or a knockout order).
 bool ClaimOrderedKnockoutCredit(Character* victim);
 
-// Load boundary: drops the watched order (raw engine pointers) and the pending
+// Load boundary: lets the watched actor go (CleanUpKnockoutOrder, while the
+// characters still exist), drops the watch (raw engine pointers) and the pending
 // credits.
 void ForgetCageCommands();
 } // namespace totalrecruit
