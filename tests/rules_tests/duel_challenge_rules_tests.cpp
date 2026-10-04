@@ -84,13 +84,14 @@ void EachMissingFactTakesTheDuelAway()
 
 void AWonDuelRecruits()
 {
-    const char* name = "resolve: a duel the squad member won against the challenged NPC -> Joined";
+    const char* name = "resolve: a duel the squad member won against the challenged NPC -> Won";
     DuelChallengeBook book;
     book.Challenge(Key("npc"), Key("me"), 100.0);
     const DuelResolveResult r = book.Resolve(Duel("me", "npc", DuelBout_AWon), 101.0, kConfig);
-    CHECK(r.resolution == DuelResolution_Joined);
+    CHECK(r.resolution == DuelResolution_Won);
     CHECK(r.npc == Key("npc"));
     CHECK(r.challenger == Key("me"));
+    CHECK(r.winner == Key("me"));
     CHECK(!book.Pending(Key("npc"), NULL));
     CHECK(!book.OnCooldown(Key("npc"), 101.0));
 }
@@ -101,7 +102,44 @@ void AnotherSquadMemberMayFightIt()
     DuelChallengeBook book;
     book.Challenge(Key("npc"), Key("me"), 100.0);
     const DuelResolveResult r = book.Resolve(Duel("friend", "npc", DuelBout_AWon), 100.5, kConfig);
-    CHECK(r.resolution == DuelResolution_Joined);
+    CHECK(r.resolution == DuelResolution_Won);
+    // The record that counts the win is the winner's, not the challenger's.
+    CHECK(r.winner == Key("friend"));
+    CHECK(r.challenger == Key("me"));
+}
+
+void CheatOffersTheDuelOnTheLevelAlone()
+{
+    const char* name = "offer: Cheat needs no ally tier, only the level, a person and the rest";
+    DuelOfferFacts f = Offerable();
+    f.allyTiered = false;
+    f.cheatPreset = true;
+    CHECK(CanOfferDuel(f));
+    f.npcLevel = 79;
+    CHECK(!CanOfferDuel(f));
+    f.npcLevel = 84;
+    f.isAnimal = true;
+    CHECK(!CanOfferDuel(f));
+    f.isAnimal = false;
+    f.onCooldown = true;
+    CHECK(!CanOfferDuel(f));
+    f.onCooldown = false;
+    f.tsAvailable = false;
+    CHECK(!CanOfferDuel(f));
+}
+
+void AWonDuelThatStaysUsesTheSameCooldownBook()
+{
+    const char* name = "book: a win cooldown set by the engine hides the duel like a lost one";
+    DuelChallengeBook book;
+    book.SetCooldownUntil(Key("npc"), 150);
+    CHECK(book.OnCooldown(Key("npc"), 149.5));
+    CHECK(!book.OnCooldown(Key("npc"), 150.0));
+    SetDuelCooldownUntil(Key("npc-pw"), 150);
+    CHECK(DuelOnCooldown(Key("npc-pw"), 120.0));
+    CHECK(SavedDuelCooldownUntil("npc-pw") == 150);
+    SetDuelCooldownUntil(Key("npc-pw"), 0);
+    CHECK(!DuelOnCooldown(Key("npc-pw"), 120.0));
 }
 
 void ALostOrDrawnDuelStartsTheCooldown()
@@ -289,6 +327,8 @@ void RunDuelChallengeRulesTests()
     EachMissingFactTakesTheDuelAway();
     AWonDuelRecruits();
     AnotherSquadMemberMayFightIt();
+    CheatOffersTheDuelOnTheLevelAlone();
+    AWonDuelThatStaysUsesTheSameCooldownBook();
     ALostOrDrawnDuelStartsTheCooldown();
     ASparNeverCounts();
     AnUndecidedDuelKeepsTheChallenge();

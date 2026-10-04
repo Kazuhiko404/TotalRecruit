@@ -158,6 +158,13 @@ void ClampDuelChallenges(DuelChallenges* d)
 {
     ClampFloat(&d->cooldownHours, 0.0f, 720.0f);
     ClampFloat(&d->expiryHours, 0.5f, 168.0f);
+    // The join chance after a win (duel_join_rules.h) and the win cooldown band, up to
+    // a month. A max below the min is left as it is: the rule reads it as the min.
+    ClampInt(&d->joinBaseChance, 0, 100);
+    ClampInt(&d->joinChancePerWin, 0, 100);
+    ClampFloat(&d->winCooldownMinHours, 0.0f, 720.0f);
+    ClampFloat(&d->winCooldownMaxHoursUnder100, 0.0f, 720.0f);
+    ClampFloat(&d->winCooldownMaxHours, 0.0f, 720.0f);
 }
 
 void ReadFloat(const std::string& text, const std::string& key, float* target)
@@ -352,6 +359,11 @@ std::vector<Field> ConfigFields(Config& c)
     AddBool(f, "duelChallengeEnabled", &c.duelChallenges.enabled);
     AddFloat(f, "duelChallengeCooldownHours", &c.duelChallenges.cooldownHours);
     AddFloat(f, "duelChallengeExpiryHours", &c.duelChallenges.expiryHours);
+    AddInt(f, "duelJoinBaseChance", &c.duelChallenges.joinBaseChance);
+    AddInt(f, "duelJoinChancePerWin", &c.duelChallenges.joinChancePerWin);
+    AddFloat(f, "duelWinCooldownMinHours", &c.duelChallenges.winCooldownMinHours);
+    AddFloat(f, "duelWinCooldownMaxHoursUnder100", &c.duelChallenges.winCooldownMaxHoursUnder100);
+    AddFloat(f, "duelWinCooldownMaxHours", &c.duelChallenges.winCooldownMaxHours);
     AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
     AddFloat(f, "relationRefuseAll", &c.relationRefuseAll);
     AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);

@@ -898,6 +898,38 @@ void ADuelableAllyKeepsItsTierAndAddsTheDuel()
     CHECK(v.cancelLabel == t.cancel);
 }
 
+void TheNextWinsChanceIsAnInfoRow()
+{
+    const char* name = "duel: SI LE GANAS shows the next win's join chance (Balanced) or 'se une' (Cheat)";
+    const OfferTexts t = Texts();
+    OfferInput in = DuelableTemporaryAlly();
+    in.duel.joinKnown = true;
+    in.duel.joinSure = false;
+    in.duel.joinChance = 65;
+    OfferView v = BuildOfferView(in, t);
+    CHECK(v.showDuelJoin);
+    CHECK(v.duelJoinLabel == t.duelJoinLabel);
+    CHECK(v.duelJoinLabel == "SI LE GANAS");
+    CHECK(v.duelJoinText == "65% de que se una");
+
+    in.duel.joinSure = true;
+    in.duel.joinChance = 100;
+    v = BuildOfferView(in, t);
+    CHECK(v.showDuelJoin);
+    CHECK(v.duelJoinText == t.duelJoinSure);
+    CHECK(v.duelJoinText == "se une");
+
+    in.duel.joinKnown = false;
+    v = BuildOfferView(in, t);
+    CHECK(!v.showDuelJoin);
+    CHECK(v.duelJoinText.empty());
+
+    in.duel.joinKnown = true;
+    in.duel.offered = false;
+    v = BuildOfferView(in, t);
+    CHECK(!v.showDuelJoin);
+}
+
 void NoDuelWithoutTheCallersYes()
 {
     const char* name = "duel: not offered -> no button and no record, whatever the record says";
@@ -968,6 +1000,7 @@ void RunOfferViewTests()
 {
     ADuelableAllyKeepsItsTierAndAddsTheDuel();
     NoDuelWithoutTheCallersYes();
+    TheNextWinsChanceIsAnInfoRow();
     AnUnreadRecordStillOffersTheDuel();
     ARefusingEliteAllyCanStillBeChallenged();
     TheDuelRidesBesideTheSlider();

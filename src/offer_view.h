@@ -122,6 +122,9 @@ struct OfferTexts
     // The duel challenge (duel_challenge_rules.h, popup.duel.*).
     std::string duelChallenge;    // "RETAR A DUELO"
     std::string duelRecordLabel;  // "DUELOS", the info row of the head-to-head record
+    std::string duelJoinLabel;    // "SI LE GANAS", what the next win does
+    std::string duelJoinChance;   // "{chance}% de que se una" (Balanced)
+    std::string duelJoinSure;     // "se une" (Cheat)
 
     // The haggle section (popup.haggle.*).
     std::string haggleLabel;    // "OFERTA"
@@ -177,8 +180,17 @@ struct OfferDuelInput
     int wins;
     int losses;
     int draws;
+    // What the next win does (duel_join_rules.h DuelNextWinOdds): known when the caller
+    // could say (Balanced needs the record), sure in Cheat, else a percent.
+    bool joinKnown;
+    bool joinSure;
+    int joinChance;
 
-    OfferDuelInput() : offered(false), recordKnown(false), wins(0), losses(0), draws(0) {}
+    OfferDuelInput()
+        : offered(false), recordKnown(false), wins(0), losses(0), draws(0), joinKnown(false),
+          joinSure(false), joinChance(0)
+    {
+    }
 };
 
 // The built-in Spanish, used for any key messages.json does not have.
@@ -250,6 +262,10 @@ struct OfferView
     bool showDuelRecord;
     std::string duelRecordLabel;
     std::string duelRecordText;
+    // What the next win does ("SI LE GANAS  65% de que se una"), only beside RETAR A DUELO.
+    bool showDuelJoin;
+    std::string duelJoinLabel;
+    std::string duelJoinText;
 
     // Empty when there is nothing to explain. Red when it is a no.
     std::string reasonText;
@@ -291,7 +307,8 @@ struct OfferView
     OfferView()
         : route(ReadoutRoute_Free), showPrice(false), priceFree(false), priceCats(0),
           showPurse(false), purseKnown(false), purseCats(0), affordable(true), shortfall(0),
-          showChance(false), chancePercent(0), showDuelRecord(false), reasonRefused(false),
+          showChance(false), chancePercent(0), showDuelRecord(false), showDuelJoin(false),
+          reasonRefused(false),
           showSlider(false), haggleBounds(), sliderSteps(0), sliderStep(0), offerCats(0),
           oddsPercent(100), haggleTone(OddsTone_Ready), haggleLocked(false), acceptIsOffer(false)
     {

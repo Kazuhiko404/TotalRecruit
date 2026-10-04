@@ -142,14 +142,30 @@ ReadoutView DaysLeftReadout(int lineId, int daysLeft)
     return v;
 }
 
-// "Duelos: 2-1": wins in `food`, losses in `need`, draws (when any) in `chance`.
+// "Duelos: 2-1": wins in `food`, losses in `need`, draws (when any) in `chance`. With
+// the next win's odds (duel_join_rules.h) the same line says what a win does: a sure
+// join keeps the draws in `chance`; a percent takes `chance` and the draws move to
+// `purse` (readout_catalog.h).
 ReadoutLineView DuelRecordLine(const ReadoutInput& in)
 {
     ReadoutLineView line;
     line.food = in.duelWins > 0 ? in.duelWins : 0;
     line.need = in.duelLosses > 0 ? in.duelLosses : 0;
-    line.chance = in.duelDraws > 0 ? in.duelDraws : 0;
-    line.id = line.chance > 0 ? kLineDuelRecordWithDraws : kLineDuelRecord;
+    const int draws = in.duelDraws > 0 ? in.duelDraws : 0;
+    line.chance = draws;
+    if (!in.duelJoinKnown)
+    {
+        line.id = draws > 0 ? kLineDuelRecordWithDraws : kLineDuelRecord;
+        return line;
+    }
+    if (in.duelJoinSure)
+    {
+        line.id = draws > 0 ? kLineDuelRecordDrawsSure : kLineDuelRecordSure;
+        return line;
+    }
+    line.purse = draws;
+    line.chance = in.duelJoinChance > 0 ? in.duelJoinChance : 0;
+    line.id = draws > 0 ? kLineDuelRecordDrawsChance : kLineDuelRecordChance;
     return line;
 }
 } // namespace

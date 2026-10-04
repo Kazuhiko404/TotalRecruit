@@ -403,6 +403,44 @@ void AChallengeableAllyShowsTheDuelRecord()
     CHECK(!v.secondary.Present());
 }
 
+void TheDuelRecordCarriesTheNextWinsChance()
+{
+    const char* name = "duel: the record line carries the next win's chance (Balanced) or 'se une' (Cheat)";
+    ReadoutInput in = Input(Route_FreeWorld, Reason_AllyTemporary);
+    in.verdict.allyTiered = true;
+    in.verdict.allyLevel = 85;
+    in.verdict.willJoin = true;
+    in.duelRecordKnown = true;
+    in.duelWins = 2;
+    in.duelLosses = 1;
+    in.duelDraws = 0;
+    in.duelJoinKnown = true;
+    in.duelJoinSure = false;
+    in.duelJoinChance = 65;
+    ReadoutView v = BuildReadout(in, kConfig);
+    CHECK(v.secondary.id == kLineDuelRecordChance);
+    CHECK(v.secondary.food == 2 && v.secondary.need == 1 && v.secondary.chance == 65);
+
+    in.duelDraws = 3;
+    v = BuildReadout(in, kConfig);
+    CHECK(v.secondary.id == kLineDuelRecordDrawsChance);
+    CHECK(v.secondary.purse == 3 && v.secondary.chance == 65);
+
+    in.duelJoinSure = true;
+    v = BuildReadout(in, kConfig);
+    CHECK(v.secondary.id == kLineDuelRecordDrawsSure);
+    CHECK(v.secondary.chance == 3);
+
+    in.duelDraws = 0;
+    v = BuildReadout(in, kConfig);
+    CHECK(v.secondary.id == kLineDuelRecordSure);
+    CHECK(v.secondary.food == 2 && v.secondary.need == 1);
+
+    in.duelJoinKnown = false;
+    v = BuildReadout(in, kConfig);
+    CHECK(v.secondary.id == kLineDuelRecord);
+}
+
 void TheDuelRecordNeverRidesAMembersCard()
 {
     const char* name = "duel: a temporary member's or helper's card stays one line";
@@ -502,6 +540,7 @@ void RunReadoutModelTests()
 {
     AChallengeableAllyShowsTheDuelRecord();
     TheDuelRecordNeverRidesAMembersCard();
+    TheDuelRecordCarriesTheNextWinsChance();
     AHelperShowsTheDaysLeft();
     QuestionsThatAreNotAboutAPersonHideTheCard();
     EachEntryRouteHasItsName();

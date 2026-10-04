@@ -17,12 +17,15 @@
 //
 //   spar, undecided (cancelled, interrupted), unrelated pair   Ignored
 //       (an undecided duel keeps the challenge until it expires)
-//   duel, side A (the player's squad member) won, B = the NPC  Joined: recruited for good
+//   duel, side A (the player's squad member) won, B = the NPC  Won: whether they join is
+//       duel_join_rules.h's call (Balanced: a seeded chance; Cheat: always)
 //   duel, B won or a draw                                      Lost: "vuelve cuando seas
 //       mas fuerte", and no new challenge for cooldownHours (saved with the NPC as
 //       total_recruit.duel_cooldown_until)
 //
-// A challenge nobody finished is forgotten after expiryHours.
+// A challenge nobody finished is forgotten after expiryHours. A win that does not join
+// (duel_join_rules.h) puts its own cooldown into the same book (SetDuelCooldownUntil),
+// so it is saved with the NPC the same way.
 //
 // DuelChallengeBook is the plain table (tests/rules_tests/duel_challenge_rules_tests.cpp);
 // the free functions at the end are the one process-wide instance behind a lock,
@@ -71,7 +74,8 @@ struct DuelBoutRecord
 enum DuelResolution
 {
     DuelResolution_Ignored,
-    DuelResolution_Joined,
+    // A squad member won: duel_join_rules.h decides whether they join.
+    DuelResolution_Won,
     DuelResolution_Lost
 };
 
@@ -85,6 +89,8 @@ struct DuelOfferFacts
     // The verdict came from the Balanced ally tiers (Verdict::allyTiered): an ally in
     // Balanced with the tiers on.
     bool allyTiered;
+    // The Cheat preset: no tiers, the level alone decides (any person, not an animal).
+    bool cheatPreset;
     bool isAnimal;
     int npcLevel;
     // allyTiers.eliteFromLevel: the 80+ cut.
@@ -93,14 +99,14 @@ struct DuelOfferFacts
     bool onCooldown;
 
     DuelOfferFacts()
-        : enabled(false), tsAvailable(false), allyTiered(false), isAnimal(false),
+        : enabled(false), tsAvailable(false), allyTiered(false), cheatPreset(false), isAnimal(false),
           npcLevel(0), eliteFromLevel(80), onCooldown(false)
     {
     }
 };
 
-// The one predicate: enabled, TotalSparring available, a Balanced tiered ally (not
-// an animal) at the elite cut level or above, and no cooldown running.
+// The one predicate: enabled, TotalSparring available, a Balanced tiered ally or the
+// Cheat preset, not an animal, at the elite cut level or above, and no cooldown running.
 bool CanOfferDuel(const DuelOfferFacts& facts);
 
 // The game hour a lost duel's cooldown ends: ceil(now + hours). Hours of 0 or less
@@ -129,14 +135,17 @@ std::string FormatDuelRecord(int wins, int losses, int draws);
 struct DuelResolveResult
 {
     DuelResolution resolution;
-    // The challenged NPC (Joined / Lost), and who challenged them.
+    // The challenged NPC (Won / Lost), and who challenged them.
     CharKey npc;
     CharKey challenger;
+    // Won: the squad member who won (side A). TotalSparring's window may switch
+    // fighters, so this is whose head-to-head record counts the win.
+    CharKey winner;
     // Lost: the game hour the cooldown ends.
     int cooldownUntilHour;
 
     DuelResolveResult()
-        : resolution(DuelResolution_Ignored), npc(), challenger(), cooldownUntilHour(0)
+        : resolution(DuelResolution_Ignored), npc(), challenger(), winner(), cooldownUntilHour(0)
     {
     }
 };
@@ -153,7 +162,7 @@ public:
     // (optional). Returns how many.
     int ExpirePending(double nowHours, float expiryHours, std::vector<CharKey>* expired);
 
-    // What a finished bout means (see the table at the top). Joined and Lost end the
+    // What a finished bout means (see the table at the top). Won and Lost end the
     // challenge; Lost also starts the cooldown.
     DuelResolveResult Resolve(const DuelBoutRecord& bout, double nowHours,
                               const DuelChallenges& config);
@@ -179,6 +188,9 @@ int ExpireDuelChallenges(double nowHours, float expiryHours);
 DuelResolveResult ResolveDuelBout(const DuelBoutRecord& bout, double nowHours,
                                   const DuelChallenges& config);
 bool DuelOnCooldown(const CharKey& npc, double nowHours);
+// A win that does not join (duel_join_rules.h): its cooldown end hour; 0 or less
+// forgets it.
+void SetDuelCooldownUntil(const CharKey& npc, int untilHour);
 
 // The saved-int bridge (saved_ints.cpp, row total_recruit.duel_cooldown_until):
 // the end hour to write for the character carrying `persistedId` (0 = none), and

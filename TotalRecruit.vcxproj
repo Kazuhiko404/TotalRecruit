@@ -156,6 +156,7 @@
     <ClCompile Include="src\level_rules.cpp" />
     <ClCompile Include="src\npc_level.cpp" />
     <ClCompile Include="src\duel_record_cache_rules.cpp" />
+    <ClCompile Include="src\duel_join_rules.cpp" />
     <ClCompile Include="src\ts_bridge.cpp" />
     <ClCompile Include="src\approach_driver.cpp" />
     <ClCompile Include="src\squad_leave.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="src\level_rules.h" />
     <ClInclude Include="src\npc_level.h" />
     <ClInclude Include="src\duel_record_cache_rules.h" />
+    <ClInclude Include="src\duel_join_rules.h" />
     <ClInclude Include="src\ts_bridge.h" />
     <ClInclude Include="src\third_party\ts_api.h" />
     <ClInclude Include="src\recruit_overlay.h" />

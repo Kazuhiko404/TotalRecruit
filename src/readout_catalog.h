@@ -40,6 +40,13 @@ const int kLineHelperDaysLeft = Reason_Count + 6;
 // losses in its `need`), and the same with the draws in `chance` when there are some.
 const int kLineDuelRecord = Reason_Count + 7;
 const int kLineDuelRecordWithDraws = Reason_Count + 8;
+// The same record carrying what the next win does (duel_join_rules.h): Balanced
+// "Duelos: {food}-{need}, si ganas {chance}% se une" (the chance in `chance`; with
+// draws they move to `purse`), Cheat "..., si ganas se une" (draws in `chance`).
+const int kLineDuelRecordChance = Reason_Count + 9;
+const int kLineDuelRecordDrawsChance = Reason_Count + 10;
+const int kLineDuelRecordSure = Reason_Count + 11;
+const int kLineDuelRecordDrawsSure = Reason_Count + 12;
 
 int ReadoutLineCount();
 // messages.json path ("readout.line.cats.ask") and the built-in text used when the

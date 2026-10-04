@@ -539,8 +539,10 @@ struct Helpers
     }
 };
 
-// The duel challenge (duel_challenge_rules.h): an ally of the elite cut level and
-// above can be challenged to a TotalSparring duel and joins for good on a win.
+// The duel challenge (duel_challenge_rules.h): an NPC of the elite cut level and
+// above (Balanced: a tiered ally; Cheat: any person) can be challenged to a
+// TotalSparring duel; a win is a join chance in Balanced (duel_join_rules.h) and a
+// sure join in Cheat.
 // Hours are in-game hours. config.json keys "duelChallenge*".
 struct DuelChallenges
 {
@@ -551,11 +553,28 @@ struct DuelChallenges
     float cooldownHours;
     // A challenge whose duel never finished is forgotten after this many hours.
     float expiryHours;
+    // Balanced: a won duel is a join chance (duel_join_rules.h), not a sure join:
+    // min(100, joinBaseChance + joinChancePerWin * (wins - 1)) percent, wins counted
+    // with the new one. Cheat ignores both: a win always joins.
+    int joinBaseChance;
+    int joinChancePerWin;
+    // A win that does not join hides the duel for a seeded number of hours in
+    // [winCooldownMinHours, winCooldownMaxHoursUnder100] (level 80-99) or
+    // [winCooldownMinHours, winCooldownMaxHours] (level 100+). A max below the min
+    // reads as the min.
+    float winCooldownMinHours;
+    float winCooldownMaxHoursUnder100;
+    float winCooldownMaxHours;
 
     DuelChallenges()
         : enabled(true),
           cooldownHours(24.0f),
-          expiryHours(6.0f)
+          expiryHours(6.0f),
+          joinBaseChance(25),
+          joinChancePerWin(20),
+          winCooldownMinHours(24.0f),
+          winCooldownMaxHoursUnder100(72.0f),
+          winCooldownMaxHours(120.0f)
     {
     }
 };

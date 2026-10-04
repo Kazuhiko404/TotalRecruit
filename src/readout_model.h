@@ -100,12 +100,18 @@ struct ReadoutInput
     int duelWins;
     int duelLosses;
     int duelDraws;
+    // What the next win does (duel_join_rules.h DuelNextWinOdds), carried on the record
+    // line: "Duelos: 2-1, si ganas 65% se une", or "si ganas se une" when sure (Cheat).
+    bool duelJoinKnown;
+    bool duelJoinSure;
+    int duelJoinChance;
 
     ReadoutInput()
         : route(Route_FreeWorld), haveCore(true), core(), verdict(),
           holdKnown(false), hoursHeld(0.0f), mercyPending(false), rollKeyed(false),
           tempMember(false), tempDaysLeft(0), helper(false), helperDaysLeft(0),
-          duelRecordKnown(false), duelWins(0), duelLosses(0), duelDraws(0)
+          duelRecordKnown(false), duelWins(0), duelLosses(0), duelDraws(0),
+          duelJoinKnown(false), duelJoinSure(false), duelJoinChance(0)
     {
     }
 };

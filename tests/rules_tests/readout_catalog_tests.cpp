@@ -21,7 +21,7 @@ bool IsHidden(int id)
 void EveryReasonHasARowPlusTheCardsOwnLines()
 {
     const char* name = "catalog: one row per ReasonKey plus the wait, the open roll, beat-again and the ally prices";
-    CHECK(ReadoutLineCount() == (int)Reason_Count + 9);
+    CHECK(ReadoutLineCount() == (int)Reason_Count + 13);
     CHECK(kLineWaitCage == (int)Reason_Count);
     CHECK(kLineRollOpen == (int)Reason_Count + 1);
     CHECK(kLineFieldYieldBeatAgain == (int)Reason_Count + 2);
@@ -31,6 +31,23 @@ void EveryReasonHasARowPlusTheCardsOwnLines()
     CHECK(kLineHelperDaysLeft == (int)Reason_Count + 6);
     CHECK(kLineDuelRecord == (int)Reason_Count + 7);
     CHECK(kLineDuelRecordWithDraws == (int)Reason_Count + 8);
+    CHECK(kLineDuelRecordChance == (int)Reason_Count + 9);
+    CHECK(kLineDuelRecordDrawsChance == (int)Reason_Count + 10);
+    CHECK(kLineDuelRecordSure == (int)Reason_Count + 11);
+    CHECK(kLineDuelRecordDrawsSure == (int)Reason_Count + 12);
+}
+
+void TheDuelChanceLinesCarryTheChance()
+{
+    const char* name = "catalog: the record + chance lines (chance in {chance}; draws in {purse}, or {chance} when sure)";
+    CHECK(std::string(ReadoutLineDefaultText(kLineDuelRecordChance)) == "Duelos: {food}-{need}, si ganas {chance}% se une");
+    CHECK(std::string(ReadoutLineDefaultText(kLineDuelRecordDrawsChance)) == "Duelos: {food}-{need}-{purse}, si ganas {chance}%");
+    CHECK(std::string(ReadoutLineDefaultText(kLineDuelRecordSure)) == "Duelos: {food}-{need}, si ganas se une");
+    CHECK(std::string(ReadoutLineDefaultText(kLineDuelRecordDrawsSure)) == "Duelos: {food}-{need}-{chance}, si ganas se une");
+    CHECK(std::string(ReadoutLineMessageKey(kLineDuelRecordChance)) == "readout.line.duel.recordChance");
+    CHECK(std::string(ReadoutLineMessageKey(kLineDuelRecordDrawsChance)) == "readout.line.duel.recordDrawsChance");
+    CHECK(std::string(ReadoutLineMessageKey(kLineDuelRecordSure)) == "readout.line.duel.recordSure");
+    CHECK(std::string(ReadoutLineMessageKey(kLineDuelRecordDrawsSure)) == "readout.line.duel.recordDrawsSure");
 }
 
 void TheDuelRecordLinesCarryTheCounts()
@@ -169,6 +186,7 @@ void RunReadoutCatalogTests()
 {
     EveryReasonHasARowPlusTheCardsOwnLines();
     TheDuelRecordLinesCarryTheCounts();
+    TheDuelChanceLinesCarryTheChance();
     TheCardsOwnLinesSayWhatTheyMean();
     TheAllyTierLinesNameTheFriendship();
     TheTempMemberLineCountsTheDays();

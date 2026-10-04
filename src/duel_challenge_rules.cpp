@@ -9,7 +9,8 @@ namespace totalrecruit
 {
 bool CanOfferDuel(const DuelOfferFacts& facts)
 {
-    return facts.enabled && facts.tsAvailable && facts.allyTiered && !facts.isAnimal &&
+    return facts.enabled && facts.tsAvailable && (facts.allyTiered || facts.cheatPreset) &&
+           !facts.isAnimal &&
            facts.npcLevel >= facts.eliteFromLevel && !facts.onCooldown;
 }
 
@@ -125,10 +126,11 @@ DuelResolveResult DuelChallengeBook::Resolve(const DuelBoutRecord& bout, double 
 
     result.npc = bout.b;
     result.challenger = it->second.challenger;
+    result.winner = bout.a;
     pending_.erase(it);
     if (bout.outcome == DuelBout_AWon)
     {
-        result.resolution = DuelResolution_Joined;
+        result.resolution = DuelResolution_Won;
         return result;
     }
     result.resolution = DuelResolution_Lost;
@@ -217,6 +219,12 @@ bool DuelOnCooldown(const CharKey& npc, double nowHours)
 {
     Lock lock;
     return g_book.OnCooldown(npc, nowHours);
+}
+
+void SetDuelCooldownUntil(const CharKey& npc, int untilHour)
+{
+    Lock lock;
+    g_book.SetCooldownUntil(npc, untilHour);
 }
 
 int SavedDuelCooldownUntil(const std::string& persistedId)

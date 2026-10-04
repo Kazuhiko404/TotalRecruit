@@ -223,6 +223,13 @@ void ApplyCageCommands(const OfferInput& in, const OfferTexts& t, OfferView* vie
 // The duel challenge step of BuildOfferView (ui-mockup section 5, the duel state):
 // the caller decided it with CanOfferDuel; it adds a button and, when TotalSparring
 // read it, the head-to-head record. It never takes the tier's own answer away.
+std::string ReplacedChance(const std::string& text, int chance)
+{
+    std::string out = text;
+    ReplaceAll(&out, "{chance}", PercentNumber(chance));
+    return out;
+}
+
 void ApplyDuelChallenge(const OfferInput& in, const OfferTexts& t, OfferView* view)
 {
     if (!in.duel.offered)
@@ -235,6 +242,14 @@ void ApplyDuelChallenge(const OfferInput& in, const OfferTexts& t, OfferView* vi
         view->showDuelRecord = true;
         view->duelRecordLabel = t.duelRecordLabel;
         view->duelRecordText = FormatDuelRecord(in.duel.wins, in.duel.losses, in.duel.draws);
+    }
+    // What the next win does (duel_join_rules.h DuelNextWinOdds, decided by the caller).
+    if (in.duel.joinKnown)
+    {
+        view->showDuelJoin = true;
+        view->duelJoinLabel = t.duelJoinLabel;
+        view->duelJoinText = in.duel.joinSure ? t.duelJoinSure
+                                              : ReplacedChance(t.duelJoinChance, in.duel.joinChance);
     }
 }
 
@@ -315,6 +330,9 @@ OfferTexts DefaultOfferTexts()
 
     t.duelChallenge = "RETAR A DUELO";
     t.duelRecordLabel = "DUELOS";
+    t.duelJoinLabel = "SI LE GANAS";
+    t.duelJoinChance = "{chance}% de que se una";
+    t.duelJoinSure = "se une";
 
     t.haggleLabel = "OFERTA";
     t.haggleOdds = "Probabilidad de aceptar: {pct}%";

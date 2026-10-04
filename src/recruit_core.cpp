@@ -910,7 +910,7 @@ const char* ResolutionWord(DuelResolution resolution)
 {
     switch (resolution)
     {
-    case DuelResolution_Joined: return "joined";
+    case DuelResolution_Won:    return "won";
     case DuelResolution_Lost:   return "lost";
     default:                    return "ignored";
     }
@@ -1099,7 +1099,7 @@ void DuelChallengeTick()
     {
         const DuelResolveResult result = ResolveDuelBout(bouts[i], now, config);
         LogBout(bouts[i], result.resolution);
-        if (result.resolution == DuelResolution_Joined)
+        if (result.resolution == DuelResolution_Won)
         {
             OnDuelWon(result);
         }
