@@ -18,6 +18,7 @@
 #include "feeding_ledger.h"
 #include "submission_rules.h"
 #include "submission_tracker.h"
+#include "npc_level.h"
 
 #include <kenshi/CharacterAnimal.h>
 #include <kenshi/CharStats.h>
@@ -137,12 +138,6 @@ bool SafeIsUnique(Character* character, bool* out)
     TR_CATCH { return false; }
 }
 
-bool SafeRoughLevel(Character* character, int* out)
-{
-    TR_TRY { *out = character->getRoughLevel(); return true; }
-    TR_CATCH { return false; }
-}
-
 bool SafePlayerMoney(Character* leader, int* out)
 {
     TR_TRY { *out = leader->getMoney(); return true; }
@@ -230,7 +225,8 @@ bool SafeAnimalMaturity(Character* character, float* out)
 
 // What someone is actually good at, and how far past their own level it goes.
 //
-// getRoughLevel() is an average, so a level 30 assassin and a level 30 baker
+// The level (npc_level.h, the overall skill level) is an average, so a level 30
+// assassin and a level 30 baker
 // with a sword price identically -- which is exactly the complaint Recruit
 // Prisoners for Cats answers by hand-pricing every NPC. Reading the stats gets
 // there without a table, and without a patch per mod.
@@ -526,16 +522,18 @@ void GatherCoreFacts(Character* character, CoreFacts* out)
     bool corpse = false;
     f.corpse = SafeIsDead(character, &corpse) && corpse;
 
-    // Levels, read once for every route that compares them.
+    // Levels, read once for every route that compares them: the overall skill level
+    // TotalSparring shows (npc_level.h), so prices, tiers, chances and the duel gate
+    // all use the number the player sees on both mods' cards.
     Character* leader = NULL;
     SafePlayerLeader(&leader);
     int npcLevel = 1;
-    SafeRoughLevel(character, &npcLevel);
+    SafeNpcLevel(character, &npcLevel);
     f.npcLevel = npcLevel;
     int playerLevel = 1;
     if (leader != NULL)
     {
-        SafeRoughLevel(leader, &playerLevel);
+        SafeNpcLevel(leader, &playerLevel);
     }
     f.playerLevel = playerLevel;
 
@@ -699,7 +697,7 @@ HaggleTerms ReadHaggleTerms(Character* npc)
                    SessionHaggleLedger().IsHaggleLocked(terms.roll.key, terms.roll.dayIndex);
 
     int level = 1;
-    if (SafeRoughLevel(npc, &level))
+    if (SafeNpcLevel(npc, &level))
     {
         terms.npcLevel = level;
     }
