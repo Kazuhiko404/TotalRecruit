@@ -12,7 +12,8 @@
 // notice that asks the player to act (HeadNoticeKind_Prompt: a hail, a helper's
 // offer, the submission event's "approaching") stays headNoticeSeconds (config,
 // default 90, Mod Hub); a one-line informational notice (HeadNoticeKind_Info: a
-// temporary member's join / strike / farewell, a helper's start / farewell) stays
+// temporary member's join / strike / farewell, a helper's start / farewell, a duel's
+// "joined" / "come back stronger") stays
 // headNoticeInfoSeconds (config, default 25, Mod Hub). Both are counted in real
 // seconds frozen while the game is paused, and then it goes by itself. Selecting that
 // NPC (left click) dismisses it for good: the normal readout card takes the head, so

@@ -943,7 +943,8 @@ void OnDuelWon(const DuelResolveResult& result)
         TellPlayer(name + ": " + message, true);
         return;
     }
-    RaiseSquadHeadNotice(npc, Say("duel.notice.joined", "Me ganaste. Me uno a ti", npc));
+    RaiseSquadHeadNotice(npc, Say("duel.notice.joined", "Me ganaste. Me uno a ti", npc),
+                         HeadNoticeKind_Info);
     TellPlayer(Fill(Say("duel.joined", "{name} perdio el duelo y se une a tu grupo para siempre.", npc),
                     name, 0, 0),
                false);
@@ -960,7 +961,8 @@ void OnDuelLost(const DuelResolveResult& result, double nowHours)
     const int hours = left > 0.0 ? (int)(left + 0.999) : 0;
     if (npc != NULL)
     {
-        RaiseHeadNotice(npc, Say("duel.notice.lost", "Vuelve cuando seas mas fuerte", npc));
+        RaiseHeadNotice(npc, Say("duel.notice.lost", "Vuelve cuando seas mas fuerte", npc),
+                        HeadNoticeKind_Info);
     }
     TellPlayer(Fill(Say("duel.lost",
                         "{name} gano el duelo. Vuelve cuando seas mas fuerte (podras retarlo en {hours} h).",
