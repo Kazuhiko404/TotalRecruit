@@ -58,7 +58,7 @@ Decisiones:
 
 ## Progreso
 - Documento creado antes de tocar el codigo.
-- T1..T4 hechos en `fix/cage-beat-direct-hit`; commit: (pendiente de hash).
+- T1..T4 hechos en `fix/cage-beat-direct-hit`; commit: `0f042dc` (`fix(cage): golpear lands one direct hit instead of starting a fight`). Sin deploy, sin push.
 
 ## Siguiente paso
 QA en juego 12.19 C3 / C3b / C5 / C7: que el golpe baje la vida, que el preso no salga de la jaula, que un noqueo por golpe se acredite (`[defeat-hook] knockout fired` + `credited to the player explicitly`). Pendiente fuera de este alcance: `ui-mockup/README.md` y `ui-mockup/readout.html` todavia describen Golpear como `BEAT_CAGE_OCCUPANT`.
