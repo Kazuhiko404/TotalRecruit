@@ -37,6 +37,13 @@ function chanceBlock(vm) {
   return barRow('Chance', '<b class="hot">' + vm.chancePct + '%</b>', track);
 }
 
+// The cared-for bonus (Balanced cage, v1-presets-close P4): the day's draw between
+// submissionCaredForBonusMin and Max when the prisoner is unhurt, fed and at full health.
+// Its own row under the chance, expanded only. C++ twin: readout_ui.cpp caredFor row.
+function caredRow(vm) {
+  return '<div class="row"><span>Lo cuidaste</span><b style="color:var(--ready)">+' + vm.caredForPct + '%</b></div>';
+}
+
 function foodBlock(vm) {
   var cls = vm.foodPct >= vm.foodNeededPct ? 'good' : '';
   var track = '<div class="track"><div class="fill ' + cls + '" style="width:' + vm.foodPct + '%"></div>' +
@@ -66,6 +73,7 @@ function readoutHTML(vm, compact, noArrow) {
   if (vm.showStress) h += stressBlock(vm, compact);
   if (vm.showFood) h += foodBlock(vm);
   if (vm.showChance) h += chanceBlock(vm);
+  if (vm.showChance && vm.caredForPct > 0 && !compact) h += caredRow(vm);
   if (vm.showDefeats && !compact) h += defeatsRow(vm);
   h += '<div class="why ' + vm.why.tone + '" title="' + esc(vm.why.text) + '">' + esc(vm.why.text) + '</div>';
   if (vm.alt && !compact) h += '<div class="why alt">' + esc(vm.alt.text) + '</div>';

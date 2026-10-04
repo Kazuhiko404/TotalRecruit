@@ -51,6 +51,22 @@ var POPUP_STATES = [
     }
   },
   {
+    id: 'caredFor',
+    title: 'Caged prisoner you cared for (Balanced)',
+    note: 'Kareem unhurt, fed and at full health in your cage: the odds carry the cared-for bonus of the day (+12, drawn between <code>submissionCaredForBonusMin</code> and <code>Max</code> once per game day, v1-presets-close P4), shown as its own row under the odds. It is part of the 70%, not added on top. No row for a wounded or hungry prisoner, an animal, or Cheat.',
+    // facts: verdict willJoin, Currency_Cats, cats 9570, rolled 70% with caredFor +12; purse 12000
+    vm: {
+      title: 'Reclutamiento', name: 'Kareem el Tuerto', route: 'cautiverio', routeTag: 'Cautiverio',
+      body: 'Kareem el Tuerto se unira a tu grupo por 9.570 cats.',
+      showPrice: true, priceText: '9.570 cats', priceFree: false,
+      showPurse: true, purseText: '12.000 cats', affordable: true,
+      showChance: true, chanceText: '70%',
+      showCaredFor: true, caredForText: '+12%',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: '', cancel: 'CANCELAR'
+    }
+  },
+  {
     id: 'haggle',
     title: 'Haggle: offer below the ask',
     note: 'The same Kareem with <code>haggleEnabled</code> on. <b>Drag the slider</b>: it runs from half the ask to the ask in steps of 10, starting at the ask. Below the ask the amber button reads OFRECER and the line gives the live odds (green from 70%, amber 30-69, red under 30); at the ask it is ACEPTAR again, 100%, exactly as before. OFRECER is one attempt on the day\'s seed: accepted, he joins for the offer; refused, he is offended (state 4). Sample: speaker best stat 46 vs level 30 (leverage +8), Normal temperament.',

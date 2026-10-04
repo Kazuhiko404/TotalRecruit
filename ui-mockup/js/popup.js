@@ -8,7 +8,7 @@
 // come from js/haggle.js applyHaggle; its slider art is SLIDER_ART (src/flat_slider.cpp).
 
 var PP_INFO_LABELS = { price: 'Precio', purse: 'Tienes', chance: 'Probabilidad', duels: 'Duelos',
-                       duelJoin: 'Si le ganas' };
+                       duelJoin: 'Si le ganas', caredFor: 'Lo cuidaste' };
 
 // Height of `text` wrapped at `width` in the class `cls` (the C++ MeasureWrapped).
 function ppMeasure(text, width, cls) {
@@ -112,6 +112,8 @@ function layoutOffer(vm) {
   if (vm.showPrice) rows.push([PP_INFO_LABELS.price, priceShown, vm.priceFree ? 'var(--ready)' : 'var(--amber)']);
   if (vm.showPurse) rows.push([PP_INFO_LABELS.purse, vm.purseText, vm.affordable ? 'var(--text)' : 'var(--soft-danger)']);
   if (vm.showChance) rows.push([PP_INFO_LABELS.chance, vm.chanceText, 'var(--text)']);
+  // The cared-for bonus already inside that chance (offer_view.h showCaredFor), "+12%".
+  if (vm.showCaredFor) rows.push([PP_INFO_LABELS.caredFor, vm.caredForText, 'var(--ready)']);
   // The head-to-head duel record beside RETAR A DUELO (offer_view.h showDuelRecord).
   if (vm.showDuelRecord) rows.push([PP_INFO_LABELS.duels, vm.duelRecordText, 'var(--amber)']);
   // What the next won duel does (offer_view.h showDuelJoin): Balanced "65% de que se una",

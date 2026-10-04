@@ -58,8 +58,9 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
    the route rolled; stomach bar for animals; defeats pips when defeats matter. A refused NPC shows just the route
    tag and the reason, because showing a 0% bar would suggest a roll that does not exist.
 6. **One main line, at most one more.** The main line is the verdict's reason with its number: "Precio 9.570 cats
-   (tienes 12.000)", "Faltan 3h en la jaula", "Hambre 56% / necesita 80%", "Rencor: no perdona fuera de la jaula".
-   The expanded card adds a muted second line only for a caged cats-prisoner whose easy wait still runs. MyGUI text
+   (tienes 12.000)", "Desafiante: hambre o golpes lo ablandan", "Hambre 56% / necesita 80%", "Rencor: no perdona fuera de la jaula".
+   The expanded card adds a muted second line only for a challengeable ally's duel record, and a "Lo cuidaste
+   +N%" row under the chance for a Balanced prisoner you cared for (v1-presets-close P4). MyGUI text
    boxes do not wrap, so every line is written to fit the card (about 36 characters at the body font).
 7. **Compact** drops the legend, the defeats row and the second line, narrows the card (176 vs 264) and thins
    the bars (5 vs 8). The route tag, the bars and the main line stay.

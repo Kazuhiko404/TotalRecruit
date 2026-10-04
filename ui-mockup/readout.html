@@ -60,10 +60,10 @@ asked as a bystander and remembered per NPC for 2 s (<code>src/talk_hint_cache.h
   <tr><td>Route tag</td><td>always</td><td>Rescate: out cold, dying, saved, healed up. Cautiverio: your cage. Sometido: field yield (beaten in the open). Rendicion: surrender rather than die. The grudge refusal outside the cage is Libre. Piedad: the plea on screen. Animal: any animal. Libre: the open world.</td></tr>
   <tr><td>Estres bar + Hambre / Heridas / Cansancio / Golpes</td><td>Cautiverio, Rendicion (the routes whose roll reads stress)</td><td><code>StressFromState</code>; the four parts are its four terms and add up to the bar. Golpes is the beating stress (Golpear and Noquear in your cage, <code>beating_stress_rules.h</code>), fading over <code>submissionBeatingStressFadeHours</code>; its legend has a row of its own</td></tr>
   <tr><td>Chance bar</td><td>any route that rolled</td><td><code>Verdict::chancePercent</code> (JoinChance)</td></tr>
+  <tr><td>Lo cuidaste +N% (expanded only)</td><td>Cautiverio in Balanced, a person unhurt, fed and at full health</td><td><code>ChanceInputs::caredFor</code>: today's draw between <code>submissionCaredForBonusMin</code> and <code>Max</code> (<code>CaredForBonus</code>), already inside the chance</td></tr>
   <tr><td>Barriga bar + notch</td><td>animals</td><td>fullness and the fullness the animal needs (<code>TamingFullnessNeeded</code>)</td></tr>
   <tr><td>Derrotas pips</td><td>Cautiverio and Rendicion, or any NPC you have beaten</td><td>defeat count against <code>defeatsToBreak</code></td></tr>
   <tr><td>Main line</td><td>always</td><td>the verdict's reason key, with the number it carries (price, hours, stomach). A rolled "not yet" the card could not roll (no roll key: field yield, ally) is the odds instead: "41%: puede unirse si le hablas". A field-yield "not yet" says "dejalo sin comer" only in your own cage, "vencelo otra vez" anywhere else.</td></tr>
-  <tr><td>Second line (expanded only)</td><td>a caged cats-prisoner while the easy wait still runs</td><td>hours left of <code>easyHoursCaged</code></td></tr>
 </table>
 
 <h2 class="sec">4. Mod Hub controls</h2>

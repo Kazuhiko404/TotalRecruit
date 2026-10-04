@@ -7,17 +7,31 @@ var STATES = [
   {
     id: 'cage',
     title: 'Caged bandit',
-    note: 'Cautiverio, easy wait on. Stress comes from an empty stomach, untreated wounds and the beatings (Golpes: what Golpear and Noquear left in your cage, fading over 24 game hours); the chance is JoinChance(...) and the price is FinalPriceInCats(...) -- the same numbers Evaluate uses. A cats-currency prisoner is the one case with two lines.',
+    note: 'Cautiverio. Stress comes from an empty stomach, untreated wounds and the beatings (Golpes: what Golpear and Noquear left in your cage, fading over 24 game hours); the chance is JoinChance(...) and the price is FinalPriceInCats(...) -- the same numbers Evaluate uses. Time in the cage alone no longer decides anything (the easy wait was removed in v1-presets-close P4): only stress, personality, level and the price do.',
     // facts: route Cage, level 14 vs player 20, hunger raw 1.2/3, worstDamage .4, rested .7,
-    // beaten .12 (beating stress, decayed), defeats 1/2, held 3h of 6h, price 9570 (purse 12000)
+    // beaten .12 (beating stress, decayed), defeats 1/2, price 9570 (purse 12000)
     vm: {
       name: 'Kareem el Tuerto', route: 'cautiverio', routeLabel: 'Cautiverio',
       showStress: true, stressPct: 65, stress: { hunger: 30, wounds: 14, tired: 9, beaten: 12 },
       showChance: true, chancePct: 58, ready: false,
       showDefeats: true, defeats: 1, defeatsNeeded: 2,
       showFood: false,
-      why:  { text: 'Precio 9.570 cats (tienes 12.000)', tone: '' },
-      alt:  { text: 'O espera: faltan 3h en la jaula' }
+      why:  { text: 'Precio 9.570 cats (tienes 12.000)', tone: '' }
+    }
+  },
+  {
+    id: 'caredFor',
+    title: 'Caged prisoner you cared for',
+    note: 'Cautiverio, Balanced (v1-presets-close P4). Unhurt, fed and at full health in your cage: the roll gets a cared-for bonus, drawn once per NPC per game day between <code>submissionCaredForBonusMin</code> (5) and <code>submissionCaredForBonusMax</code> (20), seeded with <code>DailySeed(key, day, kCaredForBonusSalt)</code> so clicking or reloading never redraws it. The draw of the day is +12; it is already inside the 70%. It replaced the old "sano gracias a ti" automatic join: being looked after argues for joining, it does not decide. A wounded or hungry prisoner, or an animal, gets no row.',
+    // facts: route Cage, level 14 vs player 20, hunger raw 3/3 (fed), worstDamage 0, health 1,
+    // rested 1, beaten 0, defeats 1/2, caredFor +12 (today's draw), price 9570 (purse 12000)
+    vm: {
+      name: 'Kareem el Tuerto', route: 'cautiverio', routeLabel: 'Cautiverio',
+      showStress: true, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
+      showChance: true, chancePct: 70, ready: false, caredForPct: 12,
+      showDefeats: true, defeats: 1, defeatsNeeded: 2,
+      showFood: false,
+      why:  { text: 'Precio 9.570 cats (tienes 12.000)', tone: '' }
     }
   },
   {
@@ -99,7 +113,7 @@ var STATES = [
     id: 'rescue',
     title: 'Saved life (will join)',
     note: 'Rescate with a certain outcome (no roll left): the chance row is replaced by the result. Same card, the line goes green.',
-    // facts: Route EasyHealthy / Surrendered / ... willJoin without a roll
+    // facts: Route Rescue / Surrendered / ... willJoin without a roll
     vm: {
       name: 'Dalia', route: 'rescate', routeLabel: 'Rescate',
       showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
@@ -204,6 +218,10 @@ var HUB = [
    'Si le ganas y no se une, horas maximas de espera para un NPC de nivel 80 a 99'],
   ['Duelo: horas maximas tras ganar (100+)', 'duelWinCooldownMaxHours', '120',
    'Si le ganas y no se une, horas maximas de espera para un NPC de nivel 100 o mas'],
+  ['Sumision: bonus por cuidarlo min', 'submissionCaredForBonusMin', '5',
+   'Lo menos que suma a la chance un preso de tu jaula sano, comido y sin heridas (sorteo del dia)'],
+  ['Sumision: bonus por cuidarlo max', 'submissionCaredForBonusMax', '20',
+   'Lo mas que suma; un maximo menor que el minimo cuenta como el minimo'],
   ['Sumision: horas entre golpizas', 'submissionBeatingCooldownHours', '1',
    'Horas de juego antes de poder volver a golpearlo'],
   ['Sumision: horas entre noqueos', 'submissionKnockoutCooldownHours', '1',
