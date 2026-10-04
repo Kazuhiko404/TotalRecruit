@@ -35,9 +35,9 @@ Fix issues 2 and 3 of the 2026-10-03 handoff (`git show feat/ts-duel-bridge:odd/
 
 ## Checklist
 - [x] T1 KenshiLib 0.5.0 build: vendor `Include/` (tag v0.5.0, commit `11cd65d`) and `Libraries/KenshiLib.lib` (release `KenshiLib_v0.5.0.zip`) under `deps/kenshilib-0.5.0/`; point `TotalRecruit.vcxproj` include/lib/forced-include paths there; fix the 0.4.0 -> 0.5.0 compile churn in `src/` without behaviour change; confirm `AI/Blackboard.h` compiles; imports of the DLL all resolve against the installed `KenshiLib.dll`. Route: delegated writer. Commit `dd159ba`. Evidence: 861 vendored files (11.6 MB, lib md5 `6ec1f2b4b6a269d494317a6fef8f8809`); release `KenshiLib.dll` md5 = installed md5 `210344fbf1bacfbd94a2644182a679ed`; Release|x64 Rebuild OK with no `src/` change (only the known `C4482` header warnings); `tests/rules_tests` stays pure (no KenshiLib), 39/39 suites, 0/63304 checks failed; `dumpbin -imports`: 138 KenshiLib.dll imports, 0 missing from the installed DLL's 10131 exports. Throwaway probe (reverted) calling `Platoon::blackboard->replaceAIPackage / addFallbackPackages / addPackages / endContractJob` compiled, linked and resolved against the installed DLL (142 imports, 0 missing). Ogre/MyGUI libs still from `KENSHILIB_DIR`.
-- [ ] T2 helper native bodyguard + improved code fallback. Route: TBD.
-- [ ] T3 leaving temp member native reset + walk-back fallback. Route: TBD.
-- [ ] T4 docs / QA / deploy. Route: TBD.
+- [x] T2 helper native bodyguard + improved code fallback. Route: delegated writer (2+ non-trivial files). Commit `e5e5f4b`. New module `src/ai_packages.{h,cpp}` (all blackboard glue): halt + clearOrders, `_setContractJob(5090, hours, hand(leader))`, `replaceAIPackage` only when the contract is not the active package, read back (`contractJob`, missionEmployer, current package); end = `endContractJob` + KEP reset; a helper in a squad of others is first moved to a platoon of its own. `AIPackage.h` cannot be included next to `Blackboard.h` (both define `BlackboardSignalFunctions`), so `packageData` (0x68) / `missionEmployer` (0x48) are read at their documented offsets; `CharBody::_endAction` is protected and left out. `helperNativeBodyguard` (default true) in config.h/.cpp, Mod Hub and shipped config.json. Fallback B replaces the dead BODYGUARD/FOLLOW/walk ladder: 1 s repath, walk/run by distance, ring offset, fight_starter sequence (`NpcMotion::EngageFor`). F8 on a helper logs/assigns the native contract. Evidence: RED 24 failing checks, GREEN 39/39 suites 0/63329; Release|x64 build OK; 148 KenshiLib imports, 0 missing.
+- [x] T3 leaving temp member native reset + walk-back fallback. Route: delegated writer. Commit `031eb37`. `AiPackages::ResetToTemplate` (KEP dismiss reset) after the new 5006 platoon, logged `[temp] <name> native wander package <name> assigned`; join spot saved as string `total_recruit.temp_join_spot` ("x,z"); fallback `src/leave_homing.{h,cpp}` + pure `leave_homing_rules` (re-issue 4 s, arrive 6 m, timeout 240 s). Evidence: RED 15 failing checks, GREEN 40/40 suites 0/63355; build OK; 148 imports, 0 missing.
+- [ ] T4 docs / QA / deploy. Route: TBD. Deferred by the user: deploy first for play-test; QA.md, DEVELOPING.md, ui-mockup HUB row (`helperNativeBodyguard`), README/REQUISITOS key lists afterwards.
 
 ## Acceptance criteria
 - T1: `TotalRecruit.dll` Release|x64 rebuilds against the vendored 0.5.0; rules tests 39/39; every import the DLL takes from `KenshiLib.dll` exists in the installed `KenshiLib.dll`.
@@ -53,5 +53,7 @@ Fix issues 2 and 3 of the 2026-10-03 handoff (`git show feat/ts-duel-bridge:odd/
 ## Progress
 - T1 done (`dd159ba`). Engram mirror `odd/native-ai-packages/tasks`: pending (engram project name is ambiguous in this workspace).
 
+- T2 done (`e5e5f4b`), T3 done (`031eb37`); in-game QA pending.
+
 ## Next step
-T2: helper native Bodyguard package.
+Deploy for play-test (parent), then T4 docs.
