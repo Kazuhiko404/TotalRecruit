@@ -14,7 +14,7 @@ Engram project: `totalrecruit` (`.engram/config.json`). This document is mirrore
 Status tags:
 - `verified in game`: seen working in a real game with the log line that proves it (ESTADO "Jugado"). It predates the later rounds and is not a formal QA pass.
 - `play-tested informally`: the user played it and reported it working. No QA row was marked.
-- `not verified`: built and unit-tested (`tests/rules_tests`, 45 suites), not yet seen in game. The QA.md section to run is given.
+- `not verified`: built and unit-tested (`tests/rules_tests`, 46 suites), not yet seen in game. The QA.md section to run is given.
 
 Nothing has a formal QA pass mark.
 
@@ -53,12 +53,13 @@ Nothing has a formal QA pass mark.
 | Tribute (pay to be let go) and the rescue gift through one money convention | `not verified` (§6, 12.4) |
 | NPC level = TotalSparring's overall skill level (feeds price, tiers, chance, haggle, helper lead, taming) | `play-tested informally` (12.31 F3) |
 
-### 4. Popup, Hablar button and UI (6)
+### 4. Popup, Hablar button and UI (7)
 | Feature | Status |
 |---|---|
 | One styled recruit popup: portrait, route, price, purse, odds; red refusals with the way out | `not verified` (12.15) |
 | Every refusal names its reason, keyed in `messages.json` (`reason` block) | `not verified` (12.7 Z1-Z4) |
 | Hablar button in the first free slot, 160 x 44, same style as the sibling mods | `not verified` (12.10) |
+| Button block stays outside both native columns when a character in a building opens two (prisoner in a cage) | `not verified` (12.10 B8-B9) |
 | Hablar fires on right-button release (hold, slide, release) | `not verified` (12.12) |
 | Talk cursor over NPCs worth approaching | `not verified` |
 | Spawn panel (Shift+K) | `not verified` |
@@ -140,7 +141,8 @@ Nothing has a formal QA pass mark.
 2. **12.6 I4/I5**: stable character id across a reload and a relaunch. Highest risk: the `Character` hooks are unverified.
 3. **12.4 money (P1-P9)** and **12.18 haggle (H1-H12)**; balance re-check after the level change (see risks).
 4. **12.23-12.31** formally: head notices (N8, N14-N17), ally tiers, temporary members, helper, card hidden in dialogue, duel bridge, native packages, play-test fixes. Several were play-tested informally.
-5. **The rest:** §1 smoke S1-S4; 12.1-12.3, 12.5, 12.7-12.17; 12.19-12.22; §9 R6.3 (needs the Mod Hub slot dump).
+5. **prisoner-module-fixes** (branch `fix/cage-beat-direct-hit`): 12.19 C10-C10e (Noquear acts once, stuck goals healed), 12.13 K4b (one knockout, one defeat), §6 R6 (card and menu agree on a rescue), 12.10 B8-B9 (block outside both native columns).
+6. **The rest:** §1 smoke S1-S4; 12.1-12.3, 12.5, 12.7-12.17; 12.19-12.22; §9 R6.3 (needs the Mod Hub slot dump).
 
 ### Risks and known limitations
 - **Balance.** The NPC level is now TotalSparring's overall skill level, so prices, tiers, chance, haggle, helper lead and animal taming all moved. Needs a re-check in play.

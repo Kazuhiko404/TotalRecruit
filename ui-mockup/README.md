@@ -7,11 +7,11 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 
 | File | What it holds | C++ it mirrors |
 |---|---|---|
-| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / menu on your prisoner with Golpear and Noquear / press Hablar / head notice and selecting the one who called), the per-route table, the Mod Hub controls, the recruit popup gallery (section 5) | -- |
+| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / menu on your prisoner with Golpear and Noquear, one column and two columns / press Hablar / head notice and selecting the one who called), the per-route table, the Mod Hub controls, the recruit popup gallery (section 5) | -- |
 | `css/base.css` | palette tokens | `ui_style.h` / `ui_style.cpp` colours |
 | `css/readout.css` | the card: widths, padding, bar heights, segment colours | `kCardWidth`, `kCardWidthCompact`, `kPad`, `kBarH` ... |
 | `js/data.js` | one view-model per state (the facts that produce it are in a comment above each); `PLACEMENT` timings and gaps; `HUB` rows | `readout_model.cpp` output (`ReadoutView`); `readout.cpp` / `readout_ui.cpp` constants; `mod_hub_integration.cpp` |
-| `js/readout.js` | draws a view-model as the card; `placeCard` (over the head, sideways beside the offer); `offerRect` (the popup centred) | `screen_projection.cpp` (`PlaceCard`, called by `readout_ui.cpp` `PlaceUnguarded`); `offer_popup.cpp` (`ChoosePosition`) |
+| `js/readout.js` | draws a view-model as the card; `placeCard` (over the head, sideways beside the offer); `offerRect` (the popup centred); `menuAnchorUnion` (the native menu's one or two columns as one rectangle) | `screen_projection.cpp` (`PlaceCard`, called by `readout_ui.cpp` `PlaceUnguarded`); `offer_popup.cpp` (`ChoosePosition`); `menu_anchor.cpp` (`UnionMenuRect`) |
 | `css/popup.css` | the recruit popup: fonts and colours of each slot, flat buttons | `offer_popup.cpp` (widgets from `ui_style.cpp`) |
 | `js/popup_data.js` | `POPUP_LAYOUT` (every px of the popup) and one `OfferView` per state, the facts above each | `offer_popup.cpp` constants; `offer_view.cpp` output (`OfferView`) |
 | `js/popup.js` | `layoutOffer`: every rectangle of the popup, text measured first; the haggle section and the slider art | `offer_popup.cpp` (`LayoutOffer`, `MeasureWrapped`); `flat_slider.cpp` |
@@ -106,10 +106,18 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 17. **Golpear and Noquear beside Hablar** (user request 2026-10-03). For a prisoner awake in the player's own cage
     with `allowBeating` on, the block beside the context menu is `[Hablar, Golpear, Noquear]`, top to bottom, one
     `PlaceButtonBlock` call with the shared 160 x 44 style and 2 px between buttons; anyone else keeps `[Hablar]`.
-    Both are Kenshi's own orders given to the selected character (`BEAT_CAGE_OCCUPANT`, `STEALTH_KNOCKOUT`), so the
-    outcome is the game's. Noquear shows the game's own odds ("Noquear 72%", `getPlayerTaskProbability`), plain
-    "Noquear" when there are none. Labels are title case like Hablar (`cage.button.*` in `messages.json`). Each
-    button arms its own press-and-release gesture.
+    Golpear is one direct, capped blow from the selected character (`fix/cage-beat-direct-hit`: its own attack damage
+    as blunt; the prisoner stays caged and is never killed); Noquear is Kenshi's own order (`STEALTH_KNOCKOUT`) given to
+    the selected character, once: when the prisoner is down the character is let go (prisoner-module-fixes F1).
+    Noquear shows the game's own odds ("Noquear 72%", `getPlayerTaskProbability`), plain "Noquear" when there are none.
+    Labels are title case like Hablar (`cage.button.*` in `messages.json`). Each button arms its own press-and-release
+    gesture.
+    **Two native columns** (tab "Menu on your prisoner, two columns"; prisoner-module-fixes F4). A character inside a
+    building opens two columns side by side: the character (`ContextMenu::menuGUI`) and the building (`menuGUI2`, e.g.
+    "Jaula de Prisionero": ABRIR CON LLAVE, DESMANTELAR, PONER EN LIBERTAD). The block is placed beside the rectangle
+    that holds both visible columns (`menu_anchor.cpp` `UnionMenuRect` = `menuAnchorUnion` in `js/readout.js`), so it
+    never covers the second one; the button width stays the first column's (`MakeBlockStyle`). With one column the
+    rectangle is that column and nothing moves.
 18. **The same commands in the popup** (user report 2026-10-03: a caged, defiant Holy Warden got only CERRAR). Any
     refusal from a prisoner the block above would offer Golpear and Noquear for (one predicate,
     `CageCommandsAllowed`) carries GOLPEAR and NOQUEAR (the game's odds, `KnockoutLabel`) beside the remedy and

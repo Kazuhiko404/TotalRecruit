@@ -138,6 +138,7 @@
     <ClCompile Include="src\cage_commands.cpp" />
     <ClCompile Include="src\knockout_watch_rules.cpp" />
     <ClCompile Include="src\knockout_order_cleanup.cpp" />
+    <ClCompile Include="src\menu_anchor.cpp" />
     <ClCompile Include="src\feeding_ledger.cpp" />
     <ClCompile Include="src\saved_ints.cpp" />
     <ClCompile Include="src\approach_rules.cpp" />
@@ -209,6 +210,7 @@
     <ClInclude Include="src\menu_slot.h" />
     <ClInclude Include="src\knockout_watch_rules.h" />
     <ClInclude Include="src\knockout_order_cleanup.h" />
+    <ClInclude Include="src\menu_anchor.h" />
     <ClInclude Include="src\menu_button_release.h" />
     <ClInclude Include="src\menu_obstacles.h" />
     <ClInclude Include="src\button_style.h" />

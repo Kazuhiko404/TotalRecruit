@@ -13,6 +13,7 @@
 #include "menu_button_release.h"
 #include "cage_commands.h"
 #include "cage_command_rules.h"
+#include "menu_anchor.h"
 
 namespace totalrecruit
 {
@@ -332,7 +333,9 @@ void DestroyButtons()
 // resolver tries left, then right, then each pushed below what is already
 // there, and only then a clamped fallback (menu_slot.h). Its own frame because
 // the block vector needs unwinding, which cannot share a frame with __try.
-bool PlaceBeside(const MyGUI::IntCoord& optionsCoord)
+// `menuCoord` is the rectangle to stay beside (both native columns, menu_anchor);
+// `styleWidth` the first column's width the button style is sized from, as before.
+bool PlaceBeside(const MyGUI::IntCoord& menuCoord, int styleWidth)
 {
     std::vector<MyGUI::Button*> block;
     for (size_t i = 0; i < g_block.size(); ++i)
@@ -348,12 +351,13 @@ bool PlaceBeside(const MyGUI::IntCoord& optionsCoord)
     {
         return false;
     }
-    return PlaceButtonBlock(optionsCoord, block,
-                            MakeBlockStyle(optionsCoord.width), &g_previousSide);
+    return PlaceButtonBlock(menuCoord, block, MakeBlockStyle(styleWidth), &g_previousSide);
 }
 
-// Places the block in a free slot beside the native menu's option list, so it
-// reads as part of the menu without covering the buttons other mods put there.
+// Places the block in a free slot beside the native menu, so it reads as part of
+// the menu without covering the buttons other mods put there. The menu is both of
+// its columns when a character inside a building opens two (menu_anchor.h); with
+// one column the rectangle is that column's option list, as it always was.
 bool AnchorToMenu(ContextMenu* menu)
 {
     if (menu == NULL || g_block.empty())
@@ -361,36 +365,14 @@ bool AnchorToMenu(ContextMenu* menu)
         return false;
     }
 
-    // ContextMenuGUI is only forward-declared here (its full header would
-    // redefine ContextMenu), so optionsList is read at its documented offset
-    // from kenshi/gui/ContextMenu.h:27.
-    const size_t kOptionsListOffset = 0xF8;
-
-    MyGUI::IntCoord optionsCoord;
-    TR_TRY
-    {
-        void* menuGUI = menu->menuGUI;
-        if (menuGUI == NULL)
-        {
-            return false;
-        }
-
-        MyGUI::Widget* optionsList = *reinterpret_cast<MyGUI::Widget**>(
-            reinterpret_cast<char*>(menuGUI) + kOptionsListOffset);
-        if (optionsList == NULL)
-        {
-            return false;
-        }
-        optionsCoord = optionsList->getAbsoluteCoord();
-    }
-    TR_CATCH { return false; }
-
-    if (optionsCoord.width <= 0)
+    MenuAnchor anchor;
+    if (!ReadMenuAnchor(menu, &anchor))
     {
         return false;
     }
-
-    return PlaceBeside(optionsCoord);
+    const MyGUI::IntCoord menuCoord(anchor.menu.left, anchor.menu.top, anchor.menu.width,
+                                    anchor.menu.height);
+    return PlaceBeside(menuCoord, anchor.first.rect.width);
 }
 
 void ForgetMenu()
@@ -532,6 +514,7 @@ void ContextMenu_showContextMenu_hook(ContextMenu* thisptr, bool on, RootObject*
 
     // The native menu sizes itself during show, so the first anchor attempt can
     // read a stale rect; update() re-anchors every frame while it is open.
+    ResetMenuAnchorLog();
     AnchorToMenu(thisptr);
 }
 

@@ -119,6 +119,11 @@ quita la meta de noqueo de un personaje del jugador si ninguna vigilancia la
 tiene y su objetivo ya está caído o es un preso de tu jaula (un noqueo que el
 jugador ordena con el menú del juego es una orden, no esta meta, y no se toca).
 
+*Estado (2026-10-04, prisoner-module-fixes F4):* con un preso dentro de la jaula
+el menú del juego abre dos columnas (el personaje y la jaula: ABRIR CON LLAVE,
+DESMANTELAR, PONER EN LIBERTAD). El bloque Hablar / Golpear / Noquear se ubica
+fuera de las dos; con una sola columna queda donde siempre.
+
 **R2.4 — Cooldown de insistencia acumulativo y configurable.** *(P1)*
 Hoy funciona pero con horas fijas. Debe pasar a:
 - Horas base, configurables.

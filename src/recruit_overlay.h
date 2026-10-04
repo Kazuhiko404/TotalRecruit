@@ -6,8 +6,9 @@ namespace totalrecruit
 {
 // Installs the context-menu hooks that show the Hablar button anchored to
 // Kenshi's own right-click menu -- with Golpear and Noquear under it for a
-// prisoner awake in the player's cage (cage_commands.h). Returns false if a hook
-// could not be placed.
+// prisoner awake in the player's cage (cage_commands.h). The block stays beside
+// both native columns when the menu has two (menu_anchor.h). Returns false if a
+// hook could not be placed.
 bool InstallRecruitOverlay();
 
 // Destroys the buttons and drops any target reference.

@@ -58,3 +58,4 @@ void RunLevelRulesTests();
 void RunDuelRecordCacheRulesTests();
 void RunDuelJoinRulesTests();
 void RunKnockoutWatchRulesTests();
+void RunMenuAnchorTests();

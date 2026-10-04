@@ -109,3 +109,20 @@ function offerRect(view, size) {
   return { left: Math.floor((view.w - size.w) / 2), top: Math.floor((view.h - size.h) / 2),
            width: size.w, height: size.h };
 }
+
+// menu_anchor.cpp UnionMenuRect: the native context menu as the block sees it. A
+// character inside a building opens two columns side by side (menuGUI: the
+// character; menuGUI2: the building); the block goes beside the rectangle that
+// holds both, so it never lands on the second column. A missing, hidden or zero-
+// width column is left out; with one column the result is that column, exactly.
+// The buttons keep the width of the first column's block (MakeBlockStyle), not
+// the union's. Each column is { left, top, width, height, visible } or null.
+function menuAnchorUnion(gui1, gui2) {
+  function usable(c) { return c && c.visible !== false && c.width > 0; }
+  var a = usable(gui1) ? gui1 : null, b = usable(gui2) ? gui2 : null;
+  if (!a) return b ? { left: b.left, top: b.top, width: b.width, height: b.height } : null;
+  if (!b) return { left: a.left, top: a.top, width: a.width, height: a.height };
+  var l = Math.min(a.left, b.left), t = Math.min(a.top, b.top);
+  var r = Math.max(a.left + a.width, b.left + b.width), btm = Math.max(a.top + a.height, b.top + b.height);
+  return { left: l, top: t, width: r - l, height: btm - t };
+}

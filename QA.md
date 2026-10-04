@@ -497,6 +497,8 @@ Por defecto la tarjeta sale **solo** al apretar `Hablar`, al lado de la ventana 
 | B5 | Lo mismo pegado al borde **derecho** y al borde **inferior** | Queda entero en pantalla; si no hay hueco libre, se ajusta a la izquierda del menu dentro de la pantalla | |
 | B6 | Solo TotalRecruit (sin los otros mods) | `Hablar` a la izquierda del menu, alineado arriba, 160 x 44 | |
 | B7 | Clic en `Hablar` | Se abre la oferta como antes (con la tarjeta de 12.9) y el boton se va | |
+| B8 | Clic derecho sobre un preso **dentro** de tu jaula (el menu abre dos columnas: el personaje y "Jaula de Prisionero"; prisoner-module-fixes F4). Mockup: `ui-mockup/readout.html`, "Menu on your prisoner, two columns" | El bloque (Hablar, Golpear, Noquear) queda **fuera de las dos columnas**: nunca tapa ABRIR CON LLAVE, DESMANTELAR ni PONER EN LIBERTAD; Hablar se ve | `[menu-anchor] gui1=(...) gui2=(l,t,w,h) union=(...)` con `union` que contiene a las dos |
+| B9 | Clic derecho sobre un NPC en campo abierto (una sola columna) | El bloque queda exactamente donde quedaba antes (B1-B6) | `[menu-anchor] gui1=(l,t,w,h) gui2=none union=(l,t,w,h)` con `union` = `gui1` |
 
 ### 12.11 Tarjeta al seleccionar el NPC (price-readout-button-tweaks T5)
 

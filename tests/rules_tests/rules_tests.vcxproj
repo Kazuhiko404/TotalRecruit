@@ -86,6 +86,7 @@
     <ClCompile Include="duel_record_cache_rules_tests.cpp" />
     <ClCompile Include="duel_join_rules_tests.cpp" />
     <ClCompile Include="knockout_watch_rules_tests.cpp" />
+    <ClCompile Include="menu_anchor_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />

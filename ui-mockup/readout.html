@@ -41,6 +41,7 @@ is shown on hover.</p>
   <button class="tab" data-s="select" aria-pressed="true">Selected NPC (default)</button>
   <button class="tab" data-s="menu" aria-pressed="false">Right-click menu open</button>
   <button class="tab" data-s="cagemenu" aria-pressed="false">Menu on your prisoner (Golpear / Noquear)</button>
+  <button class="tab" data-s="cagemenu2" aria-pressed="false">Menu on your prisoner, two columns (character + cage)</button>
   <button class="tab" data-s="hablar" aria-pressed="false">Press Hablar</button>
   <button class="tab" data-s="compact" aria-pressed="false">Press Hablar, compact</button>
   <button class="tab" data-s="notice" aria-pressed="false">Someone wants to talk (head notice)</button>
@@ -183,6 +184,39 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       scene.innerHTML = h;
       return;
     }
+    if (mode === 'cagemenu2') {
+      // A prisoner inside the cage building: Kenshi opens two native columns side by side,
+      // the character (menuGUI, 0x48) and the building (menuGUI2, 0x50). menu_anchor.cpp reads
+      // both option lists and hands PlaceButtonBlock their union (menuAnchorUnion), so
+      // menu_slot's left-first search puts the block left of BOTH columns, never on the second.
+      // The buttons keep the first column's 160 px style; only the rectangle grows.
+      var bw2 = 160, bh2 = 44, gy2 = 2, gx2 = 2, colW = 122;
+      var c1 = { left: 470, top: VIEW.h - 300, width: colW, height: 4 * 25, visible: true };
+      var c2 = { left: 470 + colW + 6, top: VIEW.h - 300, width: colW + 30, height: 4 * 25, visible: true };
+      var u = menuAnchorUnion(c1, c2);
+      var bx2 = u.left - gx2 - bw2;
+      h += '<div class="cage" style="left:390px"></div><div class="npc" style="left:408px"></div>';
+      h += '<div class="selring" style="left:397px"></div>';
+      h += '<div class="ctxmenu" style="left:' + c1.left + 'px;top:' + c1.top + 'px"><div>Grech</div><div>Saquear</div>' +
+           '<div>Examinar</div><div>Cargar</div></div>';
+      h += '<div class="ctxmenu" style="left:' + c2.left + 'px;top:' + c2.top + 'px;width:' + c2.width + 'px">' +
+           '<div>Jaula de Prisionero</div><div>Abrir con llave</div><div>Desmantelar</div><div>Poner en libertad</div></div>';
+      h += '<div style="position:absolute;left:' + u.left + 'px;top:' + (u.top - 3) + 'px;width:' + u.width + 'px;height:' +
+           (u.height + 6) + 'px;outline:1px dashed var(--golddim);pointer-events:none"></div>';
+      h += '<div class="ctxbtn" style="left:' + bx2 + 'px;top:' + u.top + 'px">Hablar</div>';
+      h += '<div class="ctxbtn" style="left:' + bx2 + 'px;top:' + (u.top + bh2 + gy2) + 'px">Golpear</div>';
+      h += '<div class="ctxbtn" style="left:' + bx2 + 'px;top:' + (u.top + 2 * (bh2 + gy2)) + 'px">Noquear 72%</div>';
+      h += '<div class="callout" style="left:16px;top:16px;max-width:330px">Right-click on a prisoner inside your cage ' +
+           'building: two native columns, the character ("Grech") and the cage ("Jaula de Prisionero"). The block sits ' +
+           'beside the dashed rectangle that holds both (menuGUI + menuGUI2), left first, then right of the second ' +
+           'column; it never covers ABRIR CON LLAVE / DESMANTELAR / PONER EN LIBERTAD.</div>';
+      h += '<div class="callout" style="left:860px;top:16px;max-width:400px">Before the fix the block was anchored to ' +
+           'the first column only and could land on the second. With one column (anyone not in a building) the ' +
+           'rectangle is that column and the block sits exactly where it always did. Log (probeOnClick, once per ' +
+           'menu): [menu-anchor] gui1=(l,t,w,h) gui2=(l,t,w,h|none) union=(l,t,w,h).</div>';
+      scene.innerHTML = h;
+      return;
+    }
     if (mode === 'cagemenu') {
       // The prisoner is awake in the player's own cage and allowBeating is on: the block
       // is [Hablar, Golpear, Noquear] (cage_command_rules.cpp ComposeContextBlock), one
@@ -202,9 +236,10 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + (cy + 2 * (bh + gy)) + 'px">Noquear 72%</div>';
       h += '<div class="ctxbtn" style="left:' + (cx + 122 + gx) + 'px;top:' + cy + 'px">Sparring</div>';
       h += '<div class="callout" style="left:16px;top:16px;max-width:300px">Right-click on a prisoner awake in your cage. ' +
-           'Golpear and Noquear are Kenshi\'s own orders (BEAT_CAGE_OCCUPANT, STEALTH_KNOCKOUT) given to the character ' +
-           'you have selected; nobody selected says "Selecciona a alguien de tu grupo para hacerlo". The mod computes ' +
-           'no damage and no odds of its own: the 72% is the game\'s.</div>';
+           'Golpear is one direct blow from the character you have selected (its own attack damage as blunt, capped so ' +
+           'the prisoner is never killed and stays caged); Noquear is Kenshi\'s own order (STEALTH_KNOCKOUT), given once: ' +
+           'when he is down the character is let go. Nobody selected says "Selecciona a alguien de tu grupo para ' +
+           'hacerlo". The 72% is the game\'s.</div>';
       h += '<div class="callout" style="left:860px;top:16px;max-width:400px">Anyone else -- not caged, already down, ' +
            'or beating switched off -- gets the block of one, [Hablar], as in "Right-click menu open". The popup\'s ' +
            'GOLPEAR and NOQUEAR (section 5) give the same native orders and close the window.</div>';
