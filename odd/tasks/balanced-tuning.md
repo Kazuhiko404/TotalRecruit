@@ -44,7 +44,7 @@ La jaula de Balanced cobra tiempo de juego y decisiones (R2.x). Si una sola herr
 - Conventional Commits; docs en espanol, codigo en ingles.
 
 ## Alcance
-T1..T6 abajo. Solo reglas puras de Balanced (`src/*_rules.cpp`), sus claves de config, Mod Hub, mensajes y docs. Cheat no cambia salvo T5.
+T1..T7 abajo. Solo reglas puras de Balanced (`src/*_rules.cpp`), sus claves de config, Mod Hub, mensajes y docs. Cheat no cambia salvo T5.
 
 ## Restricciones
 - Toolset v100: sin C++11.
@@ -118,6 +118,15 @@ T1..T6 abajo. Solo reglas puras de Balanced (`src/*_rules.cpp`), sus claves de c
   - **Unicos fuertes inalcanzables en la jaula**: brave/honourable unicos a +50 quedan en 5 (45) en todas las columnas.
   - **Field-yield casi seguro** con 2 derrotas: normal 91, fearful 95 (seccion 4); maniacal 66 supera a brave 62 pese a personalidad -25 (resolucion 1.0 contra 1.6).
 
+### T7 Animales: reclutar con duelo (respeto) o sometiendolos
+- [ ] Pedido del usuario: un animal tambien se puede reclutar ganandole un duelo (se gana su respeto) o sometiendolo a golpes, no solo con comida.
+- [ ] Hoy: el animal se doma solo por el estomago con comida del jugador (`DecideAnimal`, `route_cage.cpp` antes de cualquier argumento humano); el duelo excluye animales (`duel_challenge_rules.cpp:13` `!facts.isAnimal`, y `recruit_core.cpp:1120` en Cheat); field-yield excluye animales (`route_rules.cpp` `!f.animal`); Golpear/Noquear en jaula si aplican a un animal pero su estres no entra en la decision del animal.
+- [ ] Propuesta, dos vias nuevas en Balanced que conviven con la comida (cada una en su modulo puro, con tirada estable `DailySeed` y min/max configurables):
+  - **Duelo / respeto**: RETAR A DUELO tambien para animales (sin el corte de nivel 80+ o con uno propio, p.ej. `animalDuelMinLevel`); ganar da una chance de unirse `animalDuelJoinBase` + `animalDuelJoinPerWin` por victoria previa (estilo `duel_join_rules`), con enfriamiento tras perder. Verificar primero que TotalSparring (puente `TS_*`) admite un animal como lado B; si no, documentarlo y pedir la parte de TotalSparring al usuario (no tocar ese repo sin permiso).
+  - **Sometimiento**: las derrotas que el jugador le inflige (noqueos en el campo) y el estres de golpes en la jaula suman a la decision del animal: termino `animalSubmissionPerDefeat` (tope) y el estres de golpes ya existente, divididos por una resolucion por especie o por nivel (los animales no tienen temperamento humano: definir la resolucion, p.ej. por nivel o por clase de criatura).
+- [ ] Coherencia lore: un animal salvaje respeta la fuerza; uno domestico/ajeno sigue excluido como hoy. Animal domado por duelo o sometimiento entra igual que el domado con comida.
+- [ ] Hoja: filas nuevas en `tests/balance_sheet` para las dos vias; tarjeta y popup con maqueta primero ("Te respeta", "Sometido").
+- [ ] Cheat no cambia: animal en jaula + 1 min y se une.
 ## Criterios de aceptacion
 - Tabla objetivo de T1 acordada y escrita en este documento.
 - La hoja regenerada despues de cada tarea calza con la tabla objetivo (columna "quebrado" y "cuidado" dentro de +-1 dia del objetivo, nivel +0).
@@ -150,4 +159,4 @@ Pasos de cierre: QA en juego -> merge de `feat/balanced-tuning` a `main` -> push
 - Este documento y `odd/balance/START-PROMPT.md` creados. Ningun numero cambiado todavia.
 
 ## Proximo paso
-T1: confirmar la tabla objetivo con el usuario; despues T2-T4, luego T5, luego T6.
+T1: confirmar la tabla objetivo con el usuario; despues T2-T4, luego T5, luego T6, luego T7 (animales: duelo y sometimiento).
