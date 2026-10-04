@@ -49,7 +49,7 @@ Prompt (headNoticeSeconds): hail `headNotice.wantsToTalk`, helper `headNotice.he
 
 ## Progress
 - Doc created before any source write.
-- T1..T4 done on `fix/head-notice-lifetime`; commit: HASH_PENDING (`fix(notice): shorten head notice lifetime and add an info lifetime`).
+- T1..T4 done on `fix/head-notice-lifetime`; commit: `543db47` (`fix(notice): shorten head notice lifetime and add an info lifetime`).
 - Not deployed, not merged, not pushed.
 - `DEVELOPING.md` still says `headNoticeSeconds` (300) in the head_notice row: it was outside this task's edit surface.
 
