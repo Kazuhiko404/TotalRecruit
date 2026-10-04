@@ -579,6 +579,8 @@ MSBUILD="/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/B
 tests/rules_tests/x64/Release/rules_tests.exe     # exit code 0 = green
 ```
 
+Balance sheet: `tests/balance_sheet` compiles the same `src/` rule files and prints the Balanced numbers (default `Config()`) as Markdown; regenerate `odd/balance/balance-sheet.md` before and after any tuning change with `"$MSBUILD" tests/balance_sheet/balance_sheet.vcxproj -p:Configuration=Release -p:Platform=x64 -v:minimal -nologo && tests/balance_sheet/x64/Release/balance_sheet.exe "$(git rev-parse --short HEAD)" > odd/balance/balance-sheet.md` (a new `src/*.cpp` rule file goes into its `.vcxproj` too).
+
 Adding a rule test:
 
 1. Put the rule in an engine-free module under `src/` (plain arguments, the
