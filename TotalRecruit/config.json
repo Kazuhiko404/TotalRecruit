@@ -23,7 +23,6 @@
   "surrenderEnabled": true,
   "animalsEnabled": true,
 
-  "easyHoursCaged": 6.0,
   "catsPerLevel": 32,
   "catsCeiling": 10000,
   "priceCurveSteepness": 0.09,
@@ -84,6 +83,8 @@
 
   "submissionBeatingCooldownHours": 1.0,
   "submissionKnockoutCooldownHours": 1.0,
+  "submissionCaredForBonusMin": 5,
+  "submissionCaredForBonusMax": 20,
   "submissionBeatStressBase": 0.08,
   "submissionKnockoutStressBase": 0.15,
   "submissionBeatingStressMin": 0.02,

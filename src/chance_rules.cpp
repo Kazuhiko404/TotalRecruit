@@ -159,6 +159,7 @@ int JoinChance(const ChanceInputs& in, const Chance& c, const Submission& sub)
                + ChanceFromDefeats(in.defeats, in.personality, sub)
                + ChanceFromStress(in.stress, in.personality, sub)
                + in.situation
+               + in.caredFor
                - (in.grudge ? c.grudgePenalty : 0)
                - (in.unique ? c.uniquePenalty : 0);
 

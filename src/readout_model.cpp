@@ -37,7 +37,6 @@ ReadoutRoute NameRoute(const ReadoutInput& in)
     case Route_Rescue:
     case Route_Dying:
     case Route_Unconscious:
-    case Route_EasyHealthy:
         return ReadoutRoute_Rescue;
     case Route_FieldYield:
         return ReadoutRoute_FieldYield;
@@ -217,6 +216,9 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
     {
         v.showChance = true;
         v.chancePct = in.verdict.chancePercent;
+        // The Balanced cage's cared-for bonus already inside that chance
+        // (cared_for_rules.h): "Lo cuidaste +12%" under the bar.
+        v.caredForPct = in.verdict.chanceInputs.caredFor > 0 ? in.verdict.chanceInputs.caredFor : 0;
     }
 
     if (person && config.submission.countDefeats &&
@@ -237,29 +239,6 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
     v.primary = PrimaryLine(in);
     v.primary.food = v.foodPct;
     v.primary.need = v.foodNeededPct;
-
-    // The easy wait is a way in whatever the price table says, so while it still
-    // runs it is worth a line. Two reasons name no number of their own (the proud
-    // and the zealot); for them the wait is the most useful thing to say.
-    const float easy = config.prices.easyHoursCaged;
-    const bool waitRuns = in.route == Route_Cage && person && config.captivityEnabled &&
-                          easy > 0.0f && in.holdKnown && in.hoursHeld < easy &&
-                          !in.verdict.willJoin && !in.mercyPending;
-    if (waitRuns)
-    {
-        ReadoutLineView wait;
-        wait.id = kLineWaitCage;
-        wait.hours = easy - in.hoursHeld;
-        if (in.verdict.reasonKey == Reason_Defiant ||
-            in.verdict.reasonKey == Reason_UniqueZealot)
-        {
-            v.primary = wait;
-        }
-        else
-        {
-            v.secondary = wait;
-        }
-    }
 
     // A challengeable ally (duel_challenge_rules.h): the head-to-head duel record,
     // when the second line is still free.

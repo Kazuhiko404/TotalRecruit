@@ -30,59 +30,46 @@ void NothingSpecialInMyCageIsCage()
 
 void UnconsciousWaits()
 {
-    const char* name = "route: unconscious comes before rescue, easy mode and surrender";
+    const char* name = "route: unconscious comes before rescue and surrender";
     RouteFacts f;
     f.unconscious = true;
     f.remembersSaviour = true;
     f.dying = true;
     f.inMyCage = true;
-    f.easyHealthy = true;
     f.surrendered = true;
     CHECK(ChooseEntryRoute(f) == Route_Unconscious);
 }
 
-void RescueOutranksDyingAndEasy()
+void RescueOutranksDying()
 {
-    const char* name = "route: rescue before dying, easy-healthy and surrender";
+    const char* name = "route: rescue before dying and surrender";
     RouteFacts f;
     f.remembersSaviour = true;
     f.dying = true;
     f.inMyCage = true;
-    f.easyHealthy = true;
     f.surrendered = true;
     CHECK(ChooseEntryRoute(f) == Route_Rescue);
 }
 
-void RescueSwitchedOffSkipsRescueDyingAndEasy()
+void RescueSwitchedOffSkipsRescueAndDying()
 {
-    const char* name = "route: rescueEnabled off removes rescue, dying and easy-healthy";
+    const char* name = "route: rescueEnabled off removes rescue and dying";
     RouteFacts f;
     f.rescueEnabled = false;
     f.remembersSaviour = true;
     f.dying = true;
     f.inMyCage = true;
-    f.easyHealthy = true;
     CHECK(ChooseEntryRoute(f) == Route_Cage);
 }
 
-void DyingBeforeEasyHealthy()
+void ACaredForPrisonerTakesTheCageRoute()
 {
-    const char* name = "route: dying before easy-healthy";
+    const char* name = "route: a healthy, fed prisoner in your cage takes the cage route (no shortcut, P4)";
     RouteFacts f;
+    f.inMyCage = true;
+    CHECK(ChooseEntryRoute(f) == Route_Cage);
     f.dying = true;
-    f.inMyCage = true;
-    f.easyHealthy = true;
     CHECK(ChooseEntryRoute(f) == Route_Dying);
-}
-
-void EasyHealthyNeedsMyCage()
-{
-    const char* name = "route: easy-healthy only applies inside the player's cage";
-    RouteFacts f;
-    f.easyHealthy = true;
-    CHECK(ChooseEntryRoute(f) == Route_FreeWorld);
-    f.inMyCage = true;
-    CHECK(ChooseEntryRoute(f) == Route_EasyHealthy);
 }
 
 void SurrenderedBeatsTheTail()
@@ -106,26 +93,20 @@ void AnimalsNeverSurrender()
 }
 
 // cage-animals-submission T2: an animal is tamed with the player's food and
-// nothing else, so neither the rescue debt nor easy mode's "healthy thanks to you"
-// may answer for it.
-void AnimalsSkipRescueAndEasyHealthy()
+// nothing else, so the rescue debt may not answer for it.
+void AnimalsSkipRescue()
 {
-    const char* name = "route: an animal never takes the rescue or easy-healthy route";
+    const char* name = "route: an animal never takes the rescue route";
     RouteFacts f;
     f.animal = true;
     f.remembersSaviour = true;
     CHECK(ChooseEntryRoute(f) == Route_FreeWorld);
     f.inMyCage = true;
     CHECK(ChooseEntryRoute(f) == Route_Cage);
-    f.remembersSaviour = false;
-    f.easyHealthy = true;
-    CHECK(ChooseEntryRoute(f) == Route_Cage);
 
     // A person in the same spot still does.
     RouteFacts person;
     person.inMyCage = true;
-    person.easyHealthy = true;
-    CHECK(ChooseEntryRoute(person) == Route_EasyHealthy);
     person.remembersSaviour = true;
     CHECK(ChooseEntryRoute(person) == Route_Rescue);
 }
@@ -216,8 +197,7 @@ void FieldYieldStillBeatsUnconsciousOutsideTheCage()
 }
 
 // T2b -- field-yield returned for every NPC with enough defeats, caged or not,
-// so a prisoner beaten twice never reached the cage fallbacks (easy-mode wait,
-// healthy shortcut, care, cats). In the cage the defeats still count -- they
+// so a prisoner beaten twice never reached the cage fallbacks (care, cats). In the cage the defeats still count -- they
 // feed the chance -- but the route is the cage.
 void CagedNpcWithDefeatsKeepsTheCageRoute()
 {
@@ -228,16 +208,6 @@ void CagedNpcWithDefeatsKeepsTheCageRoute()
     CHECK(ChooseEntryRoute(f) == Route_Cage);
     f.defeats = 9;
     CHECK(ChooseEntryRoute(f) == Route_Cage);
-}
-
-void CagedNpcWithDefeatsKeepsEasyHealthy()
-{
-    const char* name = "route: defeats do not remove the easy-healthy shortcut in the cage";
-    RouteFacts f;
-    f.defeats = 3;
-    f.inMyCage = true;
-    f.easyHealthy = true;
-    CHECK(ChooseEntryRoute(f) == Route_EasyHealthy);
 }
 
 void CagedNpcWithDefeatsStillDies()
@@ -307,7 +277,7 @@ void RouteNamesAreDistinct()
 {
     const char* name = "route: every route has its own log name";
     const Route all[] = { Route_FieldYield, Route_Unconscious, Route_GrudgeRefusal,
-                          Route_Rescue, Route_Dying, Route_EasyHealthy,
+                          Route_Rescue, Route_Dying,
                           Route_Surrendered, Route_FreeWorld, Route_Cage };
     const int n = sizeof(all) / sizeof(all[0]);
     for (int i = 0; i < n; ++i)
@@ -326,13 +296,12 @@ void RunRouteRulesTests()
     NothingSpecialIsFreeWorld();
     NothingSpecialInMyCageIsCage();
     UnconsciousWaits();
-    RescueOutranksDyingAndEasy();
-    RescueSwitchedOffSkipsRescueDyingAndEasy();
-    DyingBeforeEasyHealthy();
-    EasyHealthyNeedsMyCage();
+    RescueOutranksDying();
+    RescueSwitchedOffSkipsRescueAndDying();
+    ACaredForPrisonerTakesTheCageRoute();
     SurrenderedBeatsTheTail();
     AnimalsNeverSurrender();
-    AnimalsSkipRescueAndEasyHealthy();
+    AnimalsSkipRescue();
     GrudgeRefusesOutsideTheCageOnly();
     ForgivingGrudgeIsNotARefusal();
     FieldYieldNeedsEnoughDefeats();
@@ -342,7 +311,6 @@ void RunRouteRulesTests()
     ForgivingGrudgeStillYieldsInTheField();
     FieldYieldStillBeatsUnconsciousOutsideTheCage();
     CagedNpcWithDefeatsKeepsTheCageRoute();
-    CagedNpcWithDefeatsKeepsEasyHealthy();
     CagedNpcWithDefeatsStillDies();
     CagedNpcWithDefeatsStillWaitsWhenUnconscious();
     ReloadedNpcKeepsTheFieldYieldRoute();

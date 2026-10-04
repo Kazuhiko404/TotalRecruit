@@ -156,12 +156,11 @@ struct AnimalExtra
 struct CheatFacts
 {
     bool inMyCage;
-    // Hours held in the cage, only read when it can matter.
+    // Hours held in the cage, only read when it can matter (0 when a peek finds
+    // no running clock).
     float hoursHeld;
-    // The clock was read (a peek reads it only when a running clock already exists).
-    bool holdKnown;
 
-    CheatFacts() : inMyCage(false), hoursHeld(0.0f), holdKnown(false) {}
+    CheatFacts() : inMyCage(false), hoursHeld(0.0f) {}
 };
 
 struct RescueExtra
@@ -202,16 +201,14 @@ struct FreeExtra
 
 struct CageExtra
 {
-    // Hours held in THIS cage, only read when the easy wait is on.
-    float hoursHeld;
-    // The clock was read; false when the wait is off or a peek found no clock.
-    bool holdKnown;
     RollFact roll;
+    // The seed of the cared-for draw (cared_for_rules.h): the same key and day as
+    // `roll` on a click; on a peek the id the character already has (PeekRollKey),
+    // which `roll` never carries there, so the card shows the bonus a click uses.
+    RollFact care;
     PurseFact purse;
     PriceInputs price;
     HaggleFact haggle;
     AnimalExtra animal;
-
-    CageExtra() : hoursHeld(0.0f), holdKnown(false) {}
 };
 } // namespace totalrecruit

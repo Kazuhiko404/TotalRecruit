@@ -40,12 +40,6 @@ enum Preset
 // cannot be paid is never a refusal, only a "not yet" with a reason attached.
 struct Prices
 {
-    // Easy mode: hours a captive must simply be held before they give in,
-    // regardless of who they are -- flat, no per-personality or unique extra.
-    // Counted from when the prisoner was first seen in the player's cage (see
-    // hold_clock.h). 0 disables it and leaves the per-archetype prices as the
-    // only route.
-    float easyHoursCaged;
     // Route B: cats demanded, scaled from the NPC's rough level.
     // Price = (catsPerLevel/10) * level^2 + catsCeiling * logistic(level).
     // The square term keeps low levels affordable; the logistic carries the top
@@ -121,8 +115,7 @@ struct Prices
     float haggleOffenceMarkup;
 
     Prices()
-        : easyHoursCaged(6.0f),
-          catsPerLevel(32),
+        : catsPerLevel(32),
           catsCeiling(10000),
           priceCurveSteepness(0.09f),
           priceCurveMidpoint(31.0f),
@@ -271,6 +264,14 @@ struct Submission
     // What a field yield argues on its own. Lower than the cage, because a cage
     // is a sustained condition and a beating in the open is a single moment.
     int fieldYieldBonus;
+    // The Balanced cage's cared-for bonus (v1-presets-close P4): a person in the
+    // player's cage who is unhurt, fed and at full health argues for joining with
+    // a bonus drawn once per NPC per game day in [caredForBonusMin,
+    // caredForBonusMax] (cared_for_rules.h). It used to be an automatic join
+    // ("sano gracias a ti"); now it only weighs on the roll. A max below the min
+    // means the min. Whole percent.
+    int caredForBonusMin;
+    int caredForBonusMax;
     // What loyalty to a standing organisation (military, law enforcement) takes
     // off the field-yield roll. A penalty, not a refusal: in the open world they
     // cannot be bought, but being beaten is the one argument they still hear.
@@ -326,6 +327,8 @@ struct Submission
           honourableResolve(1.8f),
           defeatsToBreak(2),
           fieldYieldBonus(10),
+          caredForBonusMin(5),
+          caredForBonusMax(20),
           fieldYieldLoyaltyPenalty(25),
           stressFromHunger(0.5f),
           stressFromWounds(0.35f),

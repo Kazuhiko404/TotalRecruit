@@ -24,8 +24,6 @@ enum Route
     Route_Rescue,
     // Still dying and not yet saved: the price is care.
     Route_Dying,
-    // Easy mode, the healing half: patched all the way up in your cage.
-    Route_EasyHealthy,
     // Beaten and on the edge, still awake: yields rather than be cut down.
     Route_Surrendered,
     // Not in the player's cage: the free-world conversation.
@@ -52,8 +50,6 @@ struct RouteFacts
     bool rescueEnabled;
     bool remembersSaviour;
 
-    // Easy mode is on and the prisoner is fed, unwounded and at full health.
-    bool easyHealthy;
     // The composed "beaten and yielding" reading from surrender.cpp.
     bool surrendered;
 
@@ -61,7 +57,7 @@ struct RouteFacts
         : animal(false), surrenderEnabled(true), countDefeats(true),
           defeats(0), defeatsToBreak(2), unconscious(false), dying(false),
           grudge(false), grudgeUnforgivable(false), inMyCage(false),
-          rescueEnabled(true), remembersSaviour(false), easyHealthy(false),
+          rescueEnabled(true), remembersSaviour(false),
           surrendered(false)
     {
     }

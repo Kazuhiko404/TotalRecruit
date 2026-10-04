@@ -992,9 +992,6 @@
     "dying": [
       "se está muriendo: cúralo primero"
     ],
-    "easyHealthy": [
-      "sano gracias a ti, y quiere unirse"
-    ],
     "surrendered": [
       "se rinde antes que morir aquí"
     ],
@@ -1045,9 +1042,6 @@
     "captivityDisabled": [
       "el reclutamiento de prisioneros está desactivado"
     ],
-    "easyWait": [
-      "lleva bastante encerrado y se rinde"
-    ],
     "freed": [
       "seguirá a quien lo liberó"
     ],
@@ -1088,6 +1082,7 @@
     "tired": "Cansancio",
     "beaten": "Golpes",
     "chance": "CHANCE",
+    "caredFor": "LO CUIDASTE",
     "defeats": "DERROTAS",
     "food": "BARRIGA",
     "route": {
@@ -1117,7 +1112,6 @@
         "joins": "Te debe la vida: se une",
         "repays": "No puede seguirte: te paga con lo suyo"
       },
-      "easyHealthy": "Sano gracias a ti: se une",
       "fieldYield": {
         "joins": "Se rinde y te sigue",
         "notYet": "Aun no cede: dejalo sin comer",
@@ -1167,7 +1161,6 @@
         "join": "Se une por {cats} cats"
       },
       "captivityDisabled": "Reclutar prisioneros esta desactivado",
-      "easyWait": "Lleva bastante encerrado: se rinde",
       "intimidated": "Intimidado: se somete",
       "freed": "Seguira a quien lo libero",
       "cared": {
@@ -1193,7 +1186,6 @@
         }
       },
       "rejectCooldown": "No quiere saber nada de ti",
-      "waitCage": "Faltan {hours} en la jaula",
       "rollOpen": "{chance}%: puede unirse si le hablas"
     }
   },
@@ -1222,6 +1214,7 @@
       "price": "PRECIO",
       "purse": "TIENES",
       "chance": "PROBABILIDAD",
+      "caredFor": "LO CUIDASTE",
       "free": "Gratis",
       "cats": "{cats} cats",
       "duels": "DUELOS",

@@ -1,4 +1,6 @@
 #include "route_decisions.h"
+#include "body_rules.h"
+#include "cared_for_rules.h"
 
 namespace totalrecruit
 {
@@ -114,8 +116,8 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
 
     // A caged animal is still an animal: it is tamed with the player's food and
     // nothing else, so it settles on the same stomach arithmetic as a loose one
-    // (DecideAnimal) before any of the cage's human arguments -- the easy wait,
-    // the intimidation roll, the saviour shortcut -- can answer for it. Deciding
+    // (DecideAnimal) before any of the cage's human arguments -- the intimidation
+    // roll, the cared-for bonus, the saviour shortcut -- can answer for it. Deciding
     // this twice is how two rules that are meant to be one drift apart. The
     // animal route answers for itself: it does not carry what the cage route set.
     if (core.animal)
@@ -124,17 +126,6 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
     }
 
     v.viaCaptivity = true;
-
-    // Easy mode: time alone breaks anyone. Whoever they are and whatever they would
-    // normally charge, long enough in a cage is its own argument -- and the player
-    // only has to wait, not work out what this particular NPC wants.
-    if (config.prices.easyHoursCaged > 0.0f && extra.hoursHeld >= config.prices.easyHoursCaged)
-    {
-        v.willJoin = true;
-        v.currency = Currency_Submission;
-        v.reasonKey = Reason_EasyWait;
-        return v;
-    }
 
     // Overwhelming strength used to be an automatic yes below a gap of -40, which
     // handed the player anyone they had outgrown -- including the honourable
@@ -159,6 +150,12 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
         in.grudge       = core.grudge;
         in.unique       = core.unique;
         in.situation    = config.chance.intimidationBonus;
+        // Looked after -- unhurt, fed, at full health -- argues for joining; it no
+        // longer decides on its own (v1-presets-close P4). The day's draw, stable
+        // per NPC per game day (cared_for_rules.h).
+        in.caredFor     = CaredForBonus(IsFullyCaredFor(core.wounded, core.starving, core.health),
+                                        extra.care.haveKey, extra.care.key, extra.care.dayIndex,
+                                        config.submission);
 
         const int chance = JoinChance(in, config.chance, config.submission);
         v.rolled = true;

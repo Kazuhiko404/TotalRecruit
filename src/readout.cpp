@@ -241,8 +241,6 @@ bool WorkOut(Character* character, const char* source)
         input.haveCore = detail.haveCore;
         input.core = detail.core;
         input.verdict = verdict;
-        input.holdKnown = detail.holdKnown;
-        input.hoursHeld = detail.hoursHeld;
         input.mercyPending = IsMercyPending(character);
         // The peek mints no id. Only the rescue route rolls in it, from an id the
         // NPC already has (character_facts.cpp PeekRollKey), and the rescue is not

@@ -56,7 +56,6 @@ enum ReasonKey
     Reason_Dying,
     Reason_RescueJoins,
     Reason_RescueRepays,
-    Reason_EasyHealthy,
 
     // Beaten.
     Reason_FieldYieldJoins,
@@ -81,7 +80,6 @@ enum ReasonKey
 
     // The cage.
     Reason_CaptivityDisabled,
-    Reason_EasyWait,
     Reason_Intimidated,
     Reason_FreedFollows,
     Reason_CaredFor,

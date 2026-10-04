@@ -24,13 +24,13 @@ void LogChanceBreakdown(Character* character, const ChanceInputs& in, int total)
     char buf[256] = { 0 };
     _snprintf_s(buf, sizeof(buf), _TRUNCATE,
                 "[chance] level=%d relation=%d personality=%d defeats=%d(x%d) "
-                "situation=%d stress=%d(%.0f%%) grudge=-%d unique=-%d -> %d%%  (npc %d vs player %d, rel %.0f)",
+                "situation=%d stress=%d(%.0f%%) caredFor=+%d grudge=-%d unique=-%d -> %d%%  (npc %d vs player %d, rel %.0f)",
                 ChanceFromLevelGap(in.npcLevel, in.playerLevel, cc),
                 ChanceFromRelation(in.relation, in.haveRelation, cc),
                 ChanceFromPersonality(in.personality, cc),
                 ChanceFromDefeats(in.defeats, in.personality, cs), in.defeats,
                 in.situation, ChanceFromStress(in.stress, in.personality, cs),
-                in.stress * 100.0f,
+                in.stress * 100.0f, in.caredFor,
                 in.grudge ? cc.grudgePenalty : 0,
                 in.unique ? cc.uniquePenalty : 0,
                 total, in.npcLevel, in.playerLevel,
@@ -88,14 +88,6 @@ void LogRoute(Character* character, Route route)
             " [key] " + (haveKey ? probeKey.ToString() : std::string("unreadable")));
 }
 
-void LogHold(Character* character, float held)
-{
-    char note[96] = { 0 };
-    _snprintf_s(note, sizeof(note), _TRUNCATE,
-                " [hold] held=%.1fh easy-mode needs %.1fh", held,
-                GetConfig().prices.easyHoursCaged);
-    LogInfo(CharacterName(character) + note);
-}
 } // namespace
 
 const char* CurrencyName(Currency currency)
@@ -143,8 +135,6 @@ Verdict Run(Character* character, GatherMode mode, EvaluationDetail* detail)
         if (detail != NULL)
         {
             detail->route = facts.inMyCage ? Route_Cage : Route_FreeWorld;
-            detail->holdKnown = facts.holdKnown;
-            detail->hoursHeld = facts.hoursHeld;
         }
         return Finish(DecideCheat(facts, config), character, NULL, mode);
     }
@@ -198,8 +188,6 @@ Verdict Run(Character* character, GatherMode mode, EvaluationDetail* detail)
     case Route_Dying:
         return Finish(DecideDying(core), character, NULL, mode);
 
-    case Route_EasyHealthy:
-        return Finish(DecideEasyHealthy(core), character, NULL, mode);
 
     case Route_Surrendered:
         return Finish(DecideSurrendered(core), character, NULL, mode);
@@ -214,16 +202,6 @@ Verdict Run(Character* character, GatherMode mode, EvaluationDetail* detail)
     default:
     {
         const CageExtra extra = GatherCageExtra(character, core, mode);
-        if (detail != NULL)
-        {
-            detail->holdKnown = extra.holdKnown;
-            detail->hoursHeld = extra.hoursHeld;
-        }
-        if (deciding && config.probeOnClick && config.captivityEnabled &&
-            config.prices.easyHoursCaged > 0.0f)
-        {
-            LogHold(character, extra.hoursHeld);
-        }
         return Finish(DecideCage(core, extra, config), character, &extra.price, mode);
     }
     }

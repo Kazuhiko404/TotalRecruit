@@ -304,7 +304,6 @@ std::vector<Field> ConfigFields(Config& c)
     AddBool(f, "surrenderEnabled", &c.surrenderEnabled);
     AddBool(f, "animalsEnabled", &c.animalsEnabled);
 
-    AddFloat(f, "easyHoursCaged", &c.prices.easyHoursCaged);
     AddInt(f, "catsPerLevel", &c.prices.catsPerLevel);
     AddInt(f, "catsCeiling", &c.prices.catsCeiling);
     AddFloat(f, "priceCurveSteepness", &c.prices.priceCurveSteepness);
@@ -410,6 +409,8 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "submissionHonourableResolve", &c.submission.honourableResolve);
     AddInt(f, "submissionDefeatsToBreak", &c.submission.defeatsToBreak);
     AddInt(f, "submissionFieldYieldBonus", &c.submission.fieldYieldBonus);
+    AddInt(f, "submissionCaredForBonusMin", &c.submission.caredForBonusMin);
+    AddInt(f, "submissionCaredForBonusMax", &c.submission.caredForBonusMax);
     AddInt(f, "submissionFieldYieldLoyaltyPenalty", &c.submission.fieldYieldLoyaltyPenalty);
     AddFloat(f, "submissionStressFromHunger", &c.submission.stressFromHunger);
     AddFloat(f, "submissionStressFromWounds", &c.submission.stressFromWounds);
@@ -563,6 +564,8 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.submission.approachSeconds, 10.0f, 600.0f);
     ClampFloat(&g_config.submission.forgiveSeconds, 0.0f, 1800.0f);
     ClampFloat(&g_config.submission.rejectCooldownHours, 0.0f, 720.0f);
+    ClampInt(&g_config.submission.caredForBonusMin, 0, 50);
+    ClampInt(&g_config.submission.caredForBonusMax, 0, 50);
     for (int i = 0; i < Temperament_Count; ++i)
     {
         ClampInt(&g_config.chance.personality[i], -100, 100);

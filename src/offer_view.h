@@ -91,6 +91,7 @@ struct OfferTexts
     std::string priceLabel;
     std::string purseLabel;
     std::string chanceLabel;
+    std::string caredForLabel;   // "LO CUIDASTE", the cared-for bonus row
     std::string free;
     std::string catsValue;     // "{cats} cats"
     std::string shortPurse;    // "No te alcanzan los cats (te faltan {cats})"
@@ -259,6 +260,12 @@ struct OfferView
     int chancePercent;
     std::string chanceText;
 
+    // The Balanced cage's cared-for bonus already inside that chance
+    // (cared_for_rules.h): "LO CUIDASTE  +12%", only when it was drawn.
+    bool showCaredFor;
+    std::string caredForLabel;
+    std::string caredForText;
+
     // The head-to-head duel record ("DUELOS  2-1"), only beside RETAR A DUELO.
     bool showDuelRecord;
     std::string duelRecordLabel;
@@ -308,7 +315,7 @@ struct OfferView
     OfferView()
         : route(ReadoutRoute_Free), showPrice(false), priceFree(false), priceCats(0),
           showPurse(false), purseKnown(false), purseCats(0), affordable(true), shortfall(0),
-          showChance(false), chancePercent(0), showDuelRecord(false), showDuelJoin(false),
+          showChance(false), chancePercent(0), showCaredFor(false), showDuelRecord(false), showDuelJoin(false),
           reasonRefused(false),
           showSlider(false), haggleBounds(), sliderSteps(0), sliderStep(0), offerCats(0),
           oddsPercent(100), haggleTone(OddsTone_Ready), haggleLocked(false), acceptIsOffer(false)

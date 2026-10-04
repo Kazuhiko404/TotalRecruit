@@ -207,7 +207,6 @@ static bool DoRegisterModHub()
     regInt(api, mod, "cats_minimum", "Cats (Mínimo)", "Precio mínimo para cualquier recluta", 0, 10000, 100, &c.prices.catsMinimum);
     regFloat(api, mod, "hunger_threshold", "Umbral de hambre", "Considera hambriento por debajo de este % de estomago lleno (0 = usar solo el motor)", 0.0f, 1.0f, 0.05f, 2, &c.prices.hungerThreshold);
     regFloat(api, mod, "wounded_threshold", "Salud (Máximo para reclutar)", "Si la salud es <= a esto, escuchan (0..1)", 0.0f, 1.0f, 0.1f, 2, &c.prices.woundedThreshold);
-    regFloat(api, mod, "easy_hours_caged", "Horas jaula (modo facil)", "Horas en jaula que bastan por si solas, iguales para todos. 0 lo desactiva", 0.0f, 72.0f, 1.0f, 0, &c.prices.easyHoursCaged);
     
     // Multipliers
     regFloat(api, mod, "fearful_multiplier", "Precio miedosos", "Multplicador para personalidades miedosas", 0.1f, 2.0f, 0.1f, 1, &c.prices.fearfulMultiplier);
@@ -313,6 +312,8 @@ static bool DoRegisterModHub()
 
     regInt(api, mod, "sub_defeats_to_break", "Sumision: derrotas para quebrar", "Cuantas veces hay que vencerlo (sin jaula) antes de que ceda", 1, 10, 1, &c.submission.defeatsToBreak);
     regInt(api, mod, "sub_field_yield_bonus", "Sumision: peso de rendirse", "Cuanto pesa haberse rendido en el campo", 0, 60, 5, &c.submission.fieldYieldBonus);
+    regInt(api, mod, "sub_cared_for_bonus_min", "Sumision: bonus por cuidarlo min", "Lo menos que suma a la chance un preso de tu jaula sano, comido y sin heridas (sorteo del dia)", 0, 50, 1, &c.submission.caredForBonusMin);
+    regInt(api, mod, "sub_cared_for_bonus_max", "Sumision: bonus por cuidarlo max", "Lo mas que suma; un maximo menor que el minimo cuenta como el minimo", 0, 50, 1, &c.submission.caredForBonusMax);
     regInt(api, mod, "sub_field_yield_loyalty", "Sumision: lealtad al rendirse", "Cuanto le resta a rendirse en el campo ser militar o de la ley (no lo impide)", 0, 100, 5, &c.submission.fieldYieldLoyaltyPenalty);
     regFloat(api, mod, "sub_stress_hunger", "Estres: peso del hambre", "Cuanto pesa el hambre en quebrarlo", 0.0f, 1.0f, 0.05f, 2, &c.submission.stressFromHunger);
     regFloat(api, mod, "sub_stress_wounds", "Estres: peso de las heridas", "Cuanto pesan las heridas sin curar", 0.0f, 1.0f, 0.05f, 2, &c.submission.stressFromWounds);

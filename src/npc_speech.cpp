@@ -196,6 +196,7 @@ OfferTexts OfferWording()
     Word(&t.priceLabel, "popup.info.price");
     Word(&t.purseLabel, "popup.info.purse");
     Word(&t.chanceLabel, "popup.info.chance");
+    Word(&t.caredForLabel, "popup.info.caredFor");
     Word(&t.free, "popup.info.free");
     Word(&t.catsValue, "popup.info.cats");
     Word(&t.shortPurse, "popup.shortPurse");

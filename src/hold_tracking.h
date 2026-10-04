@@ -18,7 +18,7 @@ namespace totalrecruit
 // (hold_clock.cpp); this is the engine-facing half.
 
 // Looks at where this character is right now and keeps the hold clock honest:
-// caged starts it (once), free drops it, so the easy-mode wait counts time in THIS
+// caged starts it (once), free drops it, so Cheat's wait counts time in THIS
 // cage. Returns whether they are in the player's cage. Called by the periodic
 // sweep for everyone in range.
 bool NoteCageState(Character* character);

@@ -60,10 +60,15 @@ occupant, stealth knockout) given to the character you have selected, so the
 wounds, the stress and whether the knockout lands are the game's; Noquear shows
 the game's own odds. A knockout ordered this way counts as your defeat.
 
-**Easy mode.** A healthy, fed prisoner who has been in your cage long enough
-simply joins. The wait is **6 game hours, flat for everyone** (`easyHoursCaged`;
-it used to be 12). The clock starts when the prisoner is first seen in your cage
-and is dropped when they leave it.
+**No shortcuts in the Balanced cage.** Time alone no longer breaks anyone (the
+old 6-hour easy wait is gone), and a healthy, fed prisoner no longer joins on the
+spot. Looking after a prisoner still helps: one who is unhurt, fed and at full
+health gets a **cared-for bonus** on the join roll, drawn once per NPC per game
+day between `submissionCaredForBonusMin` (5) and `submissionCaredForBonusMax` (20),
+so clicking or reloading never redraws it. The card and the recruit window show
+it as "Lo cuidaste +12%". The cage is decided by stress, personality, level and
+the other currencies. A leftover `easyHoursCaged` key in your `config.json` is
+ignored.
 
 **Price.** Quotes follow one calibrated curve by the recruit's own level, at
 vanilla-like prices: roughly 380 at level 5, 1k at 10, 1.6k at 13, 3.4k at 20,
@@ -233,8 +238,8 @@ Select an NPC with a left click (or press Hablar on them) and a small card appea
 over their head: the route that answers them (Captivity, Surrender, Animal, Free,
 Rescue, Mercy), a three-colour stress bar (hunger, wounds, tiredness), the join
 chance, the defeats counted against the threshold, the stomach bar for animals,
-one short line saying what stands in the way, and the hours still to wait when
-easy mode applies. Every number is one the decision itself computed. The card
+one short line saying what stands in the way, and the cared-for bonus when it
+applies. Every number is one the decision itself computed. The card
 shows the odds, never whether the roll will pass, and asking has no side effects.
 It follows the selection: deselect the NPC and it goes, select another and it
 switches. It is worked out when the selection changes and refreshed every 2

@@ -50,15 +50,14 @@ void ThresholdIsAFractionOfAFullStomach()
     CHECK(!IsStarving(false, 0.0f, 0.0f));
 }
 
-void EasyHealthyNeedsEverythingRight()
+void FullyCaredForNeedsEverythingRight()
 {
-    const char* name = "easy healthy: easy mode on, fed, unwounded and at full health";
-    CHECK(IsEasyHealthy(6.0f, false, false, 1.0f));
-    CHECK(IsEasyHealthy(6.0f, false, false, 1.7f));
-    CHECK(!IsEasyHealthy(0.0f, false, false, 1.0f));
-    CHECK(!IsEasyHealthy(6.0f, true, false, 1.0f));
-    CHECK(!IsEasyHealthy(6.0f, false, true, 1.0f));
-    CHECK(!IsEasyHealthy(6.0f, false, false, 0.99f));
+    const char* name = "cared for: fed, unwounded and at full health";
+    CHECK(IsFullyCaredFor(false, false, 1.0f));
+    CHECK(IsFullyCaredFor(false, false, 1.7f));
+    CHECK(!IsFullyCaredFor(true, false, 1.0f));
+    CHECK(!IsFullyCaredFor(false, true, 1.0f));
+    CHECK(!IsFullyCaredFor(false, false, 0.99f));
 }
 
 void RestoredIsBloodWhenOutColdAndHealthOtherwise()
@@ -96,7 +95,7 @@ void RunBodyRulesTests()
     OutColdIsWoundedOnlyWhenDying();
     EngineHungerAlwaysStarves();
     ThresholdIsAFractionOfAFullStomach();
-    EasyHealthyNeedsEverythingRight();
+    FullyCaredForNeedsEverythingRight();
     RestoredIsBloodWhenOutColdAndHealthOtherwise();
     BandsRunFromAllyToEnemy();
 }

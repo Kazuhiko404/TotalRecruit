@@ -23,6 +23,9 @@ struct ReadoutTexts
     std::string beatenLegend;
     std::string chanceLabel;
     std::string chanceValue;
+    // The cared-for row under the chance: "LO CUIDASTE" and "+12%".
+    std::string caredForLabel;
+    std::string caredForValue;
     std::string defeatsLabel;
     std::string defeatsValue;
     std::string foodLabel;

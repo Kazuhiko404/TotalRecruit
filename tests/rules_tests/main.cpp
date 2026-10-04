@@ -89,6 +89,7 @@ const Suite kSuites[] = {
     { "menu_anchor", RunMenuAnchorTests },
     { "preset_rules", RunPresetRulesTests },
     { "cheat_waits", RunCheatWaitsTests },
+    { "cared_for_rules", RunCaredForRulesTests },
 };
 } // namespace
 

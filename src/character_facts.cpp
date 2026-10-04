@@ -566,12 +566,11 @@ CheatFacts GatherCheatFacts(Character* character, GatherMode mode)
     {
         if (mode == Gather_Peek)
         {
-            facts.holdKnown = PeekHoursHeld(character, &facts.hoursHeld);
+            PeekHoursHeld(character, &facts.hoursHeld);
         }
         else
         {
             facts.hoursHeld = HoursHeld(character);
-            facts.holdKnown = true;
         }
     }
     return facts;
@@ -651,27 +650,15 @@ FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core, GatherMod
 
 CageExtra GatherCageExtra(Character* character, const CoreFacts& core, GatherMode mode)
 {
-    const Config& config = GetConfig();
     CageExtra extra;
-
-    // The wait is only read when it can decide something: reading it notes the
-    // sighting in the hold clock.
-    if (config.captivityEnabled && config.prices.easyHoursCaged > 0.0f)
-    {
-        if (mode == Gather_Peek)
-        {
-            extra.holdKnown = PeekHoursHeld(character, &extra.hoursHeld);
-        }
-        else
-        {
-            extra.hoursHeld = HoursHeld(character);
-            extra.holdKnown = true;
-        }
-    }
-
     if (mode == Gather_Decide)
     {
         extra.roll = MintRollKey(character);
+        extra.care = extra.roll;
+    }
+    else
+    {
+        extra.care = PeekRollKey(character);
     }
     extra.purse = ReadPurse();
     // Standing is not a factor in the cage: neither the chance nor the price reads it.

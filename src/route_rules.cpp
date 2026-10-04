@@ -19,8 +19,6 @@ RouteFacts MakeRouteFacts(const CoreFacts& core, const Config& config)
     f.inMyCage           = core.inMyCage;
     f.rescueEnabled      = config.rescueEnabled;
     f.remembersSaviour   = config.rescueEnabled && core.rememberedAsSaviour;
-    f.easyHealthy        = IsEasyHealthy(config.prices.easyHoursCaged, core.wounded,
-                                         core.starving, core.health);
     f.surrendered        = core.surrendered;
     return f;
 }
@@ -63,11 +61,6 @@ Route ChooseEntryRoute(const RouteFacts& f)
         return Route_Dying;
     }
 
-    if (f.rescueEnabled && f.easyHealthy && f.inMyCage && !f.animal)
-    {
-        return Route_EasyHealthy;
-    }
-
     if (f.surrenderEnabled && !f.animal && f.surrendered)
     {
         return Route_Surrendered;
@@ -85,7 +78,6 @@ const char* RouteName(Route route)
     case Route_GrudgeRefusal:  return "grudge-refusal";
     case Route_Rescue:         return "rescue";
     case Route_Dying:          return "dying";
-    case Route_EasyHealthy:    return "easy-healthy";
     case Route_Surrendered:    return "surrendered";
     case Route_FreeWorld:      return "free-world";
     case Route_Cage:           return "cage";

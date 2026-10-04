@@ -73,6 +73,20 @@ La ruta amistosa deja de usar un 25 fijo. Se configura, y arranca en 20.
 
 ## 2. BALANCED — la jaula
 
+*Estado (v1-presets-close P4, pedido del usuario: "lore-friendly y balanceado"):*
+la jaula de Balanced ya no tiene atajos que salten la chance. Se retiraron la
+**espera facil** (`easyHoursCaged`: 6 h en la jaula bastaban para unirse) y la
+ruta **"sano gracias a ti"** (`Route_EasyHealthy`: sano, comido y sin heridas se
+unia solo). La jaula depende solo del estres, la personalidad, el nivel y las
+demas monedas. Cuidarlo sigue contando: un preso de tu jaula (persona, no animal)
+sin heridas, sin hambre y con la salud llena suma a la tirada un **bonus por
+cuidarlo** (`caredFor`), sorteado una vez por NPC y por dia de juego entre
+`submissionCaredForBonusMin` (5) y `submissionCaredForBonusMax` (20) con
+`DailySeed(clave, dia, kCaredForBonusSalt)`: ni otro clic ni recargar lo vuelve a
+sortear. Un maximo menor que el minimo cuenta como el minimo. Se ve en la tarjeta
+y en la ventana ("Lo cuidaste +12%") y en el log `[chance] ... caredFor=+N`. Una
+clave `easyHoursCaged` vieja en el config se ignora.
+
 **R2.1 — El nivel da chance, no permiso.** *(P1)*
 Hoy el nivel es una puerta: pasado cierto hueco no te escucha, y con ventaja
 enorme se somete solo. Debe convertirse en una probabilidad que participe del
@@ -508,8 +522,8 @@ animal salvaje está lleno por su cuenta (Cabra y Goat Alpha decían "CAN JOIN"
 sin haber comido nunca), así que ahora se une solo si **el jugador le dio de
 comer al menos una vez** y además la barriga llegó al umbral. Las comidas que le
 dio el jugador se guardan con el personaje (`total_recruit.fed_by_player`, en
-comidas). Vale igual en la jaula: la espera fácil, la intimidación, el rescate y
-"sano gracias a ti" no doman a un animal.
+comidas). Vale igual en la jaula: la intimidación, el rescate y el bonus por cuidarlo no
+doman a un animal (la espera fácil y "sano gracias a ti" se retiraron en v1).
 
 **R5.2 — Cachorros y débiles: una comida.** *(P1, ya cumplido)*
 Cría, o cualquier animal de nivel bajo, se une con muy poco. No tiene otra

@@ -736,6 +736,14 @@ int LayoutUnguarded(const OfferView& view)
         inks[rows] = kText;
         ++rows;
     }
+    // The cared-for bonus inside that chance ("LO CUIDASTE  +12%").
+    if (view.showCaredFor && rows < kInfoRows)
+    {
+        labels[rows] = &view.caredForLabel;
+        values[rows] = &view.caredForText;
+        inks[rows] = kReady;
+        ++rows;
+    }
     // The head-to-head duel record beside RETAR A DUELO ("DUELOS  2-1").
     if (view.showDuelRecord)
     {

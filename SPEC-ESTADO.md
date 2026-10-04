@@ -69,7 +69,7 @@ mantiene el gesto y elimina el precio.
 | Especificación | Estado | Detalle |
 |---|---|---|
 | Vencerlo primero | ✅ | Estar en la jaula ya lo prueba |
-| Meterlo en jaula y esperar X horas configurable | ✅ | `easyHoursCaged`, `hoursCagedForProud` |
+| Meterlo en jaula y esperar X horas configurable | ❌ (retirado) | v1-presets-close P4: el tiempo solo ya no decide en Balanced (`easyHoursCaged` retirado); cuidarlo da un bonus diario a la tirada (`submissionCaredForBonusMin/Max`) |
 | Aviso cuando está listo | ✅ | |
 | Condiciones según personalidad: cats, comida, o someterlo | ✅ | `ChooseCurrency` (`rules.cpp:653`) |
 | **La diferencia de nivel da chance, en todos los NPC y bestias** | 🟡 | El nivel es **puerta binaria**, no chance: +15 → no te escucha; −40 → se somete. La chance por nivel existe solo para aliados |

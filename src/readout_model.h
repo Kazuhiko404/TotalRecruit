@@ -75,9 +75,6 @@ struct ReadoutInput
     bool haveCore;
     CoreFacts core;
     Verdict verdict;
-    // Hours held in the player's cage, when that was read.
-    bool holdKnown;
-    float hoursHeld;
     // This NPC's plea is the one on screen.
     bool mercyPending;
     // The evaluation had the roll key, so a rolled verdict is the click's own
@@ -110,7 +107,7 @@ struct ReadoutInput
 
     ReadoutInput()
         : route(Route_FreeWorld), haveCore(true), core(), verdict(),
-          holdKnown(false), hoursHeld(0.0f), mercyPending(false), rollKeyed(false),
+          mercyPending(false), rollKeyed(false),
           tempMember(false), tempDaysLeft(0), helper(false), helperDaysLeft(0),
           duelRecordKnown(false), duelWins(0), duelLosses(0), duelDraws(0),
           duelJoinKnown(false), duelJoinSure(false), duelJoinChance(0)
@@ -135,6 +132,9 @@ struct ReadoutView
 
     bool showChance;
     int chancePct;
+    // The cared-for bonus inside chancePct (Balanced cage, cared_for_rules.h); 0 hides
+    // the "Lo cuidaste +N%" row.
+    int caredForPct;
 
     bool showDefeats;
     int defeats;
@@ -152,7 +152,7 @@ struct ReadoutView
     ReadoutView()
         : visible(false), route(ReadoutRoute_Free), showStress(false), stressPct(0),
           hungerPts(0), woundsPts(0), tiredPts(0), beatenPts(0), showChance(false),
-          chancePct(0),
+          chancePct(0), caredForPct(0),
           showDefeats(false), defeats(0), defeatsNeeded(0), showFood(false),
           foodPct(0), foodNeededPct(0), primary(), secondary()
     {

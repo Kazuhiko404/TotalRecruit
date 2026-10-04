@@ -83,6 +83,8 @@ struct Card
     MyGUI::TextBox* legend[kStressParts];
     MyGUI::TextBox* chanceLabel;
     MyGUI::TextBox* chanceValue;
+    MyGUI::TextBox* caredLabel;
+    MyGUI::TextBox* caredValue;
     MyGUI::TextBox* foodLabel;
     MyGUI::TextBox* foodValue;
     MyGUI::TextBox* defeatsLabel;
@@ -164,6 +166,8 @@ bool BuildUnguarded()
     for (int i = 0; i < kStressParts; ++i) c.legend[i] = MakeLabel(c.root, kSmallFont, kMuted);
     c.chanceLabel = MakeLabel(c.root, kSmallFont, kMuted);
     c.chanceValue = MakeLabel(c.root, kBodyFont, kAmber);
+    c.caredLabel = MakeLabel(c.root, kSmallFont, kMuted);
+    c.caredValue = MakeLabel(c.root, kBodyFont, kReady);
     c.foodLabel = MakeLabel(c.root, kSmallFont, kMuted);
     c.foodValue = MakeLabel(c.root, kBodyFont, kText);
     c.defeatsLabel = MakeLabel(c.root, kSmallFont, kMuted);
@@ -172,8 +176,9 @@ bool BuildUnguarded()
     c.secondary = MakeLabel(c.root, kSmallFont, kMuted);
 
     // The right-aligned values.
-    MyGUI::TextBox* rights[4] = { c.stressValue, c.chanceValue, c.foodValue, c.defeatsValue };
-    for (int i = 0; i < 4; ++i)
+    MyGUI::TextBox* rights[5] = { c.stressValue, c.chanceValue, c.foodValue, c.defeatsValue,
+                                  c.caredValue };
+    for (int i = 0; i < 5; ++i)
     {
         if (rights[i] != NULL)
             rights[i]->setTextAlign(MyGUI::Align::Right | MyGUI::Align::VCenter);
@@ -199,7 +204,7 @@ void HideAll()
     for (int i = 0; i < kMaxPips; ++i) Hide(c.pip[i]);
     MyGUI::TextBox* texts[] = {
         c.name, c.tag, c.stressLabel, c.stressValue, c.chanceLabel, c.chanceValue,
-        c.foodLabel, c.foodValue, c.defeatsLabel, c.defeatsValue, c.primary, c.secondary
+        c.caredLabel, c.caredValue, c.foodLabel, c.foodValue, c.defeatsLabel, c.defeatsValue, c.primary, c.secondary
     };
     for (size_t i = 0; i < sizeof(texts) / sizeof(texts[0]); ++i) Hide(texts[i]);
 }
@@ -314,6 +319,17 @@ void LayoutUnguarded(const ReadoutView& view, const ReadoutTexts& texts, bool co
                                     : (view.chancePct < 25 ? kDanger : kBrass));
             Place(c.chanceFill, bx, by, fillW, barH);
         }
+    }
+
+    // The cared-for bonus already inside that chance (Balanced cage,
+    // cared_for_rules.h): its own label row, expanded only, like the defeats.
+    if (view.showChance && view.caredForPct > 0 && !compact)
+    {
+        SetText(c.caredLabel, texts.caredForLabel);
+        SetText(c.caredValue, texts.caredForValue);
+        Place(c.caredLabel, x, y, inner / 2, kLabelH);
+        Place(c.caredValue, x + inner / 2, y, inner - inner / 2, kLabelH);
+        y += kLabelH + gap;
     }
 
     if (view.showDefeats && !compact)
@@ -504,16 +520,17 @@ std::string LayoutKey(const ReadoutView& v, const ReadoutTexts& t, bool compact)
 {
     char nums[192] = { 0 };
     _snprintf_s(nums, sizeof(nums), _TRUNCATE,
-                "%d|%d|%d%d%d%d|%d,%d,%d,%d|%d,%d|%d|%d,%d|%d",
+                "%d|%d|%d%d%d%d|%d,%d,%d,%d|%d,%d|%d,%d|%d,%d|%d",
                 compact ? 1 : 0, (int)v.route,
                 v.showStress ? 1 : 0, v.showFood ? 1 : 0, v.showChance ? 1 : 0,
                 v.showDefeats ? 1 : 0, v.hungerPts, v.woundsPts, v.tiredPts, v.beatenPts,
-                v.foodPct, v.foodNeededPct, v.chancePct, v.defeats, v.defeatsNeeded,
+                v.foodPct, v.foodNeededPct, v.chancePct, v.caredForPct, v.defeats, v.defeatsNeeded,
                 (int)v.primary.tone);
     std::string key(nums);
     const std::string* parts[] = {
         &t.name, &t.route, &t.stressLabel, &t.stressValue, &t.hungerLegend,
         &t.woundsLegend, &t.tiredLegend, &t.beatenLegend, &t.chanceLabel, &t.chanceValue,
+        &t.caredForLabel, &t.caredForValue,
         &t.defeatsLabel, &t.defeatsValue, &t.foodLabel, &t.foodValue,
         &t.primary, &t.secondary
     };

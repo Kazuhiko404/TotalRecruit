@@ -1022,10 +1022,31 @@ void TheDuelTextsAreComplete()
     CHECK(t.duelChallenge == "RETAR A DUELO");
     CHECK(t.duelRecordLabel == "DUELOS");
 }
+void TheCaredForBonusHasItsOwnRow()
+{
+    const char* name = "popup: the cared-for bonus is its own row under the odds, only when drawn";
+    OfferInput in;
+    in.name = "Kareem";
+    in.verdict = CatsVerdict(true, 9570, 0);
+    in.verdict.viaCaptivity = true;
+    in.verdict.rolled = true;
+    in.verdict.chancePercent = 70;
+    in.verdict.chanceInputs.caredFor = 12;
+    const OfferTexts t = Texts();
+    OfferView v = BuildOfferView(in, t);
+    CHECK(v.showChance && v.chanceText == "70%");
+    CHECK(v.showCaredFor);
+    CHECK(v.caredForLabel == t.caredForLabel);
+    CHECK(v.caredForText == "+12%");
+    in.verdict.chanceInputs.caredFor = 0;
+    CHECK(!BuildOfferView(in, t).showCaredFor);
+}
+
 } // namespace
 
 void RunOfferViewTests()
 {
+    TheCaredForBonusHasItsOwnRow();
     ADuelableAllyKeepsItsTierAndAddsTheDuel();
     NoDuelWithoutTheCallersYes();
     TheNextWinsChanceIsAnInfoRow();

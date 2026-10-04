@@ -42,7 +42,6 @@ Verdict DecideCheat(const CheatFacts& facts, const Config& config);
 // route_rescue
 Verdict DecideUnconscious(const CoreFacts& core, const Config& config);
 Verdict DecideDying(const CoreFacts& core);
-Verdict DecideEasyHealthy(const CoreFacts& core);
 // Someone you pulled out of the dirt owes you nothing else: a saved life weighs
 // more than any other opening. A roll decides whether they can follow; if they
 // cannot, they pay it forward.

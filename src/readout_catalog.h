@@ -6,7 +6,7 @@
 // reason_catalog.cpp holds the full sentence the NPC's window reads; the card has
 // room for about forty characters, so it has its own line per reason. A line is
 // identified by an id: a ReasonKey (verdict.h) for what the rules said, plus the
-// lines that are not a verdict reason (the time left in the cage, the odds of a roll
+// lines that are not a verdict reason (the odds of a roll
 // the card could not make, the field-yield "beat them again"). Add a ReasonKey and
 // the test fails until its row is here too. The route labels live here too, so the
 // card and the recruit popup read one table.
@@ -16,38 +16,36 @@
 
 namespace totalrecruit
 {
-// The id of "faltan {hours} en la jaula".
-const int kLineWaitCage = Reason_Count;
 // The id of "{chance}%: puede unirse si le hablas": a roll the card could not make
 // (the peek carries no roll key outside the rescue), so it states the odds
 // instead of a "not yet".
-const int kLineRollOpen = Reason_Count + 1;
+const int kLineRollOpen = Reason_Count;
 // The id of "Aun no cede: vencelo otra vez": the field-yield "not yet" for someone
 // who is not in the player's cage, where starving them is not on offer.
-const int kLineFieldYieldBeatAgain = Reason_Count + 2;
+const int kLineFieldYieldBeatAgain = Reason_Count + 1;
 // The ids of a Balanced ally's discounted price (ally_tier_rules.h): the yes and the
 // "not yet" the purse cannot meet. The verdict's reason is CatsJoin / CatsAsk like
 // any other price; the card names the friendship on top.
-const int kLineAllyPaidJoin = Reason_Count + 3;
-const int kLineAllyPaidAsk = Reason_Count + 4;
+const int kLineAllyPaidJoin = Reason_Count + 2;
+const int kLineAllyPaidAsk = Reason_Count + 3;
 // The id of "Temporal: le quedan {need} dias": a temporary squad member's card
 // (temp_member.h). The days travel in the line's `need`.
-const int kLineTempMemberDaysLeft = Reason_Count + 5;
+const int kLineTempMemberDaysLeft = Reason_Count + 4;
 // The id of "Ayudante: le quedan {need} dias": a free helper's card (helper.h). The
 // days travel in the line's `need`.
-const int kLineHelperDaysLeft = Reason_Count + 6;
+const int kLineHelperDaysLeft = Reason_Count + 5;
 // The ids of the head-to-head duel record of a challengeable ally
 // (duel_challenge_rules.h): "Duelos: {food}-{need}" (wins in the line's `food`,
 // losses in its `need`), and the same with the draws in `chance` when there are some.
-const int kLineDuelRecord = Reason_Count + 7;
-const int kLineDuelRecordWithDraws = Reason_Count + 8;
+const int kLineDuelRecord = Reason_Count + 6;
+const int kLineDuelRecordWithDraws = Reason_Count + 7;
 // The same record carrying what the next win does (duel_join_rules.h): Balanced
 // "Duelos: {food}-{need}, si ganas {chance}% se une" (the chance in `chance`; with
 // draws they move to `purse`), Cheat "..., si ganas se une" (draws in `chance`).
-const int kLineDuelRecordChance = Reason_Count + 9;
-const int kLineDuelRecordDrawsChance = Reason_Count + 10;
-const int kLineDuelRecordSure = Reason_Count + 11;
-const int kLineDuelRecordDrawsSure = Reason_Count + 12;
+const int kLineDuelRecordChance = Reason_Count + 8;
+const int kLineDuelRecordDrawsChance = Reason_Count + 9;
+const int kLineDuelRecordSure = Reason_Count + 10;
+const int kLineDuelRecordDrawsSure = Reason_Count + 11;
 
 int ReadoutLineCount();
 // messages.json path ("readout.line.cats.ask") and the built-in text used when the

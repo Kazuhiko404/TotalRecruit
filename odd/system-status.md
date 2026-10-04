@@ -25,7 +25,7 @@ Nothing has a formal QA pass mark.
 | One chance engine: relation, level gap, personality, defeats and situation as separate terms, logged as `[chance]` (R0.1, R2.1) | `verified in game` (§2) |
 | Route order: unbeatable grudge before field yield; cage defeats feed the chance (`[route] <name>`) | `not verified` (12.1) |
 | Captivity: needs by who they are (food and healing, cats, freedom, beating then time) | `not verified` (§2, 12.4) |
-| Easy mode: 6 game hours, flat, healthy and fed, in your cage (`easyHoursCaged`) | `not verified` (12.3) |
+| Balanced cage without shortcuts: the easy wait (`easyHoursCaged`) and the "healthy thanks to you" route were removed (v1-presets-close P4); a cared-for prisoner gets a stable daily bonus on the roll (5..20, `submissionCaredForBonusMin/Max`) | `needs in-game QA` (12.33 C1-C6, 12.3 E3, 12.8 U3) |
 | Insistence cooldown, cumulative and configurable (R2.4) | `not verified` (§5, 12.7 N1) |
 | Rescue: `LT_MY_LIFESAVER` debt, offer on waking, parting gift paid once (R4) | `not verified` (§6) |
 | Grudge refusal by character (who cannot forgive what they saw) | `not verified` (12.7) |

@@ -58,6 +58,10 @@ ReadoutTexts BuildReadoutTexts(const ReadoutView& view, const std::string& name,
 
     t.chanceLabel = Say("readout.chance", "CHANCE", NULL);
     t.chanceValue = Pct(view.chancePct);
+    t.caredForLabel = Say("readout.caredFor", "LO CUIDASTE", NULL);
+    char cared[16] = { 0 };
+    _snprintf_s(cared, sizeof(cared), _TRUNCATE, "+%d%%", view.caredForPct);
+    t.caredForValue = cared;
 
     t.defeatsLabel = Say("readout.defeats", "DERROTAS", NULL);
     char frac[24] = { 0 };

@@ -17,9 +17,9 @@ bool IsStarving(bool engineSaysStarving, float rawHunger, float hungerThreshold)
     return hungerThreshold > 0.0f && HungerToFullness01(rawHunger) <= hungerThreshold;
 }
 
-bool IsEasyHealthy(float easyHoursCaged, bool wounded, bool starving, float health)
+bool IsFullyCaredFor(bool wounded, bool starving, float health)
 {
-    return easyHoursCaged > 0.0f && !wounded && !starving && health >= 1.0f;
+    return !wounded && !starving && health >= 1.0f;
 }
 
 float RestoredFraction(bool unconscious, float bloodFraction, float health)

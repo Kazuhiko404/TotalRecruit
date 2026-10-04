@@ -309,6 +309,7 @@ OfferTexts DefaultOfferTexts()
     t.priceLabel = "PRECIO";
     t.purseLabel = "TIENES";
     t.chanceLabel = "PROBABILIDAD";
+    t.caredForLabel = "LO CUIDASTE";
     t.free = "Gratis";
     t.catsValue = "{cats} cats";
     t.shortPurse = "No te alcanzan los cats (te faltan {cats})";
@@ -389,6 +390,12 @@ OfferView BuildVerdictView(const OfferInput& in, const OfferTexts& t)
         view.showChance = true;
         view.chancePercent = v.chancePercent;
         view.chanceText = Percent(v.chancePercent);
+        if (v.chanceInputs.caredFor > 0)
+        {
+            view.showCaredFor = true;
+            view.caredForLabel = t.caredForLabel;
+            view.caredForText = "+" + Percent(v.chanceInputs.caredFor);
+        }
     }
 
     if (IsPriceOffer(v))

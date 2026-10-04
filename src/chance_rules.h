@@ -39,11 +39,14 @@ struct ChanceInputs
     // A named character. There is only one of them and no second attempt, so
     // they cost more work than anyone else at the same level.
     bool unique;
+    // The Balanced cage's cared-for bonus, already drawn (cared_for_rules.h): the
+    // day's value for a prisoner unhurt, fed and at full health, 0 otherwise.
+    int caredFor;
 
     ChanceInputs()
         : npcLevel(1), playerLevel(1), relation(0.0f), haveRelation(false),
           personality(Temperament_Normal), situation(0), stress(0.0f),
-          defeats(0), grudge(false), unique(false)
+          defeats(0), grudge(false), unique(false), caredFor(0)
     {
     }
 };

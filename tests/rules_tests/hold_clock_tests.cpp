@@ -1,4 +1,4 @@
-// Tests for src/hold_clock.cpp: the timing behind easy mode and Cheat's wait.
+// Tests for src/hold_clock.cpp: the timing behind Cheat's wait.
 
 #include "test_support.h"
 #include "hold_clock.h"
@@ -122,23 +122,6 @@ void ClockGoingBackwardsRestartsTheHold()
     CHECK(Near(c.HoursHeld(kAlice, 43.0), 3.0f));
 }
 
-void ShippedEasyDefaultIsSixHours()
-{
-    const char* name = "config: easyHoursCaged defaults to 6 (user-requested), flat for everyone";
-    Prices p;
-    CHECK(Near(p.easyHoursCaged, 6.0f));
-}
-
-void EasyWaitReachedExactlyAtTheThreshold()
-{
-    const char* name = "hold: held for easyHoursCaged hours reaches the threshold, not before";
-    Prices p;
-    HoldClock c;
-    c.Observe(kAlice, true, 20.0);
-    CHECK(c.HoursHeld(kAlice, 20.0 + p.easyHoursCaged - 0.5) < p.easyHoursCaged);
-    CHECK(c.HoursHeld(kAlice, 20.0 + p.easyHoursCaged) >= p.easyHoursCaged);
-}
-
 void ClearForgetsEveryone()
 {
     const char* name = "hold: Clear() drops every clock";
@@ -235,8 +218,6 @@ void RunHoldClockTests()
     FreeCharactersAreNeverTracked();
     ReusedSlotIsAnotherPrisoner();
     ClockGoingBackwardsRestartsTheHold();
-    ShippedEasyDefaultIsSixHours();
-    EasyWaitReachedExactlyAtTheThreshold();
     ClearForgetsEveryone();
     SavedStartRoundTripsToTheSameHours();
     UntrackedSavesZeroAndZeroRestoresNothing();

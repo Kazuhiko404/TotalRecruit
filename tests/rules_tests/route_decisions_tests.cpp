@@ -13,6 +13,7 @@
 
 #include "test_support.h"
 #include "route_decisions.h"
+#include "cared_for_rules.h"
 #include "route_rules.h"
 #include "chance_rules.h"
 #include "animal_rules.h"
@@ -239,14 +240,12 @@ void OutColdAndNothingElseJustWaits()
     CHECK(v.reasonKey == Reason_UnconsciousWait);
 }
 
-void DyingAndEasyHealthyAreRescueRoutes()
+void DyingIsARescueRoute()
 {
-    const char* name = "rescue: dying wants care first, a patched-up prisoner joins";
+    const char* name = "rescue: dying wants care first";
     CoreFacts core = Core();
     Verdict d = DecideDying(core);
     CHECK(!d.willJoin && d.viaRescue && d.currency == Currency_Care && d.reasonKey == Reason_Dying);
-    Verdict e = DecideEasyHealthy(core);
-    CHECK(e.willJoin && e.viaRescue && e.currency == Currency_Care && e.reasonKey == Reason_EasyHealthy);
 }
 
 void ASavedLifeRollsAtTheSavedLifeChance()
@@ -1137,6 +1136,8 @@ CageExtra FailingTheRoll(const CoreFacts& core)
 {
     CageExtra extra = InCage();
     extra.roll = KeyRolling(false, kConfig.chance.ceiling);
+    // The cared-for draw is seeded from the same key a click rolls with.
+    extra.care = extra.roll;
     (void)core;
     return extra;
 }
@@ -1152,26 +1153,50 @@ void ACageRouteSwitchedOffIsDisabled()
     CHECK(v.reasonKey == Reason_CaptivityDisabled);
 }
 
-void TimeAloneBreaksAnyone()
+void ACaredForPrisonerGetsTheBonusInTheRoll()
 {
-    const char* name = "cage: easy mode, held long enough anyone yields";
-    CageExtra extra = InCage();
-    extra.hoursHeld = kConfig.prices.easyHoursCaged;
-    Verdict v = DecideCage(Prisoner(), extra, kConfig);
-    CHECK(v.willJoin);
-    CHECK(v.viaCaptivity);
-    CHECK(v.currency == Currency_Submission);
-    CHECK(v.reasonKey == Reason_EasyWait);
-    CHECK(!v.rolled);
+    const char* name = "cage: a healthy, fed prisoner rolls with the cared-for bonus, never an auto-join";
+    const CoreFacts core = Prisoner();   // unhurt, fed, full health (CoreFacts defaults)
+    CageExtra extra = FailingTheRoll(core);
+    const Verdict v = DecideCage(core, extra, kConfig);
+    CHECK(v.rolled);
+    CHECK(v.reasonKey != Reason_Intimidated);
+    const int bonus = CaredForBonus(true, true, extra.care.key, extra.care.dayIndex,
+                                    kConfig.submission);
+    CHECK(bonus >= kConfig.submission.caredForBonusMin && bonus <= kConfig.submission.caredForBonusMax);
+    CHECK(v.chanceInputs.caredFor == bonus);
+    CHECK(v.chancePercent == JoinChance(v.chanceInputs, kConfig.chance, kConfig.submission));
+    ChanceInputs without = v.chanceInputs;
+    without.caredFor = 0;
+    CHECK(JoinChance(without, kConfig.chance, kConfig.submission) + bonus == v.chancePercent);
 
-    extra.hoursHeld = kConfig.prices.easyHoursCaged - 0.01f;
-    v = DecideCage(Prisoner(), extra, kConfig);
-    CHECK(v.reasonKey != Reason_EasyWait);
+    // Asked again the same day: the same draw.
+    CHECK(DecideCage(core, extra, kConfig).chanceInputs.caredFor == bonus);
+}
 
-    Config off;
-    off.prices.easyHoursCaged = 0.0f;
-    extra.hoursHeld = 1000.0f;
-    CHECK(DecideCage(Prisoner(), extra, off).reasonKey != Reason_EasyWait);
+void AHurtOrHungryPrisonerGetsNoCaredForBonus()
+{
+    const char* name = "cage: wounded, starving or below full health means no cared-for bonus";
+    CoreFacts hurt = Prisoner();
+    hurt.wounded = true;
+    CHECK(DecideCage(hurt, FailingTheRoll(hurt), kConfig).chanceInputs.caredFor == 0);
+    CoreFacts hungry = Prisoner();
+    hungry.starving = true;
+    CHECK(DecideCage(hungry, FailingTheRoll(hungry), kConfig).chanceInputs.caredFor == 0);
+    CoreFacts scratched = Prisoner();
+    scratched.health = 0.9f;
+    CHECK(DecideCage(scratched, FailingTheRoll(scratched), kConfig).chanceInputs.caredFor == 0);
+    // No key to seed from (the card's peek of an NPC without an id): no draw either.
+    CHECK(DecideCage(Prisoner(), InCage(), kConfig).chanceInputs.caredFor == 0);
+}
+
+void ALongHeldHealthyPrisonerStillRolls()
+{
+    const char* name = "cage: time in the cage alone decides nothing (no easy wait, P4)";
+    const CoreFacts core = Prisoner();
+    const Verdict v = DecideCage(core, FailingTheRoll(core), kConfig);
+    CHECK(v.rolled);
+    CHECK(v.chancePercent > 0 && v.chancePercent < 100);
 }
 
 void IntimidationIsAStrongArgumentNotAVerdict()
@@ -1300,17 +1325,15 @@ void AnAnimalInTheCageIsTamedByTheSameBar()
     CHECK(v.reasonKey == Reason_TameReady);
 }
 
-void ACagedUnfedAnimalIgnoresTheEasyWait()
+void ACagedUnfedAnimalIsNotTamedByTime()
 {
-    const char* name = "cage: an unfed animal held 24 h is not broken by time";
+    const char* name = "cage: an unfed animal is not tamed, and gets no cared-for bonus";
     CageExtra extra = CagedBeast(Unfed());
-    extra.hoursHeld = 24.0f;
-    extra.holdKnown = true;
     const Verdict v = DecideCage(CagedAnimal(3.0f), extra, kConfig);
     CHECK(!v.willJoin);
     CHECK(v.isAnimal);
     CHECK(v.reasonKey == Reason_TameNotFed);
-    CHECK(v.reasonKey != Reason_EasyWait);
+    CHECK(v.chanceInputs.caredFor == 0);
 }
 
 void AnimalsAreNeverIntimidated()
@@ -1499,11 +1522,11 @@ void RouteFactsAreBuiltFromTheCoreAndTheConfig()
     grudging.temperament = Temperament_Normal;
     CHECK(ChooseEntryRoute(MakeRouteFacts(grudging, kConfig)) == Route_FreeWorld);
 
-    // Easy-healthy: easy mode on, fed, unwounded, full health, in the cage.
+    // Fed, unwounded, full health, in the cage: the cage route rolls (no shortcut, P4).
     CoreFacts patched = Core();
     patched.inMyCage = true;
     patched.health = 1.0f;
-    CHECK(ChooseEntryRoute(MakeRouteFacts(patched, kConfig)) == Route_EasyHealthy);
+    CHECK(ChooseEntryRoute(MakeRouteFacts(patched, kConfig)) == Route_Cage);
     patched.health = 0.9f;
     CHECK(ChooseEntryRoute(MakeRouteFacts(patched, kConfig)) == Route_Cage);
 }
@@ -1523,7 +1546,7 @@ void RunRouteDecisionsTests()
     OutColdAndOwingWaitsForThemToWake();
     OutColdAndDyingWantsCare();
     OutColdAndNothingElseJustWaits();
-    DyingAndEasyHealthyAreRescueRoutes();
+    DyingIsARescueRoute();
     ASavedLifeRollsAtTheSavedLifeChance();
     ARescuedOneWhoCannotFollowPaysItForward();
     HealingThemMoreArguesMore();
@@ -1566,7 +1589,9 @@ void RunRouteDecisionsTests()
     TheMilitaryServeTheirFaction();
     EveryoneElseHasAPrice();
     ACageRouteSwitchedOffIsDisabled();
-    TimeAloneBreaksAnyone();
+    ACaredForPrisonerGetsTheBonusInTheRoll();
+    AHurtOrHungryPrisonerGetsNoCaredForBonus();
+    ALongHeldHealthyPrisonerStillRolls();
     IntimidationIsAStrongArgumentNotAVerdict();
     TheCageRollCountsTheGrudgeAndTheName();
     ASlaveIsFreedNotBought();
@@ -1574,7 +1599,7 @@ void RunRouteDecisionsTests()
     TheHurtAndHungryWantCare();
     TheKindAreCaredForAndJoin();
     AnAnimalInTheCageIsTamedByTheSameBar();
-    ACagedUnfedAnimalIgnoresTheEasyWait();
+    ACagedUnfedAnimalIsNotTamedByTime();
     AnimalsAreNeverIntimidated();
     ACagedAnimalHasNoSaviourShortcut();
     AFullUnfedWildAnimalRefuses();

@@ -90,6 +90,7 @@
     <ClCompile Include="menu_anchor_tests.cpp" />
     <ClCompile Include="preset_rules_tests.cpp" />
     <ClCompile Include="cheat_waits_tests.cpp" />
+    <ClCompile Include="cared_for_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -145,6 +146,7 @@
     <ClCompile Include="..\..\src\knockout_watch_rules.cpp" />
     <ClCompile Include="..\..\src\preset_rules.cpp" />
     <ClCompile Include="..\..\src\cheat_waits.cpp" />
+    <ClCompile Include="..\..\src\cared_for_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

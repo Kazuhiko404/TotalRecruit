@@ -41,7 +41,6 @@ void EachEntryRouteHasItsName()
     CHECK(BuildReadout(Input(Route_Rescue, Reason_RescueJoins), kConfig).route == ReadoutRoute_Rescue);
     CHECK(BuildReadout(Input(Route_Dying, Reason_Dying), kConfig).route == ReadoutRoute_Rescue);
     CHECK(BuildReadout(Input(Route_Unconscious, Reason_UnconsciousWait), kConfig).route == ReadoutRoute_Rescue);
-    CHECK(BuildReadout(Input(Route_EasyHealthy, Reason_EasyHealthy), kConfig).route == ReadoutRoute_Rescue);
     CHECK(BuildReadout(Input(Route_FieldYield, Reason_FieldYieldNotYet), kConfig).route == ReadoutRoute_FieldYield);
     CHECK(BuildReadout(Input(Route_FieldYield, Reason_FieldYieldJoins), kConfig).route == ReadoutRoute_FieldYield);
     CHECK(BuildReadout(Input(Route_Surrendered, Reason_Surrendered), kConfig).route == ReadoutRoute_Surrender);
@@ -468,65 +467,32 @@ void TheDuelRecordNeverRidesAMembersCard()
     CHECK(!BuildReadout(in, kConfig).secondary.Present());
 }
 
-void TheEasyWaitIsASecondLineWhileItRuns()
+void NoCageWaitLineAnyMore()
 {
-    const char* name = "easy wait: second line beside another way in, with the hours left";
+    const char* name = "cage: no time-left-in-the-cage line: time alone decides nothing (P4)";
     ReadoutInput in = Input(Route_Cage, Reason_CatsAsk);
-    in.holdKnown = true;
-    in.hoursHeld = 3.0f;
     ReadoutView v = BuildReadout(in, kConfig);
     CHECK(v.primary.id == (int)Reason_CatsAsk);
-    CHECK(v.secondary.id == kLineWaitCage);
-    CHECK(v.secondary.hours > 2.99f && v.secondary.hours < 3.01f);
-
-    ReadoutInput done = in;
-    done.hoursHeld = 6.0f;
-    CHECK(!BuildReadout(done, kConfig).secondary.Present());
-
-    ReadoutInput joins = in;
-    joins.verdict.willJoin = true;
-    CHECK(!BuildReadout(joins, kConfig).secondary.Present());
-
-    ReadoutInput unknown = in;
-    unknown.holdKnown = false;
-    CHECK(!BuildReadout(unknown, kConfig).secondary.Present());
-
-    ReadoutInput open = in;
-    open.route = Route_FreeWorld;
-    CHECK(!BuildReadout(open, kConfig).secondary.Present());
-
-    ReadoutInput cheat = in;
-    cheat.haveCore = false;
-    CHECK(!BuildReadout(cheat, kConfig).secondary.Present());
-
-    ReadoutInput beast = in;
-    beast.core.animal = true;
-    CHECK(!BuildReadout(beast, kConfig).secondary.Present());
-
-    Config off;
-    off.prices.easyHoursCaged = 0.0f;
-    CHECK(!BuildReadout(in, off).secondary.Present());
+    CHECK(!v.secondary.Present());
+    ReadoutInput defiant = Input(Route_Cage, Reason_Defiant);
+    CHECK(BuildReadout(defiant, kConfig).primary.id == (int)Reason_Defiant);
 }
 
-void TheWaitIsPromotedWhenTheReasonNamesNoNumber()
+void TheCaredForBonusIsShownWithTheChance()
 {
-    const char* name = "easy wait: promoted to the main line when the reason has no number of its own";
-    ReadoutInput defiant = Input(Route_Cage, Reason_Defiant);
-    defiant.holdKnown = true;
-    defiant.hoursHeld = 4.5f;
-    ReadoutView v = BuildReadout(defiant, kConfig);
-    CHECK(v.primary.id == kLineWaitCage);
-    CHECK(v.primary.hours > 1.49f && v.primary.hours < 1.51f);
-    CHECK(!v.secondary.Present());
-
-    ReadoutInput zealot = defiant;
-    zealot.verdict.reasonKey = Reason_UniqueZealot;
-    CHECK(BuildReadout(zealot, kConfig).primary.id == kLineWaitCage);
-
-    // Nothing to promote once the wait is over: the reason stays.
-    ReadoutInput over = defiant;
-    over.hoursHeld = 6.0f;
-    CHECK(BuildReadout(over, kConfig).primary.id == (int)Reason_Defiant);
+    const char* name = "card: a caged prisoner's cared-for bonus rides with the chance";
+    ReadoutInput in = Input(Route_Cage, Reason_CatsAsk);
+    in.verdict.rolled = true;
+    in.verdict.chancePercent = 70;
+    in.verdict.chanceInputs.caredFor = 12;
+    ReadoutView v = BuildReadout(in, kConfig);
+    CHECK(v.showChance);
+    CHECK(v.caredForPct == 12);
+    in.verdict.chanceInputs.caredFor = 0;
+    CHECK(BuildReadout(in, kConfig).caredForPct == 0);
+    ReadoutInput noRoll = Input(Route_Cage, Reason_CatsAsk);
+    noRoll.verdict.chanceInputs.caredFor = 12;
+    CHECK(BuildReadout(noRoll, kConfig).caredForPct == 0);
 }
 
 void StressTermsMakeStressFromState()
@@ -581,7 +547,7 @@ void RunReadoutModelTests()
     ABalancedAllysPriceNamesTheFriendship();
     ATemporaryOrRefusingAllyShowsItsTierLine();
     ATemporaryMemberShowsTheDaysLeft();
-    TheEasyWaitIsASecondLineWhileItRuns();
-    TheWaitIsPromotedWhenTheReasonNamesNoNumber();
+    NoCageWaitLineAnyMore();
+    TheCaredForBonusIsShownWithTheChance();
     StressTermsMakeStressFromState();
 }

@@ -4,8 +4,7 @@ namespace totalrecruit
 {
 namespace
 {
-// One row per id, in ReasonKey order and then the card's own lines: the cage wait,
-// the open roll, the field-yield beat-again, a Balanced ally's discounted price
+// One row per id, in ReasonKey order and then the card's own lines: the open roll, the field-yield beat-again, a Balanced ally's discounted price
 // (join / short), a temporary member's days left, a helper's days left, the duel
 // record without and with draws, and the same record carrying the next win's join
 // chance or "se une" (the test checks the count). Text is plain ASCII like the rest of messages.json, and short: the card
@@ -33,7 +32,6 @@ const Row kRows[] = {
     { "readout.line.dying",                  "Se muere: curalo primero" },
     { "readout.line.rescue.joins",           "Te debe la vida: se une" },
     { "readout.line.rescue.repays",          "No puede seguirte: te paga con lo suyo" },
-    { "readout.line.easyHealthy",            "Sano gracias a ti: se une" },
     { "readout.line.fieldYield.joins",       "Se rinde y te sigue" },
     { "readout.line.fieldYield.notYet",      "Aun no cede: dejalo sin comer" },
     { "readout.line.surrendered",            "Se rinde antes que morir" },
@@ -50,7 +48,6 @@ const Row kRows[] = {
     { "readout.line.cats.ask",               "Precio {cats} cats (tienes {purse})" },
     { "readout.line.cats.join",              "Se une por {cats} cats" },
     { "readout.line.captivityDisabled",      "Reclutar prisioneros esta desactivado" },
-    { "readout.line.easyWait",               "Lleva bastante encerrado: se rinde" },
     { "readout.line.intimidated",            "Intimidado: se somete" },
     { "readout.line.freed",                  "Seguira a quien lo libero" },
     { "readout.line.cared.person",           "Alimentado y curado: se une" },
@@ -70,7 +67,6 @@ const Row kRows[] = {
     { "readout.line.ally.leaderTooWeak",     "Aliado: eres muy debil para el" },
     { "readout.line.ally.cruel",             "Cruel: no camina a tu lado" },
     { "readout.line.ally.greedy",            "Ambicioso: no hay precio para el" },
-    { "readout.line.waitCage",              "Faltan {hours} en la jaula" },
     { "readout.line.rollOpen",               "{chance}%: puede unirse si le hablas" },    // kLineRollOpen
     { "readout.line.fieldYield.beatAgain",   "Aun no cede: vencelo otra vez" },          // kLineFieldYieldBeatAgain
     { "readout.line.ally.paidJoin",          "Aliado: {cats} cats con descuento" },      // kLineAllyPaidJoin

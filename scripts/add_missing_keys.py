@@ -11,7 +11,7 @@ they belong to.
 
 --set-if KEY OLD NEW (top level only, repeatable): if DEPLOYED[KEY] equals OLD
 exactly, set it to NEW. Anything else the user typed is kept. It exists for one
-reason: a default the user asked to change (easyHoursCaged 12 -> 6).
+reason: a default the user asked to change (catsPerLevel 90 -> 32, ...).
 
 Prints one line per change ("+ path" added, "~ path old -> new" changed) and a
 summary. Writes nothing with --dry-run, or when there is nothing to change.

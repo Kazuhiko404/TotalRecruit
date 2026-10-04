@@ -10,7 +10,8 @@
 #
 # config.json / messages.json in the game folder are the user's. They are never
 # overwritten: scripts/add_missing_keys.py only adds keys that are absent, at any
-# depth, and the one value it changes is easyHoursCaged 12 -> 6 (the old default);
+# depth, and the only values it changes are the old shipped defaults named in the
+# merge_file line below (catsPerLevel, catsCeiling, headNoticeSeconds);
 # any other value the user set is kept.
 set -u
 
@@ -107,7 +108,7 @@ merge_file() {  # name, extra args...
     "$PY" "$MERGE" "$shipped" "$deployed" "$@" || die "merge of $name failed; the backup is $deployed.bak-$STAMP"
   fi
 }
-merge_file config.json --set-if easyHoursCaged 12 6.0 --set-if catsPerLevel 90 32 --set-if catsCeiling 28000 10000 --set-if headNoticeSeconds 300 90.0
+merge_file config.json --set-if catsPerLevel 90 32 --set-if catsCeiling 28000 10000 --set-if headNoticeSeconds 300 90.0
 merge_file messages.json
 
 # 5. md5 of the three DLLs.

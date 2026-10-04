@@ -322,11 +322,11 @@ Antes de empezar: `tasklist | rg kenshi_x64` (si esta abierto, cerralo del todo)
 2. **12.6 I4/I5**: el id estable sobrevive una recarga y un relanzamiento (lo de mayor riesgo: hooks sin verificar).
 3. **12.8 U1, U2, U6, U13, U17**: la tarjeta (puntería, numeros iguales a los del clic, sin efectos secundarios).
 4. **12.4 P1-P9**: el dinero (precio, cobro, reembolso).
-5. El resto: 12.1 (rutas), 12.2 (piedad), 12.3 (modo facil), 12.5 (config), 12.7 (estructura), y lo que quede de 12.6 y 12.8.
+5. El resto: 12.1 (rutas), 12.2 (piedad), 12.3 (reloj de encierro), 12.5 (config), 12.7 (estructura), y lo que quede de 12.6 y 12.8.
 
 Con `"probeOnClick": true`, cada click escribe `[route] <nombre>` en el log: es
 la ruta que contestó primero (`field-yield`, `unconscious`, `grudge-refusal`,
-`rescue`, `dying`, `easy-healthy`, `surrendered`, `free-world`, `cage`).
+`rescue`, `dying`, `surrendered`, `free-world`, `cage`; `easy-healthy` se retiro en v1-presets-close P4).
 
 ### 12.1 Orden de rutas (T2)
 
@@ -334,8 +334,8 @@ la ruta que contestó primero (`field-yield`, `unconscious`, `grudge-refusal`,
 |---|---|---|---|
 | F1 | Un honorable, valiente o bondadoso que **recuerda que mataste a uno de los suyos**: vencerlo 2 veces **fuera** de la jaula y hablarle | Se niega: *"mataste a alguien suyo, y eso no se compra"*. **No** se rinde | `[route] grudge-refusal` |
 | F2 | Mismo caso pero **dentro de tu jaula** | La jaula sí lo toca (el hambre y el tiempo no entienden de honor) | `[route] cage` |
-| F3 | Un prisionero **tuyo** con 2 o más derrotas, sano y alimentado, con `easyHoursCaged` > 0 | Entra por el atajo del modo fácil, no por *"todavía no se quiebra"* | `[route] easy-healthy` |
-| F4 | Un prisionero tuyo con 2 o más derrotas, hambriento o herido, con `easyHoursCaged` en 0 | Llega a los fallbacks de la jaula: cuidados, precio en cats, o intimidación; **no** el cartel de sumisión del campo | `[route] cage` y una línea `[chance]` con `defeats=` > 0 |
+| F3 | Un prisionero **tuyo** con 2 o más derrotas, sano y alimentado | Entra por la jaula y tira con el bonus por cuidarlo (12.33 C1); ya no hay atajo | `[route] cage` y `[chance] ... caredFor=+N` |
+| F4 | Un prisionero tuyo con 2 o más derrotas, hambriento o herido | Llega a los fallbacks de la jaula: cuidados, precio en cats, o intimidación; **no** el cartel de sumisión del campo | `[route] cage` y una línea `[chance]` con `defeats=` > 0 |
 | F5 | Un NPC **libre** vencido 2 veces | Sigue cediendo (es la ruta del campo) | `[route] field-yield` |
 | F6 | Vencer a alguien 2 veces, guardar, **salir al escritorio**, volver y hablarle fuera de la jaula | Sigue en la ruta del campo: el progreso sobrevivió | `[route] field-yield`; tras una derrota más, `count 3` |
 | F7 | Un NPC pide piedad (perdió un miembro o sangre < 25%). Apretar **ACEPTAR** | **Se une gratis**, también un honorable o un valiente. Nunca un precio en cats ni *"su honor le impide aceptar sobornos"* | `Accepted the plea of <nombre>: joined without a price.` y **ningún** `pagaste` |
@@ -350,19 +350,19 @@ la ruta que contestó primero (`field-yield`, `unconscious`, `grudge-refusal`,
 | M3 | Ídem con RECHAZAR | Se abre la siguiente | — |
 | M4 | Con una súplica abierta, hacerle click derecho al mismo NPC y abrir su oferta normal (si es un cautivo con precio) | ACEPTAR **cobra** según el veredicto; no lo regala como si fuera piedad | `pagaste N cats` en el mensaje |
 
-### 12.3 Modo fácil y reloj de encierro (T4)
+### 12.3 Reloj de encierro (T4; la espera facil se retiro en v1-presets-close P4)
 
 Con `probeOnClick` el reloj deja líneas `[hold]`.
 
 | # | Qué hacer | Esperado | Línea del log |
 |---|---|---|---|
-| E1 | Instalar con la config de fábrica y mirar el hub | `Horas jaula (modo facil)` arranca en **6**, igual para todos | — |
+| E1 | Abrir el hub | **No** hay fila `Horas jaula (modo facil)` (retirada en P4) | — |
 | E2 | Encerrar a alguien en una jaula tuya y quedarse cerca (< ~900 unidades) | El reloj arranca **al encerrarlo**, no al primer click | `<nombre> [hold] clock started: seen in your cage` |
-| E3 | Esperar 6 horas de juego y hablarle | Se rinde por tiempo: *"lleva bastante encerrado y se rinde"*, sea honorable, único o cobarde | `[hold] held=6.0h easy-mode needs 6.0h` |
-| E4 | Hablarle a las 3 horas | Todavía no (otras rutas pueden decidir) | `[hold] held=3.0h easy-mode needs 6.0h` |
+| E3 | Balanced: esperar 6 horas de juego con el preso en la jaula y hablarle | **No** se rinde por tiempo: tira la chance normal (estres, personalidad, nivel, bonus por cuidarlo si corresponde) | `[chance] ...`; ninguna linea `easy-mode needs` |
+| E4 | Cheat: hablarle antes y despues del minuto | Antes: "dale un momento"; despues se une (el reloj de encierro solo decide la espera de Cheat) | `[hold] clock started` |
 | E5 | Encerrarlo un día, **sacarlo de la jaula** (que te vean pasar con él libre), volver a encerrarlo y hablarle enseguida | **No** se une al instante: el reloj empieza de cero | `[hold] clock dropped: no longer in your cage`, luego `clock started` y `held=0.0h` |
 | E6 | Abrir el hub | **Ya no** están `Horas jaula (Orgullosos)` ni `Horas jaula (Únicos)` | S2: sin `Mod Hub rejected` |
-| E7 | Con un preso encerrado 3 h, guardar, salir y cargar ese save (Balanced y Cheat) | El reloj sigue: la tarjeta y el log cuentan las horas desde el encierro original, no desde la carga (v1-presets-close P3, 12.33 H1-H4) | `[hold] held=3.0h ...` tras la carga |
+| E8 | Con un preso encerrado, guardar, salir y cargar ese save | El reloj sigue desde el encierro original, no desde la carga (v1-presets-close P3, 12.33 H1-H4) | sin `[hold] clock started` nuevo tras la carga |
 | E7 | Cargar una config vieja que todavía trae `hoursCagedForProud` y `uniqueExtraHours` | Carga sin quejas; esas claves se ignoran | Sin errores de config en el log |
 | E8 | Con `hailWhenReady` en `false`, repetir E2 y E3 | El reloj anda igual (el barrido sigue vivo) | Las mismas líneas `[hold]` |
 
@@ -445,9 +445,9 @@ Desde 12.11 la tarjeta sale al **seleccionar** el NPC (clic izquierdo) y al apre
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
-| U1 | Pasar el mouse sobre un prisionero en tu jaula (modo facil 6h, precio en cats) | Tarjeta sobre su cabeza: ruta **Cautiverio**, barra de estres con 3 colores y la leyenda `Hambre/Heridas/Cansancio` que suma el total, barra de chance, derrotas `n/2`, linea de precio `Precio N cats (tienes M)` y debajo `Faltan Xh en la jaula` | `[readout] ... route=captivity chance=..% stress=..% ... [hover]` |
+| U1 | Pasar el mouse sobre un prisionero en tu jaula (precio en cats) | Tarjeta sobre su cabeza: ruta **Cautiverio**, barra de estres con 3 colores y la leyenda `Hambre/Heridas/Cansancio` que suma el total, barra de chance, derrotas `n/2`, linea de precio `Precio N cats (tienes M)` | `[readout] ... route=captivity chance=..% stress=..% ... [hover]` |
 | U2 | Hacer clic (menu contextual) en ese mismo prisionero y comparar | `chance=` de la tarjeta == `-> N%` de `[chance] ...` del clic; el precio de la tarjeta == `[price] ... -> N cats`; el estres == `stress=N(...%)` de `[chance]` | `[chance] ... -> N%`, `[price] ... -> N cats` |
-| U3 | Esperar en la jaula hasta que pasen las 6h | La segunda linea baja `Faltan 3h` -> `2h` -> `45min` y al llegar a 0 la tarjeta dice `Lleva bastante encerrado: se rinde` en verde. El tiempo coincide con `[hold] held=` | `[hold] held=Xh easy-mode needs 6.0h` |
+| U3 | Prisionero sano, comido y sin heridas en tu jaula (Balanced) | Debajo de la chance, la fila `LO CUIDASTE +N%` (N entre 5 y 20, el mismo todo el dia de juego); ya no hay linea `Faltan Xh en la jaula` | `[chance] ... caredFor=+N` |
 | U4 | Alimentar al prisionero (o curarlo) con la tarjeta a la vista | El estres baja en la tarjeta en menos de ~0.5 s | `[readout]` con otro `stress=` |
 | U5 | NPC que venciste 2 veces en campo abierto (sin jaula) | Ruta **Rendicion**, derrotas `2/2` llenas, chance y estres, linea `Aun no cede: dejalo sin comer` (o la que corresponda) | `route=surrender` |
 | U6 | Animal suelto con hambre | Ruta **Animal**, barra **Barriga** con la marca blanca en lo que necesita y `Hambre 56% / necesita 80%` (los numeros del motor, p. ej. un perro hueso a ~56%); sin barra de estres ni de chance | `route=animal ... food=56% line="Hambre 56% / necesita 80%"` |
@@ -693,7 +693,7 @@ Un animal se une solo si el jugador le dio de comer al menos una vez **y** su ba
 | F3 | Un animal con hambre (barriga bajo la barra) que nunca alimentaste | "todavia tiene hambre: le falta N% de barriga" y DARLE COMIDA; tras comer lo suficiente se une | `meals from the player N` |
 | F4 | Animal en tu jaula, sin alimentar, mas de 6 h (espera facil) | No se une por tiempo: el mismo motivo que F1 | sin `easyWait` para el |
 | F5 | Animal en tu jaula sano y lleno, sin alimentar | No hay "intimidado por tu poder" ni "Desconfia": el motivo es F1 | — |
-| F6 | Animal que rescataste (te recuerda como salvador) y sin alimentar | No entra por rescate ni por "sano gracias a ti": pide comida (F1) | `[route] free-world` o `cage`, nunca `rescue` / `easy-healthy` |
+| F6 | Animal que rescataste (te recuerda como salvador) y sin alimentar | No entra por rescate ni recibe el bonus por cuidarlo: pide comida (F1) | `[route] free-world` o `cage`, nunca `rescue` / `easy-healthy` |
 | F7 | Alimentar un animal, guardar, salir del juego, volver y cargar | Sigue contando como alimentado: si esta lleno se une | `first character id read back from the save` |
 | F8 | Cargar un save **anterior** a la comida | Vuelve a "todavia no ha comido de tu mano" | — |
 | F9 | Dar de comer a una **persona** presa | Igual que antes (el motor la alimenta); no se registra comida del jugador | `Fed <nombre> ... (engine)` sin `meals from the player` |
@@ -927,7 +927,7 @@ Con `"probeOnClick": true` y los valores por defecto (descansos de 1 h; base 0,0
 
 ### 12.33 Dos presets, esperas de Cheat de 1 minuto y horas de jaula guardadas (v1-presets-close)
 
-Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat) y H (horas de jaula guardadas).
+Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat), H (horas de jaula guardadas) y C (bonus por cuidarlo, jaula de Balanced sin atajos).
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
@@ -936,7 +936,15 @@ Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat) y H (horas d
 | P3 | Dejar una clave `"factionWeight": 0.75` en el `config.json` desplegado y abrir | Nada cambia: la clave se ignora, sin errores ni avisos; el precio de un hostil y el de un amigo no aliado salen de la misma curva | sin lineas de `factionWeight` |
 | W1 | Cheat (`"preset": 0`): los casos 8 H2, H3, H7, H8, H9, H10 | Cada espera dura 1 minuto de juego; rechazo y duelo terminan en la proxima hora entera (como mucho ~1 h) | `[hold] clock started`, `called out to the player.`, `reject cooldown until game hour N (1 h)`, `no challenge until hour N` |
 | W2 | Balanced: Golpear (12.32 S4), llamado (`hailFirstHours`, 12.23 N1), rechazo (12.21 S7), duelo perdido (12.28 T9) | Sin cambios: 1 h, 24 h, 72 h, 24 h | igual que antes |
-| H1 | Balanced: encerrar a un preso, esperar 3 h de juego, guardar, salir de Kenshi, abrir y cargar ese save; mirar la tarjeta | Las horas en la jaula siguen desde el encierro original (3 h, no 0) | `[hold] held=3.0h` en la primera evaluacion tras la carga |
+| H1 | Encerrar a un preso, esperar 3 h de juego, guardar, salir de Kenshi, abrir y cargar ese save (cerca del preso) | Tras la carga **no** aparece un `clock started` nuevo para el: el reloj siguio desde el encierro original (en Balanced el reloj ya no decide nada desde P4; se nota en Cheat, H2) | sin `[hold] clock started: seen in your cage` para ese preso tras la carga |
 | H2 | Cheat: encerrar a un preso, guardar enseguida (antes del minuto), cargar y esperar | Llama al completar el minuto contado desde el encierro original, no desde la carga | `called out to the player.` |
 | H3 | Guardar con un preso encerrado, sacarlo de la jaula, guardar en otra ranura; cargar la segunda | No hay reloj: se reinicia al volver a encerrarlo | `[hold] clock started: seen in your cage` al volver a encerrarlo |
 | H4 | Encerrar a un preso (reloj en la hora N), cargar un save **anterior** a la hora N en el que el mismo preso ya estaba encerrado | El reloj se reinicia en la hora del save viejo, nunca queda negativo ni congelado | `[hold] held=0.0h` y despues cuenta normal |
+| C1 | Balanced: un preso de tu jaula sin heridas, comido y con la salud llena; clic derecho y Hablar | **No** se une solo: tira la chance normal; la tarjeta y la ventana muestran `LO CUIDASTE +N%` con N entre 5 y 20, y la chance ya lo incluye | `[route] cage` y `[chance] ... caredFor=+N ... -> M%` |
+| C2 | Repetir C1 varias veces el mismo dia, y guardar/cargar y repetir | El mismo N cada vez (sorteo estable por NPC y por dia) | el mismo `caredFor=+N` |
+| C3 | Esperar al dia de juego siguiente y repetir C1 | N puede cambiar (otro sorteo), siempre entre 5 y 20 | `caredFor=+N2` |
+| C4 | Un preso herido, hambriento o con la salud no llena | Sin fila `LO CUIDASTE` y `caredFor=+0` | `[chance] ... caredFor=+0` |
+| C5 | Un animal en tu jaula, sano y lleno | Sin bonus: lo deciden la comida del jugador y la barriga (12.20) | sin `caredFor` (ruta animal) |
+| C6 | Mod Hub: "Sumision: bonus por cuidarlo min" = "max" = 12; luego min 15 y max 3 | Primero siempre +12; despues siempre +15 (un maximo menor que el minimo cuenta como el minimo) | `caredFor=+12` / `caredFor=+15` |
+| C7 | Balanced: dejar a un preso 6 h o mas en la jaula y hablarle | No se une por tiempo (12.3 E3) | ninguna linea `easy-mode needs` |
+| C8 | Dejar `"easyHoursCaged": 6.0` en el `config.json` desplegado y abrir | Se ignora: sin errores ni avisos, y nadie se une por tiempo | sin lineas de `easyHoursCaged` |

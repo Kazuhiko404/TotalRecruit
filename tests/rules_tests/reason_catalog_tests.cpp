@@ -170,7 +170,6 @@ void RewordingAMessageCannotChangeTheTone()
     // And the converse: a text that merely contains a trigger word is not a tone.
     const std::string wordy = "tiene honor de sobra, y aun asi se une";
     CHECK(OldSubstringTone(wordy) == RefusalTone_Honour);
-    CHECK(RefusalToneFor(Reason_EasyHealthy) == RefusalTone_Default);
 }
 
 void NoReasonThatIsNotARefusalCarriesATone()
@@ -178,7 +177,7 @@ void NoReasonThatIsNotARefusalCarriesATone()
     const char* name = "tone: reasons that never refuse are all default";
     const ReasonKey joins[] = {
         Reason_CheatJoins, Reason_RescueJoins, Reason_FieldYieldJoins, Reason_AllyJoins,
-        Reason_CatsJoin, Reason_Intimidated, Reason_EasyWait, Reason_TameReady,
+        Reason_CatsJoin, Reason_Intimidated, Reason_TameReady,
         Reason_CaredFor, Reason_BrokenNoPride, Reason_FreedFollows
     };
     for (size_t i = 0; i < sizeof(joins) / sizeof(joins[0]); ++i)

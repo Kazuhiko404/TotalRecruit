@@ -143,6 +143,7 @@
     <ClCompile Include="src\menu_anchor.cpp" />
     <ClCompile Include="src\preset_rules.cpp" />
     <ClCompile Include="src\cheat_waits.cpp" />
+    <ClCompile Include="src\cared_for_rules.cpp" />
     <ClCompile Include="src\feeding_ledger.cpp" />
     <ClCompile Include="src\saved_ints.cpp" />
     <ClCompile Include="src\approach_rules.cpp" />
@@ -217,6 +218,7 @@
     <ClInclude Include="src\menu_anchor.h" />
     <ClInclude Include="src\preset_rules.h" />
     <ClInclude Include="src\cheat_waits.h" />
+    <ClInclude Include="src\cared_for_rules.h" />
     <ClInclude Include="src\menu_button_release.h" />
     <ClInclude Include="src\menu_obstacles.h" />
     <ClInclude Include="src\button_style.h" />

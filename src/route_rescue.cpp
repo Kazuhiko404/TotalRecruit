@@ -38,20 +38,6 @@ Verdict DecideDying(const CoreFacts& core)
     return v;
 }
 
-// Easy mode, the healing half: someone patched all the way back up owes the player
-// whether or not the engine happened to credit the first aid. The applyFirstAid
-// hook only fires while the player's own medic is working, so a prisoner healed by
-// a bed or by time would otherwise slip through.
-Verdict DecideEasyHealthy(const CoreFacts& core)
-{
-    Verdict v = BaseVerdict(core);
-    v.willJoin = true;
-    v.viaRescue = true;
-    v.currency = Currency_Care;
-    v.reasonKey = Reason_EasyHealthy;
-    return v;
-}
-
 // Route A -- rescue. Someone you pulled out of the dirt owes you nothing else.
 //
 // The debt is real, but it is not a contract. Whether they can follow you depends

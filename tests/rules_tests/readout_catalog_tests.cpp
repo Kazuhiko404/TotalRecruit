@@ -20,21 +20,20 @@ bool IsHidden(int id)
 
 void EveryReasonHasARowPlusTheCardsOwnLines()
 {
-    const char* name = "catalog: one row per ReasonKey plus the wait, the open roll, beat-again and the ally prices";
-    CHECK(ReadoutLineCount() == (int)Reason_Count + 13);
-    CHECK(kLineWaitCage == (int)Reason_Count);
-    CHECK(kLineRollOpen == (int)Reason_Count + 1);
-    CHECK(kLineFieldYieldBeatAgain == (int)Reason_Count + 2);
-    CHECK(kLineAllyPaidJoin == (int)Reason_Count + 3);
-    CHECK(kLineAllyPaidAsk == (int)Reason_Count + 4);
-    CHECK(kLineTempMemberDaysLeft == (int)Reason_Count + 5);
-    CHECK(kLineHelperDaysLeft == (int)Reason_Count + 6);
-    CHECK(kLineDuelRecord == (int)Reason_Count + 7);
-    CHECK(kLineDuelRecordWithDraws == (int)Reason_Count + 8);
-    CHECK(kLineDuelRecordChance == (int)Reason_Count + 9);
-    CHECK(kLineDuelRecordDrawsChance == (int)Reason_Count + 10);
-    CHECK(kLineDuelRecordSure == (int)Reason_Count + 11);
-    CHECK(kLineDuelRecordDrawsSure == (int)Reason_Count + 12);
+    const char* name = "catalog: one row per ReasonKey plus the open roll, beat-again and the ally prices";
+    CHECK(ReadoutLineCount() == (int)Reason_Count + 12);
+    CHECK(kLineRollOpen == (int)Reason_Count);
+    CHECK(kLineFieldYieldBeatAgain == (int)Reason_Count + 1);
+    CHECK(kLineAllyPaidJoin == (int)Reason_Count + 2);
+    CHECK(kLineAllyPaidAsk == (int)Reason_Count + 3);
+    CHECK(kLineTempMemberDaysLeft == (int)Reason_Count + 4);
+    CHECK(kLineHelperDaysLeft == (int)Reason_Count + 5);
+    CHECK(kLineDuelRecord == (int)Reason_Count + 6);
+    CHECK(kLineDuelRecordWithDraws == (int)Reason_Count + 7);
+    CHECK(kLineDuelRecordChance == (int)Reason_Count + 8);
+    CHECK(kLineDuelRecordDrawsChance == (int)Reason_Count + 9);
+    CHECK(kLineDuelRecordSure == (int)Reason_Count + 10);
+    CHECK(kLineDuelRecordDrawsSure == (int)Reason_Count + 11);
 }
 
 void TheDuelChanceLinesCarryTheChance()

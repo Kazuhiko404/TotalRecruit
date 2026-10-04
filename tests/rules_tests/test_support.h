@@ -62,3 +62,4 @@ void RunBeatingStressRulesTests();
 void RunMenuAnchorTests();
 void RunPresetRulesTests();
 void RunCheatWaitsTests();
+void RunCaredForRulesTests();

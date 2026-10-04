@@ -26,12 +26,9 @@ struct EvaluationDetail
     Route route;
     bool haveCore;
     CoreFacts core;
-    // The hold clock was read (a peek only reads one that is already running).
-    bool holdKnown;
-    float hoursHeld;
 
     EvaluationDetail()
-        : route(Route_FreeWorld), haveCore(false), core(), holdKnown(false), hoursHeld(0.0f)
+        : route(Route_FreeWorld), haveCore(false), core()
     {
     }
 };
