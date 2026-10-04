@@ -38,9 +38,11 @@ struct EvaluationDetail
 
 // The same question Evaluate answers, through the same facts and the same route
 // functions, asked as a bystander: it starts no hold clock, mints no id, speaks and
-// logs nothing, and supplies no roll key, so a roll can never pass. The verdict is
-// therefore "what happens if luck does not carry them": its chance is the real
-// chance, its reason is what would be needed next. Safe to ask every few hundred
+// logs nothing. Only the rescue route gets a roll key, read from an id the NPC
+// already has (character_facts.cpp PeekRollKey), so the card and the click agree on
+// a rescue; every other route has none, so its roll can never pass and the verdict
+// is "what happens if luck does not carry them": its chance is the real chance,
+// its reason is what would be needed next. Safe to ask every few hundred
 // milliseconds about anyone in view; it never says whether the roll will pass.
 Verdict EvaluatePeek(Character* character, EvaluationDetail* detail);
 

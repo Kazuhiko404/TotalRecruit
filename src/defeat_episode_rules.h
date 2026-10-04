@@ -57,7 +57,8 @@ enum Sighting
     // knockout ran: the transition itself, so a new episode.
     Sighting_KnockoutFromStanding,
     // Already down when looked at: a repeat knockout call as the body settles,
-    // the right-click, the beating's explicit credit, or an unreadable state.
+    // the right-click (NoteIfDown), a cage command's knockout found already down,
+    // or an unreadable state.
     Sighting_FoundDown
 };
 

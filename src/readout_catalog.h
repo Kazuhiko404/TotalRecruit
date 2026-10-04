@@ -19,7 +19,8 @@ namespace totalrecruit
 // The id of "faltan {hours} en la jaula".
 const int kLineWaitCage = Reason_Count;
 // The id of "{chance}%: puede unirse si le hablas": a roll the card could not make
-// (the peek carries no roll key), so it states the odds instead of a "not yet".
+// (the peek carries no roll key outside the rescue), so it states the odds
+// instead of a "not yet".
 const int kLineRollOpen = Reason_Count + 1;
 // The id of "Aun no cede: vencelo otra vez": the field-yield "not yet" for someone
 // who is not in the player's cage, where starving them is not on offer.

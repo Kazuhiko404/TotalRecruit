@@ -244,8 +244,10 @@ bool WorkOut(Character* character, const char* source)
         input.holdKnown = detail.holdKnown;
         input.hoursHeld = detail.hoursHeld;
         input.mercyPending = IsMercyPending(character);
-        // The peek mints no id, so it has no roll key: a roll it could not make is
-        // shown as odds (readout_model.h).
+        // The peek mints no id. Only the rescue route rolls in it, from an id the
+        // NPC already has (character_facts.cpp PeekRollKey), and the rescue is not
+        // a lost-roll reason; every other roll it could not make is shown as odds
+        // (readout_model.h IsLostRoll).
         input.rollKeyed = false;
         AddDuelRecord(character, &input);
     }

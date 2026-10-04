@@ -415,7 +415,7 @@ T8 es un refactor: **el comportamiento no debe cambiar** salvo A1 (golpiza) y la
 
 | # | Qué hacer | Esperado | Línea del log |
 |---|---|---|---|
-| A1 | Prisionero en tu jaula, ventana de oferta, **GOLPEARLO** | Queda sin sentido y la derrota **cuenta siempre** (antes se perdia si el motor no nombraba al jugador como ganador); el contador de sesion sube de a 1 | `[defeat] credited to the player explicitly (beating): <nombre> (engine winner is the player / is someone else / unreadable)` y luego `<nombre> defeated by the player (N this session, ...)` |
+| A1 | Prisionero en tu jaula, ventana de oferta, **GOLPEAR** hasta que quede sin sentido (o **NOQUEAR**) | La derrota **cuenta siempre** (antes se perdia si el motor no nombraba al jugador como ganador); el conteo sube de a 1 | `[defeat] credited to the player explicitly (cage command): <nombre> (engine winner is the player / is someone else / unreadable)` y luego `<nombre> defeated by the player (...; count N, ...)` |
 | A2 | Volver a golpear al mismo prisionero enseguida | "todavia se esta recuperando del anterior": el enfriamiento (6h por defecto) corre desde ESE golpe. Antes, un golpe descartado no dejaba registro y se podia golpear sin espera | (sin linea nueva) |
 | A3 | Con `probeOnClick`, golpear a alguien que el motor no registra como tuyo | Mismo `[defeat] credited ...`; **no** aparece `[defeat-skip] ... lastGuyWhoDefeatedMe` para ese golpe | `[defeat-skip]` ausente |
 | Z1 | Hacer clic en un prisionero, un NPC libre, un aliado, un animal, un rescatado y un NPC con rencor | El texto del motivo en la ventana y en `Refused ...` es **el mismo de antes**, palabra por palabra | `Refused <nombre> (<moneda>): <motivo>` |
@@ -654,7 +654,7 @@ Golpear y Noquear los da el personaje **seleccionado**. Golpear (desde `fix/cage
 | C2 | Clic derecho sobre un NPC libre, un preso inconsciente, o con `allowBeating` apagado | Solo Hablar | sin `[cage commands]` |
 | C3 | Golpear (clic izquierdo, y otra vez con el gesto: mantener clic derecho, deslizar, soltar) | Un solo golpe en el acto por gesto: la vida del torso del preso baja; el preso **sigue en la jaula** (nadie se pone a pelear, la lectura no pasa a `route=free`) | `[cage] <tuyo> -> <preso> beat hit (blunt X, part health A -> B)` con B < A |
 | C3b | Con Mod Hub "Sumision: horas entre golpizas" en 0,5, golpear al mismo preso muchas veces (esperando el descanso entre golpes, a velocidad x3) | Puede quedar inconsciente; **nunca muere** ni sangra hasta morir; los golpes cuando la parte ya esta en el piso no bajan nada | `beat hit (blunt 0.0, part health -N -> -N)` en el piso (N = la mitad de la vida maxima de la parte) |
-| C3h | Golpear a un preso cuyo torso ya esta por debajo del piso (por ejemplo, herido de una pelea anterior y todavia en el suelo no: despierto pero muy herido; si no se consigue, anotarlo) | El golpe no pega y la vida del torso **no sube** | `beat hit (blunt 0.0, part health A -> A)` con A igual en los dos lados |
+| C3h | Golpear a un preso despierto cuyo torso ya esta por debajo del piso (-0,5 x su vida maxima), por ejemplo muy herido de una pelea anterior; si no se consigue, anotarlo | El golpe no pega y la vida del torso **no sube** | `beat hit (blunt 0.0, part health A -> A)` con A igual en los dos lados |
 | C3c | Justo despues de C3, clic derecho otra vez sobre el mismo preso (horas entre golpizas en 6) | El bloque sigue con Golpear, que dice "Golpear (6 h)" (las horas que faltan, redondeadas hacia arriba); otro preso sin golpes dice "Golpear" | — |
 | C3d | Golpear en C3c | No hay golpe; mensaje "Podras volver a golpearlo en N h" | sin `beat hit` |
 | C3e | Igual en la ventana: rechazo del mismo preso tras C3 | GOLPEAR dice "GOLPEAR (N h)"; al pulsarlo la ventana se cierra con el mensaje de C3d; NOQUEAR funciona normal (Noquear no descansa) | sin `beat hit` |
@@ -723,7 +723,7 @@ Reporte del usuario (2026-10-03): un "Holy Warden" en tu jaula, Cautiverio 87%, 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
 | W1 | Hablar con un preso **despierto** y desafiante en tu jaula, con uno de los tuyos seleccionado | Motivo en rojo "...dejalo con hambre o hierelo"; botones GOLPEAR, "NOQUEAR NN%" (el mismo % que el menu contextual) y CERRAR, en una fila | — |
-| W2 | GOLPEAR en W1 | La ventana se cierra; el seleccionado va a golpearlo (como C3) | `[cage] ... beat ordered ...` |
+| W2 | GOLPEAR en W1 | La ventana se cierra; el seleccionado le da un golpe en el acto (como C3); el preso sigue en la jaula | `[cage] ... beat hit (...)` |
 | W3 | NOQUEAR en W1 | La ventana se cierra; el seleccionado intenta el noqueo (como C4) | `[cage] ... knockout ordered ...` |
 | W4 | W2 / W3 sin nadie seleccionado | "Selecciona a alguien de tu grupo para hacerlo" | — |
 | W5 | El mismo preso con hambre, llevando comida | DARLE COMIDA, GOLPEAR, NOQUEAR en la primera fila y CERRAR solo a la derecha en una segunda | — |

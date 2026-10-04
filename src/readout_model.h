@@ -12,7 +12,8 @@
 //
 // It also never says whether the roll passes: the roll is stable and seeded from
 // the character, so the odds are the information and the result is the click's.
-// (The peek that feeds this supplies no roll key; see rules.h.)
+// (The peek that feeds this supplies a roll key only for the rescue, from an
+// existing id; see rules.h.)
 
 #include "config.h"
 #include "entry_facts.h"
@@ -80,8 +81,9 @@ struct ReadoutInput
     // This NPC's plea is the one on screen.
     bool mercyPending;
     // The evaluation had the roll key, so a rolled verdict is the click's own
-    // outcome. False for the card's peek (EvaluatePeek mints no id): a roll it
-    // could not make is shown as odds, never as a "not yet".
+    // outcome. False for the card's peek (EvaluatePeek mints no id; only its
+    // rescue rolls, from an existing id): a roll it could not make is shown as
+    // odds, never as a "not yet".
     bool rollKeyed;
     // A temporary member of the player's squad (temp_member.h): the card is not about
     // joining any more, only how many days they have left (`tempDaysLeft`). Nothing

@@ -104,8 +104,8 @@ enum CandidateSkip
 CandidateSkip ScreenCandidate(const CandidateFacts& facts);
 const char* CandidateSkipText(CandidateSkip skip);
 
-// What the peek at the verdict (rules.h EvaluatePeek: no roll key, no id, no
-// clocks) says about firing the event.
+// What the peek at the verdict (rules.h EvaluatePeek: no roll key outside the
+// rescue, no id minted, no clocks) says about firing the event.
 enum SubmissionPeek
 {
     Peek_Skip = 0,   // not submitted: no event
