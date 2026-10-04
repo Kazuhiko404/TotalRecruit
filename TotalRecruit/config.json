@@ -34,7 +34,6 @@
   "woundedThreshold": 0.5,
   "fearfulMultiplier": 0.6,
   "braveMultiplier": 1.6,
-  "factionWeight": 0.75,
   "talentWeight": 1.0,
   "uniqueMultiplier": 2.0,
   "talentMaxMultiplier": 1.5,

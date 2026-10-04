@@ -357,23 +357,10 @@ HaggleFact ReadHaggle(Character* character)
     return fact;
 }
 
-// Faction relation only ever shifts the price, and only in Vanilla+: as a gate it
-// would make half the world unrecruitable, which is exactly the problem this mod
-// exists to solve. The arithmetic (and its clamps) is price_rules.cpp.
-float FactionMultiplier(const RelationFact& relation, const Config& config)
-{
-    if (config.preset != Preset_VanillaPlus || !relation.known)
-    {
-        return 1.0f;
-    }
-    return FactionPriceMultiplier(relation.value, config.prices);
-}
-
 // A Balanced ally's friendship discount as a price multiplier, 1 - discount
-// (ally_tier_rules.h). 1.0 for anyone the tiers do not price -- and always outside
-// Balanced, where FactionMultiplier is the one that moves, so the two multiply
-// together without ever both being off 1.0. The route decides by the same
-// DecideBalancedAllyTier, so the popup's "-14%" is the discount in the price.
+// (ally_tier_rules.h). 1.0 for anyone the tiers do not price, and always outside
+// Balanced: faction relation is never a price factor on its own. The route
+// decides by the same DecideBalancedAllyTier, so the popup's "-14%" is the discount in the price.
 float AllyFriendshipMultiplier(const CoreFacts& core, const RelationFact& relation,
                                const Config& config)
 {
@@ -390,8 +377,7 @@ float AllyFriendshipMultiplier(const CoreFacts& core, const RelationFact& relati
 // worth, and how hard they are to win over is already the level gap's job in
 // JoinChance. Pricing both would charge twice for one fact and make the same
 // prisoner cost different amounts depending on who is asking.
-PriceInputs GatherPrice(Character* character, const CoreFacts& core,
-                        const RelationFact& relation)
+PriceInputs GatherPrice(Character* character, const CoreFacts& core)
 {
     const Config& config = GetConfig();
 
@@ -415,7 +401,6 @@ PriceInputs GatherPrice(Character* character, const CoreFacts& core,
     // The name multiplies the price (uniqueMultiplier), but together with talent
     // and personality it stays under premiumMaxMultiplier (PremiumMultiplier).
     inputs.unique = core.unique;
-    inputs.factionMultiplier = FactionMultiplier(relation, config);
     return inputs;
 }
 
@@ -649,7 +634,7 @@ FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core, GatherMod
 
     extra.relation = ReadRelation(character, PlayerFaction());
     extra.purse = ReadPurse();
-    extra.price = GatherPrice(character, core, extra.relation);
+    extra.price = GatherPrice(character, core);
     // Only here, in the open world: a friend's price is a free-world deal, and a
     // caged ally is priced like any other prisoner.
     extra.price.factionMultiplier *= AllyFriendshipMultiplier(core, extra.relation, config);
@@ -689,8 +674,8 @@ CageExtra GatherCageExtra(Character* character, const CoreFacts& core, GatherMod
         extra.roll = MintRollKey(character);
     }
     extra.purse = ReadPurse();
-    // The relation is only a price factor here (the cage chance ignores standing).
-    extra.price = GatherPrice(character, core, ReadRelation(character, PlayerFaction()));
+    // Standing is not a factor in the cage: neither the chance nor the price reads it.
+    extra.price = GatherPrice(character, core);
     extra.haggle = ReadHaggle(character);
     if (core.animal)
     {

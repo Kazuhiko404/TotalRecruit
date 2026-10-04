@@ -774,7 +774,7 @@ Pedido del usuario (2026-10-03): en Balanced, el nivel y la personalidad de un a
 | A8 | Aliado Frio y cruel o Maniaco de nivel 80+ | Rechazo "no camina al lado de nadie: su crueldad no se pone a tus ordenes" | — |
 | A9 | Aliado Traicionero o Astuto de nivel 100+ | Rechazo "vale mas de lo que podrias pagarle nunca" | — |
 | A10 | Seleccionar al aliado de A2 (tarjeta) | Linea "Aliado: X cats con descuento" en verde, sin barra de chance | — |
-| A11 | Preset 2 (Vanilla+) con el aliado de A2 | Como antes: una tirada diaria, PROBABILIDAD, sin "-N%" | — |
+| A11 | `allyTierEnabled` apagado con el aliado de A2 (Vanilla+ se retiro en v1) | Como antes: una tirada diaria, PROBABILIDAD, sin "-N%" | — |
 | A12 | Preset 0 (Cheat) | Sin cambios: jaula y un momento | — |
 | A13 | Mod Hub "Aliados por nivel: activo" apagado, preset 1 | Todos los aliados vuelven a la tirada diaria | — |
 | A14 | Mod Hub: bajar "Aliados: peso de la amistad" a 0.5 con relacion 28 | El descuento pasa a 14% | — |
@@ -823,7 +823,7 @@ Pedido del usuario (2026-10-03): aliados mas fuertes y de buena personalidad se 
 | H15 | Ordenar a uno de tu grupo que lo ataque | Cartel "No vuelvo a ayudarte", roller "<nombre> dejo de ayudarte: tu grupo lo ataco."; deja de seguirte; 3 dias sin ofrecerse | `stops helping: attacked by the squad` |
 | H16 | Noquearlo con tu grupo | Igual que H15 | `stops helping: knocked out by the squad` |
 | H17 | Mientras un sometido camina hacia vos (12.x) | Ningun ayudante se ofrece hasta que termina, y al reves | — |
-| H18 | Mod Hub "Ayudante: activo" apagado, o preset 0/2 | Nadie se ofrece (los contratos en curso siguen hasta su fin) | — |
+| H18 | Mod Hub "Ayudante: activo" apagado, o preset 0 (Cheat) | Nadie se ofrece (los contratos en curso siguen hasta su fin) | — |
 
 ### 12.27 La tarjeta y los carteles se ocultan con el dialogo de Kenshi (fix card-hide-on-dialogue)
 
@@ -848,7 +848,7 @@ Pedido del usuario (2026-10-03): retar a un aliado 80+ a un duelo de TotalSparri
 | T1 | Sin TotalSparring instalado: Hablar con el aliado 80+ | La ventana de siempre (temporal / precio / negativa), **sin** RETAR A DUELO ni fila DUELOS; la tarjeta sin "Duelos" | `[ts-bridge] TotalSparring duels unavailable: ...` (una vez, ~30 s despues de cargar) |
 | T2 | Con TotalSparring, partida cargada: Hablar con el aliado 80+ | La respuesta del tramo sigue, mas RETAR A DUELO y la fila DUELOS con el historial del seleccionado ("0-0" si nunca pelearon) | `[ts-bridge] attached to TotalSparring API v1 and listening for bouts.` |
 | T3 | Seleccionar el aliado 80+ (clic izquierdo) con uno de tu grupo seleccionado antes | La tarjeta muestra "Duelos: W-L, si ganas X% se une" como segunda linea; cambiar de miembro seleccionado cambia el numero | — |
-| T4 | Aliado de nivel 79, o un no aliado, o preset Vanilla+ | Nunca RETAR A DUELO (Cheat si lo ofrece: 12.29 J7) | — |
+| T4 | Aliado de nivel 79, o un no aliado | Nunca RETAR A DUELO (Cheat si lo ofrece: 12.29 J7) | — |
 | T5 | RETAR A DUELO sin nadie de tu grupo seleccionado (o el seleccionado inconsciente) | Roller "Selecciona a alguien de tu grupo para hacerlo"; nada se abre | — |
 | T6 | RETAR A DUELO con tu luchador seleccionado | Se cierra la ventana de TotalRecruit y se abre la ventana **Dueling** de TotalSparring con ese luchador preseleccionado; roller "<nombre> acepta el reto: ..." | `[duel] <tuyo> challenges <nombre> [key ...]` |
 | T7 | Con la ventana Dueling ya abierta, volver a Hablar y RETAR A DUELO | Roller "Ya hay un duelo abierto en TotalSparring."; el reto nuevo se borra | `TotalSparring did not open the duel ... challenge withdrawn` |
@@ -919,3 +919,13 @@ Con `"probeOnClick": true` y los valores por defecto (descansos de 1 h; base 0,0
 | S10 | Con estres por golpes, guardar, salir y cargar ese save | La barra vuelve con el valor del save, desvanecida segun las horas de juego que pasaron desde el ultimo golpe; cargar un save **anterior** a los golpes la deja en 0 | `[readout] ... beaten N)` |
 | S11 | Mod Hub: "Estres: base por golpe" en 0 y golpear | El golpe no suma estres (base 0 apaga el termino; el minimo no aplica) | `beating stress +0% (blow, ...)` |
 | S12 | Con la barra de golpes alta, comparar la chance de la tarjeta antes y despues de golpear | La chance sube con el estres (pesa como el resto del estres, con su tope `maxStressChance` y el aguante) | `[chance] ... stress=N(..%)` |
+
+### 12.33 Dos presets, esperas de Cheat de 1 minuto y horas de jaula guardadas (v1-presets-close)
+
+Con `"probeOnClick": true`. Casos P (presets); W y H se agregan con sus tareas.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| P1 | Mod Hub, fila "Dificultad (Preset)" | Va de 0 a 1 y dice "0: Cheat, 1: Balanced"; no hay fila "Peso de Faccion" | — |
+| P2 | Cerrar Kenshi, poner `"preset": 2` en el `config.json` desplegado, abrir | Corre Balanced (precios, aliados por nivel); el log lo dice una sola vez | `config.json preset 2 is not a preset (0: Cheat, 1: Balanced); running Balanced.` |
+| P3 | Dejar una clave `"factionWeight": 0.75` en el `config.json` desplegado y abrir | Nada cambia: la clave se ignora, sin errores ni avisos; el precio de un hostil y el de un amigo no aliado salen de la misma curva | sin lineas de `factionWeight` |

@@ -125,7 +125,7 @@ Nothing has a formal QA pass mark.
 ### 11. Config, Mod Hub, messages and deploy (6)
 | Feature | Status |
 |---|---|
-| Every setting in Emkej's Mod Hub, three presets (Cheat, Balanced, Vanilla+) | `verified in game` (R6.2) |
+| Every setting in Emkej's Mod Hub, two presets (Cheat, Balanced; Vanilla+ retired in v1, a saved `preset` 2 loads as Balanced) | `verified in game` (R6.2); preset range 0..1 `needs in-game QA` (QA P1) |
 | Config writer merges into `config.json` (hand edits, comments and unknown keys kept), atomic write | `not verified` (12.5) |
 | Every player-facing line in `messages.json`; a missing key announces itself | `not verified` (§1 S4) |
 | `scripts/deploy.sh`: never-overwrite key merge, `--set-if` default migration, dry run, refuses while Kenshi runs | `play-tested informally` (used for every deploy; 12.23 N17 not run) |

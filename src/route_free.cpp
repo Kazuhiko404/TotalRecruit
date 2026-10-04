@@ -16,8 +16,8 @@ bool IsFriendly(const RelationFact& relation, const Config& config)
 }
 
 // Today's ally roll: level, relation and personality, plus what standing this good
-// is worth on its own. Every ally used to get only this; Vanilla+ and Cheat still
-// do, and in Balanced it is what a Good ally under the first cut level gets.
+// is worth on its own. Every ally used to get only this; Balanced with the tiers
+// switched off still does, and so does a Good ally under the first cut level.
 Verdict AllyRoll(const CoreFacts& core, const FreeExtra& extra, const Config& config, Verdict v)
 {
     ChanceInputs in;

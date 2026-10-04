@@ -199,7 +199,7 @@ static bool DoRegisterModHub()
     regInt(api, mod, "max_spawned_characters", "Spawn: maximo", "Tope del panel de spawn", 1, 500, 10, &c.maxSpawnedCharacters);
 
     // Prices
-    regInt(api, mod, "preset", "Dificultad (Preset)", "0: Cheat, 1: Balanced, 2: Vanilla+", 0, 2, 1, &c.preset);
+    regInt(api, mod, "preset", "Dificultad (Preset)", "0: Cheat, 1: Balanced", 0, 1, 1, &c.preset);
     regInt(api, mod, "cats_per_level", "Cats por nivel", "Peso del tramo bajo: mantiene baratos los niveles chicos", 0, 300, 5, &c.prices.catsPerLevel);
     regInt(api, mod, "cats_ceiling", "Cats: techo", "A cuanto tiende el precio de los mas fuertes", 0, 200000, 5000, &c.prices.catsCeiling);
     regFloat(api, mod, "price_steepness", "Curva: pendiente", "Que tan brusco encarece alrededor del punto medio", 0.02f, 0.4f, 0.01f, 2, &c.prices.priceCurveSteepness);
@@ -214,10 +214,9 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "brave_multiplier", "Precio valientes", "Multplicador para personalidades valientes", 0.1f, 4.0f, 0.1f, 1, &c.prices.braveMultiplier);
     regFloat(api, mod, "talent_weight", "Peso del talento", "Cuanto sube el precio un NPC con un oficio o habilidad rara", 0.0f, 4.0f, 0.25f, 2, &c.prices.talentWeight);
     regFloat(api, mod, "talent_max_multiplier", "Talento: tope", "Lo maximo que el talento puede multiplicar el precio", 1.0f, 5.0f, 0.25f, 2, &c.prices.talentMaxMultiplier);
-    regFloat(api, mod, "premium_max_multiplier", "Prima máxima (talento x único x carácter)", "Tope conjunto de talento, unico y personalidad sobre el precio base (la faccion va aparte)", 1.0f, 5.0f, 0.1f, 2, &c.prices.premiumMaxMultiplier);
+    regFloat(api, mod, "premium_max_multiplier", "Prima máxima (talento x único x carácter)", "Tope conjunto de talento, unico y personalidad sobre el precio base (el descuento de un aliado va aparte)", 1.0f, 5.0f, 0.1f, 2, &c.prices.premiumMaxMultiplier);
     regInt(api, mod, "cats_hard_cap", "Cats: tope final", "Precio maximo tras todos los multiplicadores (0 = sin tope)", 0, 500000, 10000, &c.prices.catsHardCap);
     regFloat(api, mod, "unique_multiplier", "Precio de unicos", "Cuanto multiplican su precio los personajes con nombre", 1.0f, 5.0f, 0.25f, 2, &c.prices.uniqueMultiplier);
-    regFloat(api, mod, "faction_weight", "Peso de Facción", "Impacto de rep en el precio (0..2)", 0.0f, 2.0f, 0.1f, 1, &c.prices.factionWeight);
 
     // Regateo: ofrecer menos cats que el precio pedido
     regBool(api, mod, "haggle_enabled", "Regateo: activo", "Permite ofrecer menos cats que el precio pedido. Apagado, el precio es el que es", &c.prices.haggleEnabled);

@@ -88,6 +88,7 @@
     <ClCompile Include="duel_join_rules_tests.cpp" />
     <ClCompile Include="knockout_watch_rules_tests.cpp" />
     <ClCompile Include="menu_anchor_tests.cpp" />
+    <ClCompile Include="preset_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -141,6 +142,7 @@
     <ClCompile Include="..\..\src\duel_record_cache_rules.cpp" />
     <ClCompile Include="..\..\src\duel_join_rules.cpp" />
     <ClCompile Include="..\..\src\knockout_watch_rules.cpp" />
+    <ClCompile Include="..\..\src\preset_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

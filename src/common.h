@@ -25,8 +25,8 @@
 #include <kenshi/PlayerInterface.h>
 #include <kenshi/Character.h>
 #include <kenshi/Faction.h>
-// Faction.h only forward-declares FactionRelations, which the Vanilla+ preset
-// reads to weight prices by how much a faction hates you.
+// Faction.h only forward-declares FactionRelations, which character_facts reads
+// for the player's standing (ally tiers, refusals by relation).
 #include <kenshi/FactionRelations.h>
 #include <kenshi/Platoon.h>
 #include <kenshi/GameData.h>

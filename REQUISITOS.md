@@ -300,8 +300,8 @@ Sin cambios.
 
 *(2026-10-03, ally-tiers-temp-helpers T1.)* Un aliado (relación ≥
 `friendlyRelation`) ya no es una sola tirada diaria: en Balanced deciden su
-nivel y su grupo de personalidad. Vanilla+ y Cheat no cambian (Vanilla+ conserva
-la tirada; Cheat responde antes de leer nada). `allyTierEnabled` en falso vuelve
+nivel y su grupo de personalidad. Cheat no cambia (responde antes de leer nada).
+(Vanilla+, que conservaba la tirada, se retiro en v1: `v1-presets-close` P1.) `allyTierEnabled` en falso vuelve
 a la tirada también en Balanced.
 
 **Grupos de personalidad** (`src/personality_groups.cpp`, una sola función):

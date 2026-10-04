@@ -246,19 +246,6 @@ void TalentMultiplierIsBounded()
     CHECK(TalentMultiplier(5.0f, 1.0f, loose) == 1.0f);
 }
 
-void FactionMultiplierIsBounded()
-{
-    const char* name = "price: faction multiplier";
-    CHECK(FactionPriceMultiplier(0.0f, kPrices) == 1.0f);
-    CHECK(Near(FactionPriceMultiplier(-100.0f, kPrices), 1.75f, 0.001f));   // hated: +75%
-    CHECK(Near(FactionPriceMultiplier(50.0f, kPrices), 0.625f, 0.001f));
-    CHECK(FactionPriceMultiplier(100.0f, kPrices) == 0.25f);               // clamped, not 0.0
-    CHECK(FactionPriceMultiplier(5000.0f, kPrices) == 0.25f);
-    Prices fierce;
-    fierce.factionWeight = 2.0f;
-    CHECK(FactionPriceMultiplier(-100.0f, fierce) == 3.0f);                // clamped at 3x
-}
-
 void MultipliersStackInOrderWithOneRounding()
 {
     const char* name = "price: multipliers combine once, then round";
@@ -328,7 +315,6 @@ void RunPriceRulesTests()
     CeilingComesAfterTheMultipliers();
     QuotesAreRoundedToTens();
     TalentMultiplierIsBounded();
-    FactionMultiplierIsBounded();
     MultipliersStackInOrderWithOneRounding();
     FamilyWeightsKeepTheirShippedValues();
     FamilyWeightsAreConfigurable();

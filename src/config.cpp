@@ -4,6 +4,7 @@
 #include "json_merge.h"
 #include "atomic_file.h"
 #include "head_notice_rules.h"
+#include "preset_rules.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -314,7 +315,6 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "woundedThreshold", &c.prices.woundedThreshold);
     AddFloat(f, "fearfulMultiplier", &c.prices.fearfulMultiplier);
     AddFloat(f, "braveMultiplier", &c.prices.braveMultiplier);
-    AddFloat(f, "factionWeight", &c.prices.factionWeight);
     AddFloat(f, "talentWeight", &c.prices.talentWeight);
     AddFloat(f, "talentMaxMultiplier", &c.prices.talentMaxMultiplier);
     AddFloat(f, "premiumMaxMultiplier", &c.prices.premiumMaxMultiplier);
@@ -539,7 +539,6 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.prices.priceCurveMidpoint, 1.0f, 200.0f);
     ClampFloat(&g_config.prices.fearfulMultiplier, 0.0f, 20.0f);
     ClampFloat(&g_config.prices.braveMultiplier, 0.0f, 20.0f);
-    ClampFloat(&g_config.prices.factionWeight, 0.0f, 5.0f);
     ClampFloat(&g_config.prices.talentWeight, 0.0f, 10.0f);
     ClampFloat(&g_config.prices.uniqueMultiplier, 0.0f, 50.0f);
     ClampFloat(&g_config.prices.talentMaxMultiplier, 1.0f, 50.0f);
@@ -578,6 +577,18 @@ void LoadConfig(const std::string& modDirectory)
     ClampTempMembers(&g_config.tempMembers);
     ClampHelpers(&g_config.helpers);
     ClampDuelChallenges(&g_config.duelChallenges);
+
+    // Only Cheat and Balanced ship (preset_rules.h): a saved 2 from the retired
+    // Vanilla+, or any other stray number, runs Balanced and says so once per load.
+    if (!IsKnownPreset(g_config.preset))
+    {
+        char note[128] = { 0 };
+        _snprintf_s(note, sizeof(note), _TRUNCATE,
+                    "config.json preset %d is not a preset (0: Cheat, 1: Balanced); running Balanced.",
+                    g_config.preset);
+        LogInfo(note);
+        g_config.preset = ClampPreset(g_config.preset);
+    }
 
     g_modDirectory = modDirectory;
     LogInfo("Loaded config from " + path);

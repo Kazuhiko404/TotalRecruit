@@ -31,7 +31,7 @@ That is the only reason to build this.
 | Central gesture | **Two routes**: rescue and captivity | Rescue is the one thing no existing mod has |
 | Coexist with Recruitable Prisoners? | **Coexist, don't negotiate** | Right-click overlay; anchor beside the menu, not below |
 | Animals | Same engine, different numbers, **humanoids ship first** | `isAnimal()` splits the table, not the system |
-| Faction relations | **Modifier only, Vanilla+ preset only** | Faction is the one thing the player cannot change; as a gate it makes half the population unrecruitable — exactly what this mod exists to fix |
+| Faction relations | **Never a gate; no longer a price factor** (the Vanilla+ preset that weighted prices by it was retired in v1) | Faction is the one thing the player cannot change; as a gate it makes half the population unrecruitable — exactly what this mod exists to fix |
 | Confirmation prompt | **Native FCS dialogue**, not a custom modal | The engine's own dialogue window has branches, choices and voice |
 
 ### The three routes
@@ -47,13 +47,13 @@ soldier wants to be beaten first.
 
 **C — Surrender.** Optional, last. See §7 for why it is deferred.
 
-### The three presets
+### The presets
 
 - **Cheat total** — everything recruitable, click and done (today's behaviour)
 - **Balanced** — the routes with their prices
-- **Vanilla+** — same, plus faction relation as a modifier
 
-One engine, three INI tables. Presets are numbers, not code paths.
+One engine, two tables. (A third, Vanilla+ — Balanced plus faction relation as a
+price modifier — was retired before v1; a saved `preset` 2 loads as Balanced.) Presets are numbers, not code paths.
 
 ---
 

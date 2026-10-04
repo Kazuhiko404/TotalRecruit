@@ -1,6 +1,6 @@
 #pragma once
 
-// The price curve, without the engine. Talent, faction and uniqueness are read
+// The price curve, without the engine. Talent, ally friendship and uniqueness are read
 // from the character elsewhere and arrive here as PriceInputs.
 
 #include "config.h"
@@ -40,10 +40,6 @@ enum TalentFamily
 // Combat is the baseline; the other two come from prices.
 float TalentFamilyWeight(TalentFamily family, const Prices& prices);
 
-// Faction standing as a price multiplier. `relation` runs roughly -100..100:
-// liked sellers charge less, hated ones more. Clamped to 0.25..3.0.
-float FactionPriceMultiplier(float relation, const Prices& prices);
-
 // Everything that decides one quote, already read from the character.
 struct PriceInputs
 {
@@ -51,7 +47,7 @@ struct PriceInputs
     float talentMultiplier;    // TalentMultiplier(), 1.0 when none applies
     bool unique;
     Temperament personality;
-    float factionMultiplier;   // FactionPriceMultiplier(), 1.0 outside Vanilla+
+    float factionMultiplier;   // a Balanced ally's friendship discount (AllyPriceMultiplier), else 1.0
 
     PriceInputs()
         : level(1), talentMultiplier(1.0f), unique(false),
@@ -62,13 +58,13 @@ struct PriceInputs
 
 // talent x unique x personality, together, capped from above at
 // prices.premiumMaxMultiplier (a value below 1.0 in the config reads as 1.0).
-// Only the top is capped: a coward's 0.6 still discounts. Faction is not part of
-// it; FinalPriceInCats applies it after.
+// Only the top is capped: a coward's 0.6 still discounts. The ally
+// friendship multiplier is not part of it; FinalPriceInCats applies it after.
 float PremiumMultiplier(const PriceInputs& inputs, const Prices& prices);
 
 // The price the player is asked for, in whole cats.
 //
-// base curve x PremiumMultiplier x faction, rounded to the nearest
+// base curve x PremiumMultiplier x factionMultiplier (ally friendship), rounded to the nearest
 // 10 cats (so a quote reads as a price, not as a float's tail), then held between
 // prices.catsMinimum and prices.catsHardCap. The floor and the ceiling come last
 // on purpose: applied before the multipliers, a coward's 0.6 undercut the minimum

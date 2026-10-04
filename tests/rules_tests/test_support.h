@@ -60,3 +60,4 @@ void RunDuelJoinRulesTests();
 void RunKnockoutWatchRulesTests();
 void RunBeatingStressRulesTests();
 void RunMenuAnchorTests();
+void RunPresetRulesTests();

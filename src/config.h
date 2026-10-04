@@ -24,18 +24,16 @@ struct Exclusions
     }
 };
 
-// How strict the rule engine is. The engine is the same in all three; only the
-// numbers and which factors are consulted change.
+// How strict the rule engine is. The engine is the same in both; only the
+// numbers and which factors are consulted change. v1 ships these two; a config
+// value outside them (the retired Vanilla+ was 2) loads as Balanced
+// (preset_rules.h).
 enum Preset
 {
     // Everything recruitable, click and done. The original behaviour.
     Preset_Cheat,
     // Each archetype charges in its own currency: cats, food, freeing, submission.
-    Preset_Balanced,
-    // As Balanced, plus faction relation as a modifier. Faction is the one thing
-    // the player cannot change, so it is never a gate -- only a weight, and only
-    // for players who want that roleplay.
-    Preset_VanillaPlus
+    Preset_Balanced
 };
 
 // Prices, expressed as what the NPC wants before they will join. A price that
@@ -77,9 +75,6 @@ struct Prices
     // Multipliers applied to the cats price by personality.
     float fearfulMultiplier;
     float braveMultiplier;
-    // Vanilla+ only: how much faction relation shifts the price. Relation runs
-    // roughly -100..100; this is the fraction of the base price added at -100.
-    float factionWeight;
     // How hard an unusual talent moves the price. 0 disables it and prices by
     // level alone. A stat far above the character's own level is the only thing
     // that reads as "they know something you cannot see from here".
@@ -136,7 +131,6 @@ struct Prices
           woundedThreshold(0.5f),
           fearfulMultiplier(0.6f),
           braveMultiplier(1.6f),
-          factionWeight(0.75f),
           talentWeight(1.0f),
           uniqueMultiplier(2.0f),
           catsHardCap(150000),

@@ -87,6 +87,7 @@ const Suite kSuites[] = {
     { "duel_join_rules", RunDuelJoinRulesTests },
     { "knockout_watch_rules", RunKnockoutWatchRulesTests },
     { "menu_anchor", RunMenuAnchorTests },
+    { "preset_rules", RunPresetRulesTests },
 };
 } // namespace
 

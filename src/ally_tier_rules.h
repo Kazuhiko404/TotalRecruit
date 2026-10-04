@@ -85,8 +85,7 @@ AllyTierDecision DecideAllyTier(int npcLevel, int leaderLevel, PersonalityGroup 
 
 // The price multiplier a decision stands for: 1 - discount for Paid, 1.0 otherwise.
 // It is what character_facts puts in PriceInputs.factionMultiplier for a Balanced
-// ally, where that multiplier is 1.0 otherwise (Vanilla+ only), so nothing counts
-// twice.
+// ally; that multiplier is 1.0 for everyone else.
 float AllyPriceMultiplier(const AllyTierDecision& decision);
 
 // The discount as a whole percent, rounded (0.14 -> 14).

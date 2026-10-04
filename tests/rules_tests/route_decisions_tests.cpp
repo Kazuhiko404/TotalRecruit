@@ -770,18 +770,19 @@ void TheBandComesFromTheRelation()
 }
 
 // The single ally roll every preset had before the Balanced level tiers
-// (ally_tier_rules.h). Vanilla+ keeps it unchanged; Balanced reads the tiers.
-Config VanillaPlus()
+// (ally_tier_rules.h). Balanced with the tiers switched off keeps it unchanged.
+Config TiersOff()
 {
     Config config;
-    config.preset = Preset_VanillaPlus;
+    config.preset = Preset_Balanced;
+    config.allyTiers.enabled = false;
     return config;
 }
 
 void AnAllyRollsWithTheAlliedBonus()
 {
-    const char* name = "free world (Vanilla+): an ally rolls level + relation + allied bonus";
-    const Config kConfig = VanillaPlus();
+    const char* name = "free world (tiers off): an ally rolls level + relation + allied bonus";
+    const Config kConfig = TiersOff();
     FreeExtra extra = Free(40.0f);
     extra.roll = KeyRolling(true, 65);
     // 45 + (int)(40 * 0.25) + 10 = 65
@@ -802,8 +803,8 @@ void AnAllyRollsWithTheAlliedBonus()
 
 void TheAlliedBonusIsConfigurable()
 {
-    const char* name = "free world (Vanilla+): the allied bonus comes from the config";
-    Config config = VanillaPlus();
+    const char* name = "free world (tiers off): the allied bonus comes from the config";
+    Config config = TiersOff();
     config.chance.alliedBonus = 0;
     FreeExtra extra = Free(40.0f);
     CHECK(DecideFreeWorld(Core(), extra, config).chancePercent == 55);
@@ -814,8 +815,8 @@ void TheAlliedBonusIsConfigurable()
 void FriendlyIsAtOrAboveTheThreshold()
 {
     const char* name = "free world: friendly standing is relation >= friendlyRelation, inclusive";
-    CHECK(DecideFreeWorld(Core(), Free(20.0f), VanillaPlus()).rolled);
-    CHECK(!DecideFreeWorld(Core(), Free(19.9f), VanillaPlus()).rolled);
+    CHECK(DecideFreeWorld(Core(), Free(20.0f), TiersOff()).rolled);
+    CHECK(!DecideFreeWorld(Core(), Free(19.9f), TiersOff()).rolled);
     // Balanced: the level tier answers instead of the roll (a Neutral level 20 pays).
     CHECK(DecideFreeWorld(Core(), Free(20.0f), kConfig).allyTiered);
     CHECK(!DecideFreeWorld(Core(), Free(19.9f), kConfig).allyTiered);
@@ -965,22 +966,16 @@ void TheStrongAlliesWhoWillNotCome()
     CHECK(v.allyDiscountPercent == 10);
 }
 
-void VanillaPlusAndCheatKeepTheirAllies()
+void CheatAndTiersOffKeepTheirAllies()
 {
-    const char* name = "balanced ally: Vanilla+, Cheat and tiers switched off keep the single ally roll";
+    const char* name = "balanced ally: Cheat and tiers switched off keep the single ally roll";
     const CoreFacts strong = AllyCore(85, 20, Temperament_ColdCruel);
     FreeExtra extra = Free(40.0f);
     extra.roll = KeyRolling(true, 5);
 
-    Config vanilla = VanillaPlus();
-    Verdict v = DecideFreeWorld(strong, extra, vanilla);
-    CHECK(v.rolled);
-    CHECK(!v.allyTiered);
-    CHECK(v.reasonKey == Reason_AllyJoins || v.reasonKey == Reason_AllyMaybe);
-
     Config cheat;
     cheat.preset = Preset_Cheat;
-    v = DecideFreeWorld(strong, extra, cheat);
+    Verdict v = DecideFreeWorld(strong, extra, cheat);
     CHECK(v.rolled);
     CHECK(!v.allyTiered);
     // Cheat never reaches the free world in the game (rules.cpp answers first),
@@ -988,14 +983,13 @@ void VanillaPlusAndCheatKeepTheirAllies()
     CheatFacts facts;
     CHECK(DecideCheat(facts, cheat).reasonKey == DecideCheat(facts, Config()).reasonKey);
 
-    Config off;
-    off.allyTiers.enabled = false;
+    const Config off = TiersOff();
     v = DecideFreeWorld(strong, extra, off);
     CHECK(v.rolled);
     CHECK(!v.allyTiered);
+    CHECK(v.reasonKey == Reason_AllyJoins || v.reasonKey == Reason_AllyMaybe);
 
     AllyTierDecision d;
-    CHECK(!DecideBalancedAllyTier(strong, Relation(40.0f), vanilla, &d));
     CHECK(!DecideBalancedAllyTier(strong, Relation(40.0f), cheat, &d));
     CHECK(!DecideBalancedAllyTier(strong, Relation(40.0f), off, &d));
 }
@@ -1563,7 +1557,7 @@ void RunRouteDecisionsTests()
     APayingAllysDiscountFollowsTheTierCapAndTheScale();
     AStrongGoodAllyComesForAFewDays();
     TheStrongAlliesWhoWillNotCome();
-    VanillaPlusAndCheatKeepTheirAllies();
+    CheatAndTiersOffKeepTheirAllies();
     OnlyAlliesHaveATier();
     TheGoodNaturedStopTalkingBelowTheirCutoff();
     NobodyTalksBelowTheSecondCutoff();

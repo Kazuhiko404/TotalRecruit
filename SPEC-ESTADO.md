@@ -83,7 +83,7 @@ mantiene el gesto y elimina el precio.
 | Especificación | Estado | Detalle |
 |---|---|---|
 | Umbral de relación configurable | ❌ | Hardcodeado en 25 |
-| Precio según nivel y relación, con descuentos por relación | ✅ | `factionWeight`, solo en Vanilla+ |
+| Precio según nivel y relación, con descuentos por relación | ✅ | Balanced: descuento de amistad de un aliado (`allyTier*`); el peso por facción (`factionWeight`, Vanilla+) se retiró en v1 |
 | **Honorables: chance por relación y por diferencia de nivel** | 🟡 | La chance existe solo en la rama de aliados; un honorable en jaula no la usa |
 | Si el gap es mayor a X configurable, rechazo cortés | 🟡 | Rechaza, pero el **15** no es configurable |
 | Si insistís, deja de hablarte, con cooldown configurable | 🟡 | Funciona (`IsIgnoringPlayer`), pero las horas **no** son configurables |

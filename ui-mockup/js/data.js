@@ -68,7 +68,7 @@ var STATES = [
   {
     id: 'ally',
     title: 'Friendly NPC in the open',
-    note: 'Libre, ally, Balanced: the level tier decides (<code>ally_tier_rules.h</code>). A Normal of level 34 pays a friend\'s price, no roll, so no chance bar: the line is the discounted price (<code>readout.line.ally.paidJoin</code>; short of cats it is <code>paidAsk</code> with the purse). A Good ally under 20 still rolls and shows the odds; 80+ reads "Aliado: te acompana unos dias" or the tier refusal. Vanilla+ keeps the single roll for every ally: chance bar and "Quiza te siga; si no, hazte mas fuerte".',
+    note: 'Libre, ally, Balanced: the level tier decides (<code>ally_tier_rules.h</code>). A Normal of level 34 pays a friend\'s price, no roll, so no chance bar: the line is the discounted price (<code>readout.line.ally.paidJoin</code>; short of cats it is <code>paidAsk</code> with the purse). A Good ally under 20 still rolls and shows the odds; 80+ reads "Aliado: te acompana unos dias" or the tier refusal. With <code>allyTierEnabled</code> off every ally keeps the single roll: chance bar and "Quiza te siga; si no, hazte mas fuerte".',
     // facts: Route FreeWorld, Balanced, relation +40, level 34 vs 20, Normal -> Paid 20%; cats 1840, willJoin
     vm: {
       name: 'Mercader Ostrel', route: 'libre', routeLabel: 'Libre',

@@ -6,8 +6,6 @@ namespace totalrecruit
 {
 namespace
 {
-const float kFactionMultiplierMin = 0.25f;
-const float kFactionMultiplierMax = 3.0f;
 // Quotes are rounded to this many cats so they read as prices.
 const float kPriceStep = 10.0f;
 // Even with the ceiling lifted a quote must stay a valid int, with room to spare.
@@ -72,20 +70,6 @@ float TalentMultiplier(float edge, float familyWeight, const Prices& prices)
     if (multiplier > most)
     {
         multiplier = most;
-    }
-    return multiplier;
-}
-
-float FactionPriceMultiplier(float relation, const Prices& prices)
-{
-    float multiplier = 1.0f - (relation / 100.0f) * prices.factionWeight;
-    if (multiplier < kFactionMultiplierMin)
-    {
-        multiplier = kFactionMultiplierMin;
-    }
-    if (multiplier > kFactionMultiplierMax)
-    {
-        multiplier = kFactionMultiplierMax;
     }
     return multiplier;
 }

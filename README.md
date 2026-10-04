@@ -106,7 +106,7 @@ behind a leader no more than 15 levels below them; the cruel refuse, and from
 level 100 so do the greedy. The popup says which: "Aliado (nivel 34): te cobra
 1.840 cats, con 14% de descuento por amistad", with the discount beside the
 price. Every number is an `allyTier*` key in `config.json` and in Mod Hub;
-Vanilla+ and Cheat keep their old ally behaviour.
+Cheat, and Balanced with `allyTierEnabled` off, keep the single daily ally roll.
 
 A temporary member tells you, over their head, how long they will stay ("Te
 acompanare 6 dias"), and their card counts the days left. Starve them, hit them
@@ -156,8 +156,10 @@ itself.
   in your cage and held for `cheatHoursCaged` (0.02 game hours); no cats, food,
   submission, level or standing. `cheatNeedsCage` turns the cage requirement off.
 - **Balanced** — the prices above, and allies by level. *(default)*
-- **Vanilla+** — as Balanced, plus faction relation shifting the price; allies
-  keep the single daily roll.
+
+v1 ships these two. Vanilla+ (faction relation shifting the price) was retired:
+a `config.json` that still says `"preset": 2` loads as Balanced and the log says
+so once; a leftover `factionWeight` key is ignored.
 
 Faction relation is deliberately never a gate. It is the one thing the player
 cannot change, so using it as a door would make half the world unrecruitable —
@@ -273,7 +275,7 @@ Useful actions: `DA_JOIN_SQUAD_FAST`, `DA_TAKE_MONEY`, `DA_FREE_TARGET_SLAVE`,
 ## Configuration
 
 Everything in the Mod Hub is also in `config.json`. `preset` is `0` Cheat, `1`
-Balanced, `2` Vanilla+. The Hub writes by merging into the file: keys you edited
+Balanced (any other value runs Balanced). The Hub writes by merging into the file: keys you edited
 by hand, comments and unknown keys are kept.
 
 Set `probeOnClick` to `true` to log an NPC's personality, archetype and medical
