@@ -89,6 +89,24 @@ Written for the next Claude session. Read this whole document first, then the fe
      - Log each step.
   - Use the debug trigger to test: `"helperDebugKey": 119` (F8) with a selected NPC.
 
+### 3. A temporary member who leaves just stands still
+- **What the user saw:** the temporary member works well from joining to the end, and can be used as a normal squad member. When the time is up and they leave the party, they stand in place, idle, forever.
+- **Code:** `src/squad_leave.{h,cpp}`, the port of KEP's dismiss sequence (`CharacterExtension.cpp:72-108`):
+  1. `setFaction` back to the home faction.
+  2. `createNewEmptyActivePlatoon("5006-squad.mod" = vanilla "Wandering Squad")` + `addActiveObject`.
+  3. Clear the task system.
+  4. `reThinkCurrentAIAction`.
+  - It **skipped** KEP's blackboard reset + `addPackages(squadTemplate)`, because `AI/Blackboard.h` is missing. So the new platoon has no AI package and the NPC idles.
+- **What the user wants:** after leaving, the NPC goes back to where it was (where it joined), or at least travels to the nearest town. There is a native package for that, something like "wandering around" / return to town.
+- **Plan:**
+  1. **Save where they joined.** On `OnRecruitedTemporarily`, persist the join position, plus the home town if it can be read cheaply. Use `saved_ints` (x/z as ints) or `saved_strings`.
+  2. **Native path, if `Blackboard.h` is obtained** (shared with issue 2): after `createNewEmptyActivePlatoon`, run KEP's full reset (clear the jobs, then `addPackages(squadTemplate)`), or `replaceAIPackage` with a vanilla wander/return-home package. Look up the right package in `gamedata.base`: search the AI package records for "wander", "go home", "return to town", "travel" and the "Wandering Squad" template's own packages.
+  3. **Fallback without Blackboard:**
+     - Issue `addOrder(NULL, MOVE_CUS_ORDERED, NULL, false, true, savedJoinPos)` (the `npc_motion` `IssueMoveGuarded` pattern) to walk back to where they joined.
+     - Re-issue every few seconds until they arrive or a timeout runs out. Then `reThinkCurrentAIAction`.
+     - Also check `Dialogue.h` `DA_GO_HOME` (40) and any public function that triggers "go home" on a character or platoon (`Platoon`, `ActivePlatoon`, `Faction` headers), and prefer it if it works.
+  4. **QA:** the member leaves at expiry → walks or travels away (to the join spot, or home) instead of standing. Log `[temp] <name> heading back to (x,z)` / `arrived`.
+
 ## In-game QA still owed (QA.md)
 - 12.19 cage commands.
 - 12.20 animals.
@@ -103,5 +121,5 @@ Written for the next Claude session. Read this whole document first, then the fe
 
 ## Next steps, in order
 1. Fix issue 1 (head notice lifetime), then deploy TotalRecruit.
-2. Fix issue 2 (helper escort): research step first, then implement. Deploy.
+2. Fix issue 2 (helper escort) and issue 3 (leaving member stands still). Both depend on the same research step: obtaining KEP's KenshiLib `AI/Blackboard.h`. Do the research first, then implement both. Deploy.
 3. Ask the user whether to deploy and merge the TotalSparring `feat/public-api` worktree branch and TotalRecruit `feat/ts-duel-bridge` to test the duel tier.
