@@ -329,7 +329,39 @@ la escala, la distancia de nivel y los días. El miembro temporal, `tempMember*`
 faltas para irse, umbral y horas de hambre, horas entre faltas, aviso antes de
 irse y días sin volver. El ayudante, `helper*`: activo, chance por día, niveles de
 ventaja, días mínimos y máximos, días tras rechazo, aviso antes de irse y la
-tecla de prueba.
+tecla de prueba. El duelo, `duelChallenge*`: activo, horas tras perder y horas
+que espera el reto.
+
+**R4b.6 — Retar a duelo a un aliado 80+.** *(P1, hecho; QA 12.28 pendiente)*
+Pedido del usuario (2026-10-03): "el duelo para el tramo 80+: retarlo a duelo
+para que se una. TotalSparring ya tiene la lógica del duelo (decide amistoso o a
+muerte); solo hay que llevar la cuenta después del duelo y comunicar los
+plugins".
+- **Cuándo.** Balanced, aliado con tramo (`Verdict::allyTiered`), nivel
+  `allyTierEliteFromLevel` (80) o más, no animal, `duelChallengeEnabled`,
+  TotalSparring cargado, escuchando y listo, y sin enfriamiento de duelo
+  perdido. Un solo predicado: `CanOfferDuel` (`duel_challenge_rules.h`).
+- **La ventana.** La respuesta del tramo queda igual (miembro temporal, precio
+  del ambicioso, o la negativa del cruel / líder débil) y se agrega **RETAR A
+  DUELO**, más la fila **DUELOS** con el historial cara a cara de TotalSparring
+  del miembro seleccionado contra el NPC ("2-1"; empates como tercer número). La
+  tarjeta del NPC muestra "Duelos: 2-1" como segunda línea. El historial se lee
+  al abrir la ventana o al cambiar el par seleccionado, nunca por cuadro.
+- **El clic.** El retador es el miembro seleccionado (la misma regla y el mismo
+  "Selecciona a alguien de tu grupo para hacerlo" de Golpear / Noquear). Se anota
+  el reto pendiente, se cierra la ventana y se abre la ventana Dueling de
+  TotalSparring con ese retador. Ocupada, rechazada o no lista: una línea en el
+  roller y el reto se borra.
+- **El resultado** (lo avisa TotalSparring al terminar cada pelea). Duelo ganado
+  por tu lado contra el NPC retado: se recluta **para siempre** (no temporal),
+  cartel "Me ganaste. Me uno a ti" y línea en el roller. Perdido o empate:
+  cartel "Vuelve cuando seas más fuerte" y `duelChallengeCooldownHours` (24)
+  horas sin el botón, guardadas con el personaje
+  (`total_recruit.duel_cooldown_until`). Sparring, sin decidir (cancelado,
+  interrumpido) o con otro: no cuenta; sin decidir deja el reto pendiente hasta
+  `duelChallengeExpiryHours` (6). Si murió en un duelo a muerte, se dice y nadie
+  se une.
+- **Sin TotalSparring** el botón no aparece y los tramos funcionan como antes.
 
 ---
 

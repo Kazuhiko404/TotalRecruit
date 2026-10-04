@@ -125,6 +125,18 @@ leave at once. Their card counts the days left, and they pick up again after a
 reload. A 15% chance per ally per day, `helper*` keys; `helperDebugKey` (a
 Windows key code, 119 = F8) makes the selected NPC offer at once for testing.
 
+With TotalSparring installed, an ally of level 80 or more
+can also be challenged to a duel. Their popup keeps its usual answer and adds
+**RETAR A DUELO**, with your selected fighter's head-to-head record against
+them ("DUELOS 2-1", also on their card as "Duelos: 2-1"). The button opens
+TotalSparring's own Dueling window with the character you have selected;
+TotalSparring decides whether it is friendly or to the death and fights it out.
+Win and they join you for good ("Me ganaste. Me uno a ti"); lose or draw and
+they tell you to come back stronger, and you cannot challenge them again for a
+day. A spar never counts, and a duel that was cancelled or interrupted leaves
+the challenge open for six in-game hours. Without TotalSparring nothing
+changes. `duelChallenge*` keys in `config.json` and in Mod Hub.
+
 ### Refusal, with a reason
 
 Someone who watched you kill their friend says no — and you are told so. Every

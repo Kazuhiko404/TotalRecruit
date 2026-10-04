@@ -813,3 +813,26 @@ Reporte del usuario (2026-10-03): al hablar con el NPC y abrirse el dialogo, la 
 | D5 | Hablar con el NPC que tiene el cartel, sin seleccionarlo antes | El cartel se oculta durante el dialogo; al cerrarlo vuelve (solo seleccionarlo lo descarta) | — |
 | D6 | Abrir el inventario propio o comerciar con la tarjeta a la vista | La tarjeta sigue como antes (comercio/inventario no estan cubiertos a proposito) | (sin `open:`) |
 | D7 | Regresion: clic derecho sobre el NPC (menu) y Hablar de TotalRecruit | El menu la oculta como antes; con la oferta abierta la tarjeta queda al costado (12.9, 12.17 C8) | (sin `open:`) |
+
+### 12.28 Retar a duelo a un aliado 80+ (ts-duel-bridge)
+
+Pedido del usuario (2026-10-03): retar a un aliado 80+ a un duelo de TotalSparring para que se una. Preparacion: preset Balanced, un aliado (reputacion >= `friendlyRelation`) de nivel 80 o mas, uno de tu grupo seleccionado. TotalSparring con la API publica v1 (`TS_GetApi`) para D2 en adelante.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| T1 | Sin TotalSparring instalado: Hablar con el aliado 80+ | La ventana de siempre (temporal / precio / negativa), **sin** RETAR A DUELO ni fila DUELOS; la tarjeta sin "Duelos" | `[ts-bridge] TotalSparring duels unavailable: ...` (una vez, ~30 s despues de cargar) |
+| T2 | Con TotalSparring, partida cargada: Hablar con el aliado 80+ | La respuesta del tramo sigue, mas RETAR A DUELO y la fila DUELOS con el historial del seleccionado ("0-0" si nunca pelearon) | `[ts-bridge] attached to TotalSparring API v1 and listening for bouts.` |
+| T3 | Seleccionar el aliado 80+ (clic izquierdo) con uno de tu grupo seleccionado antes | La tarjeta muestra "Duelos: W-L" como segunda linea; cambiar de miembro seleccionado cambia el numero | — |
+| T4 | Aliado de nivel 79, o un no aliado, o preset Vanilla+/Cheat | Nunca RETAR A DUELO | — |
+| T5 | RETAR A DUELO sin nadie de tu grupo seleccionado (o el seleccionado inconsciente) | Roller "Selecciona a alguien de tu grupo para hacerlo"; nada se abre | — |
+| T6 | RETAR A DUELO con tu luchador seleccionado | Se cierra la ventana de TotalRecruit y se abre la ventana **Dueling** de TotalSparring con ese luchador preseleccionado; roller "<nombre> acepta el reto: ..." | `[duel] <tuyo> challenges <nombre> [key ...]` |
+| T7 | Con la ventana Dueling ya abierta, volver a Hablar y RETAR A DUELO | Roller "Ya hay un duelo abierto en TotalSparring."; el reto nuevo se borra | `TotalSparring did not open the duel ... challenge withdrawn` |
+| T8 | Ganar el duelo (amistoso) | El NPC se une **para siempre** (no temporal: su tarjeta no dice "Temporal"); cartel "Me ganaste. Me uno a ti" sobre el; roller "<nombre> perdio el duelo y se une a tu grupo para siempre." | `[duel] bout duel outcome=1 ... -> joined` y `lost the duel and joins for good` |
+| T9 | Perder (o empatar) el duelo | Cartel "Vuelve cuando seas mas fuerte"; roller con las horas; RETAR A DUELO desaparece por 24 h de juego | `-> lost` y `won the duel: no challenge until hour N` |
+| T10 | Despues de T9: guardar, salir, cargar, Hablar con el mismo NPC antes de 24 h | Sigue sin RETAR A DUELO (el enfriamiento viajo en el save); pasadas las 24 h vuelve | — |
+| T11 | Sparring (no duelo) entre tu luchador y ese NPC despues de retarlo | No cuenta: ni se une ni enfriamiento | `[duel] bout spar ...` solo con `probeOnClick` |
+| T12 | Retar y cancelar la ventana Dueling, o interrumpir el duelo | Nada pasa; el reto queda pendiente; un duelo terminado dentro de 6 h de juego todavia cuenta; despues de 6 h no | `-> ignored`; `challenge(s) expired unanswered` |
+| T13 | Duelo a muerte ganado | Si murio: roller "<nombre> murio en el duelo." y nadie se une | `died in the duel: nobody to recruit` |
+| T14 | La fila DUELOS contra el Fight Log de TotalSparring para ese par | Mismos ganados-perdidos (empates como tercer numero) | — |
+| T15 | Mod Hub "Duelo: retar aliados 80+" apagado | Nunca RETAR A DUELO | — |
+| T16 | Salir de la partida / cerrar el juego con TotalSparring cargado | Sin crash; TotalRecruit se descarga limpio (el listener se da de baja) | `stopPlugin called.` sin errores de `[ts-bridge]` |
