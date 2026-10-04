@@ -376,6 +376,44 @@ void AHelperShowsTheDaysLeft()
     CHECK(!v.showStress && !v.showChance && !v.showDefeats && !v.showFood);
 }
 
+void AChallengeableAllyShowsTheDuelRecord()
+{
+    const char* name = "duel: a challengeable 80+ ally's card adds the head-to-head record as its second line";
+    ReadoutInput in = Input(Route_FreeWorld, Reason_AllyTemporary);
+    in.verdict.allyTiered = true;
+    in.verdict.allyLevel = 85;
+    in.verdict.willJoin = true;
+    in.duelRecordKnown = true;
+    in.duelWins = 2;
+    in.duelLosses = 1;
+    in.duelDraws = 0;
+    ReadoutView v = BuildReadout(in, kConfig);
+    CHECK(v.primary.id == (int)Reason_AllyTemporary);
+    CHECK(v.secondary.id == kLineDuelRecord);
+    CHECK(v.secondary.food == 2);
+    CHECK(v.secondary.need == 1);
+
+    in.duelDraws = 3;
+    v = BuildReadout(in, kConfig);
+    CHECK(v.secondary.id == kLineDuelRecordWithDraws);
+    CHECK(v.secondary.chance == 3);
+
+    in.duelRecordKnown = false;
+    v = BuildReadout(in, kConfig);
+    CHECK(!v.secondary.Present());
+}
+
+void TheDuelRecordNeverRidesAMembersCard()
+{
+    const char* name = "duel: a temporary member's or helper's card stays one line";
+    ReadoutInput in = Input(Route_FreeWorld, Reason_None);
+    in.tempMember = true;
+    in.tempDaysLeft = 2;
+    in.duelRecordKnown = true;
+    in.duelWins = 1;
+    CHECK(!BuildReadout(in, kConfig).secondary.Present());
+}
+
 void TheEasyWaitIsASecondLineWhileItRuns()
 {
     const char* name = "easy wait: second line beside another way in, with the hours left";
@@ -462,6 +500,8 @@ void StressTermsMakeStressFromState()
 
 void RunReadoutModelTests()
 {
+    AChallengeableAllyShowsTheDuelRecord();
+    TheDuelRecordNeverRidesAMembersCard();
     AHelperShowsTheDaysLeft();
     QuestionsThatAreNotAboutAPersonHideTheCard();
     EachEntryRouteHasItsName();

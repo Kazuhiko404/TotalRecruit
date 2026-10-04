@@ -152,6 +152,14 @@ void ClampHelpers(Helpers* h)
     ClampInt(&h->debugKey, 0, 255);
 }
 
+// The duel challenge (duel_challenge_rules.h): a cooldown of up to a month, and a
+// challenge waits at least half an hour and at most a week for its duel.
+void ClampDuelChallenges(DuelChallenges* d)
+{
+    ClampFloat(&d->cooldownHours, 0.0f, 720.0f);
+    ClampFloat(&d->expiryHours, 0.5f, 168.0f);
+}
+
 void ReadFloat(const std::string& text, const std::string& key, float* target)
 {
     size_t valueStart = 0;
@@ -341,6 +349,9 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "helperExpiryWarningHours", &c.helpers.expiryWarningHours);
     AddInt(f, "helperDebugKey", &c.helpers.debugKey);
     AddBool(f, "helperNativeBodyguard", &c.helpers.nativeBodyguard);
+    AddBool(f, "duelChallengeEnabled", &c.duelChallenges.enabled);
+    AddFloat(f, "duelChallengeCooldownHours", &c.duelChallenges.cooldownHours);
+    AddFloat(f, "duelChallengeExpiryHours", &c.duelChallenges.expiryHours);
     AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
     AddFloat(f, "relationRefuseAll", &c.relationRefuseAll);
     AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);
@@ -545,6 +556,7 @@ void LoadConfig(const std::string& modDirectory)
     ClampAllyTiers(&g_config.allyTiers);
     ClampTempMembers(&g_config.tempMembers);
     ClampHelpers(&g_config.helpers);
+    ClampDuelChallenges(&g_config.duelChallenges);
 
     g_modDirectory = modDirectory;
     LogInfo("Loaded config from " + path);

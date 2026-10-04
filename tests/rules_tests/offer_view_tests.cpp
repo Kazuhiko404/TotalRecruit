@@ -861,10 +861,117 @@ void TheAllyTextsAreComplete()
     CHECK(t.allyTemporaryBody.find("{days}") != std::string::npos);
     CHECK(t.discountTag.find("{pct}") != std::string::npos);
 }
+
+// A level-85 temporary ally the caller offers the duel for (duel_challenge_rules.h
+// CanOfferDuel), with the head-to-head record read from TotalSparring.
+OfferInput DuelableTemporaryAlly()
+{
+    OfferInput in;
+    in.name = "Beep";
+    in.verdict.willJoin = true;
+    in.verdict.currency = Currency_None;
+    in.verdict.reasonKey = Reason_AllyTemporary;
+    in.verdict.allyTiered = true;
+    in.verdict.allyLevel = 85;
+    in.verdict.temporary = true;
+    in.verdict.temporaryDays = 6;
+    in.duel.offered = true;
+    in.duel.recordKnown = true;
+    in.duel.wins = 2;
+    in.duel.losses = 1;
+    in.duel.draws = 0;
+    return in;
+}
+
+void ADuelableAllyKeepsItsTierAndAddsTheDuel()
+{
+    const char* name = "duel: the tier's own answer stays, RETAR A DUELO and the record are added";
+    const OfferTexts t = Texts();
+    const OfferView v = BuildOfferView(DuelableTemporaryAlly(), t);
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(v.bodyLine.find("Aliado (nivel 85): Beep te acompa") == 0);
+    CHECK(v.duelLabel == t.duelChallenge);
+    CHECK(v.duelLabel == "RETAR A DUELO");
+    CHECK(v.showDuelRecord);
+    CHECK(v.duelRecordLabel == t.duelRecordLabel);
+    CHECK(v.duelRecordText == "2-1");
+    CHECK(v.cancelLabel == t.cancel);
+}
+
+void NoDuelWithoutTheCallersYes()
+{
+    const char* name = "duel: not offered -> no button and no record, whatever the record says";
+    OfferInput in = DuelableTemporaryAlly();
+    in.duel.offered = false;
+    const OfferView v = BuildOfferView(in, Texts());
+    CHECK(v.duelLabel.empty());
+    CHECK(!v.showDuelRecord);
+    CHECK(v.duelRecordText.empty());
+}
+
+void AnUnreadRecordStillOffersTheDuel()
+{
+    const char* name = "duel: the record could not be read -> the button without the record row";
+    OfferInput in = DuelableTemporaryAlly();
+    in.duel.recordKnown = false;
+    const OfferView v = BuildOfferView(in, Texts());
+    CHECK(!v.duelLabel.empty());
+    CHECK(!v.showDuelRecord);
+}
+
+void ARefusingEliteAllyCanStillBeChallenged()
+{
+    const char* name = "duel: a cruel 80+ ally refuses, and the duel is the way in (draws in the record)";
+    OfferInput in;
+    in.name = "Cruel";
+    in.verdict.currency = Currency_Refused;
+    in.verdict.reasonKey = Reason_AllyCruel;
+    in.verdict.reason = "no camina al lado de nadie";
+    in.verdict.allyTiered = true;
+    in.verdict.allyLevel = 90;
+    in.duel.offered = true;
+    in.duel.recordKnown = true;
+    in.duel.wins = 0;
+    in.duel.losses = 3;
+    in.duel.draws = 1;
+    const OfferTexts t = Texts();
+    const OfferView v = BuildOfferView(in, t);
+    CHECK(v.reasonRefused);
+    CHECK(v.acceptLabel.empty());
+    CHECK(v.duelLabel == t.duelChallenge);
+    CHECK(v.duelRecordText == "0-3-1");
+    CHECK(v.cancelLabel == t.close);
+}
+
+void TheDuelRidesBesideTheSlider()
+{
+    const char* name = "duel: a greedy 80+ ally's haggle keeps its slider and adds the duel";
+    OfferInput in = HaggleKareem(0);
+    in.verdict.allyTiered = true;
+    in.verdict.allyLevel = 85;
+    in.duel.offered = true;
+    const OfferView v = BuildOfferView(in, Texts());
+    CHECK(v.showSlider);
+    CHECK(!v.duelLabel.empty());
+}
+
+void TheDuelTextsAreComplete()
+{
+    const char* name = "duel: the button and the record label have built-in text";
+    const OfferTexts t = Texts();
+    CHECK(t.duelChallenge == "RETAR A DUELO");
+    CHECK(t.duelRecordLabel == "DUELOS");
+}
 } // namespace
 
 void RunOfferViewTests()
 {
+    ADuelableAllyKeepsItsTierAndAddsTheDuel();
+    NoDuelWithoutTheCallersYes();
+    AnUnreadRecordStillOffersTheDuel();
+    ARefusingEliteAllyCanStillBeChallenged();
+    TheDuelRidesBesideTheSlider();
+    TheDuelTextsAreComplete();
     APayingAllyNamesTheTierAndTheDiscount();
     APayingAllyWithNoDiscountSaysJustThePrice();
     AShortAllyStillSeesTheTierAndTheShortfall();

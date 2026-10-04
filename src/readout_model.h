@@ -92,11 +92,20 @@ struct ReadoutInput
     // they have left (`helperDaysLeft`), like a temporary member's.
     bool helper;
     int helperDaysLeft;
+    // The head-to-head duel record of the selected squad member against this NPC,
+    // set by the caller only when the duel is on offer (duel_challenge_rules.h
+    // CanOfferDuel) and TotalSparring could read it. It becomes the second line when
+    // that is free ("Duelos: 2-1").
+    bool duelRecordKnown;
+    int duelWins;
+    int duelLosses;
+    int duelDraws;
 
     ReadoutInput()
         : route(Route_FreeWorld), haveCore(true), core(), verdict(),
           holdKnown(false), hoursHeld(0.0f), mercyPending(false), rollKeyed(false),
-          tempMember(false), tempDaysLeft(0), helper(false), helperDaysLeft(0)
+          tempMember(false), tempDaysLeft(0), helper(false), helperDaysLeft(0),
+          duelRecordKnown(false), duelWins(0), duelLosses(0), duelDraws(0)
     {
     }
 };

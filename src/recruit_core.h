@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "verdict.h"
+
 class Character;
 class RootObject;
 
@@ -53,4 +55,26 @@ void CompleteHaggle(Character* character, int offer);
 // feeding them, for now. Reopens the offer afterwards so the player sees what
 // changed without working through the context menu again.
 void HelpCaptive(Character* character);
+
+// ------------------------------------------------------------ Duel challenge
+// An elite Balanced ally can be challenged to a TotalSparring duel and joins for
+// good on a win (duel_challenge_rules.h has the rules, ts_bridge.h the plumbing).
+
+// Whether RETAR A DUELO is on offer for `npc` with this verdict now: CanOfferDuel over
+// duelChallengeEnabled, TsAvailable, the tiered-ally verdict, the elite cut level and
+// the NPC's cooldown.
+bool DuelOfferedFor(Character* npc, const Verdict& verdict);
+
+// TotalSparring's head-to-head record of `challenger` (a squad member) against `npc`.
+// Reads its history database: call it on an event only (popup open, selection change).
+bool ReadDuelRecord(Character* challenger, Character* npc, int* wins, int* losses, int* draws);
+
+// RETAR A DUELO: the selected squad member (the cage commands' actor rule) challenges
+// `npc`; the challenge is recorded and TotalSparring's Dueling window opens. Says why
+// to the player when it cannot (nobody selected, TotalSparring busy or not ready).
+void ChallengeToDuel(Character* npc);
+
+// The frame tick: attaches to TotalSparring, expires stale challenges and acts on the
+// bouts TotalSparring reported (a win recruits for good, a loss starts the cooldown).
+void DuelChallengeTick();
 } // namespace totalrecruit

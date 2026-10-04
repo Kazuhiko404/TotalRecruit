@@ -35,6 +35,11 @@ const int kLineTempMemberDaysLeft = Reason_Count + 5;
 // The id of "Ayudante: le quedan {need} dias": a free helper's card (helper.h). The
 // days travel in the line's `need`.
 const int kLineHelperDaysLeft = Reason_Count + 6;
+// The ids of the head-to-head duel record of a challengeable ally
+// (duel_challenge_rules.h): "Duelos: {food}-{need}" (wins in the line's `food`,
+// losses in its `need`), and the same with the draws in `chance` when there are some.
+const int kLineDuelRecord = Reason_Count + 7;
+const int kLineDuelRecordWithDraws = Reason_Count + 8;
 
 int ReadoutLineCount();
 // messages.json path ("readout.line.cats.ask") and the built-in text used when the

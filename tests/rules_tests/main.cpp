@@ -80,6 +80,7 @@ const Suite kSuites[] = {
     { "helper_rules", RunHelperRulesTests },
     { "leave_homing_rules", RunLeaveHomingRulesTests },
     { "overlay_visibility_rules", RunOverlayVisibilityRulesTests },
+    { "duel_challenge_rules", RunDuelChallengeRulesTests },
 };
 } // namespace
 

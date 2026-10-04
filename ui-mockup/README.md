@@ -188,6 +188,24 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     Selecting a helper shows their card with one line, "Ayudante: le quedan 3 dias"
     (`readout.line.helper.daysLeft`), and nothing else.
 
+### Duel challenge (section 5, "Ally 80+ can be challenged ..." and "Cruel ally 80+ ..."; section 1, "Ally 80+ you can challenge")
+
+25. **An 80+ ally can be challenged to a TotalSparring duel and joins for good on a win** (ts-duel-bridge,
+    user request 2026-10-03: "challenge him to a duel so he joins you; TotalSparring already has the duel logic").
+    TotalRecruit draws one new button and one new info row, nothing else; the fight itself is TotalSparring's own
+    Dueling window. When `CanOfferDuel` holds (duel challenge on, TotalSparring loaded and ready, a Balanced tiered
+    ally at `allyTierEliteFromLevel` or above, no lost-duel cooldown), the popup keeps the tier's own answer
+    (ACEPTAR as a temporary member, the greedy's price, or the cruel / too-weak refusal) and adds **RETAR A DUELO**
+    to the row, after the extra slot: a sumi plate with an amber border, like the other extra answers. The info
+    box gets a fourth row, **DUELOS**, with TotalSparring's head-to-head record of the selected squad member
+    against this NPC in amber ("2-1"; draws as a third number, "0-3-1"), only when TotalSparring could read it.
+    The card of the same NPC shows "Duelos: 2-1" as its second line (`readout.line.duel.record`). Decision: the
+    record is a row of the info box, not a sentence in the body, because it is a number the player compares
+    like the price and the odds; the button sits beside the tier's answer instead of replacing it, so the duel
+    is an extra way in and never takes the temporary stay or the paid deal away. Without TotalSparring nothing
+    changes. The outcome is told with head notices (`duel.notice.*`): "Me ganaste. Me uno a ti" over the new
+    member (a squad notice), "Vuelve cuando seas mas fuerte" over the winner.
+
 ### Native windows (sections 2 and 5: the card and the head notices)
 
 24. **The card and the notices step aside for Kenshi's own dialogue** (user report 2026-10-03: "if I talk to the

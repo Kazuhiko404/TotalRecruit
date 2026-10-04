@@ -10,6 +10,7 @@
 #include "temp_member.h"
 #include "helper.h"
 #include "leave_homing.h"
+#include "recruit_core.h"
 #include "log.h"
 
 #include <kenshi/gui/ForgottenGUI.h>
@@ -25,7 +26,9 @@ void (*g_forgottenGuiUpdate_orig)(ForgottenGUI*) = NULL;
 void SafeTick()
 {
     // HeadNoticeTick after ReadoutTick: it reads where the normal card is this frame.
-    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); HeadNoticeTick(); TickCageCommands(); SubmissionTick(); HelperTick(); TempMemberTick(); LeaveHomingTick(); ModHubTick(); }
+    // DuelChallengeTick attaches to TotalSparring lazily and acts on its bouts a frame
+    // after they were reported (never inside TotalSparring's teardown).
+    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); HeadNoticeTick(); TickCageCommands(); SubmissionTick(); HelperTick(); TempMemberTick(); LeaveHomingTick(); DuelChallengeTick(); ModHubTick(); }
     TR_CATCH { }
 }
 

@@ -21,6 +21,8 @@
 #include "temp_member.h"
 #include "helper.h"
 #include "leave_homing.h"
+#include "duel_challenge_rules.h"
+#include "ts_bridge.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4091)
@@ -78,6 +80,10 @@ void ResetSessionState()
     ForgetAllSubmissionMemory();
     ForgetAllTempMembers();
     ForgetLeaveHoming();
+    // Pending duel challenges and lost-duel cooldowns (each NPC's load hook puts its
+    // cooldown back), and bouts TotalSparring reported for the abandoned world.
+    ForgetAllDuelChallenges();
+    ForgetTsBoutEvents();
     SessionHaggleLedger().Clear();
 
     // Last: the ids the keys above were made from.
@@ -85,7 +91,8 @@ void ResetSessionState()
     LogInfo("[identity] load begin: session state cleared (offer window, overlay, readout and cursor targets, "
             "conversation, cage command watch and credits, submission event, mercy, hails, hold clock, "
             "insistence, defeats, meals from the player, submission asks and reject cooldowns, temporary "
-            "members, haggle offences, identity registry).");
+            "members, duel challenges and cooldowns, queued TotalSparring bouts, haggle offences, "
+            "identity registry).");
 }
 
 bool Install()

@@ -34,6 +34,7 @@
 #include "character_identity.h"
 #include "load_boundary.h"
 #include "readout.h"
+#include "ts_bridge.h"
 
 
 
@@ -202,6 +203,8 @@ __declspec(dllexport) void stopPlugin()
     using namespace totalrecruit;
     LogInfo("stopPlugin called.");
 
+    // First: TotalSparring must not call back into a plugin that is going away.
+    ShutdownTsBridge();
     ShutdownReadout();
     ShutdownHailing();
     ShutdownMercy();
