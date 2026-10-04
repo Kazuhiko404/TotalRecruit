@@ -3,9 +3,18 @@
 Qué está hecho, qué falta, y qué tan seguro es cada afirmación. Todo verificado
 contra `src/` y contra el log de partidas reales, no de memoria.
 
-Actualizado tras la ronda `rebalance-and-ui` (T1-T9, rama `feat/rebalance-and-ui`).
-Todo lo nuevo de esa ronda esta en **Compila + tests**: compila en Release|x64 y sus
-reglas puras pasan `tests/rules_tests`, pero **nada se jugo todavia** (ver §2.1 y QA.md §12).
+> **2026-10-04:** la foto vigente de todo el sistema (qué hace hoy el mod, qué está
+> verificado, qué falta, ideas) es [odd/system-status.md](odd/system-status.md).
+> Este documento queda como el registro detallado de la ronda `rebalance-and-ui`
+> y de las investigaciones; no se actualiza feature por feature. Desde entonces:
+> todas las rondas están en `main` @ `3554d19` y desplegadas; el usuario probó de
+> manera informal el ayudante nativo, la partida del temporal, el duelo vía
+> TotalSparring, el refresco del historial de duelos, los avisos de duelo de 25 s
+> y el nivel de TotalSparring. Nada tiene marca formal de QA.
+
+Escrito tras la ronda `rebalance-and-ui` (T1-T9, rama `feat/rebalance-and-ui`, ya en
+`main`). Todo lo nuevo de esa ronda estaba en **Compila + tests**: compila en
+Release|x64 y sus reglas puras pasan `tests/rules_tests` (ver §2.1 y QA.md §12).
 
 Este documento reemplaza la lectura cruzada de `REQUISITOS.md` (lo que falta),
 `SPEC-ESTADO.md` (spec vs código), `COMPARATIVA.md` (contra otros mods) y
@@ -40,7 +49,7 @@ inconsciente; `hunger` no es 0..1. Los headers dan el **tipo**, nunca el
 | **I1** | ¿Los animales tienen personalidad? | ✅ **Jugado** | **Sí, y varía.** Dos Canhuesos: `PT_HONORABLE` y `PT_TRAITOROUS`. No es default del FCS |
 | **I2** | Rango real de `hunger` | ✅ **Jugado** | **0..3, donde 3 es lleno.** Confirmado por tres fuentes independientes |
 | **I3** | Qué señal sirve de "vida restante" | ✅ **Leído** | `blood`/`getMaxBlood()` y `derivedFleshHealthPercent`. Nunca `getOverallHealthRating` |
-| **I4** | ¿Escribir la marca de derrota altera la IA? | 🔬 **Instrumentada (2º intento)** | El primer set de testigos era inútil: los 5 campos leían 0 en **42 de 42** muestras, NPCs despiertos incluidos. Ahora mide relación de facción, que sí varía |
+| **I4** | ¿Escribir la marca de derrota altera la IA? | ✅ **Resuelta** | Ya no se escribe ni se lee la marca: el conteo vive en el save del personaje (`total_recruit.player_defeats`, recruit-gating T1; QA.md §9, REQUISITOS §7) |
 | **I5** | ¿El conteo de intentos sobrevive la recarga? | ✅ **Leído** | **No** — sigue en memoria. El bug de identidad que destapó se arregló con el id estable (§2.1, T7); falta probarlo con una recarga real (QA 12.6 I4/I5) |
 | **I6** | Qué controles acepta el hub | ✅ **Leído** | Mucho más de lo que usamos. Ver §5 |
 
@@ -268,8 +277,8 @@ El orden de prioridad esta en **QA.md §12** (arriba de todo):
 4. **12.4 P1-P9**: el dinero.
 5. El resto de §12 (F, M, E, C, A/Z/N).
 
-Pendientes abiertos fuera de QA: **I4** (la marca de derrota ¿altera la IA?), **R6.3**
-(secciones del hub), ejercitar el puente de diálogo FCS. Ver TODO.md.
+Pendientes abiertos fuera de QA: **R6.3** (secciones del hub), ejercitar el puente de
+diálogo FCS. I4 quedó resuelta (§1). Ver TODO.md y odd/system-status.md.
 
 ### Lo grande de la ronda anterior: la sumisión sin jaula
 
