@@ -72,10 +72,10 @@ The group mapping lives in one pure function and is documented in REQUISITOS.
   - Persisted expiry and home faction, mistreatment monitor, native leave, head notices, and the popup "por N días".
   - Route: delegated (writer trigger: 2+ non-trivial files).
   - Commit: `19c1193 feat(allies): temporary members leave on expiry or mistreatment`.
-- [ ] **T3 Free helper (native contract).**
-  - Proof of concept first, with a debug trigger.
-  - Then the offer event, the popup, and head notices.
-  - Route: delegated.
+- [x] **T3 Free helper (code-driven escort, mechanism B).**
+  - Debug trigger, offer event, popup, head notices, escort, persistence.
+  - Route: delegated (writer trigger: 2+ non-trivial files).
+  - Commit: `9dcc5a0 feat(helpers): allied NPCs may offer free uncontrollable help`.
 - [ ] **T4 Docs + deploy.**
 
 ## Progress / evidence
@@ -101,5 +101,16 @@ The group mapping lives in one pure function and is documented in REQUISITOS.
 - In-game: pending (QA.md 12.25).
 - Known limits: the FCS-dialogue accept path still recruits a temporary ally permanently; session state (cooldowns, warnings) restarts after a load, so a warning may repeat once.
 
+**T3 (done, 9dcc5a0).**
+- Mechanism **B** (code-driven escort), not A. Evidence: no `AI/Blackboard.h` anywhere in the workspace, so `Platoon::blackboard->contractJob` can be neither read back nor cleared (KEP reads it with headers this KenshiLib lacks); `Dialogue::_doActions` / `startConversation` are private and TotalRecruit's own dialogue bridge was never proven in game (`OpenConversation` disabled); the free vanilla line 14191 has a fixed duration shared with escaped-slave quests. `Dialogue::runCustomDialog` is public but gives no handle on the contract either.
+- Pure `helper_rules` (screen, daily roll `kHelperOfferSalt`, days `kHelperDaysSalt`, `StepHelper`, escort ladder BODYGUARD -> FOLLOW_PLAYER_ORDER -> walk, `ShouldAssist`, `HelperBook`). Shared `approach_driver` extracted from `submission_director` (slot, `EventClock`, `WalkUp`); submission refactored onto it.
+- Engine: `helper.cpp` (sweep 5 s, escort 3 s, `[helper]` logs incl. the engine task per rung), `npc_motion` `GuardLeader`/`AttackFor`, `pacify` `SafeClearTempEnemies`, `engine_reads` `SafeAttackTargetOf`. Saved ints `total_recruit.helper_expiry_hour`, `helper_reject_until`; re-arm within 100 m after load. Popup `BuildHelperOfferView` (Ayuda, ACEPTAR/RECHAZAR, X = no answer); card `kLineHelperDaysLeft`. Config `helper*` (+ clamps, Mod Hub, shipped config.json); messages `helperEvent.*`, `helper.*`, `headNotice.helperOffer`, `popup.route.helper`, `popup.body.helper`, `readout.line.helper.daysLeft`.
+- Debug: `helperDebugKey` = Windows VK code (119 = F8), polled with `GetAsyncKeyState` while the game has focus; the selected non-squad NPC offers at once (screen verdict logged).
+- RED: stub `helper_rules.cpp` + declared-only catalog/model/view -> readout_catalog, readout_model, offer_view FAIL; helper_rules crashed on the stub's NULL record (exit 139).
+- GREEN: `rules_tests.exe` -> 38/38 suites passed, 0/63275 checks failed.
+- Plugin: `MSBuild TotalRecruit.vcxproj Release x64` -> exit 0, 0 warnings from `src/` (only KenshiLib header warnings).
+- Mockup: section 5 "Free helper offers to escort you", section 2 tab "Free helper (offer and escort notices)" (rendered in Chrome).
+- In-game: pending (QA.md 12.26, H1-H18). Unproven: whether the engine honours BODYGUARD for a non-contracted NPC (the ladder falls back and logs it).
+
 ## Next step
-T3 (free helper: proof of concept of the native AI contract with a debug trigger).
+T4 (docs + deploy), after in-game QA 12.24-12.26.
