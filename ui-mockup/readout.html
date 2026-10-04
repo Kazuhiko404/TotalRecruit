@@ -240,16 +240,19 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       return;
     }
     if (mode === 'tempmember') {
-      // Three temporary members of the squad (src/temp_member.cpp). The left one is selected:
-      // his card only counts the days left. The middle one was hit by the squad (a strike and
-      // the warning that comes with the one before the last); the right one's time is nearly up.
+      // Four temporary members of the squad (src/temp_member.cpp). The left one is selected:
+      // his card only counts the days left. The second was hit by the squad (a strike and
+      // the warning that comes with the one before the last); the third says today how many
+      // days are left (the daily notice); the right one's time is nearly up.
       // The farewell notices ("Me voy. Fue un honor", "Me largo") go up once they left the squad.
-      h += '<div class="npc" style="left:200px"></div><div class="npc" style="left:640px"></div>' +
-           '<div class="npc" style="left:1040px"></div>';
+      h += '<div class="npc" style="left:200px"></div><div class="npc" style="left:600px"></div>' +
+           '<div class="npc" style="left:860px"></div><div class="npc" style="left:1120px"></div>';
       h += '<div class="selring" style="left:189px"></div>';
       h += '<div class="callout" style="left:300px;top:16px;max-width:560px">Temporary members are yours, so ' +
            'their notices are squad notices: kept while they are in the squad and never dismissed by selecting ' +
-           'them. On joining: "' + TEMP_MEMBER.join + '". Each strike: "' + TEMP_MEMBER.mistreated + '" (hunger: "' +
+           'them. On joining: "' + TEMP_MEMBER.join + '". Once per game day after that: "' + TEMP_MEMBER.daily +
+           '" ("' + TEMP_MEMBER.dailyOne + '" on the last one; not on the join day, not on the day "' +
+           TEMP_MEMBER.expiring + '" goes up; tempMemberDailyNotice). Each strike: "' + TEMP_MEMBER.mistreated + '" (hunger: "' +
            TEMP_MEMBER.hungry + '"). Leaving: "' + TEMP_MEMBER.farewell + '" or "' + TEMP_MEMBER.farewellMistreated +
            '", plus a roller line with the name. Each of these lines is informational: it stays ' +
            HEAD_NOTICE.infoSeconds + ' s (headNoticeInfoSeconds), not ' + HEAD_NOTICE.seconds + ' s.</div>';
@@ -258,8 +261,9 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
                    showChance: false, showDefeats: false, showFood: false,
                    why: { text: TEMP_MEMBER.card, tone: 'ok' }, alt: null };
       placeInto(readoutHTML(temp, false), anchorOf(200), null);
-      placeInto(headNoticeHTML('Gor el Viejo', TEMP_MEMBER.warning), anchorOf(640), null);
-      placeInto(headNoticeHTML('Sana Roja', TEMP_MEMBER.expiring), anchorOf(1040), null);
+      placeInto(headNoticeHTML('Gor el Viejo', TEMP_MEMBER.warning), anchorOf(600), null);
+      placeInto(headNoticeHTML('Tomo', TEMP_MEMBER.daily), anchorOf(860), null);
+      placeInto(headNoticeHTML('Sana Roja', TEMP_MEMBER.expiring), anchorOf(1120), null);
       return;
     }
     if (mode === 'helper') {

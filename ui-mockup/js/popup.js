@@ -7,7 +7,8 @@
 // C++ asks MyGUI for getTextSize() before sizing the window. The haggle section's fields
 // come from js/haggle.js applyHaggle; its slider art is SLIDER_ART (src/flat_slider.cpp).
 
-var PP_INFO_LABELS = { price: 'Precio', purse: 'Tienes', chance: 'Probabilidad', duels: 'Duelos' };
+var PP_INFO_LABELS = { price: 'Precio', purse: 'Tienes', chance: 'Probabilidad', duels: 'Duelos',
+                       duelJoin: 'Si le ganas' };
 
 // Height of `text` wrapped at `width` in the class `cls` (the C++ MeasureWrapped).
 function ppMeasure(text, width, cls) {
@@ -113,6 +114,9 @@ function layoutOffer(vm) {
   if (vm.showChance) rows.push([PP_INFO_LABELS.chance, vm.chanceText, 'var(--text)']);
   // The head-to-head duel record beside RETAR A DUELO (offer_view.h showDuelRecord).
   if (vm.showDuelRecord) rows.push([PP_INFO_LABELS.duels, vm.duelRecordText, 'var(--amber)']);
+  // What the next won duel does (offer_view.h showDuelJoin): Balanced "65% de que se una",
+  // Cheat "se une".
+  if (vm.showDuelJoin) rows.push([PP_INFO_LABELS.duelJoin, vm.duelJoinText, 'var(--text)']);
   if (rows.length) {
     y += L.infoGap;
     var infoH = rows.length * L.infoRowH + 2 * L.infoPad;

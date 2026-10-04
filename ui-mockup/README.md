@@ -165,7 +165,9 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 22. **A temporary member says what is going on, over their head** (ally-tiers-temp-helpers T2). The same
     head notice (`.hn`), raised as a squad notice (`RaiseSquadHeadNotice`): it stays while they are in the squad,
     where an ordinary notice goes the moment its NPC joins, and selecting them never dismisses it. Lines
-    (`tempMember.notice.*`): "Te acompanare 6 dias" on joining, "No me trates asi" on a strike (hunger: "Tengo
+    (`tempMember.notice.*`): "Te acompanare 6 dias" on joining, "Me quedan 4 dias" once per game day after the
+    join day ("Me queda 1 dia" on the last; `daily` / `dailyOne`, skipped the day "Me ire pronto" goes up,
+    `tempMemberDailyNotice`), "No me trates asi" on a strike (hunger: "Tengo
     hambre... no me trates asi"), "Si sigues asi me voy" on the strike before the last, "Me ire pronto" before the
     time is up, and after they left the squad "Me voy. Fue un honor" or "Me largo" (an ordinary notice by then).
     All of these are informational: they stay `headNoticeInfoSeconds` (default 25 s), not `headNoticeSeconds`.
@@ -205,6 +207,20 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     is an extra way in and never takes the temporary stay or the paid deal away. Without TotalSparring nothing
     changes. The outcome is told with head notices (`duel.notice.*`): "Me ganaste. Me uno a ti" over the new
     member (a squad notice), "Vuelve cuando seas mas fuerte" over the winner.
+
+26. **A won duel is a join chance in Balanced; Cheat offers the duel too and a win always recruits**
+    (duel-join-chance, user design 2026-10-04). Balanced: `min(100, duelJoinBaseChance + duelJoinChancePerWin *
+    (wins - 1))`, wins = TotalSparring's head-to-head wins against this NPC with the new one counted (25, 45, 65,
+    85, 100 by default); the roll is seeded by the NPC and the win count, so a reload never rerolls it. The popup
+    gets a fifth info row, **SI LE GANAS**, with what the next win does ("65% de que se una"; Cheat "se une"), drawn
+    only when the record was read (Cheat: always). The card's record line carries it: "Duelos: 2-1, si ganas 65% se
+    une" (`readout.line.duel.recordChance`; with draws "Duelos: 0-3-1, si ganas 25%", `recordDrawsChance`; Cheat
+    "Duelos: 1-2, si ganas se une", `recordSure` / `recordDrawsSure`). Decision: the chance rides on the record line
+    instead of a third card line, because the card has two lines and the chance is meaningless without the record.
+    A win that does not roll the join raises an informational notice "Buena pelea. Retame otra vez"
+    (`duel.notice.stays`) and hides the button for a seeded `duelWinCooldownMinHours` .. `MaxHoursUnder100`
+    (level 80-99, 1-3 days) or .. `MaxHours` (100+, 1-5 days). Cheat (state "Cheat: an 80+ NPC ...") gates the
+    duel on the level alone (`SafeNpcLevel` >= `allyTierEliteFromLevel`, a person, not an animal).
 
 ### Native windows (sections 2 and 5: the card and the head notices)
 

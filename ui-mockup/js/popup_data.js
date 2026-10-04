@@ -282,8 +282,8 @@ var POPUP_STATES = [
   {
     id: 'allyDuel',
     title: 'Ally 80+ can be challenged to a duel (TotalSparring)',
-    note: 'The same Beep with TotalSparring installed and no lost-duel cooldown running (<code>duel_challenge_rules.h</code> <code>CanOfferDuel</code>): the tier\'s own answer stays (ACEPTAR as a temporary member) and <b>RETAR A DUELO</b> joins the row, a sumi plate with an amber border like the other extra answers. DUELOS is TotalSparring\'s head-to-head record of the selected squad member against Beep (wins-losses, then draws when there are any; read once as the window opens, <code>TS_ApiV1::GetDuelStats</code>). RETAR A DUELO closes this window and opens TotalSparring\'s own Dueling window with the selected fighter; nobody selected reads "Selecciona a alguien de tu grupo para hacerlo". A win recruits for good ("Me ganaste. Me uno a ti"); a loss or a draw says "Vuelve cuando seas mas fuerte" and hides the button for <code>duelChallengeCooldownHours</code>. Without TotalSparring the window is the state above.',
-    // facts: verdict willJoin, Reason_AllyTemporary, allyTiered, allyLevel 85, temporaryDays 6; duel offered, record 2-1-0
+    note: 'The same Beep with TotalSparring installed and no lost-duel cooldown running (<code>duel_challenge_rules.h</code> <code>CanOfferDuel</code>): the tier\'s own answer stays (ACEPTAR as a temporary member) and <b>RETAR A DUELO</b> joins the row, a sumi plate with an amber border like the other extra answers. DUELOS is TotalSparring\'s head-to-head record of the selected squad member against Beep (wins-losses, then draws when there are any; read once as the window opens, <code>TS_ApiV1::GetDuelStats</code>). RETAR A DUELO closes this window and opens TotalSparring\'s own Dueling window with the selected fighter; nobody selected reads "Selecciona a alguien de tu grupo para hacerlo". SI LE GANAS is what the next win does (<code>duel_join_rules.h</code> <code>DuelNextWinOdds</code>): in Balanced a win is a join chance, <code>min(100, duelJoinBaseChance + duelJoinChancePerWin * (wins - 1))</code> with the next win counted, so 2 wins so far read 25 + 20 * 2 = 65%. The row is drawn only when the record was read. A win that rolls the join recruits for good ("Me ganaste. Me uno a ti"); a win that does not says "Buena pelea. Retame otra vez" and hides the button for a seeded 1-3 days (level 80-99) or 1-5 days (100+); a loss or a draw says "Vuelve cuando seas mas fuerte" and hides the button for <code>duelChallengeCooldownHours</code>. Without TotalSparring the window is the state above.',
+    // facts: verdict willJoin, Reason_AllyTemporary, allyTiered, allyLevel 85, temporaryDays 6; duel offered, record 2-1-0; Balanced, base 25, per win 20
     vm: {
       title: 'Reclutamiento', name: 'Beep el Sabio', route: 'libre', routeTag: 'Libre',
       body: 'Aliado (nivel 85): Beep el Sabio te acompanara 6 dias como miembro temporal.',
@@ -291,6 +291,7 @@ var POPUP_STATES = [
       showPurse: false, purseText: '', affordable: true,
       showChance: false, chanceText: '',
       showDuelRecord: true, duelRecordText: '2-1',
+      showDuelJoin: true, duelJoinText: '65% de que se una',
       reason: '', reasonRed: false,
       accept: 'ACEPTAR', extra: '', duel: 'RETAR A DUELO', cancel: 'CANCELAR'
     }
@@ -298,8 +299,8 @@ var POPUP_STATES = [
   {
     id: 'allyDuelCruel',
     title: 'Cruel ally 80+ refuses, the duel is the way in',
-    note: 'A ColdCruel ally of level 90 refuses at 80+ (<code>Reason_AllyCruel</code>): the reason in red and CERRAR as before, plus RETAR A DUELO. Draws show as a third number (0-3-1).',
-    // facts: verdict refused, Currency_Refused, Reason_AllyCruel, allyTiered, allyLevel 90; duel offered, record 0-3-1
+    note: 'A ColdCruel ally of level 90 refuses at 80+ (<code>Reason_AllyCruel</code>): the reason in red and CERRAR as before, plus RETAR A DUELO. Draws show as a third number (0-3-1). No win yet, so the next one would be the first: SI LE GANAS reads the base chance, 25%.',
+    // facts: verdict refused, Currency_Refused, Reason_AllyCruel, allyTiered, allyLevel 90; duel offered, record 0-3-1; Balanced, base 25
     vm: {
       title: 'Reclutamiento', name: 'Grath', route: 'libre', routeTag: 'Libre',
       body: 'Grath no se une todavia.',
@@ -307,7 +308,25 @@ var POPUP_STATES = [
       showPurse: false, purseText: '', affordable: true,
       showChance: false, chanceText: '',
       showDuelRecord: true, duelRecordText: '0-3-1',
+      showDuelJoin: true, duelJoinText: '25% de que se una',
       reason: 'No camina al lado de nadie: su crueldad no se pone a tus ordenes', reasonRed: true,
+      accept: '', extra: '', duel: 'RETAR A DUELO', cancel: 'CERRAR'
+    }
+  },
+  {
+    id: 'cheatDuel',
+    title: 'Cheat: an 80+ NPC can be challenged too, and a win always recruits',
+    note: 'The Cheat preset has no ally tiers, so the duel is gated on the level alone: any person (not an animal) at <code>allyTierEliteFromLevel</code> (80) or above, read with <code>SafeNpcLevel</code> like TotalSparring\'s card, with TotalSparring present and no cooldown (<code>CanOfferDuel</code>, <code>cheatPreset</code>). The Cheat answer stays as it is (here: not in a cage yet) and RETAR A DUELO joins the row. SI LE GANAS reads "se une": in Cheat a win always recruits, there is no roll and no win cooldown.',
+    // facts: Preset_Cheat, cheatNeedsCage, not in my cage -> Reason_CheatNeedsCage; level 84 (SafeNpcLevel); duel offered, record 1-2
+    vm: {
+      title: 'Reclutamiento', name: 'Garo', route: 'libre', routeTag: 'Libre',
+      body: 'Garo no se une todavia.',
+      showPrice: false, priceText: '', priceFree: false,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      showDuelRecord: true, duelRecordText: '1-2',
+      showDuelJoin: true, duelJoinText: 'se une',
+      reason: 'Metelo en una de tus jaulas y hablara enseguida', reasonRed: true,
       accept: '', extra: '', duel: 'RETAR A DUELO', cancel: 'CERRAR'
     }
   },

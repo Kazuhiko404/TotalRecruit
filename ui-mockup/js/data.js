@@ -83,8 +83,8 @@ var STATES = [
   {
     id: 'allyDuel',
     title: 'Ally 80+ you can challenge (TotalSparring)',
-    note: 'An 80+ ally the popup offers RETAR A DUELO for (<code>duel_challenge_rules.h</code> <code>CanOfferDuel</code>: TotalSparring present, no lost-duel cooldown). The second line is TotalSparring\'s head-to-head record of the selected squad member against them (<code>readout.line.duel.record</code>, wins-losses; <code>recordDraws</code> adds the draws). Read only when the NPC or the selected squad member changes, never on the 2 s refresh.',
-    // facts: Route FreeWorld, Balanced, level 85 Honorable, Reason_AllyTemporary; duel offered, record 2-1-0
+    note: 'An 80+ ally the popup offers RETAR A DUELO for (<code>duel_challenge_rules.h</code> <code>CanOfferDuel</code>: TotalSparring present, no lost-duel cooldown). The second line is TotalSparring\'s head-to-head record of the selected squad member against them (<code>readout.line.duel.record</code>, wins-losses; <code>recordDraws</code> adds the draws). Read only when the NPC or the selected squad member changes or TotalSparring reported a bout, never on the 2 s refresh. The same line carries what the next win does (<code>duel_join_rules.h</code> <code>DuelNextWinOdds</code>): "Duelos: 2-1, si ganas 65% se une" in Balanced (<code>readout.line.duel.recordChance</code>, with draws <code>recordDrawsChance</code> "Duelos: 0-3-1, si ganas 25%"), "Duelos: 1-2, si ganas se une" in Cheat (<code>recordSure</code> / <code>recordDrawsSure</code>).',
+    // facts: Route FreeWorld, Balanced, level 85 Honorable, Reason_AllyTemporary; duel offered, record 2-1-0; base 25, per win 20
     vm: {
       name: 'Beep el Sabio', route: 'libre', routeLabel: 'Libre',
       showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0 },
@@ -92,7 +92,7 @@ var STATES = [
       showDefeats: false, defeats: 0, defeatsNeeded: 0,
       showFood: false,
       why:  { text: 'Aliado: te acompana unos dias', tone: 'ok' },
-      alt:  { text: 'Duelos: 2-1' }
+      alt:  { text: 'Duelos: 2-1, si ganas 65% se une' }
     }
   },
   {
@@ -148,6 +148,8 @@ var HEAD_NOTICE = {
 // tempMember.notice.*. {days} is filled in.
 var TEMP_MEMBER = {
   join: 'Te acompanare 6 dias',                       // on joining
+  daily: 'Me quedan 4 dias',                          // once per game day after the join day (tempMemberDailyNotice)
+  dailyOne: 'Me queda 1 dia',                         // the same with one day left (tempMember.notice.dailyOne)
   hungry: 'Tengo hambre... no me trates asi',         // a hunger strike
   mistreated: 'No me trates asi',                     // attacked / knocked out by the squad
   warning: 'Si sigues asi me voy',                    // the strike before the last
@@ -181,5 +183,25 @@ var HUB = [
   ['Aviso: segundos sobre la cabeza', 'headNoticeSeconds', '90',
    'Cuanto queda un cartel que pide algo (\'Quiere hablar contigo\', una oferta de ayuda) sobre quien te llama (90 por defecto; seleccionarlo lo quita)'],
   ['Aviso: segundos de un cartel informativo', 'headNoticeInfoSeconds', '25',
-   'Cuanto queda un cartel de una linea que solo informa (\'Te acompanare N dias\', una falta, una despedida) (25 por defecto)']
+   'Cuanto queda un cartel de una linea que solo informa (\'Te acompanare N dias\', una falta, una despedida) (25 por defecto)'],
+  ['Temporal: aviso diario de dias', 'tempMemberDailyNotice', 'ON',
+   'Una vez por dia de juego dice sobre su cabeza cuantos dias le quedan (\'Me quedan 4 dias\'); no el dia que se une ni el dia del aviso de partida'],
+  ['Ayudante: contrato nativo', 'helperNativeBodyguard', 'ON',
+   'Te escolta con el contrato de guardaespaldas del juego, como un mercenario. Apagado (o si falla), lo guia el mod: te sigue corriendo y ataca a quien ataca a tu lider'],
+  ['Duelo: retar NPC 80+', 'duelChallengeEnabled', 'ON',
+   'Con TotalSparring instalado, la ventana de un NPC de nivel 80+ ofrece RETAR A DUELO (Balanced: aliados con niveles; Cheat: cualquier persona). Ganar da una chance de que se una (Cheat: se une)'],
+  ['Duelo: horas tras perder', 'duelChallengeCooldownHours', '24',
+   'Horas de juego sin poder retarlo otra vez despues de perder o empatar'],
+  ['Duelo: horas que espera el reto', 'duelChallengeExpiryHours', '6',
+   'Si el duelo no termina en estas horas de juego, el reto se olvida'],
+  ['Duelo: chance base al ganar', 'duelJoinBaseChance', '25',
+   'Porcentaje de que se una tras tu primera victoria contra el (solo Balanced)'],
+  ['Duelo: chance extra por victoria', 'duelJoinChancePerWin', '20',
+   'Cuanto sube la chance por cada victoria anterior contra el (25, 45, 65, 85, 100 por defecto)'],
+  ['Duelo: horas minimas tras ganar', 'duelWinCooldownMinHours', '24',
+   'Si le ganas y no se une, horas minimas antes de poder retarlo otra vez'],
+  ['Duelo: horas maximas tras ganar (80-99)', 'duelWinCooldownMaxHoursUnder100', '72',
+   'Si le ganas y no se une, horas maximas de espera para un NPC de nivel 80 a 99'],
+  ['Duelo: horas maximas tras ganar (100+)', 'duelWinCooldownMaxHours', '120',
+   'Si le ganas y no se une, horas maximas de espera para un NPC de nivel 100 o mas']
 ];
