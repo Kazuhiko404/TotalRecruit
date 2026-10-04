@@ -61,6 +61,7 @@ Noquear tiene que ablandar al preso una vez (R2.3), no convertir al actor en un 
   - Decision: solo el rescate (el alcance pedido). Las otras rutas siguen sin tirada en vistazo: la tarjeta muestra sus probabilidades (`IsLostRoll`), no un veredicto contrario. El comentario de `readout.cpp` ("the peek mints no id, so it has no roll key") sigue siendo cierto para `rollKeyed` y no se toco (fuera de las superficies).
 - [x] F4 Bloque fuera de las dos columnas: maqueta de dos columnas, `menu_anchor` con la union, una sola columna igual que hoy. Ruta: escritor delegado. Evidencia: maqueta primero (`ui-mockup/readout.html` pestaña "Menu on your prisoner, two columns", `menuAnchorUnion` en `js/readout.js`, `README.md` punto 17); RED de comportamiento con la union reemplazada por la primera columna sola (el codigo viejo) = 5 checks fallidos (la union de dos columnas y el bloque encima de la columna de la jaula cuando abre a la izquierda); GREEN = 46/46 suites, 0/64337 checks fallidos; la DLL compila.
   - Modulo nuevo `menu_anchor` (`ReadMenuAnchor` con guardas SEH sobre `menuGUI` y `menuGUI2`; `UnionMenuRect` puro e inline en el header para que los tests lo incluyan sin Kenshi). `recruit_overlay.cpp` `AnchorToMenu` le pasa la union a `PlaceButtonBlock` y el ancho de la primera columna a `MakeBlockStyle`; `menu_slot` sin cambios.
+  - Commit: `bb593db` (`fix(overlay): keep the button block outside both native menu columns`).
   - Decisiones: la primera columna se toma como antes (presente y con ancho, sin visibilidad: el hook de apertura puede correr antes de que el layout se muestre), asi una sola columna da el rectangulo de hoy; la segunda solo si es visible y tiene ancho (un `menuGUI2` oculto de un menu anterior no agranda nada). `nameText` (0xF0) no se lee: el bloque siempre se anclo a la lista de opciones. La maqueta tambien dejo de describir Golpear como `BEAT_CAGE_OCCUPANT` (pendiente de `cage-beat-direct-hit`).
 
 ## Criterios de aceptacion
@@ -76,6 +77,7 @@ Noquear tiene que ablandar al preso una vez (R2.3), no convertir al actor en un 
 
 ## Progreso
 - Documento creado antes de tocar el codigo. Linea base: 44/44 suites, 0/64256 checks fallidos; la DLL compila.
+- F1..F4 hechos en `fix/cage-beat-direct-hit`, un commit por arreglo: `993c0bd` (F1), `c17e7fc` (F2), `eaf6b10` (F3), `bb593db` (F4). Final: 46/46 suites, 0/64337 checks fallidos; TotalRecruit.dll Release|x64 compila sin advertencias nuevas. Sin deploy, sin push.
 
 ## Siguiente paso
-F1.
+QA en juego: 12.19 C10-C10e (Noquear una vez, curado de metas trabadas), 12.13 K4b (un noqueo, una derrota), §6 R6 (tarjeta y menu coinciden en un rescate), 12.10 B8-B9 (bloque fuera de las dos columnas). Pendiente de confirmar en juego: que el menu del juego no use metas `STEALTH_KNOCKOUT` para un noqueo nativo (C10e) y que `menuGUI2` sea la columna del edificio (B8).
