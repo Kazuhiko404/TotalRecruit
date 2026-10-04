@@ -1,4 +1,5 @@
 #include "offer_view.h"
+#include "duel_challenge_rules.h"
 #include "readout_catalog.h"
 #include "readout_format.h"
 
@@ -219,6 +220,24 @@ void ApplyCageCommands(const OfferInput& in, const OfferTexts& t, OfferView* vie
     }
 }
 
+// The duel challenge step of BuildOfferView (ui-mockup section 5, the duel state):
+// the caller decided it with CanOfferDuel; it adds a button and, when TotalSparring
+// read it, the head-to-head record. It never takes the tier's own answer away.
+void ApplyDuelChallenge(const OfferInput& in, const OfferTexts& t, OfferView* view)
+{
+    if (!in.duel.offered)
+    {
+        return;
+    }
+    view->duelLabel = t.duelChallenge;
+    if (in.duel.recordKnown)
+    {
+        view->showDuelRecord = true;
+        view->duelRecordLabel = t.duelRecordLabel;
+        view->duelRecordText = FormatDuelRecord(in.duel.wins, in.duel.losses, in.duel.draws);
+    }
+}
+
 // The answers that let someone go (IGNORAR on a plea, PERDONAR on a submission)
 // mean nothing to someone who cannot leave: a cage, shackles, a shoulder.
 std::string LetGoLabel(bool inCage, const std::string& label)
@@ -294,6 +313,9 @@ OfferTexts DefaultOfferTexts()
     t.allyTemporaryBody = "Aliado (nivel {level}): {name} te acompa\xc3\xb1" "ar\xc3\xa1 {days} d\xc3\xad" "as como miembro temporal.";
     t.discountTag = "-{pct}%";
 
+    t.duelChallenge = "RETAR A DUELO";
+    t.duelRecordLabel = "DUELOS";
+
     t.haggleLabel = "OFERTA";
     t.haggleOdds = "Probabilidad de aceptar: {pct}%";
     t.haggleOffer = "OFRECER";
@@ -330,6 +352,7 @@ OfferView BuildOfferView(const OfferInput& in, const OfferTexts& t)
 {
     OfferView view = BuildVerdictView(in, t);
     ApplyCageCommands(in, t, &view);
+    ApplyDuelChallenge(in, t, &view);
     return view;
 }
 

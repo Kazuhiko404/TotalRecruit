@@ -141,6 +141,17 @@ ReadoutView DaysLeftReadout(int lineId, int daysLeft)
     v.primary.tone = ReadoutTone_Good;
     return v;
 }
+
+// "Duelos: 2-1": wins in `food`, losses in `need`, draws (when any) in `chance`.
+ReadoutLineView DuelRecordLine(const ReadoutInput& in)
+{
+    ReadoutLineView line;
+    line.food = in.duelWins > 0 ? in.duelWins : 0;
+    line.need = in.duelLosses > 0 ? in.duelLosses : 0;
+    line.chance = in.duelDraws > 0 ? in.duelDraws : 0;
+    line.id = line.chance > 0 ? kLineDuelRecordWithDraws : kLineDuelRecord;
+    return line;
+}
 } // namespace
 
 ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
@@ -224,6 +235,13 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
         {
             v.secondary = wait;
         }
+    }
+
+    // A challengeable ally (duel_challenge_rules.h): the head-to-head duel record,
+    // when the second line is still free.
+    if (in.duelRecordKnown && !v.secondary.Present())
+    {
+        v.secondary = DuelRecordLine(in);
     }
     return v;
 }

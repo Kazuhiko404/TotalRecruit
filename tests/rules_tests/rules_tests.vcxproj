@@ -80,6 +80,7 @@
     <ClCompile Include="temp_member_rules_tests.cpp" />
     <ClCompile Include="helper_rules_tests.cpp" />
     <ClCompile Include="overlay_visibility_rules_tests.cpp" />
+    <ClCompile Include="duel_challenge_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -126,6 +127,7 @@
     <ClCompile Include="..\..\src\temp_member_rules.cpp" />
     <ClCompile Include="..\..\src\helper_rules.cpp" />
     <ClCompile Include="..\..\src\overlay_visibility_rules.cpp" />
+    <ClCompile Include="..\..\src\duel_challenge_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

@@ -52,3 +52,4 @@ void RunAllyTierRulesTests();
 void RunTempMemberRulesTests();
 void RunHelperRulesTests();
 void RunOverlayVisibilityRulesTests();
+void RunDuelChallengeRulesTests();

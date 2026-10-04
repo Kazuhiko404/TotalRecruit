@@ -904,6 +904,44 @@
       "{name} se harto del maltrato y se fue de tu grupo."
     ]
   },
+  "duel": {
+    "_comment": "Reto a duelo a un aliado 80+ (necesita TotalSparring). notice.* va sobre su cabeza: una linea corta y sin acentos. {name} = su nombre, {hours} = horas hasta poder retarlo otra vez.",
+    "notice": {
+      "joined": [
+        "Me ganaste. Me uno a ti"
+      ],
+      "lost": [
+        "Vuelve cuando seas mas fuerte"
+      ]
+    },
+    "challenged": [
+      "{name} acepta el reto: elige el duelo en la ventana de TotalSparring."
+    ],
+    "joined": [
+      "{name} perdio el duelo y se une a tu grupo para siempre."
+    ],
+    "lost": [
+      "{name} gano el duelo. Vuelve cuando seas mas fuerte (podras retarlo en {hours} h)."
+    ],
+    "died": [
+      "{name} murio en el duelo."
+    ],
+    "missing": [
+      "Ganaste el duelo, pero tu rival ya no esta cerca para unirse."
+    ],
+    "busy": [
+      "Ya hay un duelo abierto en TotalSparring."
+    ],
+    "notReady": [
+      "TotalSparring todavia no esta listo para duelos."
+    ],
+    "refused": [
+      "TotalSparring no pudo abrir el duelo con {name}."
+    ],
+    "failed": [
+      "No se pudo abrir el duelo de TotalSparring."
+    ]
+  },
   "_razones": [
     "Los motivos que el jugador lee cuando un NPC no se une todavia, o por que si.",
     "{cats} es el precio (o el % de estomago que falta) y {purse} lo que llevas encima.",
@@ -1091,6 +1129,10 @@
       "helper": {
         "daysLeft": "Ayudante: le quedan {need} dias"
       },
+      "duel": {
+        "record": "Duelos: {food}-{need}",
+        "recordDraws": "Duelos: {food}-{need}-{chance}"
+      },
       "faction": {
         "honour": "Su honor no trata con tu reputacion",
         "greedy": "Te odia: ni por dinero"
@@ -1150,7 +1192,8 @@
       "cageKnockout": "NOQUEAR",
       "ignore": "IGNORAR",
       "decline": "RECHAZAR",
-      "forgive": "PERDONAR"
+      "forgive": "PERDONAR",
+      "duel": "RETAR A DUELO"
     },
     "route": {
       "helper": "Ayuda"
@@ -1160,7 +1203,8 @@
       "purse": "TIENES",
       "chance": "PROBABILIDAD",
       "free": "Gratis",
-      "cats": "{cats} cats"
+      "cats": "{cats} cats",
+      "duels": "DUELOS"
     },
     "shortPurse": "No te alcanzan los cats (te faltan {cats})",
     "body": {

@@ -217,6 +217,9 @@ OfferTexts OfferWording()
     Word(&t.allyTemporaryBody, "popup.ally.temporary");
     Word(&t.discountTag, "popup.ally.discountTag");
 
+    Word(&t.duelChallenge, "popup.button.duel");
+    Word(&t.duelRecordLabel, "popup.info.duels");
+
     Word(&t.haggleLabel, "popup.haggle.label");
     Word(&t.haggleOdds, "popup.haggle.odds");
     Word(&t.haggleOffer, "popup.haggle.offer");

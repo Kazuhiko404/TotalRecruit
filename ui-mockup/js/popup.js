@@ -7,7 +7,7 @@
 // C++ asks MyGUI for getTextSize() before sizing the window. The haggle section's fields
 // come from js/haggle.js applyHaggle; its slider art is SLIDER_ART (src/flat_slider.cpp).
 
-var PP_INFO_LABELS = { price: 'Precio', purse: 'Tienes', chance: 'Probabilidad' };
+var PP_INFO_LABELS = { price: 'Precio', purse: 'Tienes', chance: 'Probabilidad', duels: 'Duelos' };
 
 // Height of `text` wrapped at `width` in the class `cls` (the C++ MeasureWrapped).
 function ppMeasure(text, width, cls) {
@@ -111,6 +111,8 @@ function layoutOffer(vm) {
   if (vm.showPrice) rows.push([PP_INFO_LABELS.price, priceShown, vm.priceFree ? 'var(--ready)' : 'var(--amber)']);
   if (vm.showPurse) rows.push([PP_INFO_LABELS.purse, vm.purseText, vm.affordable ? 'var(--text)' : 'var(--soft-danger)']);
   if (vm.showChance) rows.push([PP_INFO_LABELS.chance, vm.chanceText, 'var(--text)']);
+  // The head-to-head duel record beside RETAR A DUELO (offer_view.h showDuelRecord).
+  if (vm.showDuelRecord) rows.push([PP_INFO_LABELS.duels, vm.duelRecordText, 'var(--amber)']);
   if (rows.length) {
     y += L.infoGap;
     var infoH = rows.length * L.infoRowH + 2 * L.infoPad;
@@ -163,13 +165,14 @@ function layoutOffer(vm) {
     y += plateH;
   }
 
-  // Buttons: Accept, Extra, Golpear, Noquear, Cancel share the row; Cancel alone sits on
-  // the right. More than buttonsPerRow: the others share the first row and Cancel sits
-  // alone on the right of a second one (LayoutButtonsUnguarded).
+  // Buttons: Accept, Extra, Retar a duelo, Golpear, Noquear, Cancel share the row; Cancel
+  // alone sits on the right. More than buttonsPerRow: the others share the first row and
+  // Cancel sits alone on the right of a second one (LayoutButtonsUnguarded).
   y += L.sectionGap;
   var actions = [];
   if (vm.accept) actions.push([vm.accept, 'accept']);
   if (vm.extra) actions.push([vm.extra, 'extra']);
+  if (vm.duel) actions.push([vm.duel, 'extra']);
   if (vm.beat) actions.push([vm.beat, 'extra']);
   if (vm.knockout) actions.push([vm.knockout, 'extra']);
   function row(buttons) {

@@ -30,6 +30,10 @@
 //    body: the friend's price with its discount ("Aliado (nivel 34): ... con 14%
 //    de descuento por amistad", PRECIO tagged "-14%"), the free friend, or the
 //    temporary member and their days. A tier refusal reads like any refusal.
+//  - An ally the duel is offered for (OfferDuelInput, decided by the caller with
+//    duel_challenge_rules.h CanOfferDuel) keeps all of the above and adds RETAR A
+//    DUELO to the row, and the head-to-head record as an info row ("DUELOS 2-1")
+//    when TotalSparring could read it.
 //
 // The words come in as OfferTexts (messages.json "popup" block, resolved by
 // npc_speech.cpp), so this stays testable and a translation changes no rule.
@@ -115,6 +119,10 @@ struct OfferTexts
     // or hurt them" the player can still act on (popup.reason.defiantNoBeat).
     std::string reasonDefiantNoBeat;
 
+    // The duel challenge (duel_challenge_rules.h, popup.duel.*).
+    std::string duelChallenge;    // "RETAR A DUELO"
+    std::string duelRecordLabel;  // "DUELOS", the info row of the head-to-head record
+
     // The haggle section (popup.haggle.*).
     std::string haggleLabel;    // "OFERTA"
     std::string haggleOdds;     // "Probabilidad de aceptar: {pct}%"
@@ -156,6 +164,23 @@ struct OfferHaggleInput
     }
 };
 
+// The duel challenge beside the tier's answer (duel_challenge_rules.h). Decided by
+// the caller (recruit_core.cpp, CanOfferDuel); the record is TotalSparring's
+// head-to-head of the selected squad member against this NPC, read when the popup
+// opens.
+struct OfferDuelInput
+{
+    // RETAR A DUELO is on offer.
+    bool offered;
+    // The record could be read (TotalSparring answered); only then is the row drawn.
+    bool recordKnown;
+    int wins;
+    int losses;
+    int draws;
+
+    OfferDuelInput() : offered(false), recordKnown(false), wins(0), losses(0), draws(0) {}
+};
+
 // The built-in Spanish, used for any key messages.json does not have.
 OfferTexts DefaultOfferTexts();
 
@@ -177,10 +202,12 @@ struct OfferInput
     // The engine's knockout odds for the selected character, for NOQUEAR's label.
     bool knockoutOddsKnown;
     float knockoutOdds;
+    // RETAR A DUELO and the record row; the default offers none.
+    OfferDuelInput duel;
 
     OfferInput() : name(), verdict(), purseKnown(false), purse(0),
                    remedy(OfferRemedy_None), afterRemedy(false), haggle(), cage(),
-                   knockoutOddsKnown(false), knockoutOdds(0.0f)
+                   knockoutOddsKnown(false), knockoutOdds(0.0f), duel()
     {
     }
 };
@@ -219,14 +246,21 @@ struct OfferView
     int chancePercent;
     std::string chanceText;
 
+    // The head-to-head duel record ("DUELOS  2-1"), only beside RETAR A DUELO.
+    bool showDuelRecord;
+    std::string duelRecordLabel;
+    std::string duelRecordText;
+
     // Empty when there is nothing to explain. Red when it is a no.
     std::string reasonText;
     bool reasonRefused;
 
     // Empty = the button is hidden. Cancel is always there. In the row: accept,
-    // extra (the remedy / IGNORAR / PERDONAR), beat, knockout, cancel.
+    // extra (the remedy / IGNORAR / PERDONAR), duel, beat, knockout, cancel.
     std::string acceptLabel;
     std::string extraLabel;
+    // RETAR A DUELO (duel_challenge_rules.h): next to the tier's own answer.
+    std::string duelLabel;
     std::string beatLabel;
     std::string knockoutLabel;
     std::string cancelLabel;
@@ -257,7 +291,7 @@ struct OfferView
     OfferView()
         : route(ReadoutRoute_Free), showPrice(false), priceFree(false), priceCats(0),
           showPurse(false), purseKnown(false), purseCats(0), affordable(true), shortfall(0),
-          showChance(false), chancePercent(0), reasonRefused(false),
+          showChance(false), chancePercent(0), showDuelRecord(false), reasonRefused(false),
           showSlider(false), haggleBounds(), sliderSteps(0), sliderStep(0), offerCats(0),
           oddsPercent(100), haggleTone(OddsTone_Ready), haggleLocked(false), acceptIsOffer(false)
     {

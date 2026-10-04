@@ -268,6 +268,10 @@ static bool DoRegisterModHub()
     regInt(api, mod, "helper_reject_days", "Ayudante: dias tras rechazo", "Dias sin volver a ofrecerse si lo rechazas o tu grupo lo ataca", 0, 30, 1, &c.helpers.rejectCooldownDays);
     regFloat(api, mod, "helper_expiry_warning", "Ayudante: aviso antes de irse", "Cuantas horas antes de irse avisa que se va pronto", 0.0f, 72.0f, 1.0f, 0, &c.helpers.expiryWarningHours);
     regInt(api, mod, "helper_debug_key", "Ayudante: tecla de prueba", "Codigo de tecla de Windows (119 = F8). Con un NPC seleccionado, se ofrece al instante. 0 = apagado", 0, 255, 1, &c.helpers.debugKey);
+    // Reto a duelo: un aliado 80+ se une para siempre si le ganas un duelo de TotalSparring.
+    regBool(api, mod, "duel_enabled", "Duelo: retar aliados 80+", "Con TotalSparring instalado, la ventana de un aliado de nivel temporal (80+) ofrece RETAR A DUELO: si tu peleador gana, se une para siempre (solo Balanced)", &c.duelChallenges.enabled);
+    regFloat(api, mod, "duel_cooldown_hours", "Duelo: horas tras perder", "Horas de juego sin poder retarlo otra vez despues de perder o empatar", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.cooldownHours);
+    regFloat(api, mod, "duel_expiry_hours", "Duelo: horas que espera el reto", "Si el duelo no termina en estas horas de juego, el reto se olvida", 0.5f, 168.0f, 0.5f, 1, &c.duelChallenges.expiryHours);
     regBool(api, mod, "cheat_needs_cage","Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
     regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame (0.02 = un minuto)", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
     regInt(api, mod, "rescue_base_bonus", "Rescate: peso de la deuda", "Cuanto pesa haberle salvado la vida, antes de contar la cura", 0, 90, 5, &c.rescueBaseBonus);

@@ -81,6 +81,21 @@ var STATES = [
     }
   },
   {
+    id: 'allyDuel',
+    title: 'Ally 80+ you can challenge (TotalSparring)',
+    note: 'An 80+ ally the popup offers RETAR A DUELO for (<code>duel_challenge_rules.h</code> <code>CanOfferDuel</code>: TotalSparring present, no lost-duel cooldown). The second line is TotalSparring\'s head-to-head record of the selected squad member against them (<code>readout.line.duel.record</code>, wins-losses; <code>recordDraws</code> adds the draws). Read only when the NPC or the selected squad member changes, never on the 2 s refresh.',
+    // facts: Route FreeWorld, Balanced, level 85 Honorable, Reason_AllyTemporary; duel offered, record 2-1-0
+    vm: {
+      name: 'Beep el Sabio', route: 'libre', routeLabel: 'Libre',
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0 },
+      showChance: false, chancePct: 0, ready: true,
+      showDefeats: false, defeats: 0, defeatsNeeded: 0,
+      showFood: false,
+      why:  { text: 'Aliado: te acompana unos dias', tone: 'ok' },
+      alt:  { text: 'Duelos: 2-1' }
+    }
+  },
+  {
     id: 'rescue',
     title: 'Saved life (will join)',
     note: 'Rescate with a certain outcome (no roll left): the chance row is replaced by the result. Same card, the line goes green.',

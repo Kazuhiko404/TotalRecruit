@@ -72,6 +72,9 @@
   "helperRejectCooldownDays": 3,
   "helperExpiryWarningHours": 12.0,
   "helperDebugKey": 0,
+  "duelChallengeEnabled": true,
+  "duelChallengeCooldownHours": 24.0,
+  "duelChallengeExpiryHours": 6.0,
 
   "submissionEventEnabled": true,
   "submissionApproachSeconds": 60.0,

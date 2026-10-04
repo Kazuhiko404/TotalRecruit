@@ -18,6 +18,7 @@
 #include "rules.h"
 #include "temp_member.h"
 #include "helper.h"
+#include "cage_commands.h"
 
 #include <cstdio>
 
@@ -55,6 +56,22 @@ DWORD g_pinnedAt = 0;
 // The offer window has been seen open since the pin: its closing ends the pin.
 bool g_offerSeen = false;
 std::string g_lastLogged;
+
+// The head-to-head duel record the card last read (TotalSparring's history database,
+// recruit_core.h ReadDuelRecord), and for which pair. Read again only when the NPC or
+// the selected squad member changes, never on the 2 s refresh. Raw pointers, compared
+// only, never dereferenced, cleared at a load.
+struct DuelRecordCache
+{
+    bool valid;
+    Character* npc;
+    Character* challenger;
+    bool known;
+    int wins;
+    int losses;
+    int draws;
+};
+DuelRecordCache g_duelRecord = { false, NULL, NULL, false, 0, 0, 0 };
 
 // A click elsewhere put the card away (card_dismiss_rules.h). Kept apart from the
 // mode: the card is still worked out for its NPC, only not drawn.
@@ -142,6 +159,36 @@ void LogReadout(Character* character, const ReadoutView& view, const ReadoutText
     }
 }
 
+// The duel record line of a challengeable ally (duel_challenge_rules.h): only when the
+// duel is on offer, and read from TotalSparring only when the pair changed.
+void AddDuelRecord(Character* character, ReadoutInput* input)
+{
+    if (!DuelOfferedFor(character, input->verdict))
+    {
+        return;
+    }
+    Character* challenger = SelectedSquadActor(character);
+    if (challenger == NULL)
+    {
+        return;
+    }
+    DuelRecordCache& c = g_duelRecord;
+    if (!c.valid || c.npc != character || c.challenger != challenger)
+    {
+        c.valid = true;
+        c.npc = character;
+        c.challenger = challenger;
+        c.wins = 0;
+        c.losses = 0;
+        c.draws = 0;
+        c.known = ReadDuelRecord(challenger, character, &c.wins, &c.losses, &c.draws);
+    }
+    input->duelRecordKnown = c.known;
+    input->duelWins = c.wins;
+    input->duelLosses = c.losses;
+    input->duelDraws = c.draws;
+}
+
 // Works the card out for this character: the one full evaluation. False when there
 // is nothing to show (not someone the mod talks to, or a verdict with no card).
 // On success the card is about `character` and holds the new content.
@@ -187,6 +234,7 @@ bool WorkOut(Character* character, const char* source)
         // The peek mints no id, so it has no roll key: a roll it could not make is
         // shown as odds (readout_model.h).
         input.rollKeyed = false;
+        AddDuelRecord(character, &input);
     }
 
     const ReadoutView view = BuildReadout(input, config);
@@ -615,6 +663,8 @@ void ForgetReadout()
     g_lastLogged.clear();
     g_anchorLogTarget = NULL;
     g_anchorLogged = 0;
+    const DuelRecordCache none = { false, NULL, NULL, false, 0, 0, 0 };
+    g_duelRecord = none;
     ForgetDismissal();
 }
 

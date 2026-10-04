@@ -280,6 +280,38 @@ var POPUP_STATES = [
     }
   },
   {
+    id: 'allyDuel',
+    title: 'Ally 80+ can be challenged to a duel (TotalSparring)',
+    note: 'The same Beep with TotalSparring installed and no lost-duel cooldown running (<code>duel_challenge_rules.h</code> <code>CanOfferDuel</code>): the tier\'s own answer stays (ACEPTAR as a temporary member) and <b>RETAR A DUELO</b> joins the row, a sumi plate with an amber border like the other extra answers. DUELOS is TotalSparring\'s head-to-head record of the selected squad member against Beep (wins-losses, then draws when there are any; read once as the window opens, <code>TS_ApiV1::GetDuelStats</code>). RETAR A DUELO closes this window and opens TotalSparring\'s own Dueling window with the selected fighter; nobody selected reads "Selecciona a alguien de tu grupo para hacerlo". A win recruits for good ("Me ganaste. Me uno a ti"); a loss or a draw says "Vuelve cuando seas mas fuerte" and hides the button for <code>duelChallengeCooldownHours</code>. Without TotalSparring the window is the state above.',
+    // facts: verdict willJoin, Reason_AllyTemporary, allyTiered, allyLevel 85, temporaryDays 6; duel offered, record 2-1-0
+    vm: {
+      title: 'Reclutamiento', name: 'Beep el Sabio', route: 'libre', routeTag: 'Libre',
+      body: 'Aliado (nivel 85): Beep el Sabio te acompanara 6 dias como miembro temporal.',
+      showPrice: true, priceText: 'Gratis', priceFree: true,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      showDuelRecord: true, duelRecordText: '2-1',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: '', duel: 'RETAR A DUELO', cancel: 'CANCELAR'
+    }
+  },
+  {
+    id: 'allyDuelCruel',
+    title: 'Cruel ally 80+ refuses, the duel is the way in',
+    note: 'A ColdCruel ally of level 90 refuses at 80+ (<code>Reason_AllyCruel</code>): the reason in red and CERRAR as before, plus RETAR A DUELO. Draws show as a third number (0-3-1).',
+    // facts: verdict refused, Currency_Refused, Reason_AllyCruel, allyTiered, allyLevel 90; duel offered, record 0-3-1
+    vm: {
+      title: 'Reclutamiento', name: 'Grath', route: 'libre', routeTag: 'Libre',
+      body: 'Grath no se une todavia.',
+      showPrice: false, priceText: '', priceFree: false,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      showDuelRecord: true, duelRecordText: '0-3-1',
+      reason: 'No camina al lado de nadie: su crueldad no se pone a tus ordenes', reasonRed: true,
+      accept: '', extra: '', duel: 'RETAR A DUELO', cancel: 'CERRAR'
+    }
+  },
+  {
     id: 'allyTooWeak',
     title: 'Ally refuses: leader too weak',
     note: 'The same Beep with a leader of level 60: 25 levels apart, past <code>allyTierCloseLevelGap</code> (<code>Reason_AllyLeaderTooWeak</code>). An ordinary refusal: the reason in red, CERRAR. The cruel at 80+ (<code>Reason_AllyCruel</code>) and the greedy at 100+ (<code>Reason_AllyGreedy</code>) read the same with their own line.',

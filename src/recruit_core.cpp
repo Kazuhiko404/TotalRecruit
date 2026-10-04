@@ -22,6 +22,11 @@
 #include "haggle_rules.h"
 #include "haggle_ledger.h"
 #include "temp_member.h"
+#include "duel_challenge_rules.h"
+#include "ts_bridge.h"
+#include "head_notice.h"
+#include "npc_motion.h"
+#include "approach_rules.h"
 
 #include <algorithm>
 
@@ -337,6 +342,25 @@ OfferHaggleInput HaggleInputFor(Character* character, const Verdict& verdict, Ha
     return haggle;
 }
 
+// RETAR A DUELO and the record row (offer_view.h OfferDuelInput): offered by
+// DuelOfferedFor; the record is read once, now, as the window opens.
+OfferDuelInput DuelInputFor(Character* character, const Verdict& verdict)
+{
+    OfferDuelInput duel;
+    duel.offered = DuelOfferedFor(character, verdict);
+    if (!duel.offered)
+    {
+        return duel;
+    }
+    Character* challenger = SelectedSquadActor(character);
+    if (challenger != NULL)
+    {
+        duel.recordKnown = ReadDuelRecord(challenger, character, &duel.wins, &duel.losses,
+                                          &duel.draws);
+    }
+    return duel;
+}
+
 // What the player is carrying: the squad leader's purse (cats_purse.h).
 bool ReadPlayerPurse(int* out)
 {
@@ -364,6 +388,7 @@ bool PresentOffer(Character* character, const Verdict& verdict, bool afterRemedy
     in.afterRemedy = afterRemedy;
     in.haggle = HaggleInputFor(character, verdict, NULL);
     CageInputFor(character, &in);
+    in.duel = DuelInputFor(character, verdict);
     return ShowPricedOffer(character, in, OfferWording());
 }
 
@@ -820,5 +845,266 @@ void RefundPrice(Character* character, int cats, const std::string& name)
     TellPlayer(Fill(Say("money.refunded", "{name}: te devolvieron {cats} cats", character),
                     name, cats, 0),
                false);
+}
+
+// ------------------------------------------------------------ Duel challenge
+namespace
+{
+// How far from any squad member the challenged NPC is looked for once the duel is
+// over (the bout's own pointers died with TotalSparring's callback).
+const float kDuelSearchMeters = 80.0f;
+const int kDuelSearchMembers = 64;
+// How often stale challenges are swept out.
+const DWORD kDuelExpirySweepMs = 5000;
+DWORD g_lastDuelSweep = 0;
+
+// The NPC carrying `key`, near any of the player's characters. NULL when not found.
+Character* FindNearSquad(const CharKey& key)
+{
+    Character* members[kDuelSearchMembers] = { NULL };
+    const int count = SafePlayerCharacters(members, kDuelSearchMembers);
+    for (int m = 0; m < count; ++m)
+    {
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+        std::vector<Character*> nearby;
+        if (members[m] == NULL || !NpcMotion::Position(members[m], &x, &y, &z) ||
+            !CharactersNear(Ogre::Vector3(x, y, z), MetersToWorldUnits(kDuelSearchMeters), &nearby))
+        {
+            continue;
+        }
+        for (unsigned int i = 0; i < nearby.size(); ++i)
+        {
+            CharKey found;
+            if (nearby[i] != NULL && SafeFindCharKey(nearby[i], &found) && found == key)
+            {
+                return nearby[i];
+            }
+        }
+    }
+    return NULL;
+}
+
+// The line for a window TotalSparring would not open (messages.json duel.*).
+std::string DuelOpenProblem(TsOpenResult result, Character* npc, const std::string& name)
+{
+    switch (result)
+    {
+    case TsOpen_Busy:
+        return Say("duel.busy", "Ya hay un duelo abierto en TotalSparring.", npc);
+    case TsOpen_NotReady:
+    case TsOpen_Absent:
+        return Say("duel.notReady", "TotalSparring todavia no esta listo para duelos.", npc);
+    case TsOpen_Refused:
+        return Fill(Say("duel.refused", "TotalSparring no pudo abrir el duelo con {name}.", npc),
+                    name, 0, 0);
+    case TsOpen_Failed:
+    case TsOpen_Opened:
+    default:
+        return Say("duel.failed", "No se pudo abrir el duelo de TotalSparring.", npc);
+    }
+}
+
+const char* ResolutionWord(DuelResolution resolution)
+{
+    switch (resolution)
+    {
+    case DuelResolution_Joined: return "joined";
+    case DuelResolution_Lost:   return "lost";
+    default:                    return "ignored";
+    }
+}
+
+// A won duel: the NPC joins for good -- a plain Recruit, never a temporary stay.
+void OnDuelWon(const DuelResolveResult& result)
+{
+    Character* npc = FindNearSquad(result.npc);
+    if (npc == NULL)
+    {
+        LogError("[duel] won against " + result.npc.ToString() + ", who is not near the squad.");
+        TellPlayer(Say("duel.missing", "Ganaste el duelo, pero tu rival ya no esta cerca para unirse.",
+                       NULL),
+                   true);
+        return;
+    }
+    const std::string name = CharacterName(npc);
+    bool dead = false;
+    if (SafeIsDead(npc, &dead) && dead)
+    {
+        LogInfo("[duel] " + name + " died in the duel: nobody to recruit.");
+        TellPlayer(Fill(Say("duel.died", "{name} murio en el duelo.", npc), name, 0, 0), false);
+        return;
+    }
+    std::string message;
+    if (!Recruit(npc, &message))
+    {
+        LogError("[duel] " + name + " lost the duel but the recruit failed: " + message);
+        TellPlayer(name + ": " + message, true);
+        return;
+    }
+    RaiseSquadHeadNotice(npc, Say("duel.notice.joined", "Me ganaste. Me uno a ti", npc));
+    TellPlayer(Fill(Say("duel.joined", "{name} perdio el duelo y se une a tu grupo para siempre.", npc),
+                    name, 0, 0),
+               false);
+    LogInfo("[duel] " + name + " lost the duel and joins for good [key " + result.npc.ToString() + "]");
+}
+
+// A lost (or drawn) duel: they tell the player to come back stronger, and the
+// cooldown (already in the book, saved with the NPC) keeps the button away.
+void OnDuelLost(const DuelResolveResult& result, double nowHours)
+{
+    Character* npc = FindNearSquad(result.npc);
+    const std::string name = npc != NULL ? CharacterName(npc) : std::string("Tu rival");
+    const double left = (double)result.cooldownUntilHour - nowHours;
+    const int hours = left > 0.0 ? (int)(left + 0.999) : 0;
+    if (npc != NULL)
+    {
+        RaiseHeadNotice(npc, Say("duel.notice.lost", "Vuelve cuando seas mas fuerte", npc));
+    }
+    TellPlayer(Fill(Say("duel.lost",
+                        "{name} gano el duelo. Vuelve cuando seas mas fuerte (podras retarlo en {hours} h).",
+                        npc),
+                    name, 0, hours),
+               false);
+    LogInfo("[duel] " + name + " won the duel: no challenge until hour " +
+            IntToString(result.cooldownUntilHour) + " [key " + result.npc.ToString() + "]");
+}
+
+void LogBout(const DuelBoutRecord& bout, DuelResolution resolution)
+{
+    if (!bout.isDuel && !GetConfig().probeOnClick)
+    {
+        return;
+    }
+    LogInfo(std::string("[duel] bout ") + (bout.isDuel ? "duel" : "spar") + " outcome=" +
+            IntToString((int)bout.outcome) + " a=" + (bout.aKnown ? bout.a.ToString() : "?") +
+            (bout.aIsSquadMember ? "(squad)" : "") + " b=" + (bout.bKnown ? bout.b.ToString() : "?") +
+            " -> " + ResolutionWord(resolution));
+}
+} // namespace
+
+bool DuelOfferedFor(Character* npc, const Verdict& verdict)
+{
+    if (npc == NULL)
+    {
+        return false;
+    }
+    const Config& config = GetConfig();
+    DuelOfferFacts facts;
+    facts.enabled = config.duelChallenges.enabled;
+    facts.tsAvailable = TsAvailable();
+    facts.allyTiered = verdict.allyTiered;
+    facts.isAnimal = verdict.isAnimal;
+    facts.npcLevel = verdict.allyLevel;
+    facts.eliteFromLevel = config.allyTiers.eliteFromLevel;
+    CharKey key;
+    double now = 0.0;
+    facts.onCooldown = SafeFindCharKey(npc, &key) && SafeGameHours(&now) && DuelOnCooldown(key, now);
+    return CanOfferDuel(facts);
+}
+
+bool ReadDuelRecord(Character* challenger, Character* npc, int* wins, int* losses, int* draws)
+{
+    return TsDuelStats(challenger, npc, wins, losses, draws);
+}
+
+void ChallengeToDuel(Character* npc)
+{
+    if (npc == NULL)
+    {
+        return;
+    }
+    const std::string name = CharacterName(npc);
+    if (!TsAvailable())
+    {
+        TellPlayer(DuelOpenProblem(TsOpen_NotReady, npc, name), true);
+        return;
+    }
+    // The cage commands' actor rule: the selected squad member, awake, not the NPC.
+    Character* challenger = SelectedSquadActor(npc);
+    if (challenger == NULL)
+    {
+        TellPlayer(CageCommandProblem(CageCommand_NoActor), true);
+        return;
+    }
+
+    CharKey npcKey;
+    CharKey challengerKey;
+    double now = 0.0;
+    if (!SafeCharKey(npc, &npcKey) || !SafeCharKey(challenger, &challengerKey) ||
+        !SafeGameHours(&now))
+    {
+        LogError("[duel] could not read the keys or the clock to challenge " + name + ".");
+        TellPlayer(DuelOpenProblem(TsOpen_Failed, npc, name), true);
+        return;
+    }
+
+    // Recorded before the window opens, so even an instant result finds it.
+    RecordDuelChallenge(npcKey, challengerKey, now);
+    const TsOpenResult opened = TsOpenDuel(npc, challenger);
+    if (opened == TsOpen_Opened)
+    {
+        TellPlayer(Fill(Say("duel.challenged",
+                            "{name} acepta el reto: elige el duelo en la ventana de TotalSparring.", npc),
+                        name, 0, 0),
+                   false);
+        LogInfo("[duel] " + CharacterName(challenger) + " challenges " + name + " [key " +
+                npcKey.ToString() + "]");
+        return;
+    }
+    WithdrawDuelChallenge(npcKey);
+    TellPlayer(DuelOpenProblem(opened, npc, name), true);
+    LogInfo("[duel] TotalSparring did not open the duel with " + name + " (" +
+            IntToString((int)opened) + "): challenge withdrawn.");
+}
+
+void DuelChallengeTick()
+{
+    TsBridgeTick();
+
+    std::vector<DuelBoutRecord> bouts;
+    TsTakeBoutEvents(&bouts);
+    const DWORD tick = GetTickCount();
+    const bool sweep = tick - g_lastDuelSweep >= kDuelExpirySweepMs;
+    if (bouts.empty() && !sweep)
+    {
+        return;
+    }
+    double now = 0.0;
+    if (!SafeGameHours(&now))
+    {
+        if (!bouts.empty())
+        {
+            LogError("[duel] the game clock could not be read: " + IntToString((int)bouts.size()) +
+                     " bout(s) not resolved.");
+        }
+        return;
+    }
+
+    const DuelChallenges& config = GetConfig().duelChallenges;
+    if (sweep)
+    {
+        g_lastDuelSweep = tick;
+        const int expired = ExpireDuelChallenges(now, config.expiryHours);
+        if (expired > 0)
+        {
+            LogInfo("[duel] " + IntToString(expired) + " challenge(s) expired unanswered.");
+        }
+    }
+
+    for (size_t i = 0; i < bouts.size(); ++i)
+    {
+        const DuelResolveResult result = ResolveDuelBout(bouts[i], now, config);
+        LogBout(bouts[i], result.resolution);
+        if (result.resolution == DuelResolution_Joined)
+        {
+            OnDuelWon(result);
+        }
+        else if (result.resolution == DuelResolution_Lost)
+        {
+            OnDuelLost(result, now);
+        }
+    }
 }
 } // namespace totalrecruit

@@ -20,6 +20,9 @@
 //                                  helper.h        game hour a free helper's escort ends
 //   total_recruit.helper_reject_until
 //                                  helper.h        game hour a helper may offer again
+//   total_recruit.duel_cooldown_until
+//                                  duel_challenge_rules.h  game hour an NPC who won a
+//                                                  duel may be challenged again
 //
 // Strings ride the same hooks through saved_strings.h.
 //

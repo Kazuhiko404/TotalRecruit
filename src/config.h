@@ -534,6 +534,27 @@ struct Helpers
     }
 };
 
+// The duel challenge (duel_challenge_rules.h): an ally of the elite cut level and
+// above can be challenged to a TotalSparring duel and joins for good on a win.
+// Hours are in-game hours. config.json keys "duelChallenge*".
+struct DuelChallenges
+{
+    // Off, the popup never offers RETAR A DUELO (TotalSparring present or not).
+    bool enabled;
+    // After a lost (or drawn) duel the NPC will not be challenged again for this
+    // many hours (saved with the character).
+    float cooldownHours;
+    // A challenge whose duel never finished is forgotten after this many hours.
+    float expiryHours;
+
+    DuelChallenges()
+        : enabled(true),
+          cooldownHours(24.0f),
+          expiryHours(6.0f)
+    {
+    }
+};
+
 // Which dialogue records the plugin fires. Empty means "no FCS package
 // installed" -- the plugin then falls back to acting directly, so the mod still
 // works as a code-only install.
@@ -652,6 +673,7 @@ struct Config
     AllyTiers allyTiers;
     TempMembers tempMembers;
     Helpers helpers;
+    DuelChallenges duelChallenges;
     DialogueIds dialogue;
     Exclusions exclude;
 

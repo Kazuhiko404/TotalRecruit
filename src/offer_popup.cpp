@@ -43,6 +43,7 @@ const char* const kDeclineName  = "TR_OfferDecline";
 const char* const kExtraName    = "TR_OfferExtra";
 const char* const kBeatName     = "TR_OfferBeat";
 const char* const kKnockoutName = "TR_OfferKnockout";
+const char* const kDuelName     = "TR_OfferDuel";
 const char* const kPortraitName = "TR_OfferPortrait";
 const char* const kSliderName   = "TR_OfferSlider";
 
@@ -74,7 +75,8 @@ const int kAloneButtonW = 150;
 // More buttons than this and the closing one wraps alone to a second row, on the
 // right (POPUP_LAYOUT buttonsPerRow): five across would not hold DARLE COMIDA.
 const int kButtonsPerRow = 3;
-const int kInfoRows     = 3;
+// Price, purse, chance and the duel record (OfferView::showDuelRecord).
+const int kInfoRows     = 4;
 // The haggle section (POPUP_LAYOUT haggle*).
 const int kHaggleRowH   = 24;
 const int kHaggleLabelW = 84;
@@ -103,6 +105,7 @@ struct Popup
     MyGUI::Widget* reasonBar;
     FlatButton accept;
     FlatButton extra;
+    FlatButton duel;
     FlatButton beat;
     FlatButton knockout;
     FlatButton cancel;
@@ -143,6 +146,7 @@ MyGUI::delegates::IDelegate2<MyGUI::Window*, const std::string&>* g_closeDelegat
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_acceptDelegate = NULL;
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_declineDelegate = NULL;
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_extraDelegate = NULL;
+MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_duelDelegate = NULL;
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_beatDelegate = NULL;
 MyGUI::delegates::IDelegate1<MyGUI::Widget*>* g_knockoutDelegate = NULL;
 
@@ -320,6 +324,7 @@ bool BuildBodyUnguarded()
     p.reasonBar = MakeFill(c, kDanger);
     MakeFlatButtonPlates(c, kAmber, NULL, &p.accept);
     MakeFlatButtonPlates(c, kSumi, &kAmber, &p.extra);
+    MakeFlatButtonPlates(c, kSumi, &kAmber, &p.duel);
     MakeFlatButtonPlates(c, kSumi, &kAmber, &p.beat);
     MakeFlatButtonPlates(c, kSumi, &kAmber, &p.knockout);
     MakeFlatButtonPlates(c, kLine, &kGoldDim, &p.cancel);
@@ -353,6 +358,7 @@ bool BuildBodyUnguarded()
 
     MakeFlatButtonCaption(c, kAcceptName, kMediumFont, kLacquer, &p.accept);
     MakeFlatButtonCaption(c, kExtraName, kMediumFont, kAmber, &p.extra);
+    MakeFlatButtonCaption(c, kDuelName, kMediumFont, kAmber, &p.duel);
     MakeFlatButtonCaption(c, kBeatName, kMediumFont, kAmber, &p.beat);
     MakeFlatButtonCaption(c, kKnockoutName, kMediumFont, kAmber, &p.knockout);
     MakeFlatButtonCaption(c, kDeclineName, kMediumFont, kText, &p.cancel);
@@ -366,7 +372,8 @@ bool BuildBodyUnguarded()
     }
 
     return p.plate != NULL && p.body != NULL && p.accept.button != NULL &&
-           p.extra.button != NULL && p.beat.button != NULL && p.knockout.button != NULL &&
+           p.extra.button != NULL && p.duel.button != NULL && p.beat.button != NULL &&
+           p.knockout.button != NULL &&
            p.cancel.button != NULL;
 }
 
@@ -380,6 +387,7 @@ void OnAccept(MyGUI::Widget* sender);
 void OnDecline(MyGUI::Widget* sender);
 void OnWindowButton(MyGUI::Window* sender, const std::string& button);
 void OnExtra(MyGUI::Widget* sender);
+void OnDuel(MyGUI::Widget* sender);
 void OnBeat(MyGUI::Widget* sender);
 void OnKnockout(MyGUI::Widget* sender);
 void OnSliderChange(int step);
@@ -397,11 +405,13 @@ bool BindButtons()
         g_acceptDelegate = MyGUI::newDelegate(&OnAccept);
         g_declineDelegate = MyGUI::newDelegate(&OnDecline);
         g_extraDelegate = MyGUI::newDelegate(&OnExtra);
+        g_duelDelegate = MyGUI::newDelegate(&OnDuel);
         g_beatDelegate = MyGUI::newDelegate(&OnBeat);
         g_knockoutDelegate = MyGUI::newDelegate(&OnKnockout);
         g_ui.accept.button->eventMouseButtonClick += g_acceptDelegate;
         g_ui.cancel.button->eventMouseButtonClick += g_declineDelegate;
         g_ui.extra.button->eventMouseButtonClick += g_extraDelegate;
+        g_ui.duel.button->eventMouseButtonClick += g_duelDelegate;
         g_ui.beat.button->eventMouseButtonClick += g_beatDelegate;
         g_ui.knockout.button->eventMouseButtonClick += g_knockoutDelegate;
         return true;
@@ -422,6 +432,10 @@ void Unbind()
     if (g_ui.extra.button != NULL && g_extraDelegate != NULL)
     {
         g_ui.extra.button->eventMouseButtonClick -= g_extraDelegate;
+    }
+    if (g_ui.duel.button != NULL && g_duelDelegate != NULL)
+    {
+        g_ui.duel.button->eventMouseButtonClick -= g_duelDelegate;
     }
     if (g_ui.beat.button != NULL && g_beatDelegate != NULL)
     {
@@ -515,6 +529,7 @@ void HideAllUnguarded()
     for (int i = 0; i < kInfoRows; ++i) { Hide(p.infoLabel[i]); Hide(p.infoValue[i]); }
     ShowButton(p.accept, false);
     ShowButton(p.extra, false);
+    ShowButton(p.duel, false);
     ShowButton(p.beat, false);
     ShowButton(p.knockout, false);
     ShowButton(p.cancel, false);
@@ -596,7 +611,7 @@ void PlaceButtonRow(const FlatButton* const* order, const std::string* const* ca
     }
 }
 
-// Accept (or OFRECER), Extra, Golpear, Noquear, Cancel share the row; Cancel alone
+// Accept (or OFRECER), Extra, Retar a duelo, Golpear, Noquear, Cancel share the row; Cancel alone
 // sits on the right. More than kButtonsPerRow: the others share the first row and
 // Cancel sits alone on the right of a second one. Returns the y under the buttons.
 int LayoutButtonsUnguarded(const OfferView& view, int y)
@@ -606,15 +621,17 @@ int LayoutButtonsUnguarded(const OfferView& view, int y)
     const int m = kMargin;
     ShowButton(p.accept, false);
     ShowButton(p.extra, false);
+    ShowButton(p.duel, false);
     ShowButton(p.beat, false);
     ShowButton(p.knockout, false);
     ShowButton(p.cancel, false);
 
-    const FlatButton* order[5] = { NULL, NULL, NULL, NULL, NULL };
-    const std::string* captions[5] = { NULL, NULL, NULL, NULL, NULL };
+    const FlatButton* order[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
+    const std::string* captions[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
     int count = 0;
     if (!view.acceptLabel.empty())   { order[count] = &p.accept;   captions[count] = &view.acceptLabel;   ++count; }
     if (!view.extraLabel.empty())    { order[count] = &p.extra;    captions[count] = &view.extraLabel;    ++count; }
+    if (!view.duelLabel.empty())     { order[count] = &p.duel;     captions[count] = &view.duelLabel;     ++count; }
     if (!view.beatLabel.empty())     { order[count] = &p.beat;     captions[count] = &view.beatLabel;     ++count; }
     if (!view.knockoutLabel.empty()) { order[count] = &p.knockout; captions[count] = &view.knockoutLabel; ++count; }
     const int actions = count;
@@ -689,9 +706,9 @@ int LayoutUnguarded(const OfferView& view)
 
     // Info box: only the rows that apply.
     int rows = 0;
-    const std::string* labels[kInfoRows] = { NULL, NULL, NULL };
-    const std::string* values[kInfoRows] = { NULL, NULL, NULL };
-    MyGUI::Colour inks[kInfoRows] = { kText, kText, kText };
+    const std::string* labels[kInfoRows] = { NULL, NULL, NULL, NULL };
+    const std::string* values[kInfoRows] = { NULL, NULL, NULL, NULL };
+    MyGUI::Colour inks[kInfoRows] = { kText, kText, kText, kText };
     // A Balanced ally's friendship discount rides beside the price ("1.840 cats  -14%").
     const std::string priceShown =
         view.priceTag.empty() ? view.priceText : view.priceText + "  " + view.priceTag;
@@ -716,6 +733,14 @@ int LayoutUnguarded(const OfferView& view)
         labels[rows] = &view.chanceLabel;
         values[rows] = &view.chanceText;
         inks[rows] = kText;
+        ++rows;
+    }
+    // The head-to-head duel record beside RETAR A DUELO ("DUELOS  2-1").
+    if (view.showDuelRecord)
+    {
+        labels[rows] = &view.duelRecordLabel;
+        values[rows] = &view.duelRecordText;
+        inks[rows] = kAmber;
         ++rows;
     }
     if (rows > 0)
@@ -850,6 +875,8 @@ enum OfferAnswer
     Answer_Accept,
     Answer_Extra,
     Answer_Decline,
+    // RETAR A DUELO (an ordinary offer only: BuildOfferView alone sets it).
+    Answer_Duel,
     // The cage commands (an ordinary offer only: BuildOfferView alone sets them).
     Answer_Beat,
     Answer_Knockout,
@@ -947,6 +974,10 @@ void AnswerPlain(Character* npc, OfferAnswer answer, bool offering, int offer)
     case Answer_Extra:
         HelpCaptive(npc);
         return;
+    case Answer_Duel:
+        // The window is already closed; TotalSparring's own Dueling window opens.
+        ChallengeToDuel(npc);
+        return;
     case Answer_Beat:
     case Answer_Knockout:
         OrderCageCommand(npc, answer);
@@ -1001,6 +1032,11 @@ void OnDecline(MyGUI::Widget* /*sender*/)
 void OnExtra(MyGUI::Widget* /*sender*/)
 {
     Answer(Answer_Extra);
+}
+
+void OnDuel(MyGUI::Widget* /*sender*/)
+{
+    Answer(Answer_Duel);
 }
 
 void OnBeat(MyGUI::Widget* /*sender*/)
@@ -1181,6 +1217,7 @@ void ShutdownOfferPopup()
     g_acceptDelegate = NULL;
     g_declineDelegate = NULL;
     g_extraDelegate = NULL;
+    g_duelDelegate = NULL;
     g_beatDelegate = NULL;
     g_knockoutDelegate = NULL;
     g_closeDelegate = NULL;
