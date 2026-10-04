@@ -132,6 +132,20 @@ void TheClaimSaysWhichCommandCausedIt()
     CHECK(CreditWindowMs(OrderedCredit_None) == 0u);
 }
 
+// cage-beating-stress S2: a knockout either cage command caused is not a defeat
+// (it is beating stress); only Noquear's adds stress at the knockout, because
+// Golpear's blow already added its own when it landed.
+void ACageKnockoutIsStressNotADefeat()
+{
+    const char* name = "cage knockout: any claimed credit is not a defeat; only Noquear's adds stress then";
+    CHECK(!IsCageKnockout(OrderedCredit_None));
+    CHECK(IsCageKnockout(OrderedCredit_Beat));
+    CHECK(IsCageKnockout(OrderedCredit_Knockout));
+    CHECK(!CageKnockoutAddsStress(OrderedCredit_None));
+    CHECK(!CageKnockoutAddsStress(OrderedCredit_Beat));
+    CHECK(CageKnockoutAddsStress(OrderedCredit_Knockout));
+}
+
 void ANewOrderRestartsTheWindow()
 {
     const char* name = "credit bridge: ordering again restarts the window";
@@ -418,6 +432,7 @@ void RunCageCommandRulesTests()
     AnExpiredOrderIsNotCredited();
     ANewOrderRestartsTheWindow();
     TheClaimSaysWhichCommandCausedIt();
+    ACageKnockoutIsStressNotADefeat();
     TheKnockoutLabelCarriesTheNativeOdds();
     TheFallbackKnockoutReadsTheSkillAsAFraction();
     TheBeatHitIsTheAttackersOwnDamageAsBlunt();

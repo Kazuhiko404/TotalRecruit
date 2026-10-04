@@ -50,14 +50,17 @@
 // block or a popup built a while ago never acts on a prisoner freed, knocked out
 // or out of the cage since.
 //
-// Credit: the knockout hook (defeats.cpp) counts the defeat. A blow that landed is
-// remembered for kBeatCreditWindowMs (a few seconds around the hit: its knockout
-// comes at once or not at all), a knockout order for kOrderedKnockoutWindowMs (it
-// walks to the cage first), and the hook claims it (ResolveCageKnockout),
-// so a knockout they cause counts as the player's even when the engine's
-// lastGuyWhoDefeatedMe names nobody -- the direct blow and the fallback knockout
-// are exactly such cases. A later knockout (a starvation collapse) is not. The pure
-// parts live in cage_command_rules.h.
+// Credit: a blow that landed is remembered for kBeatCreditWindowMs (a few seconds
+// around the hit: its knockout comes at once or not at all), a knockout order for
+// kOrderedKnockoutWindowMs (it walks to the cage first), and the knockout hook
+// (defeats.cpp) claims it (ResolveCageKnockout), which identifies the knockout as
+// the cage command's even when the engine's lastGuyWhoDefeatedMe names nobody --
+// the direct blow and the fallback knockout are exactly such cases. A cage
+// command's knockout is NOT a defeat (cage-beating-stress): it is beating stress
+// (beating_stress.h). Each blow that landed adds its stress at the hit; a knockout
+// order's knockout adds its own when it is claimed. A later knockout (a starvation
+// collapse) is no cage command's, and the ordinary defeat rules decide it. The
+// pure parts live in cage_command_rules.h.
 //
 // Log (probeOnClick): "[cage] <actor> -> <target> beat hit (blunt X, part health
 // A -> B)", "[cage] <actor> -> <target> knockout via task|fallback" and "[cage]
@@ -139,10 +142,21 @@ std::string KnockoutButtonLabel(Character* target);
 // kStrayGoalSweepMs, heals actors stuck with a stray knockout goal.
 void TickCageCommands();
 
+// What the knockout hook learns from ResolveCageKnockout: which cage command (if
+// any) caused this knockout, and the beating stress the knockout itself added.
+struct CageKnockout
+{
+    OrderedCreditKind kind;
+    float stressGain;   // 0..1; 0 for a blow's knockout (the blow added its own)
+
+    CageKnockout() : kind(OrderedCredit_None), stressGain(0.0f) {}
+};
+
 // For the knockout hook: which cage command (once) this knockout follows, given a
 // moment ago -- a blow or a knockout order -- or OrderedCredit_None. A knockout
-// order's knockout is Noquear landing: its rest starts here.
-OrderedCreditKind ResolveCageKnockout(Character* victim);
+// order's knockout is Noquear landing: its rest starts here and it adds its
+// beating stress (CageKnockoutAddsStress).
+CageKnockout ResolveCageKnockout(Character* victim);
 
 // Load boundary: lets the watched actor go (CleanUpKnockoutOrder, while the
 // characters still exist and still resolve to their keys), drops the watch and the

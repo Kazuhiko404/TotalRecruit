@@ -121,6 +121,16 @@ unsigned int CreditWindowMs(OrderedCreditKind kind)
     }
 }
 
+bool IsCageKnockout(OrderedCreditKind kind)
+{
+    return kind != OrderedCredit_None;
+}
+
+bool CageKnockoutAddsStress(OrderedCreditKind kind)
+{
+    return kind == OrderedCredit_Knockout;
+}
+
 void OrderedKnockoutCredit::Remember(const CharKey& target, unsigned int nowMs,
                                      OrderedCreditKind kind)
 {

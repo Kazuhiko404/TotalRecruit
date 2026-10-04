@@ -159,11 +159,11 @@ void ReArm(Character* character, Record* record)
     }
 }
 
-// Counts one defeat if this sighting is a new one. `creditedToPlayer` is the
-// caller saying the player's own action caused it, which skips the question put
-// to the engine (who beat them) and keeps every other filter -- see
-// DecideDefeatCredit. `sighting` says whether the fall itself was seen.
-void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Sighting sighting)
+// Counts one defeat if this sighting is a new one. `sighting` says whether the
+// fall itself was seen. No caller vouches for a knockout any more (the
+// DecideDefeatCredit override stays false): the knockouts the player caused
+// through a cage command are beating stress, not defeats (NoteCageKnockout).
+void RecordDefeat(Character* character, DefeatEpisode::Sighting sighting)
 {
     if (character == NULL || !GetConfig().submission.countDefeats)
     {
@@ -181,7 +181,7 @@ void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Si
     const bool readWinner = SafeDefeatedByPlayer(character, &beatenByPlayer);
 
     const DefeatCredit credit = DecideDefeatCredit(readMine && mine, readWinner,
-                                                   beatenByPlayer, creditedToPlayer);
+                                                   beatenByPlayer, false);
     if (credit != DefeatCredit_Counts)
     {
         if (trace)
@@ -217,17 +217,6 @@ void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Si
     record.episode = DefeatEpisode::AfterCount(record.episode, nowMs);
     const int count = LedgerAdd(key);
 
-    if (creditedToPlayer)
-    {
-        // The line QA looks for: a knockout ordered through a cage command
-        // counted although the engine's own record may name nobody (or somebody
-        // else).
-        LogInfo("[defeat] credited to the player explicitly (cage command): " +
-                CharacterName(character) + " (engine winner " +
-                (readWinner ? (beatenByPlayer ? "is the player" : "is someone else")
-                            : "unreadable") + ")");
-    }
-
     bool nearDeath = false;
     bool alreadyGone = false;
     float bloodFraction = 1.0f;
@@ -252,6 +241,27 @@ void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Si
             g_nearDeathListener(character);
         }
     }
+}
+
+// cage-beating-stress: a knockout Golpear or Noquear caused on a prisoner in the
+// player's cage is not a defeat -- the count and the field-yield route never see
+// it -- but its episode is marked counted all the same, so the hook's twin call
+// and the right-click fallback (both of which may find the engine naming the
+// player) cannot count this same knockout by the back door. Seeing them standing
+// again re-arms the episode as usual.
+void NoteCageKnockout(Character* victim, const CageKnockout& cage)
+{
+    CharKey key;
+    if (SafeFindCharKey(victim, &key))
+    {
+        Record& record = g_records[key];
+        record.episode = DefeatEpisode::AfterCount(record.episode, GetTickCount());
+    }
+    char note[96];
+    _snprintf_s(note, sizeof(note), _TRUNCATE, " cage knockout: not a defeat (stress +%d%%%s)",
+                (int)(cage.stressGain * 100.0f + 0.5f),
+                cage.kind == OrderedCredit_Beat ? ", the blow added its own" : "");
+    LogInfo("[defeat] " + CharacterName(victim) + note);
 }
 
 void Knockout_hook(MedicalSystem* thisptr, float skill)
@@ -286,20 +296,25 @@ void Knockout_hook(MedicalSystem* thisptr, float skill)
                 (readBefore && !downBefore ? " (was standing)" : " (already down)"));
     }
     // A knockout the player caused with Golpear's blow or Noquear's order is the
-    // player's, whatever the engine recorded as the winner: the blow and the
+    // cage command's, whatever the engine recorded as the winner: the blow and the
     // fallback knockout name nobody at all. Claimed once, inside that command's
     // window: 5 s around a blow, 2 min after a knockout order (cage_command_rules.h
-    // kBeatCreditWindowMs / kOrderedKnockoutWindowMs).
-    const bool ordered = ResolveCageKnockout(victim) != OrderedCredit_None;
-    RecordDefeat(victim, ordered,
-                 (readBefore && !downBefore) ? DefeatEpisode::Sighting_KnockoutFromStanding
-                                             : DefeatEpisode::Sighting_FoundDown);
+    // kBeatCreditWindowMs / kOrderedKnockoutWindowMs). It is beating stress, not
+    // a defeat; every other knockout goes to the ordinary defeat rules.
+    const CageKnockout cage = ResolveCageKnockout(victim);
+    if (IsCageKnockout(cage.kind))
+    {
+        NoteCageKnockout(victim, cage);
+        return;
+    }
+    RecordDefeat(victim, (readBefore && !downBefore) ? DefeatEpisode::Sighting_KnockoutFromStanding
+                                                     : DefeatEpisode::Sighting_FoundDown);
 }
 } // namespace
 
 void NoteDefeat(Character* character)
 {
-    RecordDefeat(character, false, DefeatEpisode::Sighting_FoundDown);
+    RecordDefeat(character, DefeatEpisode::Sighting_FoundDown);
 }
 
 int DefeatCount(Character* character)
@@ -346,7 +361,7 @@ void NoteIfDown(Character* character)
 
     if (down)
     {
-        RecordDefeat(character, false, DefeatEpisode::Sighting_FoundDown);
+        RecordDefeat(character, DefeatEpisode::Sighting_FoundDown);
         return;
     }
 

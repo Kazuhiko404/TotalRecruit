@@ -123,6 +123,15 @@ enum OrderedCreditKind
 // The window each kind lasts: kBeatCreditWindowMs, kOrderedKnockoutWindowMs, 0.
 unsigned int CreditWindowMs(OrderedCreditKind kind);
 
+// A knockout either cage command caused (any claimed kind). It is NOT a defeat:
+// hitting a caged prisoner is not beating them in a fight (R3.2). It is beating
+// stress instead (beating_stress_rules.h).
+bool IsCageKnockout(OrderedCreditKind kind);
+
+// Whether the knockout itself adds beating stress: Noquear's does; Golpear's blow
+// already added its own when it landed, so its knockout adds nothing more.
+bool CageKnockoutAddsStress(OrderedCreditKind kind);
+
 // The knockouts the player caused through the mod and that have not landed yet,
 // by target, each with its kind's window. The knockout hook claims one when it
 // fires; an expired one is forgotten. Session-only: the load boundary clears it.

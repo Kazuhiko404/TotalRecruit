@@ -19,10 +19,12 @@
 //                         restores exactly that save's count.
 //
 // This file is the engine side: the knockout hook, the right-click fallback and
-// the "seen standing" feed. The beating itself is Golpear's direct blow
-// (cage_commands.h); a knockout the player caused there (a blow or a knockout
-// order) is credited to the player by the hook (ResolveCageKnockout),
-// because the engine's own record of who won may name nobody. The engine's own memory tags are no
+// the "seen standing" feed. A knockout Golpear's blow or Noquear's order caused on
+// a prisoner in the player's cage (the hook asks ResolveCageKnockout, which knows
+// even when the engine's record of who won names nobody) is NOT a defeat: hitting
+// a caged prisoner is not beating them in a fight (R3.2). It adds beating stress
+// instead (beating_stress.h), and its episode is marked counted so the right-click
+// fallback cannot count it either. The engine's own memory tags are no
 // longer read: the engine writes LT_SQUAD_LOST_TO_ME_ONCE by itself, and reading
 // it as a defeat handed never-beaten guards the field-yield route.
 

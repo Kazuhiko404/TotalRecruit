@@ -743,25 +743,30 @@ void TickCageCommands()
     EndWatch(why.c_str());
 }
 
-OrderedCreditKind ResolveCageKnockout(Character* victim)
+CageKnockout ResolveCageKnockout(Character* victim)
 {
+    CageKnockout result;
     // Cheapest first: almost every knockout in the world was not ordered here.
     if (victim == NULL || g_credit.Size() == 0)
     {
-        return OrderedCredit_None;
+        return result;
     }
     CharKey key;
     if (!SafeFindCharKey(victim, &key))
     {
-        return OrderedCredit_None;
+        return result;
     }
-    const OrderedCreditKind kind = g_credit.Claim(key, GetTickCount());
-    if (kind == OrderedCredit_Knockout)
+    result.kind = g_credit.Claim(key, GetTickCount());
+    if (result.kind == OrderedCredit_Knockout)
     {
         // Noquear landed: it rests from now (Golpear's rest started with the blow).
         StartCooldown(&g_knockoutCooldown, victim);
     }
-    return kind;
+    if (CageKnockoutAddsStress(result.kind))
+    {
+        result.stressGain = AddBeatingStress(victim, BeatingBlow_Knockout);
+    }
+    return result;
 }
 
 void ForgetCageCommands()
