@@ -132,11 +132,26 @@ std::string StepNotice(Character* member, const TempMemberStep& step)
     }
     if (step.expiryWarn)
         return Say("tempMember.notice.expiring", "Me ire pronto", member);
+    // Once per game day (temp_member_rules.h ShouldAnnounceDaysLeft): one line for the
+    // last day, another for the rest.
+    if (step.dailyNotice)
+    {
+        if (step.dailyDays == 1)
+            return Say("tempMember.notice.dailyOne", "Me queda 1 dia", member);
+        return WithDays(Say("tempMember.notice.daily", "Me quedan {days} dias", member), step.dailyDays);
+    }
     return std::string();
 }
 
 void LogStep(Character* member, const TempMembership& m, const TempMemberStep& step)
 {
+    if (step.dailyNotice)
+    {
+        char daily[96] = { 0 };
+        _snprintf_s(daily, sizeof(daily), _TRUNCATE, " [temp] daily notice: %d day(s) left (day %d)",
+                    step.dailyDays, m.lastDailyDay);
+        LogInfo(CharacterName(member) + daily);
+    }
     if (!step.Struck() && !step.warn && !step.expiryWarn)
         return;
     char note[160] = { 0 };
@@ -266,7 +281,8 @@ void OnRecruitedTemporarily(Character* npc, int days, const std::string& homeFac
     const std::string spot = placed ? FormatJoinSpot((int)x, (int)z) : std::string();
     {
         Guard lock;
-        g_book.Join(key, expiry);
+        // The join day: no daily days-left notice today, the join notice said the total.
+        g_book.Join(key, expiry, DayIndexFromHours(now));
         g_homeFaction[key] = homeFactionId;
         if (placed)
             g_joinSpot[key] = spot;

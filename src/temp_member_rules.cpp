@@ -1,5 +1,7 @@
 #include "temp_member_rules.h"
 
+#include "chance_rules.h"
+
 #include <cmath>
 
 namespace totalrecruit
@@ -48,7 +50,7 @@ int EarnedStrikes(TempMembership* m, const TempMemberSignals& s, const TempMembe
 
 TempMembership::TempMembership()
     : expiryHour(0), strikes(0), warned(false), expiryWarned(false), hungrySince(-1.0),
-      wasKnockedOut(false)
+      wasKnockedOut(false), joinDay(-1), lastDailyDay(-1)
 {
     for (int i = 0; i < TempStrike_KindCount; ++i)
         lastStrikeHour[i] = -1.0;
@@ -77,11 +79,27 @@ bool IsTempMemberHungry(float fullness01, bool engineStarving, float hungerThres
     return hungerThreshold > 0.0f && fullness01 < hungerThreshold;
 }
 
-TempMembership NewTempMembership(int expiryHour)
+TempMembership NewTempMembership(int expiryHour, int joinDay)
 {
     TempMembership m;
     m.expiryHour = expiryHour;
+    m.joinDay = joinDay;
     return m;
+}
+
+bool ShouldAnnounceDaysLeft(const TempDailyNoticeFacts& f)
+{
+    if (f.daysLeft < 1 || f.warningToday || f.otherNoticeNow)
+        return false;
+    if (f.joinDay >= 0 && f.dayIndex == f.joinDay)
+        return false;
+    return f.lastAnnouncedDay < 0 || f.dayIndex > f.lastAnnouncedDay;
+}
+
+bool TempExpiryWarningFallsOnDay(int expiryHour, float warningHours, int dayIndex)
+{
+    const double warnFrom = static_cast<double>(expiryHour) - static_cast<double>(warningHours);
+    return DayIndexFromHours(warnFrom) == dayIndex;
 }
 
 TempMemberStep StepTempMember(TempMembership* m, const TempMemberSignals& s,
@@ -125,6 +143,25 @@ TempMemberStep StepTempMember(TempMembership* m, const TempMemberSignals& s,
         m->expiryWarned = true;
         step.expiryWarn = true;
     }
+
+    if (config.dailyNotice)
+    {
+        TempDailyNoticeFacts daily;
+        daily.dayIndex = DayIndexFromHours(s.nowHours);
+        daily.lastAnnouncedDay = m->lastDailyDay;
+        daily.joinDay = m->joinDay;
+        daily.daysLeft = TempDaysLeft(m->expiryHour, s.nowHours);
+        daily.warningToday =
+            step.expiryWarn ||
+            TempExpiryWarningFallsOnDay(m->expiryHour, config.expiryWarningHours, daily.dayIndex);
+        daily.otherNoticeNow = step.Struck() || step.warn;
+        if (ShouldAnnounceDaysLeft(daily))
+        {
+            m->lastDailyDay = daily.dayIndex;
+            step.dailyNotice = true;
+            step.dailyDays = daily.daysLeft;
+        }
+    }
     return step;
 }
 
@@ -134,9 +171,9 @@ int SanitiseSavedTempValue(int raw)
 }
 
 // ------------------------------------------------------------ The book
-void TempMemberBook::Join(const CharKey& who, int expiryHour)
+void TempMemberBook::Join(const CharKey& who, int expiryHour, int joinDay)
 {
-    records_[who] = NewTempMembership(expiryHour);
+    records_[who] = NewTempMembership(expiryHour, joinDay);
 }
 
 const TempMembership* TempMemberBook::Find(const CharKey& who) const

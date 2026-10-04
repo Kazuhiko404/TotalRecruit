@@ -347,6 +347,7 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "tempMemberStrikeCooldownHours", &c.tempMembers.strikeCooldownHours);
     AddFloat(f, "tempMemberExpiryWarningHours", &c.tempMembers.expiryWarningHours);
     AddInt(f, "tempMemberRejoinCooldownDays", &c.tempMembers.rejoinCooldownDays);
+    AddBool(f, "tempMemberDailyNotice", &c.tempMembers.dailyNotice);
     AddBool(f, "helperEnabled", &c.helpers.enabled);
     AddFloat(f, "helperOfferChancePerDay", &c.helpers.offerChancePerDay);
     AddInt(f, "helperMinLevelLead", &c.helpers.minLevelLead);

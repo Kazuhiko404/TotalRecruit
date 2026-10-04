@@ -259,6 +259,7 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "temp_member_strike_cooldown", "Temporal: horas entre faltas", "Cada tipo de falta cuenta como mucho una vez en estas horas", 0.0f, 168.0f, 1.0f, 0, &c.tempMembers.strikeCooldownHours);
     regFloat(api, mod, "temp_member_expiry_warning", "Temporal: aviso antes de irse", "Cuantas horas antes de irse avisa que se va pronto", 0.0f, 72.0f, 1.0f, 0, &c.tempMembers.expiryWarningHours);
     regInt(api, mod, "temp_member_rejoin_days", "Temporal: dias sin volver", "Dias que no quiere saber nada de ti despues de irse", 0, 30, 1, &c.tempMembers.rejoinCooldownDays);
+    regBool(api, mod, "temp_member_daily_notice", "Temporal: aviso diario de dias", "Una vez por dia de juego dice sobre su cabeza cuantos dias le quedan ('Me quedan 4 dias'); no el dia que se une ni el dia del aviso de partida", &c.tempMembers.dailyNotice);
     // Ayudante gratis: un aliado mucho mas fuerte se ofrece a escoltarte unos dias.
     regBool(api, mod, "helper_enabled", "Ayudante: activo", "Un aliado bueno o neutral mucho mas fuerte que tu lider puede ofrecerse a acompanarte gratis unos dias (solo Balanced)", &c.helpers.enabled);
     regFloat(api, mod, "helper_offer_chance", "Ayudante: chance por dia", "Probabilidad diaria de que cada aliado elegible se ofrezca (0.15 = 15%)", 0.0f, 1.0f, 0.05f, 2, &c.helpers.offerChancePerDay);

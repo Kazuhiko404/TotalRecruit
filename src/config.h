@@ -487,6 +487,9 @@ struct TempMembers
     // After leaving, they want nothing to do with the player for this many days
     // (the reject cooldown, submission_tracker.h).
     int rejoinCooldownDays;
+    // Once per game day they say over their head how many days they have left
+    // ("Me quedan 4 dias"); not on the join day, not on the day of "me ire pronto".
+    bool dailyNotice;
 
     TempMembers()
         : maxStrikes(3),
@@ -494,7 +497,8 @@ struct TempMembers
           hungryHours(12.0f),
           strikeCooldownHours(12.0f),
           expiryWarningHours(12.0f),
-          rejoinCooldownDays(7)
+          rejoinCooldownDays(7),
+          dailyNotice(true)
     {
     }
 };

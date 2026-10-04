@@ -327,6 +327,103 @@ void TheBookRoundTripsThroughTheSave()
     CHECK(loaded.Find(Key("d")) == NULL);
     CHECK(loaded.Count() == 2);
 }
+TempDailyNoticeFacts DailyFacts()
+{
+    TempDailyNoticeFacts f;
+    f.dayIndex = 43;
+    f.lastAnnouncedDay = 42;
+    f.joinDay = 41;
+    f.daysLeft = 3;
+    f.warningToday = false;
+    f.otherNoticeNow = false;
+    return f;
+}
+
+void TheDailyNoticeComesOncePerDay()
+{
+    const char* name = "daily: once per game day after the join day";
+    CHECK(ShouldAnnounceDaysLeft(DailyFacts()));
+    TempDailyNoticeFacts f = DailyFacts();
+    f.lastAnnouncedDay = 43;
+    CHECK(!ShouldAnnounceDaysLeft(f));        // already said today
+    f.lastAnnouncedDay = -1;
+    CHECK(ShouldAnnounceDaysLeft(f));         // never said (after a load: once)
+}
+
+void TheDailyNoticeSkipsTheJoinDayAndTheWarningDay()
+{
+    const char* name = "daily: not on the join day, not on the expiry warning's day, not with nothing left";
+    TempDailyNoticeFacts f = DailyFacts();
+    f.joinDay = 43;
+    CHECK(!ShouldAnnounceDaysLeft(f));
+    f = DailyFacts();
+    f.joinDay = -1;
+    CHECK(ShouldAnnounceDaysLeft(f));         // unknown join day (after a load)
+    f = DailyFacts();
+    f.warningToday = true;
+    CHECK(!ShouldAnnounceDaysLeft(f));
+    f = DailyFacts();
+    f.daysLeft = 0;
+    CHECK(!ShouldAnnounceDaysLeft(f));
+    f = DailyFacts();
+    f.otherNoticeNow = true;
+    CHECK(!ShouldAnnounceDaysLeft(f));        // waits for a quiet step
+}
+
+void TheWarningDayIsTheDayOfExpiryMinusTheWarning()
+{
+    const char* name = "daily: the expiry warning falls on the day of expiry - warning hours";
+    // Expiry hour 1120 (day 46, hour 16), warning 12 h -> hour 1108, day 46.
+    CHECK(TempExpiryWarningFallsOnDay(1120, 12.0f, 46));
+    CHECK(!TempExpiryWarningFallsOnDay(1120, 12.0f, 45));
+    // Warning 20 h -> hour 1100, day 45.
+    CHECK(TempExpiryWarningFallsOnDay(1120, 20.0f, 45));
+    CHECK(!TempExpiryWarningFallsOnDay(1120, 20.0f, 46));
+}
+
+void TheStepSaysTheDaysLeftOncePerDay()
+{
+    const char* name = "daily: the step says the days left once per day, never on the join day";
+    // Joined at hour 1000 (day 41) for 5 days: expiry 1120.
+    TempMembership m = NewTempMembership(TempExpiryHour(1000.0, 5), 41);
+    TempMemberStep step = StepTempMember(&m, At(1001.0), kConfig);
+    CHECK(!step.dailyNotice);                 // day 41: joined today
+    step = StepTempMember(&m, At(1005.0), kConfig);           // day 41 ends at hour 1008
+    CHECK(!step.dailyNotice);
+    step = StepTempMember(&m, At(1020.0), kConfig);           // day 42
+    CHECK(step.dailyNotice);
+    CHECK(step.dailyDays == TempDaysLeft(m.expiryHour, 1020.0));
+    CHECK(step.dailyDays == 5);
+    CHECK(m.lastDailyDay == 42);
+    step = StepTempMember(&m, At(1030.0), kConfig);           // still day 42
+    CHECK(!step.dailyNotice);
+    step = StepTempMember(&m, At(1060.0), kConfig);           // day 44
+    CHECK(step.dailyNotice && step.dailyDays == 3);
+    // Day 46: expiry warning day (1108). No daily notice that day.
+    step = StepTempMember(&m, At(1105.0), kConfig);
+    CHECK(!step.dailyNotice);
+    step = StepTempMember(&m, At(1108.0), kConfig);
+    CHECK(step.expiryWarn && !step.dailyNotice);
+}
+
+void TheDailyNoticeWaitsForAQuietStep()
+{
+    const char* name = "daily: a strike step says the strike; the count comes on the next step";
+    TempMembership m = NewTempMembership(TempExpiryHour(1000.0, 5), 41);
+    TempMemberStep step = StepTempMember(&m, Attacked(1033.0), kConfig);
+    CHECK(step.Struck() && !step.dailyNotice);
+    step = StepTempMember(&m, At(1034.0), kConfig);
+    CHECK(step.dailyNotice);
+}
+
+void TheDailyNoticeCanBeSwitchedOff()
+{
+    const char* name = "daily: tempMemberDailyNotice off -> never";
+    TempMembers off;
+    off.dailyNotice = false;
+    TempMembership m = NewTempMembership(TempExpiryHour(1000.0, 5), 41);
+    CHECK(!StepTempMember(&m, At(1033.0), off).dailyNotice);
+}
 } // namespace
 
 void RunTempMemberRulesTests()
@@ -349,4 +446,10 @@ void RunTempMemberRulesTests()
     SavedValuesAreSanitised();
     TheBookKnowsItsMembers();
     TheBookRoundTripsThroughTheSave();
+    TheDailyNoticeComesOncePerDay();
+    TheDailyNoticeSkipsTheJoinDayAndTheWarningDay();
+    TheWarningDayIsTheDayOfExpiryMinusTheWarning();
+    TheStepSaysTheDaysLeftOncePerDay();
+    TheDailyNoticeWaitsForAQuietStep();
+    TheDailyNoticeCanBeSwitchedOff();
 }

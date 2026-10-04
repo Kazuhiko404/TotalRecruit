@@ -18,10 +18,15 @@
 //     leave (TempLeave_Mistreated, before any expiry); the strike that brings them
 //     to maxStrikes - 1 comes with a warning ("si sigues asi me voy"), once.
 //
+//   - The daily notice (TempMembers::dailyNotice): once per game day they say how
+//     many days they have left ("Me quedan 4 dias"), never on the day they joined
+//     (the join notice said the total), never on the day "me ire pronto" goes up,
+//     and never on a step that already says something (it waits for the next one).
+//
 // The expiry hour and the strike count are saved with the character (saved_ints.h
 // rows, temp_member.cpp); the rest (cooldowns, hunger streak, warnings, the
-// knockout edge) is session state and starts over after a load: at worst a warning
-// is said once more.
+// knockout edge, the join day and the last announced day) is session state and
+// starts over after a load: at worst a warning or the day's count is said once more.
 //
 // TempMemberBook is the plain table of who is a member, keyed by CharKey; the engine
 // side (temp_member.cpp) holds one behind a lock, because the serialise hook that
@@ -65,6 +70,11 @@ struct TempMembership
     double hungrySince;
     // Session. They were down at the last step (a knockout strikes on the edge only).
     bool wasKnockedOut;
+    // Session. The game day they joined (no daily notice that day); -1: unknown, as
+    // after a load.
+    int joinDay;
+    // Session. The game day of the last daily notice; -1: none yet.
+    int lastDailyDay;
 
     TempMembership();
     bool IsMember() const { return expiryHour > 0; }
@@ -96,9 +106,16 @@ struct TempMemberStep
     bool warn;
     // Their time is nearly up: say "me ire pronto".
     bool expiryWarn;
+    // Today's "me quedan {days} dias" (dailyDays days left).
+    bool dailyNotice;
+    int dailyDays;
     TempLeave leave;
 
-    TempMemberStep() : struckMask(0), warn(false), expiryWarn(false), leave(TempLeave_Stay) {}
+    TempMemberStep()
+        : struckMask(0), warn(false), expiryWarn(false), dailyNotice(false), dailyDays(0),
+          leave(TempLeave_Stay)
+    {
+    }
     bool Struck() const { return struckMask != 0; }
     bool StruckBy(TempStrikeKind kind) const { return (struckMask & (1 << (int)kind)) != 0; }
 };
@@ -115,8 +132,38 @@ int TempDaysLeft(int expiryHour, double nowHours);
 // full) is under the threshold. A threshold of 0 leaves only the engine's word.
 bool IsTempMemberHungry(float fullness01, bool engineStarving, float hungerThreshold);
 
-// A new member whose stay ends at `expiryHour`.
-TempMembership NewTempMembership(int expiryHour);
+// A new member whose stay ends at `expiryHour`, who joined on game day `joinDay`
+// (-1: unknown).
+TempMembership NewTempMembership(int expiryHour, int joinDay = -1);
+
+// What decides the daily days-left notice.
+struct TempDailyNoticeFacts
+{
+    // Today (chance_rules.h DayIndexFromHours).
+    int dayIndex;
+    // The day of the last daily notice (-1: none) and the join day (-1: unknown).
+    int lastAnnouncedDay;
+    int joinDay;
+    int daysLeft;
+    // "Me ire pronto" goes up today (or just did).
+    bool warningToday;
+    // Something else is said this step: the daily notice waits.
+    bool otherNoticeNow;
+
+    TempDailyNoticeFacts()
+        : dayIndex(0), lastAnnouncedDay(-1), joinDay(-1), daysLeft(0), warningToday(false),
+          otherNoticeNow(false)
+    {
+    }
+};
+
+// True once per game day: not the join day, not a day already announced, not the
+// expiry warning's day, not while another notice is said, and only with days left.
+bool ShouldAnnounceDaysLeft(const TempDailyNoticeFacts& facts);
+
+// True when the expiry warning (expiryHour - warningHours) falls on game day
+// `dayIndex`.
+bool TempExpiryWarningFallsOnDay(int expiryHour, float warningHours, int dayIndex);
 
 // One step of a member's stay: updates `m` (strikes, cooldowns, warnings, hunger
 // streak, knockout edge) and says what to tell the player and whether they leave.
@@ -130,8 +177,9 @@ int SanitiseSavedTempValue(int raw);
 class TempMemberBook
 {
 public:
-    // `who` joined; their stay ends at `expiryHour`. Replaces any earlier record.
-    void Join(const CharKey& who, int expiryHour);
+    // `who` joined on game day `joinDay` (-1: unknown); their stay ends at
+    // `expiryHour`. Replaces any earlier record.
+    void Join(const CharKey& who, int expiryHour, int joinDay = -1);
     // The record, or NULL when `who` is not a member.
     const TempMembership* Find(const CharKey& who) const;
     // Replaces the record of a member; nothing for a non-member.
