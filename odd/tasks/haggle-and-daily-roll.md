@@ -1,6 +1,6 @@
 # Feature: haggle-and-daily-roll
 
-Locator: `odd/tasks/haggle-and-daily-roll.md` · Engram mirror: `odd/haggle-and-daily-roll/tasks` (pending: engram project is ambiguous in this workspace)
+Locator: `odd/tasks/haggle-and-daily-roll.md` · Engram mirror: `odd/haggle-and-daily-roll/tasks` (project `totalrecruit`)
 Branch: `feat/haggle-and-daily-roll` (from `fix/recruit-gating-and-popup` @ 0c9f671)
 
 ## Objective
@@ -72,7 +72,7 @@ Two additions the user approved on 2026-10-03:
   - Add an OfferView slider section.
   - Offer button flow: haggle → pay / offend → popup refresh.
   - Route: delegated.
-- [ ] **T5 Docs + deploy.**
+- [x] **T5 Docs + deploy.** Docs shipped with the feature commits (REQUISITOS R0.3 and QA C8 in `8038b11`; README, DEVELOPING and QA 12.18 in `3bf2e03`); DLL shipped in `4b9cb9e build: ship the cage, animals, submission and head notice DLL`, which contains the haggle commits. In-game QA still owed (QA.md 12.18).
 
 ## Progress / evidence
 - **T1** (delegated; 8038b11): `RollsToJoin(haveKey, key, dayIndex, pct)` = `DailyRoll(key, day, kJoinRollSalt, pct)`; seed = `Fmix32(HashKey(key) ^ Fmix32(day * 0x9E3779B9 ^ salt))`. Day source: `MintRollKey` reads `SafeGameHours` (same clock as the hold clock) into `RollFact.dayIndex = DayIndexFromHours(h)`; no clock means no key, so the roll refuses. Peek still mints no key. RED: test build failed on the new API (C2660); GREEN: rules_tests 26/26 suites, 0/49217 checks failed; plugin build clean, no warnings in touched files. Docs: REQUISITOS R0.3, DEVELOPING table + test note, QA C8.
@@ -84,4 +84,4 @@ Two additions the user approved on 2026-10-03:
 - In-game QA pending: QA.md 12.18 H1-H12 (drag feel and MyGUI drag events on the surface are engine-only).
 
 ## Next step
-T5 (docs + deploy): ship the DLL and messages.json, run QA.md 12.18 in game.
+Shipped (`4b9cb9e`). Run QA.md 12.18 in game.

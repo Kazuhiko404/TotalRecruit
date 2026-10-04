@@ -1,6 +1,6 @@
 # Feature: recruit-gating-and-popup
 
-Locator: `odd/tasks/recruit-gating-and-popup.md` · Engram mirror: `odd/recruit-gating-and-popup/tasks` (pending: engram project is ambiguous in this workspace)
+Locator: `odd/tasks/recruit-gating-and-popup.md` · Engram mirror: `odd/recruit-gating-and-popup/tasks` (project `totalrecruit`)
 Branch: `fix/recruit-gating-and-popup` (from `feat/price-readout-button-tweaks` @ f21474e)
 
 ## Objective
@@ -90,7 +90,7 @@ Fix the user's 2026-10-03 in-game feedback:
   - "dejalo sin comer" only when the NPC is in the player's cage.
   - Field-yield gets its own label ("Sometido") on the card and the popup.
   - Route: delegated.
-- [ ] **T6 Docs + deploy.** README, DEVELOPING, QA, then `bash scripts/deploy.sh`.
+- [x] **T6 Docs + deploy.** README, DEVELOPING, QA, then `bash scripts/deploy.sh`. Docs shipped with the feature commits (`78d11f4`, `a4595d8`, `324a27b`, `c04c884`); DLL shipped in `0c9f671 build: ship the recruit gating and popup DLL`.
 
 ## Progress / evidence
 - **T1** (delegated; writer trigger: 2+ non-trivial files) -- `78d11f4`. RED: 34 failing checks in `defeat_episode_rules`, `defeat_ledger` and `route_rules` (stubs). GREEN: 24/24 suites, 0/36857 failed. `TotalRecruit.vcxproj` Release x64 rebuild: no warnings in `src/`.
@@ -115,4 +115,4 @@ Fix the user's 2026-10-03 in-game feedback:
 - In-game QA still pending: QA.md 3.2, 12.13 (K1-K7), 12.14 (Y1-Y5), 12.15 (P1-P12) and 12.16 (A1-A10).
 
 ## Next step
-T6 (docs + deploy).
+Shipped (`0c9f671`). In-game QA still owed (see above).

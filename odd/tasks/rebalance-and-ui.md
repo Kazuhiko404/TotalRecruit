@@ -1,6 +1,6 @@
 # Feature: rebalance-and-ui
 
-Locator: `odd/tasks/rebalance-and-ui.md` · Engram mirror: `odd/rebalance-and-ui/tasks` (project `kenshilib-plugins`)
+Locator: `odd/tasks/rebalance-and-ui.md` · Engram mirror: `odd/rebalance-and-ui/tasks` (project `totalrecruit`)
 Branch: `feat/rebalance-and-ui` (from `main` @ 4a23201)
 
 ## Objective

@@ -1,6 +1,6 @@
 # Feature: cage-animals-submission
 
-Locator: `odd/tasks/cage-animals-submission.md` · Engram mirror: `odd/cage-animals-submission/tasks` (pending: engram project is ambiguous in this workspace)
+Locator: `odd/tasks/cage-animals-submission.md` · Engram mirror: `odd/cage-animals-submission/tasks` (project `totalrecruit`)
 Branch: `feat/cage-animals-submission` (from `feat/haggle-and-daily-roll` @ a0a0b53; haggle is not deployed yet because Kenshi was running)
 
 ## Objective
@@ -68,7 +68,7 @@ Three requests from the user on 2026-10-03:
 - [x] **T3 Submitted-NPC join event.** Port TotalSparring's event system.
   - Route: delegated (writer trigger: new pure rules + tracker, engine director, motion, pacify, popup dispatch, config, docs, mockup).
   - Evidence: `43f16f0` -- RED observed (28/33 suites, 106 failing checks in submission_rules / submission_tracker / offer_view / reason and readout catalogs), then rules_tests 33/33 suites, 0/61580 failed; TotalRecruit.dll builds with no new warnings. In-game QA pending (`QA.md` 12.21).
-- [ ] **T4 Docs + deploy (with haggle).**
+- [x] **T4 Docs + deploy (with haggle).** Docs shipped with each feature commit (README, DEVELOPING, QA 12.19-12.22: `dea7589`, `a13f51e`, `43f16f0`, `c5ba3f8`); DLL shipped in `4b9cb9e build: ship the cage, animals, submission and head notice DLL` (it also carries the haggle commits). In-game QA still owed (QA.md 12.19-12.22).
 
 ## Progress / evidence
 - **T1** (`dea7589`). Kept from the stopped writer: `cage_command_rules.{h,cpp}` and its tests (sound; all passed), the `cage_commands.h` shape (reworked: returns `CageCommandResult` so it never calls `TellPlayer`, which would ring with `recruit_core`). Added `SkillFraction` (RED first), `cage_commands.cpp`, the 3-button overlay with one gesture per button, the credit bridge in the knockout hook, `TickCageCommands` in `frame_tick`, `ForgetCageCommands` at load. Retired `BeatPrisoner`, `CreditDefeatToPlayer`, `knockoutForceTimer` and the `submissionBeatingKnockoutSeconds` knob (config + Mod Hub; the user's config.json is untouched). GOLPEARLO issues the native beat.
@@ -83,4 +83,4 @@ Three requests from the user on 2026-10-03:
 - **Fix: caged popup** (user report, caged defiant Holy Warden got only CERRAR). One rule in `offer_view` `ApplyCageCommands`: refusal + no slider + `CageCommandsAllowed` (the context menu's predicate) -> GOLPEAR / NOQUEAR NN%; beating off -> defiant reason without "hierelo". Remedy is food only (cooldown-gated GOLPEARLO retired; `CanBeatPrisoner` now has no caller). `inCage` (SafeInPrison) hides IGNORAR / PERDONAR. Popup wraps CERRAR to a second row past 3 buttons. Evidence: RED 10/61619 failing in offer_view, then rules_tests 33/33 suites, 0/61619 failed; TotalRecruit.dll builds with no warnings in touched files. In-game QA pending (`QA.md` 12.22).
 
 ## Next step
-T4 -- docs + deploy (with haggle). In-game QA of `QA.md` 12.19, 12.20 and 12.21 is still owed.
+Shipped (`4b9cb9e`). In-game QA of `QA.md` 12.19, 12.20, 12.21 and 12.22 is still owed.

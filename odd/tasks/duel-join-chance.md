@@ -1,7 +1,7 @@
 # Feature: duel-join-chance
 
-Locator: `odd/tasks/duel-join-chance.md` · Engram mirror: `odd/duel-join-chance/tasks` (pending, kept by the orchestrator)
-Branch: `feat/native-ai-packages` (continues the duel bridge, `odd/tasks/ts-duel-bridge.md`)
+Locator: `odd/tasks/duel-join-chance.md` · Engram mirror: `odd/duel-join-chance/tasks` (project `totalrecruit`)
+Branch: `feat/native-ai-packages` (continues the duel bridge, `odd/tasks/ts-duel-bridge.md`); fast-forwarded into `main` @ `3554d19` on 2026-10-04 and deleted.
 
 ## Objective
 User-approved design (2026-10-04): beating an 80+ NPC in a TotalSparring duel no longer recruits for sure in Balanced; it gives a join chance that grows with every head-to-head win. Cheat also offers the duel to 80+ NPCs, and there a win always recruits. Extra task (same day): a temporary member says once per game day how many days they have left.
@@ -42,4 +42,4 @@ User-approved design (2026-10-04): beating an 80+ NPC in a TotalSparring duel no
 - In-game: pending (QA.md 12.29, 12.25 T12-T14).
 
 ## Next step
-Deploy and play-test QA.md 12.29 / 12.25 T12-T14 (the user's call).
+Deployed in `3554d19 build: ship the duel join chance and daily notice DLL`; `feat/native-ai-packages` was fast-forwarded into `main` (`3554d19`) and deleted. Awaiting the user's play-test of QA.md 12.29 and 12.25 T12-T14.

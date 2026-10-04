@@ -1,6 +1,6 @@
 # Feature: ally-tiers-temp-helpers
 
-Locator: `odd/tasks/ally-tiers-temp-helpers.md` · Engram mirror: `odd/ally-tiers-temp-helpers/tasks` (pending: engram project is ambiguous in this workspace)
+Locator: `odd/tasks/ally-tiers-temp-helpers.md` · Engram mirror: `odd/ally-tiers-temp-helpers/tasks` (project `totalrecruit`)
 Branch: `feat/ally-tiers-temp-helpers` (from `main` @ 4b9cb9e)
 
 ## Objective
@@ -76,7 +76,7 @@ The group mapping lives in one pure function and is documented in REQUISITOS.
   - Debug trigger, offer event, popup, head notices, escort, persistence.
   - Route: delegated (writer trigger: 2+ non-trivial files).
   - Commit: `9dcc5a0 feat(helpers): allied NPCs may offer free uncontrollable help`.
-- [ ] **T4 Docs + deploy.**
+- [x] **T4 Docs + deploy.** Docs shipped with each feature commit (README, DEVELOPING, QA 12.24-12.26, REQUISITOS: `8177ecd`, `19c1193`, `9dcc5a0`); DLL shipped in `ac17ed7 build: ship the ally tiers, temporary members and helpers DLL`. In-game QA still owed (QA.md 12.24-12.26).
 
 ## Progress / evidence
 **T1 (done, 8177ecd).**

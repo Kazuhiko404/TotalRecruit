@@ -50,8 +50,8 @@ Prompt (headNoticeSeconds): hail `headNotice.wantsToTalk`, helper `headNotice.he
 ## Progress
 - Doc created before any source write.
 - T1..T4 done on `fix/head-notice-lifetime`; commit: `543db47` (`fix(notice): shorten head notice lifetime and add an info lifetime`).
-- Not deployed, not merged, not pushed.
-- `DEVELOPING.md` still says `headNoticeSeconds` (300) in the head_notice row: it was outside this task's edit surface.
+- Merged into `main` and deployed in `eac73f6 build: ship the head notice lifetime DLL`; not pushed.
+- `DEVELOPING.md` head_notice row now gives 90 s (`headNoticeSeconds`) for prompt notices and 25 s (`headNoticeInfoSeconds`) for info notices (docs commit `e54d135`).
 
 ## Next step
-Parent: review, deploy TotalRecruit (`bash scripts/deploy.sh`), commit the DLL copies, fast-forward `main`, then in-game QA 12.23 N8 and N14..N17.
+Shipped (`eac73f6`). In-game QA 12.23 N8 and N14..N17 is still owed.

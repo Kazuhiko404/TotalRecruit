@@ -1,6 +1,6 @@
 # Native AI packages
 
-Branch: `feat/native-ai-packages` (from `main` @ `eac73f6`).
+Branch: `feat/native-ai-packages` (from `main` @ `eac73f6`); fast-forwarded into `main` @ `3554d19` on 2026-10-04 and deleted.
 Route: T1 delegated writer (one bounded writer; vendoring + project + 2+ non-trivial source files).
 
 ## Objective
@@ -51,7 +51,7 @@ Fix issues 2 and 3 of the 2026-10-03 handoff (`git show feat/ts-duel-bridge:odd/
 - `dumpbin /imports x64/Release/TotalRecruit.dll` compared with the installed `KenshiLib.dll` exports.
 
 ## Progress
-- T1 done (`dd159ba`). Engram mirror `odd/native-ai-packages/tasks`: pending (engram project name is ambiguous in this workspace).
+- T1 done (`dd159ba`). Engram mirror: `odd/native-ai-packages/tasks` (project `totalrecruit`).
 
 - T2 done (`e5e5f4b`), T3 done (`031eb37`); in-game QA pending.
 
@@ -64,4 +64,4 @@ Route: delegated direct (one writer, 3 bugs, multiple files). Each fix in its ow
 - Docs done in T4 (QA.md 12.31, DEVELOPING.md rows). The mockup shows "nivel 85" in popup bodies only as sample text; nothing to change.
 
 ## Next step
-Deploy and in-game QA (QA.md 12.30, 12.31) when the user decides.
+Deployed (`ac6ed10`, `fe8e490`, `3554d19`) and fast-forwarded into `main` (`3554d19`). The user play-tested the native helper, the temporary member's departure and the three play-test fixes informally (all reported working). Formal in-game QA of QA.md 12.30 and 12.31 is still owed.

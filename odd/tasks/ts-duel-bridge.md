@@ -1,7 +1,7 @@
 # Feature: ts-duel-bridge
 
-Locator: `odd/tasks/ts-duel-bridge.md` · Engram mirror: `odd/ts-duel-bridge/tasks` (pending, kept by the orchestrator)
-Branch: `feat/ts-duel-bridge` (from `main` @ c6a3f2a)
+Locator: `odd/tasks/ts-duel-bridge.md` · Engram mirror: `odd/ts-duel-bridge/tasks` (project `totalrecruit`)
+Branch: `feat/ts-duel-bridge` (from `main` @ c6a3f2a); merged into `feat/native-ai-packages` (`511586e`), now on `main`, branch deleted.
 
 ## Objective
 User request (2026-10-03): "The duel for the 80+ tier: challenge him to a duel so he joins you. TotalSparring already has the duel logic (it decides friendly vs to-the-death); we only need to keep the counter after the duel and communicate between plugins."
@@ -20,9 +20,9 @@ User request (2026-10-03): "The duel for the 80+ tier: challenge him to a duel s
 ## Tasks
 - [x] **T1 Duel challenge through TotalSparring.**
   - Route: delegated (writer trigger: 2+ non-trivial files).
-  - Commit: `0cd51c5 feat(duel): challenge 80+ allies through TotalSparring and recruit on a win`.
-- [x] **T2 Docs** (README, DEVELOPING, REQUISITOS R4b.6, QA 12.28, this document). Commit: `docs(duel): ...` (the commit after 0cd51c5).
-- [ ] **T3 In-game QA** (QA.md 12.28, T1-T16) and deploy (not done: deploy is the user's call).
+  - Commit: `e3725eb feat(duel): challenge 80+ allies through TotalSparring and recruit on a win` on `main` (`0cd51c5` before the rebase).
+- [x] **T2 Docs** (README, DEVELOPING, REQUISITOS R4b.7 (numbered R4b.6 until 2026-10-04), QA 12.28, this document). Commit: `bbf0f30 docs(duel): document the TotalSparring duel challenge and its QA`.
+- [ ] **T3 In-game QA** (QA.md 12.28, T1-T16) and deploy. Deploy done: merged into `feat/native-ai-packages` (`511586e`) and shipped in `ac6ed10` / `fe8e490`, now on `main`. The user play-tested the duel bridge informally (working); formal QA 12.28 is still owed, so the box stays open.
 
 ## Design
 - `duel_challenge_rules.h` (pure, with a locked process-wide instance like `submission_tracker`): `CanOfferDuel` is the one predicate (enabled, TotalSparring available, `Verdict::allyTiered`, not an animal, level >= elite cut, no cooldown). `DuelChallengeBook::Resolve`: duel + A won + B is the pending NPC + A is a squad member -> Joined; B won or draw -> Lost and `ceil(now + duelChallengeCooldownHours)`; anything else Ignored (undecided keeps the challenge). Expiry after `duelChallengeExpiryHours`. Any squad member's win counts (TotalSparring's window lets the player switch fighters).
@@ -49,4 +49,4 @@ User request (2026-10-03): "The duel for the 80+ tier: challenge him to a duel s
 - 2026-10-04: a won duel is a join chance in Balanced and the duel is offered in Cheat too: `odd/tasks/duel-join-chance.md` (QA.md 12.29).
 
 ## Next step
-In-game QA 12.28 with TotalSparring's public-api build loaded, then deploy (`scripts/deploy.sh`) when the user decides.
+Deployed and on `main`; TotalSparring `feat/public-api` is merged into TotalSparring `master` (`be52149`). Formal in-game QA 12.28 is still owed. The card-record limit above was fixed by `7cb5c1f` (the card re-reads after every bout).

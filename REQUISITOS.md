@@ -255,8 +255,8 @@ aliados de Balanced en el mundo abierto (`character_facts.cpp`); en Balanced ese
 multiplicador vale 1.0 para todo lo demás, así que nada se cuenta dos veces. El
 regateo, la bolsa y el recargo por ofensa trabajan sobre el precio ya rebajado.
 
-**R4b.3 — Miembro temporal (80+).** *(P1, T1 y T2 hechos; prueba en juego
-pendiente)* Bueno o Neutral, de nivel 80 o más, y a lo sumo `allyTierCloseLevelGap`
+**R4b.3 — Miembro temporal (80+).** *(P1, T1 y T2 hechos; la partida nativa
+probada de manera informal, QA 12.25 / 12.30 pendiente)* Bueno o Neutral, de nivel 80 o más, y a lo sumo `allyTierCloseLevelGap`
 (15) niveles por encima del líder; si no, "eres demasiado débil para que te
 acompañe". Se queda entre `allyTierTempMinDays` y `allyTierTempMaxDays` días
 (3..10), sorteados una vez por día con la semilla del NPC.
@@ -278,16 +278,24 @@ acompañe". Se queda entre `allyTierTempMinDays` y `allyTierTempMaxDays` días
   más una línea en el roller con su nombre. La tarjeta del miembro seleccionado
   dice "Temporal: le quedan N días".
 - **La partida.** La secuencia de despido de KEP: vuelve a su facción (si no se
-  puede, la de KEP por defecto o la vacía), en un pelotón propio ("Wandering
-  Squad" vanilla) que se lo lleva caminando. Después no quiere saber nada de ti
-  por `tempMemberRejoinCooldownDays` (7) días (el mismo enfriamiento del rechazo
-  del sometido), así que no se lo puede volver a tomar enseguida.
+  puede, la de KEP por defecto o la vacía), en un pelotón propio creado con la
+  plantilla vanilla "Wandering Squad" (`5006-squad.mod`). Con KenshiLib 0.5.0 ese
+  pelotón recibe el paquete de IA nativo de la plantilla (el reset de blackboard
+  de KEP, `AiPackages::ResetToTemplate`): `2675-gamedata.base` "Wandering from
+  town to town", así que camina o viaja de ciudad en ciudad en vez de quedarse
+  parado (log `[temp] <nombre> native wander package <paquete> assigned`).
+  **Respaldo:** si el paquete no se puede asignar, camina de vuelta al lugar donde
+  se unió (guardado en el save como `total_recruit.temp_join_spot`, "x,z";
+  `src/leave_homing.*`): reordena cada 4 s, llega a ~6 m o se rinde a los 240 s y
+  vuelve a su IA (`[temp] <nombre> heading back to (x,z)`, luego `arrived` o
+  `gave up`). Después no quiere saber nada de ti por
+  `tempMemberRejoinCooldownDays` (7) días (el mismo enfriamiento del rechazo del
+  sometido), así que no se lo puede volver a tomar enseguida.
 - **Límites.** Si lo reclutas por un diálogo FCS (vacío por defecto), entra como
-  miembro permanente. Con KenshiLib 0.5.0 el pelotón nuevo recibe el paquete
-  del Wandering Squad (el reset de blackboard de KEP); si falla, camina de
-  vuelta al lugar donde se unió.
+  miembro permanente. La caminata de respaldo es de sesión: tras recargar no se
+  retoma.
 
-**R4b.6 — Ayudante gratis.** *(P1, T3 hecho; prueba en juego pendiente)*
+**R4b.6 — Ayudante gratis.** *(P1, T3 hecho; contrato nativo probado de manera informal, QA 12.26 / 12.30 pendiente)*
 Pedido del usuario (2026-10-03): "que haya una chance de que NPCs aliados de
 nivel más alto y buena personalidad se ofrezcan a ayudarte unos días, pero que no
 los puedas controlar; parecido a los mercenarios de Kenshi, pero gratis".
@@ -304,8 +312,8 @@ los puedas controlar; parecido a los mercenarios de Kenshi, pero gratis".
   vuelve a ofrecer por `helperRejectCooldownDays` (3) días (se guarda con el
   personaje). La X no es respuesta: se va y no pregunta más ese día.
 - **Durante.** Sigue en su facción: no aparece en tus retratos y no acepta
-  órdenes. Te sigue (BODYGUARD; si se queda atrás, FOLLOW_PLAYER_ORDER y después
-  la orden de caminar del walk-up) y, cuando tu líder pelea, ataca a su blanco.
+  órdenes. Te sigue como un mercenario contratado y pelea contra quien ataca a tu
+  líder (ver **Mecanismo**).
   Carteles: "Te cubro las espaldas" al aceptar, "Me iré pronto"
   `helperExpiryWarningHours` (12 h) antes del final. Su tarjeta dice "Ayudante: le
   quedan N días". El vencimiento se guarda: tras cargar, cuando vuelve a estar
@@ -313,10 +321,16 @@ los puedas controlar; parecido a los mercenarios de Kenshi, pero gratis".
 - **El final.** Vencido: "Hasta aquí llego. Suerte" y vuelve a su rutina. Si tu
   grupo lo ataca o lo noquea: "No vuelvo a ayudarte", se va y empieza el
   enfriamiento. Muerto o reclutado (Hablar): termina sin más.
-- **Mecanismo.** Escolta por código, no el contrato nativo de mercenario: el
-  contrato (`contractJob` del blackboard) no se puede leer ni cortar con los
-  headers disponibles (no hay `AI/Blackboard.h`), y la única línea vanilla
-  gratis tiene duración fija. Detalle en `src/helper.h`.
+- **Mecanismo** (native-ai-packages T2, KenshiLib 0.5.0). Con
+  `helperNativeBodyguard` (encendido por defecto) recibe el contrato nativo de
+  guardaespaldas del juego (`5090-gamedata.base`, `SIG_BODYGUARD`) con tu líder
+  como empleador, por las horas que le quedan (`src/ai_packages.*`); si estaba en
+  un pelotón con otros, antes pasa a uno propio. Si el contrato se pierde (por
+  ejemplo al cargar) se le asigna otra vez una sola vez. Al terminar se cierra el
+  contrato y su pelotón recupera sus paquetes. **Respaldo B** (contrato apagado o
+  fallido): escolta por código, reordena cada 1 s, camina cerca, corre si está a
+  más de 12 m, se ubica a ~3 m del líder y ataca al blanco del líder. Detalle en
+  `src/helper.h`.
 - **Prueba.** `helperDebugKey` (código de tecla de Windows, 119 = F8; 0 =
   apagado): con un NPC seleccionado, se ofrece al instante. Todo se loguea como
   `[helper]`.
@@ -335,7 +349,7 @@ ventaja, días mínimos y máximos, días tras rechazo, aviso antes de irse y la
 tecla de prueba. El duelo, `duelChallenge*`: activo, horas tras perder y horas
 que espera el reto.
 
-**R4b.6 — Retar a duelo a un aliado 80+.** *(P1, hecho; QA 12.28 pendiente)*
+**R4b.7 — Retar a duelo a un aliado 80+.** *(P1, hecho; probado de manera informal, QA 12.28 / 12.29 pendiente)*
 Pedido del usuario (2026-10-03): "el duelo para el tramo 80+: retarlo a duelo
 para que se una. TotalSparring ya tiene la lógica del duelo (decide amistoso o a
 muerte); solo hay que llevar la cuenta después del duelo y comunicar los

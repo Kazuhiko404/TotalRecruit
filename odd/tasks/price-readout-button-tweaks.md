@@ -1,6 +1,6 @@
 # Feature: price-readout-button-tweaks
 
-Locator: `odd/tasks/price-readout-button-tweaks.md` · Engram mirror: `odd/price-readout-button-tweaks/tasks`
+Locator: `odd/tasks/price-readout-button-tweaks.md` · Engram mirror: `odd/price-readout-button-tweaks/tasks` (project `totalrecruit`)
 Branch: `feat/price-readout-button-tweaks` (from `feat/rebalance-and-ui` @ 38c7643)
 
 ## Objective
@@ -60,7 +60,7 @@ Three in-game tweaks requested by the user on 2026-10-03 after the first deploy 
   `menu_obstacles` (prefix `TR_`) and button style; button 44 x 160, styled like the others.
   - Route: delegated.
   - Check: rules_tests green (slot tests); Release build; QA.md steps.
-- [ ] **T4 Deploy.** `scripts/deploy.sh` (never-overwrite merge). deploy.sh now migrates catsPerLevel 90->32 and catsCeiling 28000->10000 only when untouched (3deddb5); dry run OK. Real deploy pending: Kenshi was running.
+- [x] **T4 Deploy.** `scripts/deploy.sh` (never-overwrite merge). deploy.sh now migrates catsPerLevel 90->32 and catsCeiling 28000->10000 only when untouched (3deddb5); dry run OK. Real deploy done: `f21474e build: ship the price, readout and button tweaks DLL`. Docs shipped with the feature commits (`21f4b69`, `1401c1f`, `d0a4a7f`, `9e28fa4`, `8fb1afa`).
 - [x] **T5 Readout card on selection** (user request 2026-10-03: "que se enable y disable al dar
   click en el NPC, no hover; mejor cuando lo seleccionas"). The card follows the selected non-player
   NPC: per-frame pointer compare for the change, one `EvaluatePeek` when it changes, slow named
@@ -84,4 +84,4 @@ Three in-game tweaks requested by the user on 2026-10-03 after the first deploy 
 - T6: RED first (stubbed rule: 8 failing menu_button_release checks), then rules_tests 22/22 suites, 0/36808 checks failed; Release DLL builds clean; commit 8fb1afa. Mechanism ported from TotalLoot click_gesture/context_button_input (same as TotalSparring spar_overlay.cpp:307). In-game QA pending: QA.md 12.12 G1-G7.
 
 ## Next step
-Deploy + in-game QA: close Kenshi, run `bash scripts/deploy.sh`, then QA.md 12.9 H1-H13, 12.10 B1-B7, 12.11 S1-S14, 12.12 G1-G7.
+Shipped (`f21474e`). In-game QA: QA.md 12.9 H1-H13, 12.10 B1-B7, 12.11 S1-S14, 12.12 G1-G7.

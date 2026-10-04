@@ -42,7 +42,7 @@ Written for the next Claude session. Read this whole document first, then the fe
 - **Not deployed and not merged.** Ask the user before deploying TotalSparring or merging it, and coordinate with the other session's `feat/duel-chance-card`.
 - `docs/PUBLIC-API.md` explains the API.
 
-**Feature docs:** `odd/tasks/*.md` (rebalance-and-ui, price-readout-button-tweaks, recruit-gating-and-popup, haggle-and-daily-roll, cage-animals-submission, ally-tiers-temp-helpers, ts-duel-bridge). The engram mirror is pending for all of them, because the engram project name is ambiguous in this workspace. Ask the user which project to use.
+**Feature docs:** `odd/tasks/*.md` (rebalance-and-ui, price-readout-button-tweaks, recruit-gating-and-popup, haggle-and-daily-roll, cage-animals-submission, ally-tiers-temp-helpers, ts-duel-bridge). They are mirrored in Engram project `totalrecruit` under the topic `odd/<feature>/tasks`. This handoff is historical (2026-10-03); the current whole-system snapshot is `odd/system-status.md`.
 
 ## Open issues from the user's play test (fix these first)
 
