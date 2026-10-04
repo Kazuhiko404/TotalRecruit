@@ -1,7 +1,28 @@
 #include "hold_clock.h"
 
+#include <climits>
+
 namespace totalrecruit
 {
+int HoldStartToSavedTenths(double hours)
+{
+    const double tenths = hours * 10.0 + 0.5;
+    if (!(tenths >= 1.0))
+    {
+        return 1;
+    }
+    if (tenths >= (double)INT_MAX)
+    {
+        return INT_MAX;
+    }
+    return (int)tenths;
+}
+
+double HoldStartFromSavedTenths(int tenths)
+{
+    return tenths <= 0 ? 0.0 : (double)tenths / 10.0;
+}
+
 void HoldClock::Observe(const CharKey& who, bool caged, double nowHours)
 {
     if (!caged)
@@ -29,6 +50,21 @@ float HoldClock::HoursHeld(const CharKey& who, double nowHours) const
     }
     const double held = nowHours - found->second;
     return held > 0.0 ? (float)held : 0.0f;
+}
+
+int HoldClock::SavedStartTenths(const CharKey& who) const
+{
+    std::map<CharKey, double>::const_iterator found = since_.find(who);
+    return found == since_.end() ? 0 : HoldStartToSavedTenths(found->second);
+}
+
+void HoldClock::RestoreStartTenths(const CharKey& who, int tenths)
+{
+    if (tenths <= 0)
+    {
+        return;
+    }
+    since_[who] = HoldStartFromSavedTenths(tenths);
 }
 
 bool HoldClock::IsTracked(const CharKey& who) const

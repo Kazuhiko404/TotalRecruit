@@ -4,6 +4,8 @@
 #include "hold_clock.h"
 #include "config.h"
 
+#include <climits>
+
 using namespace totalrecruit;
 
 namespace
@@ -146,6 +148,79 @@ void ClearForgetsEveryone()
     c.Clear();
     CHECK(c.TrackedCount() == 0);
 }
+// ------------------------------------------- the hold start in the save (P3)
+// The hold start rides in the character save (saved_ints, tenths of a game hour);
+// load_boundary clears the clock at load begin and each character's load hook
+// puts its start back. The sweep's next sighting then keeps it (still caged),
+// drops it (no longer caged) or restarts it (the clock is behind it).
+
+void SavedStartRoundTripsToTheSameHours()
+{
+    const char* name = "hold save: a saved start restores the same hours held";
+    HoldClock before;
+    before.Observe(kAlice, true, 100.25);
+    const int saved = before.SavedStartTenths(kAlice);
+    CHECK(saved == 1003);   // rounded to tenths of an hour
+
+    HoldClock after;
+    after.RestoreStartTenths(kAlice, saved);
+    CHECK(after.IsTracked(kAlice));
+    CHECK(Near(after.HoursHeld(kAlice, 106.3), 6.0f));
+}
+
+void UntrackedSavesZeroAndZeroRestoresNothing()
+{
+    const char* name = "hold save: nobody held saves 0, and 0 or less restores nothing";
+    HoldClock c;
+    CHECK(c.SavedStartTenths(kAlice) == 0);
+    c.RestoreStartTenths(kAlice, 0);
+    c.RestoreStartTenths(kBob, -5);
+    CHECK(!c.IsTracked(kAlice));
+    CHECK(!c.IsTracked(kBob));
+    CHECK(c.TrackedCount() == 0);
+}
+
+void RestoredPrisonerStillCagedKeepsHisHours()
+{
+    const char* name = "hold save: still in the cage after the load, the hours carry on";
+    HoldClock c;
+    c.RestoreStartTenths(kAlice, HoldStartToSavedTenths(10.0));
+    c.Observe(kAlice, true, 15.0);
+    CHECK(Near(c.HoursHeld(kAlice, 15.0), 5.0f));
+    CHECK(Near(c.HoursHeld(kAlice, 18.0), 8.0f));
+}
+
+void RestoredPrisonerNoLongerCagedIsCleared()
+{
+    const char* name = "hold save: no longer in the cage after the load, the clock is dropped";
+    HoldClock c;
+    c.RestoreStartTenths(kAlice, HoldStartToSavedTenths(10.0));
+    c.Observe(kAlice, false, 15.0);
+    CHECK(!c.IsTracked(kAlice));
+    CHECK(Near(c.HoursHeld(kAlice, 15.0), 0.0f));
+}
+
+void RestoredStartAfterTheClockRestartsTheHold()
+{
+    const char* name = "hold save: a start later than the game clock restarts the hold safely";
+    HoldClock c;
+    c.RestoreStartTenths(kAlice, HoldStartToSavedTenths(200.0));
+    CHECK(Near(c.HoursHeld(kAlice, 50.0), 0.0f));   // never negative
+    c.Observe(kAlice, true, 50.0);
+    CHECK(Near(c.HoursHeld(kAlice, 52.0), 2.0f));
+}
+
+void SavedStartStaysAPositiveInt()
+{
+    const char* name = "hold save: the saved start is a positive int even at hour 0 or far ahead";
+    CHECK(HoldStartToSavedTenths(0.0) == 1);
+    CHECK(HoldStartToSavedTenths(-4.0) == 1);
+    CHECK(HoldStartToSavedTenths(0.04) == 1);
+    CHECK(HoldStartToSavedTenths(3.0) == 30);
+    CHECK(HoldStartToSavedTenths(1.0e12) == INT_MAX);
+    CHECK(HoldStartFromSavedTenths(30) > 2.99 && HoldStartFromSavedTenths(30) < 3.01);
+    CHECK(HoldStartFromSavedTenths(0) == 0.0);
+}
 } // namespace
 
 void RunHoldClockTests()
@@ -163,4 +238,10 @@ void RunHoldClockTests()
     ShippedEasyDefaultIsSixHours();
     EasyWaitReachedExactlyAtTheThreshold();
     ClearForgetsEveryone();
+    SavedStartRoundTripsToTheSameHours();
+    UntrackedSavesZeroAndZeroRestoresNothing();
+    RestoredPrisonerStillCagedKeepsHisHours();
+    RestoredPrisonerNoLongerCagedIsCleared();
+    RestoredStartAfterTheClockRestartsTheHold();
+    SavedStartStaysAPositiveInt();
 }

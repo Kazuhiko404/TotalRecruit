@@ -362,6 +362,7 @@ Con `probeOnClick` el reloj deja líneas `[hold]`.
 | E4 | Hablarle a las 3 horas | Todavía no (otras rutas pueden decidir) | `[hold] held=3.0h easy-mode needs 6.0h` |
 | E5 | Encerrarlo un día, **sacarlo de la jaula** (que te vean pasar con él libre), volver a encerrarlo y hablarle enseguida | **No** se une al instante: el reloj empieza de cero | `[hold] clock dropped: no longer in your cage`, luego `clock started` y `held=0.0h` |
 | E6 | Abrir el hub | **Ya no** están `Horas jaula (Orgullosos)` ni `Horas jaula (Únicos)` | S2: sin `Mod Hub rejected` |
+| E7 | Con un preso encerrado 3 h, guardar, salir y cargar ese save (Balanced y Cheat) | El reloj sigue: la tarjeta y el log cuentan las horas desde el encierro original, no desde la carga (v1-presets-close P3, 12.33 H1-H4) | `[hold] held=3.0h ...` tras la carga |
 | E7 | Cargar una config vieja que todavía trae `hoursCagedForProud` y `uniqueExtraHours` | Carga sin quejas; esas claves se ignoran | Sin errores de config en el log |
 | E8 | Con `hailWhenReady` en `false`, repetir E2 y E3 | El reloj anda igual (el barrido sigue vivo) | Las mismas líneas `[hold]` |
 
@@ -935,3 +936,7 @@ Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat) y H (horas d
 | P3 | Dejar una clave `"factionWeight": 0.75` en el `config.json` desplegado y abrir | Nada cambia: la clave se ignora, sin errores ni avisos; el precio de un hostil y el de un amigo no aliado salen de la misma curva | sin lineas de `factionWeight` |
 | W1 | Cheat (`"preset": 0`): los casos 8 H2, H3, H7, H8, H9, H10 | Cada espera dura 1 minuto de juego; rechazo y duelo terminan en la proxima hora entera (como mucho ~1 h) | `[hold] clock started`, `called out to the player.`, `reject cooldown until game hour N (1 h)`, `no challenge until hour N` |
 | W2 | Balanced: Golpear (12.32 S4), llamado (`hailFirstHours`, 12.23 N1), rechazo (12.21 S7), duelo perdido (12.28 T9) | Sin cambios: 1 h, 24 h, 72 h, 24 h | igual que antes |
+| H1 | Balanced: encerrar a un preso, esperar 3 h de juego, guardar, salir de Kenshi, abrir y cargar ese save; mirar la tarjeta | Las horas en la jaula siguen desde el encierro original (3 h, no 0) | `[hold] held=3.0h` en la primera evaluacion tras la carga |
+| H2 | Cheat: encerrar a un preso, guardar enseguida (antes del minuto), cargar y esperar | Llama al completar el minuto contado desde el encierro original, no desde la carga | `called out to the player.` |
+| H3 | Guardar con un preso encerrado, sacarlo de la jaula, guardar en otra ranura; cargar la segunda | No hay reloj: se reinicia al volver a encerrarlo | `[hold] clock started: seen in your cage` al volver a encerrarlo |
+| H4 | Encerrar a un preso (reloj en la hora N), cargar un save **anterior** a la hora N en el que el mismo preso ya estaba encerrado | El reloj se reinicia en la hora del save viejo, nunca queda negativo ni congelado | `[hold] held=0.0h` y despues cuenta normal |

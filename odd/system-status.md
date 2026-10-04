@@ -157,7 +157,7 @@ Nothing has a formal QA pass mark.
 - **Native helper.** `packageData` (0x68) and `missionEmployer` (0x48) are read at header offsets, because `AI/AIPackage.h` and `AI/Blackboard.h` cannot be included together. A helper taken out of a squad stays in its own platoon. Fallback B leaves the aggressive combat stance on the NPC.
 - **Duel.** A winner more than 80 m away is not recruited. The FCS dialogue accept path offers no duel.
 - **Temporary members.** The FCS accept path recruits a temporary ally permanently. Warnings, cooldowns and the daily notice can repeat once after a load. The leaver's walk-back fallback is session-only.
-- **State not saved.** The hold clock and talk attempts live in memory. A prisoner re-caged outside the 900-unit sweep keeps its clock.
+- **State not saved.** Talk attempts live in memory. A prisoner re-caged outside the 900-unit sweep keeps its clock. (Resolved: the hold clock start now rides in the character save, `total_recruit.hold_start_hour`, v1-presets-close P3; `needs in-game QA` 12.33 H1-H4.)
 - **Cage orders.** Whether `checkPlayerOrderForProblems` reads the right way round is unproven (the 1.5 s order watch decides the fallback).
 - **Minor.** The popup's "Sometido" tag is not in `messages.json`. There is an include loop between `src/offer_popup.cpp` and `src/mercy.cpp`. `deploy.sh` prints "would be copied" on a real run. "THE Recruit Anyone" overlaps with this mod if it is installed.
 

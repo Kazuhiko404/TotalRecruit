@@ -2,6 +2,8 @@
 
 class Character;
 
+#include <string>
+
 namespace totalrecruit
 {
 // How long each captive has been held in the player's cage, on the game clock.
@@ -10,9 +12,9 @@ namespace totalrecruit
 // periodic sweep (hail.cpp, through NoteCageState) starts a prisoner's clock the
 // first time it sees them in the player's cage and drops it when it sees them
 // free. A prisoner taken before the plugin ever saw them is counted from the first
-// sighting, which errs towards making the player wait -- the safe direction. It
-// lives only in memory: a reload restarts the clock rather than freeing someone the
-// player never actually held. The timing rules themselves are engine-free
+// sighting, which errs towards making the player wait -- the safe direction. The start
+// rides in the character save (saved_ints row total_recruit.hold_start_hour), so a
+// reload keeps a caged prisoner's hours (v1-presets-close P3). The timing rules themselves are engine-free
 // (hold_clock.cpp); this is the engine-facing half.
 
 // Looks at where this character is right now and keeps the hold clock honest:
@@ -32,6 +34,12 @@ float HoursHeld(Character* character);
 // (the periodic sweep has not seen them in the cage yet), so the caller says nothing
 // rather than "0 hours".
 bool PeekHoursHeld(Character* character, float* out);
+
+// The save row (saved_ints.h): the hold start of the character carrying
+// `persistedId`, in tenths of a game hour, 0 when not held; and putting it back
+// from a loading save state. Thread-safe (the serialise hook).
+int SavedHoldStart(const std::string& persistedId);
+void RestoreSavedHoldStart(const std::string& persistedId, int tenths);
 
 // Forgets every hold clock (new session, plugin start and stop).
 void ResetHoldClock();

@@ -28,6 +28,10 @@
 //   total_recruit.beating_stress_hour
 //                                  beating_stress.h  the game hour (tenths) it was
 //                                                  last written at
+//   total_recruit.hold_start_hour
+//                                  hold_tracking.h  the game hour (tenths) the
+//                                                  prisoner's hold in the player's
+//                                                  cage started; 0 when not held
 //
 // Strings ride the same hooks through saved_strings.h.
 //
