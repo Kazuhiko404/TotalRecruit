@@ -116,6 +116,15 @@ Otherwise they say "Me ire pronto" half a day before their time is up and then
 go: back to their own faction, walking away in a squad of their own, and they
 will not join you again for a week. The numbers are `tempMember*` keys.
 
+Sometimes an ally far stronger than your leader, of good or ordinary character,
+walks up and offers to come along for a few days, for free ("Quiere ofrecerte
+ayuda"; the popup says how many days and that you cannot give them orders).
+Accept and they stay in their own faction but follow you and fight whoever your
+leader fights, until their days run out ("Hasta aqui llego"); hit them and they
+leave at once. Their card counts the days left, and they pick up again after a
+reload. A 15% chance per ally per day, `helper*` keys; `helperDebugKey` (a
+Windows key code, 119 = F8) makes the selected NPC offer at once for testing.
+
 ### Refusal, with a reason
 
 Someone who watched you kill their friend says no — and you are told so. Every

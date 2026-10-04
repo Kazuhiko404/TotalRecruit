@@ -360,6 +360,22 @@ void ATemporaryMemberShowsTheDaysLeft()
     CHECK(!v.showFood);
 }
 
+void AHelperShowsTheDaysLeft()
+{
+    const char* name = "helper: one good line with the days left, nothing else on the card";
+    ReadoutInput in = Input(Route_FreeWorld, Reason_None);
+    in.helper = true;
+    in.helperDaysLeft = 3;
+    const ReadoutView v = BuildReadout(in, kConfig);
+    CHECK(v.visible);
+    CHECK(v.route == ReadoutRoute_Free);
+    CHECK(v.primary.id == kLineHelperDaysLeft);
+    CHECK(v.primary.need == 3);
+    CHECK(v.primary.tone == ReadoutTone_Good);
+    CHECK(!v.secondary.Present());
+    CHECK(!v.showStress && !v.showChance && !v.showDefeats && !v.showFood);
+}
+
 void TheEasyWaitIsASecondLineWhileItRuns()
 {
     const char* name = "easy wait: second line beside another way in, with the hours left";
@@ -446,6 +462,7 @@ void StressTermsMakeStressFromState()
 
 void RunReadoutModelTests()
 {
+    AHelperShowsTheDaysLeft();
     QuestionsThatAreNotAboutAPersonHideTheCard();
     EachEntryRouteHasItsName();
     ARollThePeekCouldNotMakeShowsTheOdds();

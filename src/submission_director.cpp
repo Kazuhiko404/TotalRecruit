@@ -3,6 +3,7 @@
 #include "submission_rules.h"
 #include "submission_tracker.h"
 #include "approach_rules.h"
+#include "approach_driver.h"
 #include "npc_motion.h"
 #include "pacify.h"
 #include "plea_tracker.h"
@@ -29,8 +30,10 @@
 // The submission event's director: TotalSparring's challenge_director.cpp
 // (state machine :91-96, paused-aware clock :50-85, walk-up :886-893, hold,
 // reset :948) ported to "a beaten NPC asks to join". The pure steps live in
-// submission_rules.h / approach_rules.h; the engine calls in npc_motion.h
-// (moving) and pacify.h (calm and hostility). This file reads, asks, acts, logs.
+// submission_rules.h / approach_rules.h; the walk-up itself, its clock and the
+// one-event slot in approach_driver.h (shared with the helper's offer); the engine
+// calls in npc_motion.h (moving) and pacify.h (calm and hostility). This file
+// reads, asks, acts, logs.
 
 namespace totalrecruit
 {
@@ -39,50 +42,24 @@ namespace
 const int kMaxSquad = 256;
 
 // ----------------------------------------------------------------- Clock
-float g_clock = 0.0f;
-DWORD g_lastTick = 0;
-bool g_haveLastTick = false;
+EventClock g_clock;
 unsigned int g_nextSweep = 0;
 
-void AdvanceClock()
-{
-    const DWORD now = GetTickCount();
-    if (!g_haveLastTick)
-    {
-        g_haveLastTick = true;
-        g_lastTick = now;
-        return;
-    }
-    const DWORD elapsed = now - g_lastTick;
-    g_lastTick = now;
-    bool paused = false;
-    SafeIsPaused(&paused);
-    g_clock = AdvanceEventClock(g_clock, (unsigned int)elapsed, paused);
-}
-
 // ----------------------------------------------------------------- State
-// One event at a time. The NPC is held as a pointer plus its key, and the
-// pointer is only used after the key read back from it still matches: an
-// address is not an identity (char_key.h).
+// One event at a time (and one walk-up across every director: approach_driver.h).
+// The NPC, its key, the phase times and the calm strikes are the walker's.
 struct Event
 {
     SubmissionState state;
-    Character* npc;
-    CharKey key;
-    std::string name;
+    WalkUp walk;
     bool wasHostile;
-    int strikes;
-    float phaseStart;
-    float lastReassert;
-    bool standing;
     float windowSec;
     bool fleeing;
     bool fleeArrived;
     GroundPoint fleeTo;
 
     Event()
-        : state(Submission_Idle), npc(NULL), key(), name(), wasHostile(false), strikes(0),
-          phaseStart(0.0f), lastReassert(0.0f), standing(false), windowSec(0.0f),
+        : state(Submission_Idle), walk(), wasHostile(false), windowSec(0.0f),
           fleeing(false), fleeArrived(false), fleeTo()
     {
     }
@@ -107,16 +84,7 @@ std::string Fmt(const char* format, double a, double b)
 
 Character* EventNpc()
 {
-    if (g_event.npc == NULL)
-    {
-        return NULL;
-    }
-    CharKey key;
-    if (!SafeFindCharKey(g_event.npc, &key) || !(key == g_event.key))
-    {
-        return NULL;
-    }
-    return g_event.npc;
+    return WalkUpNpc(g_event.walk);
 }
 
 Character* Leader()
@@ -131,19 +99,10 @@ bool IsMine(Character* npc)
     return npc != NULL && SafeIsPlayerCharacter(npc, &mine) && mine;
 }
 
-// The calm, once a second: first note whether the last calm held (a fight
-// that keeps coming back breaks it, CalmBroken), then clear it again toward
-// every squad member.
+// The calm, once a second (approach_driver.h ReassertCalm).
 void Reassert(Character* npc)
 {
-    if (npc == NULL)
-    {
-        return;
-    }
-    g_event.strikes = NextCombatStrikes(g_event.strikes, SafeInCombat(npc));
-    Character* squad[kMaxSquad];
-    const int count = SafePlayerCharacters(squad, kMaxSquad);
-    SafeCalmToward(npc, squad, count);
+    ReassertCalm(&g_event.walk, npc);
 }
 
 bool HostileBefore(Character* npc)
@@ -157,6 +116,7 @@ void ResetEvent()
 {
     g_event = Event();
     g_onScreen.Clear();
+    ReleaseApproachSlot(ApproachOwner_Submission);
 }
 
 std::string Line(const char* key, const char* fallback, Character* npc, int hours)
@@ -169,8 +129,8 @@ void EnterForgiven(Character* npc, SubmissionOutcome outcome, bool flee)
 {
     const Config& config = GetConfig();
     g_event.state = Submission_Forgiven;
-    g_event.phaseStart = g_clock;
-    g_event.lastReassert = g_clock - kSubmissionReassertSec;
+    g_event.walk.phaseStart = g_clock.Now();
+    g_event.walk.lastReassert = g_clock.Now() - kSubmissionReassertSec;
     g_event.windowSec = ForgivenWindowSec(outcome, config.submission.forgiveSeconds);
     g_event.fleeing = false;
     g_event.fleeArrived = false;
@@ -192,7 +152,7 @@ void EnterForgiven(Character* npc, SubmissionOutcome outcome, bool flee)
         // Let be in place: the stand order goes, the calm stays.
         NpcMotion::ResumeRoutine(npc);
     }
-    Log(g_event.name + Fmt(": calm for %.0f s", g_event.windowSec, 0.0) +
+    Log(g_event.walk.name + Fmt(": calm for %.0f s", g_event.windowSec, 0.0) +
         (flee ? (g_event.fleeing ? ", running off" : ", running off FAILED (stays)") : ", in place"));
 }
 
@@ -204,7 +164,7 @@ void Apply(SubmissionOutcome outcome)
     const bool up = NpcMotion::IsUp(npc);
     Character* leader = Leader();
     const RestorePlan plan = PlanFor(outcome, g_event.wasHostile, up);
-    const std::string name = g_event.name;
+    const std::string name = g_event.walk.name;
 
     // Whatever the outcome (an aborted walk-up included), nobody is coming to talk.
     DismissHeadNotice(npc);
@@ -292,13 +252,13 @@ bool OpenPopup(Character* npc)
     // the way: read it again, so someone who cannot leave is never offered PERDONAR.
     bool caged = false;
     const bool inCage = SafeInPrison(npc, &caged) && caged;
-    const OfferView view = BuildSubmissionOfferView(g_event.name, inCage, OfferWording());
+    const OfferView view = BuildSubmissionOfferView(g_event.walk.name, inCage, OfferWording());
     if (!ShowOffer(npc, view))
     {
         return false;
     }
     // Marked only now that the window is up: opening it cleared any older mark.
-    g_onScreen.Begin(g_event.key);
+    g_onScreen.Begin(g_event.walk.key);
     // The window names them: the "walks up to talk" notice has done its job.
     DismissHeadNotice(npc);
     return true;
@@ -307,72 +267,31 @@ bool OpenPopup(Character* npc)
 void StepApproach()
 {
     const Config& config = GetConfig();
-    Character* npc = EventNpc();
-    Character* leader = Leader();
-
-    ApproachInput in;
-    in.npcValid = NpcMotion::IsUp(npc);
-    in.targetValid = NpcMotion::IsUp(leader);
-    in.elapsedSec = g_clock - g_event.phaseStart;
-    in.sinceLastRepathSec = g_clock - g_event.lastReassert;
-    in.combatStarted = CalmBroken(g_event.strikes);
-    in.targetBusy = IsOfferOpen() || SafeInCombat(leader);
-    float meters = -1.0f;
-    if (in.npcValid && in.targetValid && NpcMotion::DistanceMeters(npc, leader, &meters))
-    {
-        in.distanceMeters = meters;
-    }
-
     const ApproachAction action =
-        ApproachStep(in, SubmissionApproachLimits(config.submission.approachSeconds));
+        StepWalkUp(&g_event.walk, g_clock.Now(),
+                   SubmissionApproachLimits(config.submission.approachSeconds), "[submission]");
+    Character* npc = EventNpc();
     switch (action.kind)
     {
     case Approach_KeepWalking:
-        return;
-
     case Approach_Repath:
-        Reassert(npc);
-        g_event.standing = false;
-        if (!NpcMotion::MoveTo(npc, leader))
-        {
-            Log(g_event.name + ": move order FAILED");
-        }
-        g_event.lastReassert = g_clock;
-        return;
-
     case Approach_Stand:
-        Reassert(npc);
-        if (g_event.standing)
-        {
-            NpcMotion::Stand(npc, leader);
-        }
-        else
-        {
-            NpcMotion::StopWalking(npc, true);
-            g_event.standing = NpcMotion::BeginStand(npc, leader);
-            Log(g_event.name + ": arrived, waits for the window to be free");
-        }
-        g_event.lastReassert = g_clock;
         return;
 
     case Approach_Arrive:
-        NpcMotion::StopWalking(npc, true);
-        Reassert(npc);
-        NpcMotion::BeginStand(npc, leader);
-        Log(g_event.name + ": " + action.text + Fmt(" (%.1f s)", in.elapsedSec, 0.0));
         if (!OpenPopup(npc))
         {
-            Log(g_event.name + ": the popup could not open");
+            Log(g_event.walk.name + ": the popup could not open");
             Apply(Outcome_Aborted);
             return;
         }
         g_event.state = Submission_Holding;
-        g_event.phaseStart = g_clock;
-        g_event.lastReassert = g_clock;
+        g_event.walk.phaseStart = g_clock.Now();
+        g_event.walk.lastReassert = g_clock.Now();
         return;
 
     case Approach_Abort:
-        Log(g_event.name + ": approach aborted: " + action.text);
+        Log(g_event.walk.name + ": approach aborted: " + action.text);
         Apply(Outcome_Aborted);
         return;
     }
@@ -387,9 +306,9 @@ void StepHold()
     HoldInput in;
     in.npcValid = NpcMotion::IsUp(npc);
     in.leaderValid = NpcMotion::IsUp(leader);
-    in.calmBroken = CalmBroken(g_event.strikes);
-    in.popupStillOurs = IsOfferOpen() && g_onScreen.IsPending(g_event.key);
-    in.sinceLastReassertSec = g_clock - g_event.lastReassert;
+    in.calmBroken = CalmBroken(g_event.walk.strikes);
+    in.popupStillOurs = IsOfferOpen() && g_onScreen.IsPending(g_event.walk.key);
+    in.sinceLastReassertSec = g_clock.Now() - g_event.walk.lastReassert;
 
     const HoldAction action = HoldStep(in);
     switch (action.kind)
@@ -400,18 +319,18 @@ void StepHold()
     case Hold_Reassert:
         Reassert(npc);
         NpcMotion::Stand(npc, leader);
-        g_event.lastReassert = g_clock;
+        g_event.walk.lastReassert = g_clock.Now();
         return;
 
     case Hold_Release:
-        Log(g_event.name + ": hold released: " + HoldReleaseText(action.reason));
+        Log(g_event.walk.name + ": hold released: " + HoldReleaseText(action.reason));
         if (action.reason == HoldRelease_Closed)
         {
             Apply(Outcome_Dismissed);
             return;
         }
         // The window must not outlive the event it asks about.
-        if (g_onScreen.IsPending(g_event.key))
+        if (g_onScreen.IsPending(g_event.walk.key))
         {
             HideOffer();
         }
@@ -439,12 +358,12 @@ void StepForgiven()
     Character* npc = EventNpc();
 
     ForgivenInput in;
-    in.elapsedSec = g_clock - g_event.phaseStart;
+    in.elapsedSec = g_clock.Now() - g_event.walk.phaseStart;
     in.windowSec = g_event.windowSec;
-    in.sinceLastReassertSec = g_clock - g_event.lastReassert;
+    in.sinceLastReassertSec = g_clock.Now() - g_event.walk.lastReassert;
     in.npcValid = NpcMotion::IsUp(npc);
     in.joined = IsMine(npc);
-    in.calmBroken = CalmBroken(g_event.strikes);
+    in.calmBroken = CalmBroken(g_event.walk.strikes);
 
     const ForgivenAction action = ForgivenStep(in);
     switch (action.kind)
@@ -460,7 +379,7 @@ void StepForgiven()
             {
                 g_event.fleeArrived = true;
                 NpcMotion::StopWalking(npc, false);
-                Log(g_event.name + ": ran off; stays calm");
+                Log(g_event.walk.name + ": ran off; stays calm");
             }
             else
             {
@@ -468,11 +387,11 @@ void StepForgiven()
                 NpcMotion::ReapplyRun(npc);
             }
         }
-        g_event.lastReassert = g_clock;
+        g_event.walk.lastReassert = g_clock.Now();
         return;
 
     case Forgiven_Release:
-        Log(g_event.name + Fmt(": forgive window over after %.0f s (", in.elapsedSec, 0.0) +
+        Log(g_event.walk.name + Fmt(": forgive window over after %.0f s (", in.elapsedSec, 0.0) +
             ForgivenReleaseText(action.reason) + ")");
         switch (action.reason)
         {
@@ -516,25 +435,23 @@ void CostlyFacts(Character* npc, int day, int defeats, CandidateFacts* f)
 
 bool Start(Character* npc, Character* leader, int defeats, const Verdict& verdict)
 {
-    CharKey key;
-    if (!SafeCharKey(npc, &key))
+    if (!ClaimApproachSlot(ApproachOwner_Submission))
     {
         return false;
     }
-    MarkSubmissionAsked(key, defeats);
-
     g_event = Event();
-    g_event.state = Submission_Approaching;
-    g_event.npc = npc;
-    g_event.key = key;
-    g_event.name = CharacterName(npc);
+    // Read before the walk-up's calm clears it.
     g_event.wasHostile = HostileBefore(npc);
-    g_event.phaseStart = g_clock;
-    g_event.lastReassert = g_clock;
-
-    Reassert(npc);
-    g_event.strikes = 0;
-    const bool moving = NpcMotion::MoveTo(npc, leader);
+    bool moving = false;
+    if (!BeginWalkUp(&g_event.walk, npc, leader, g_clock.Now(), &moving))
+    {
+        g_event = Event();
+        ReleaseApproachSlot(ApproachOwner_Submission);
+        return false;
+    }
+    const CharKey key = g_event.walk.key;
+    MarkSubmissionAsked(key, defeats);
+    g_event.state = Submission_Approaching;
 
     SpeakAloud(npc, Line("submissionEvent.approach",
                          "{name}: Espera... no quiero pelear m\xc3\xa1s.", npc, 0));
@@ -545,7 +462,7 @@ bool Start(Character* npc, Character* leader, int defeats, const Verdict& verdic
 
     float meters = -1.0f;
     NpcMotion::DistanceMeters(npc, leader, &meters);
-    Log(g_event.name + " submitted (" + ReasonMessageKey(verdict.reasonKey, "") + "), walks up" +
+    Log(g_event.walk.name + " submitted (" + ReasonMessageKey(verdict.reasonKey, "") + "), walks up" +
         Fmt(" from %.1f m, defeats %.0f", meters, (double)defeats) + "; hostile before " +
         (g_event.wasHostile ? "yes" : "no") + (moving ? "" : "; move order FAILED") + " [key " +
         key.ToString() + "]");
@@ -555,7 +472,8 @@ bool Start(Character* npc, Character* leader, int defeats, const Verdict& verdic
 void Sweep()
 {
     const Config& config = GetConfig();
-    if (!config.submission.eventEnabled || IsOfferOpen())
+    if (!config.submission.eventEnabled || IsOfferOpen() ||
+        !ApproachSlotFreeFor(ApproachOwner_Submission))
     {
         return;
     }
@@ -637,7 +555,7 @@ void Sweep()
 
 void SubmissionTick()
 {
-    AdvanceClock();
+    g_clock.Advance();
 
     switch (g_event.state)
     {
@@ -679,7 +597,7 @@ bool AnswersTheEvent(Character* npc, const char* answer)
 {
     CharKey key;
     const bool ours = g_event.state == Submission_Holding && npc != NULL &&
-                      SafeFindCharKey(npc, &key) && key == g_event.key;
+                      SafeFindCharKey(npc, &key) && key == g_event.walk.key;
     if (!ours)
     {
         Log(std::string(answer) + " ignored: no submission in progress for " + CharacterName(npc));
@@ -731,8 +649,7 @@ void ForgetSubmission()
         NpcMotion::EndRun(NULL);
     }
     ResetEvent();
-    g_clock = 0.0f;
-    g_haveLastTick = false;
+    g_clock.Reset();
     g_nextSweep = 0;
 }
 } // namespace totalrecruit

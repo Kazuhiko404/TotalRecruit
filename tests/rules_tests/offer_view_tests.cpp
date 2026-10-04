@@ -679,6 +679,30 @@ void CagedSubmissionHasNoForgive()
     CHECK(v.cancelLabel == t.decline);
 }
 
+// ------------------------------------------------------------ The helper
+// ui-mockup/readout.html section 5, the helper state (js/popup_data.js).
+void HelperOffersFreeHelpWithAcceptAndReject()
+{
+    const char* name = "helper offer: Ayuda tag, the days in the body, free, ACEPTAR / RECHAZAR";
+    const OfferTexts t = Texts();
+    const OfferView v = BuildHelperOfferView("Beep", 4, t);
+    CHECK(v.route == ReadoutRoute_Free);
+    CHECK(v.routeTag == t.routeHelper && t.routeHelper == "Ayuda");
+    CHECK(v.name == "Beep");
+    CHECK(v.bodyLine.find("Beep te ofrece acompa") == 0);
+    CHECK(v.bodyLine.find(" 4 d") != std::string::npos);
+    CHECK(v.bodyLine.find("{days}") == std::string::npos);
+    CHECK(v.bodyLine.find("gratis") != std::string::npos);
+    CHECK(v.showPrice && v.priceFree && v.priceText == t.free);
+    CHECK(!v.showPurse && !v.showChance && !v.showSlider);
+    CHECK(v.reasonText.empty());
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(v.extraLabel.empty() && v.beatLabel.empty() && v.knockoutLabel.empty());
+    CHECK(v.cancelLabel == t.decline);
+    CHECK(t.bodyHelper.find("{name}") != std::string::npos);
+    CHECK(t.bodyHelper.find("{days}") != std::string::npos);
+}
+
 // ------------------------------------------------------- Balanced allies
 // ui-mockup/readout.html section 5, the ally states (js/popup_data.js).
 
@@ -880,4 +904,5 @@ void RunOfferViewTests()
     FreeRoutesNeverHaggle();
     SubmissionHasAcceptForgiveReject();
     CagedSubmissionHasNoForgive();
+    HelperOffersFreeHelpWithAcceptAndReject();
 }

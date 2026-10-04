@@ -50,3 +50,4 @@ void RunHeadNoticeRulesTests();
 void RunPersonalityGroupsTests();
 void RunAllyTierRulesTests();
 void RunTempMemberRulesTests();
+void RunHelperRulesTests();

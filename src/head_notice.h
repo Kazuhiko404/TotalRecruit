@@ -19,8 +19,9 @@
 // squad. At most kHeadNoticeCap at once, one per NPC (head_notice_rules.h).
 //
 // Callers today: hail.cpp (a ready captive calls out), submission_director.cpp (a
-// beaten NPC walks up to ask to join) and temp_member.cpp (a temporary member's
-// warnings and farewell). Any future "X wants to talk to you" event raises one with
+// beaten NPC walks up to ask to join), temp_member.cpp (a temporary member's
+// warnings and farewell) and helper.cpp (a free helper's offer, start, warning,
+// farewell and re-arm). Any future "X wants to talk to you" event raises one with
 // RaiseHeadNotice.
 //
 // A squad notice (RaiseSquadHeadNotice) is the one exception to "dropped when they

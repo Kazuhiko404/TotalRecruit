@@ -19,6 +19,7 @@
 #include "submission_director.h"
 #include "submission_tracker.h"
 #include "temp_member.h"
+#include "helper.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4091)
@@ -56,6 +57,9 @@ void ResetSessionState()
     // The NPC of a submission in progress gets its pace and routine back while
     // it can still be read.
     ForgetSubmission();
+    // The helper offer in progress likewise, then the helpers' pointers and table
+    // (each helper's load hook puts its contract back).
+    ForgetHelpers();
     ForgetOverlayTarget();
     ForgetReadout();
     ForgetHeadNotices();

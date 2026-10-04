@@ -284,6 +284,40 @@ acompañe". Se queda entre `allyTierTempMinDays` y `allyTierTempMaxDays` días
   miembro permanente. El blackboard de KEP no se limpia (no hay
   `AI/Blackboard.h`): la rutina la da el pelotón nuevo.
 
+**R4b.6 — Ayudante gratis.** *(P1, T3 hecho; prueba en juego pendiente)*
+Pedido del usuario (2026-10-03): "que haya una chance de que NPCs aliados de
+nivel más alto y buena personalidad se ofrezcan a ayudarte unos días, pero que no
+los puedas controlar; parecido a los mercenarios de Kenshi, pero gratis".
+
+- **Quién.** Solo en Balanced (`helperEnabled`). Un aliado (relación ≥
+  `friendlyRelation`), Bueno o Neutral, con nivel mayor al de tu líder +
+  `helperMinLevelLead` (10), a 40 m o menos, de pie, sin pelear, sin jaula, no
+  tuyo, sin enfriamiento. Una tirada por día y por NPC con
+  `helperOfferChancePerDay` (15%).
+- **La oferta.** Camina hasta tu líder como el sometido (nunca dos eventos a la
+  vez), con el cartel "Quiere ofrecerte ayuda". Al llegar, el popup: "<nombre> te
+  ofrece acompañarte N días, gratis. No podrás darle órdenes." ACEPTAR /
+  RECHAZAR. N entre `helperDaysMin` y `helperDaysMax` (2..5). RECHAZAR: no se
+  vuelve a ofrecer por `helperRejectCooldownDays` (3) días (se guarda con el
+  personaje). La X no es respuesta: se va y no pregunta más ese día.
+- **Durante.** Sigue en su facción: no aparece en tus retratos y no acepta
+  órdenes. Te sigue (BODYGUARD; si se queda atrás, FOLLOW_PLAYER_ORDER y después
+  la orden de caminar del walk-up) y, cuando tu líder pelea, ataca a su blanco.
+  Carteles: "Te cubro las espaldas" al aceptar, "Me iré pronto"
+  `helperExpiryWarningHours` (12 h) antes del final. Su tarjeta dice "Ayudante: le
+  quedan N días". El vencimiento se guarda: tras cargar, cuando vuelve a estar
+  cerca, sigue ("Sigo contigo").
+- **El final.** Vencido: "Hasta aquí llego. Suerte" y vuelve a su rutina. Si tu
+  grupo lo ataca o lo noquea: "No vuelvo a ayudarte", se va y empieza el
+  enfriamiento. Muerto o reclutado (Hablar): termina sin más.
+- **Mecanismo.** Escolta por código, no el contrato nativo de mercenario: el
+  contrato (`contractJob` del blackboard) no se puede leer ni cortar con los
+  headers disponibles (no hay `AI/Blackboard.h`), y la única línea vanilla
+  gratis tiene duración fija. Detalle en `src/helper.h`.
+- **Prueba.** `helperDebugKey` (código de tecla de Windows, 119 = F8; 0 =
+  apagado): con un NPC seleccionado, se ofrece al instante. Todo se loguea como
+  `[helper]`.
+
 **R4b.4 — Siempre se explica.** *(P1, hecho)* El popup nombra el tramo ("Aliado
 (nivel 34): te cobra 1.840 cats, con 14% de descuento por amistad", PRECIO con
 "-14%", "te acompañará 6 días como miembro temporal") y la lectura sobre el NPC
@@ -293,7 +327,9 @@ también ("Aliado: 1.840 cats con descuento"). Las negativas llevan su motivo.
 `config.json` y en el Mod Hub: los niveles de corte, los máximos de cada tramo,
 la escala, la distancia de nivel y los días. El miembro temporal, `tempMember*`:
 faltas para irse, umbral y horas de hambre, horas entre faltas, aviso antes de
-irse y días sin volver.
+irse y días sin volver. El ayudante, `helper*`: activo, chance por día, niveles de
+ventaja, días mínimos y máximos, días tras rechazo, aviso antes de irse y la
+tecla de prueba.
 
 ---
 

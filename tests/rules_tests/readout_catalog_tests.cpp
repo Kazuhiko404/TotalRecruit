@@ -21,13 +21,22 @@ bool IsHidden(int id)
 void EveryReasonHasARowPlusTheCardsOwnLines()
 {
     const char* name = "catalog: one row per ReasonKey plus the wait, the open roll, beat-again and the ally prices";
-    CHECK(ReadoutLineCount() == (int)Reason_Count + 6);
+    CHECK(ReadoutLineCount() == (int)Reason_Count + 7);
     CHECK(kLineWaitCage == (int)Reason_Count);
     CHECK(kLineRollOpen == (int)Reason_Count + 1);
     CHECK(kLineFieldYieldBeatAgain == (int)Reason_Count + 2);
     CHECK(kLineAllyPaidJoin == (int)Reason_Count + 3);
     CHECK(kLineAllyPaidAsk == (int)Reason_Count + 4);
     CHECK(kLineTempMemberDaysLeft == (int)Reason_Count + 5);
+    CHECK(kLineHelperDaysLeft == (int)Reason_Count + 6);
+}
+
+void TheHelperLineCountsTheDays()
+{
+    const char* name = "catalog: a helper's line names the days left ({need})";
+    const std::string days = ReadoutLineDefaultText(kLineHelperDaysLeft);
+    CHECK(days.find("Ayudante") == 0 && days.find("{need}") != std::string::npos);
+    CHECK(std::string(ReadoutLineMessageKey(kLineHelperDaysLeft)) == "readout.line.helper.daysLeft");
 }
 
 void TheTempMemberLineCountsTheDays()
@@ -151,6 +160,7 @@ void RunReadoutCatalogTests()
     TheCardsOwnLinesSayWhatTheyMean();
     TheAllyTierLinesNameTheFriendship();
     TheTempMemberLineCountsTheDays();
+    TheHelperLineCountsTheDays();
     EveryRouteHasALabel();
     VisibleReasonsHaveShortAsciiText();
     KeysAreUniqueAndNamespaced();

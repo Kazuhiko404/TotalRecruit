@@ -27,6 +27,12 @@ bool SafeHostileToward(Character* npc, Character* const* squad, int count);
 // MarkTempEnemyGuarded). The faction relation is not touched.
 void SafeMarkHostile(Character* npc, Character* playerLeader);
 
+// The free helper's peace with the squad (helper.cpp): for each of the `count`
+// squad members, the NPC's temporary-enemy mark on them and theirs on the NPC are
+// cleared. Nothing else: no endCombatMode (the helper may be fighting for the
+// player) and no rememberCharacter (its memory of the squad stays its own).
+void SafeClearTempEnemies(Character* npc, Character* const* squad, int count);
+
 // Real combat right now (Character::isInCombatMode, melee or ranged).
 bool SafeInCombat(Character* character);
 } // namespace totalrecruit

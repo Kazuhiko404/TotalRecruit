@@ -72,6 +72,31 @@ void SafeCalmToward(Character* npc, Character* const* squad, int count)
     }
 }
 
+namespace
+{
+void ClearTempEnemyPairGuarded(Character* npc, Character* member)
+{
+    npc->clearTempEnemyStatus(member);
+    member->clearTempEnemyStatus(npc);
+}
+} // namespace
+
+void SafeClearTempEnemies(Character* npc, Character* const* squad, int count)
+{
+    if (npc == NULL)
+    {
+        return;
+    }
+    for (int i = 0; i < count; ++i)
+    {
+        if (squad[i] != NULL && squad[i] != npc)
+        {
+            TR_TRY { ClearTempEnemyPairGuarded(npc, squad[i]); }
+            TR_CATCH { }
+        }
+    }
+}
+
 bool SafeHostileToward(Character* npc, Character* const* squad, int count)
 {
     if (npc == NULL)

@@ -9,6 +9,7 @@
 #include "mercy.h"
 #include "cage_commands.h"
 #include "submission_director.h"
+#include "helper.h"
 #include "ui_style.h"
 #include "flat_slider.h"
 #include "haggle_rules.h"
@@ -829,6 +830,7 @@ void Close()
     // unanswered close as Dismiss.
     ForgetMercy(NULL);
     ForgetSubmissionOffer();
+    ForgetHelperOffer();
 }
 
 // Who the window is asking about decides what each button means, and it is
@@ -838,7 +840,9 @@ enum OfferKind
 {
     OfferKind_Plain,
     OfferKind_Mercy,
-    OfferKind_Submission
+    OfferKind_Submission,
+    // A free helper's offer (helper.h): ACEPTAR / RECHAZAR, the X is no answer.
+    OfferKind_Helper
 };
 
 enum OfferAnswer
@@ -863,6 +867,10 @@ OfferKind PendingKind(Character* npc)
     if (IsSubmissionPending(npc))
     {
         return OfferKind_Submission;
+    }
+    if (IsHelperOfferPending(npc))
+    {
+        return OfferKind_Helper;
     }
     return OfferKind_Plain;
 }
@@ -892,6 +900,16 @@ void AnswerSubmission(Character* npc, OfferAnswer answer)
     case Answer_Decline: RejectSubmission(npc); return;
     case Answer_Close:   DismissSubmission(npc); return;
     default:             return;
+    }
+}
+
+void AnswerHelper(Character* npc, OfferAnswer answer)
+{
+    switch (answer)
+    {
+    case Answer_Accept:  AcceptHelperOffer(npc); return;
+    case Answer_Close:   DismissHelperOffer(npc); return;
+    default:             RejectHelperOffer(npc); return;
     }
 }
 
@@ -956,6 +974,7 @@ void Answer(OfferAnswer answer)
     {
     case OfferKind_Mercy:      AnswerMercy(npc, answer); return;
     case OfferKind_Submission: AnswerSubmission(npc, answer); return;
+    case OfferKind_Helper:     AnswerHelper(npc, answer); return;
     case OfferKind_Plain:      AnswerPlain(npc, answer, offering, offer); return;
     }
 }
@@ -1089,6 +1108,7 @@ static bool OpenWith(Character* npc, const OfferView& view)
     // submission director.
     ForgetMercy(NULL);
     ForgetSubmissionOffer();
+    ForgetHelperOffer();
 
     if (!Build())
     {

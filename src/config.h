@@ -499,6 +499,41 @@ struct TempMembers
     }
 };
 
+// The free helper (helper_rules.h, helper.h): a much stronger Balanced ally of good
+// or neutral character may walk up and offer to escort the player for a few days,
+// for free, without taking orders. config.json keys "helper*".
+struct Helpers
+{
+    bool enabled;
+    // The chance (0..1) that an eligible ally offers, drawn once per in-game day each.
+    float offerChancePerDay;
+    // They offer only when their level is over the leader's by more than this.
+    int minLevelLead;
+    // How many in-game days the help lasts, inclusive at both ends.
+    int daysMin;
+    int daysMax;
+    // After a RECHAZAR (or the squad turning on them) they do not offer again for
+    // this many days (saved with the character).
+    int rejectCooldownDays;
+    // They say "me ire pronto" this many hours before their time is up.
+    float expiryWarningHours;
+    // Debug: a Windows virtual-key code (119 = F8). Pressed, the selected NPC offers
+    // at once, past the roll, the level and the personality. 0 = off.
+    int debugKey;
+
+    Helpers()
+        : enabled(true),
+          offerChancePerDay(0.15f),
+          minLevelLead(10),
+          daysMin(2),
+          daysMax(5),
+          rejectCooldownDays(3),
+          expiryWarningHours(12.0f),
+          debugKey(0)
+    {
+    }
+};
+
 // Which dialogue records the plugin fires. Empty means "no FCS package
 // installed" -- the plugin then falls back to acting directly, so the mod still
 // works as a code-only install.
@@ -610,6 +645,7 @@ struct Config
     Animals animals;
     AllyTiers allyTiers;
     TempMembers tempMembers;
+    Helpers helpers;
     DialogueIds dialogue;
     Exclusions exclude;
 

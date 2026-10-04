@@ -169,6 +169,20 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     Selecting a temporary member shows their card with one line, "Temporal: le quedan 4 dias"
     (`readout.line.temp.daysLeft`), and nothing else. Section 2, tab "Temporary member (squad notices)".
 
+### Free helper (section 5, "Free helper offers to escort you"; section 2, "Free helper ...")
+
+23. **A stronger ally offers to escort the player, for free, without taking orders** (ally-tiers-temp-helpers
+    T3, user request 2026-10-03: "higher-level allied NPCs with good personalities offer to help you for some
+    days, but you can't control them"). Nothing new is drawn. Walking up (the submission walk-up), the ally gets
+    the head notice "Quiere ofrecerte ayuda" (`headNotice.helperOffer`); on arrival the same popup opens with the
+    tag **Ayuda** (`popup.route.helper`), the body "Beep el Sabio te ofrece acompanarte 4 dias, gratis. No podras
+    darle ordenes." (`popup.body.helper`), PRECIO Gratis and two buttons -- ACEPTAR (amber plate) and RECHAZAR
+    (line plate, the cancel slot). No chance row. The X is no answer. During the escort the helper raises ordinary
+    notices (`helper.notice.*`): "Te cubro las espaldas" on accepting, "Me ire pronto" before the end, "Hasta
+    aqui llego. Suerte" or "No vuelvo a ayudarte" on leaving, "Sigo contigo" when found again after a load.
+    Selecting a helper shows their card with one line, "Ayudante: le quedan 3 dias"
+    (`readout.line.helper.daysLeft`), and nothing else.
+
 ## Checking a change
 
 Mockup first, then C++. Measure in Chrome (`getBoundingClientRect`) and copy the px into the constants.

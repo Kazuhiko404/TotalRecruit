@@ -258,6 +258,15 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "temp_member_strike_cooldown", "Temporal: horas entre faltas", "Cada tipo de falta cuenta como mucho una vez en estas horas", 0.0f, 168.0f, 1.0f, 0, &c.tempMembers.strikeCooldownHours);
     regFloat(api, mod, "temp_member_expiry_warning", "Temporal: aviso antes de irse", "Cuantas horas antes de irse avisa que se va pronto", 0.0f, 72.0f, 1.0f, 0, &c.tempMembers.expiryWarningHours);
     regInt(api, mod, "temp_member_rejoin_days", "Temporal: dias sin volver", "Dias que no quiere saber nada de ti despues de irse", 0, 30, 1, &c.tempMembers.rejoinCooldownDays);
+    // Ayudante gratis: un aliado mucho mas fuerte se ofrece a escoltarte unos dias.
+    regBool(api, mod, "helper_enabled", "Ayudante: activo", "Un aliado bueno o neutral mucho mas fuerte que tu lider puede ofrecerse a acompanarte gratis unos dias (solo Balanced)", &c.helpers.enabled);
+    regFloat(api, mod, "helper_offer_chance", "Ayudante: chance por dia", "Probabilidad diaria de que cada aliado elegible se ofrezca (0.15 = 15%)", 0.0f, 1.0f, 0.05f, 2, &c.helpers.offerChancePerDay);
+    regInt(api, mod, "helper_min_level_lead", "Ayudante: niveles de ventaja", "Solo se ofrece si su nivel supera al de tu lider por mas que esto", 0, 200, 1, &c.helpers.minLevelLead);
+    regInt(api, mod, "helper_days_min", "Ayudante: dias minimos", "Lo minimo que te acompana", 1, 30, 1, &c.helpers.daysMin);
+    regInt(api, mod, "helper_days_max", "Ayudante: dias maximos", "Lo maximo que te acompana", 1, 60, 1, &c.helpers.daysMax);
+    regInt(api, mod, "helper_reject_days", "Ayudante: dias tras rechazo", "Dias sin volver a ofrecerse si lo rechazas o tu grupo lo ataca", 0, 30, 1, &c.helpers.rejectCooldownDays);
+    regFloat(api, mod, "helper_expiry_warning", "Ayudante: aviso antes de irse", "Cuantas horas antes de irse avisa que se va pronto", 0.0f, 72.0f, 1.0f, 0, &c.helpers.expiryWarningHours);
+    regInt(api, mod, "helper_debug_key", "Ayudante: tecla de prueba", "Codigo de tecla de Windows (119 = F8). Con un NPC seleccionado, se ofrece al instante. 0 = apagado", 0, 255, 1, &c.helpers.debugKey);
     regBool(api, mod, "cheat_needs_cage","Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
     regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame (0.02 = un minuto)", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
     regInt(api, mod, "rescue_base_bonus", "Rescate: peso de la deuda", "Cuanto pesa haberle salvado la vida, antes de contar la cura", 0, 90, 5, &c.rescueBaseBonus);

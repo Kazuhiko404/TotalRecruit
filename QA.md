@@ -770,3 +770,28 @@ Un aliado Bueno o Neutral de nivel 80+ reclutado como en 12.24 A6. Preset 1 (Bal
 | T9 | Despues de T5 o T7, Hablar con el mismo NPC | "no quiere saber nada de ti" durante 7 dias de juego; no se lo puede volver a tomar como temporal | — |
 | T10 | Un miembro temporal golpeado por enemigos (no tu grupo) o noqueado por hambre | No suma falta | — |
 | T11 | Faccion de origen que no existe o es del jugador (raro) | Se va igual a "1233-gamedata.base" o a la faccion vacia | `left the squad for faction 1233-gamedata.base` |
+
+### 12.26 El ayudante gratis (ally-tiers-temp-helpers T3)
+
+Pedido del usuario (2026-10-03): aliados mas fuertes y de buena personalidad se ofrecen a acompanarte unos dias, gratis, sin que los puedas controlar (REQUISITOS R4b.6). Preset 1 (Balanced). **Mecanismo B (escolta por codigo)**: lo primero a probar es que la escolta y la pelea funcionan en juego; si un peldaño no sigue al lider, el log dice cual (`engine task now N on rung ...`, `left behind ... ->`). Para probar sin esperar la tirada: Mod Hub "Ayudante: tecla de prueba" = 119 (F8) o `"helperDebugKey": 119` en `config.json`; seleccionar un NPC ajeno y apretar F8. Para no esperar dias: `helperDaysMin` = `helperDaysMax` = 1 y la velocidad al maximo. Mockup: `ui-mockup/readout.html` seccion 5 "Free helper offers to escort you" y seccion 2 "Free helper (offer and escort notices)". Todo se loguea como `[helper]`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| H1 | Tecla de prueba: seleccionar un aliado ajeno y apretar F8 | Camina hasta tu lider con el cartel "Quiere ofrecerte ayuda" y dice "Eh, espera. Puedo ayudarte."; al llegar, el popup con la etiqueta Ayuda: "<nombre> te ofrece acompanarte D dias, gratis. No podras darle ordenes.", PRECIO Gratis, ACEPTAR / RECHAZAR | `[helper] debug key on <nombre>: screen says <motivo> (...)` y `[helper] <nombre> offers D days (debug key), walks up from X m` |
+| H2 | F8 sin nada seleccionado o con uno tuyo | Roller "[TotalRecruit] Selecciona un NPC que no sea tuyo." | `[helper] debug key: select an NPC that is not yours first` |
+| H3 | Natural: quedarse cerca (<40 m) de un aliado Bueno o Neutral con nivel > el de tu lider + 10 | Con 15% por dia y por NPC se ofrece como en H1; si no toca, no vuelve a tirar ese dia | `[helper] <nombre>: no offer today (level L vs leader P, ...)` o `offers D days (roll: ...)` |
+| H4 | ACEPTAR | Cartel "Te cubro las espaldas", roller "<nombre> te acompanara D dias. No acepta ordenes."; no aparece en tus retratos; te sigue cuando caminas | `escorts the player for D days (until hour H)`, `escort order BODYGUARD given`, `engine task now N on rung BODYGUARD` |
+| H5 | Seleccionarlo | Tarjeta con una sola linea verde "Ayudante: le quedan D dias" | — |
+| H6 | Intentar darle ordenes (clic derecho en el suelo con el seleccionado) | No obedece: sigue escoltando a tu lider | — |
+| H7 | Alejarse corriendo varios cientos de metros | Si BODYGUARD no lo trae, sube de peldaño y te alcanza | `left behind (X m), escort BODYGUARD -> FOLLOW_PLAYER_ORDER` (y `-> walk` si hace falta) |
+| H8 | Que tu lider pelee con bandidos | Ataca al mismo blanco que tu lider | `fights for the leader against <enemigo>` |
+| H9 | Pelea entre dos de tu grupo (sparring) o tu lider ataca a alguien de la faccion del ayudante | El ayudante no se mete | — |
+| H10 | 12 h antes del final | Cartel "Me ire pronto" | `expiry warning (N h left)` |
+| H11 | Dejar pasar el final | Cartel "Hasta aqui llego. Suerte", roller "<nombre> cumplio su palabra y sigue su camino."; vuelve a su rutina | `<nombre> stops helping: time up` |
+| H12 | RECHAZAR en el popup | "Como quieras. Suerte en el camino.", roller "<nombre>: rechazaste su ayuda."; F8 o la tirada no lo hacen ofrecerse de nuevo por 3 dias (la tirada natural; F8 lo salta) | `offer rejected; no offer for 3 days` |
+| H13 | Cerrar el popup con la X | Se va sin enfriamiento; no vuelve a preguntar ese dia | `offer dismissed (closed with no answer)` |
+| H14 | Guardar a mitad del contrato, salir, cargar, acercarse | Cartel "Sigo contigo", vuelve a escoltar; la tarjeta dice los dias que quedaban | `re-armed after a load` |
+| H15 | Ordenar a uno de tu grupo que lo ataque | Cartel "No vuelvo a ayudarte", roller "<nombre> dejo de ayudarte: tu grupo lo ataco."; deja de seguirte; 3 dias sin ofrecerse | `stops helping: attacked by the squad` |
+| H16 | Noquearlo con tu grupo | Igual que H15 | `stops helping: knocked out by the squad` |
+| H17 | Mientras un sometido camina hacia vos (12.x) | Ningun ayudante se ofrece hasta que termina, y al reves | — |
+| H18 | Mod Hub "Ayudante: activo" apagado, o preset 0/2 | Nadie se ofrece (los contratos en curso siguen hasta su fin) | — |

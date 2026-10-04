@@ -138,6 +138,18 @@ var TEMP_MEMBER = {
   card: 'Temporal: le quedan 4 dias'                  // readout.line.temp.daysLeft on their card
 };
 
+// What a free helper (src/helper.h) says over their head: messages.json headNotice.helperOffer
+// and helper.notice.*. Helpers stay in their own faction, so these are ordinary notices.
+var HELPER = {
+  offer: 'Quiere ofrecerte ayuda',      // walking up to offer (headNotice.helperOffer)
+  start: 'Te cubro las espaldas',       // accepted: the escort begins
+  expiring: 'Me ire pronto',            // helperExpiryWarningHours before the end
+  farewell: 'Hasta aqui llego. Suerte', // time up
+  betrayed: 'No vuelvo a ayudarte',     // attacked or knocked out by the squad
+  rearmed: 'Sigo contigo',              // found again after a load
+  card: 'Ayudante: le quedan 3 dias'    // readout.line.helper.daysLeft on their card
+};
+
 // Mod Hub rows, word for word as src/mod_hub_integration.cpp registers them, with the
 // src/config.h default.
 var HUB = [

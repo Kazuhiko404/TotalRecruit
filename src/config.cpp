@@ -139,6 +139,19 @@ void ClampTempMembers(TempMembers* t)
     ClampInt(&t->rejoinCooldownDays, 0, 30);
 }
 
+// The free helper (helper_rules.h): a chance, a level lead and a stay inside their
+// ranges, the longest stay no shorter than the shortest, a virtual-key code or 0.
+void ClampHelpers(Helpers* h)
+{
+    ClampFloat(&h->offerChancePerDay, 0.0f, 1.0f);
+    ClampInt(&h->minLevelLead, 0, 200);
+    ClampInt(&h->daysMin, 1, 30);
+    ClampInt(&h->daysMax, h->daysMin, 60);
+    ClampInt(&h->rejectCooldownDays, 0, 30);
+    ClampFloat(&h->expiryWarningHours, 0.0f, 72.0f);
+    ClampInt(&h->debugKey, 0, 255);
+}
+
 void ReadFloat(const std::string& text, const std::string& key, float* target)
 {
     size_t valueStart = 0;
@@ -318,6 +331,14 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "tempMemberStrikeCooldownHours", &c.tempMembers.strikeCooldownHours);
     AddFloat(f, "tempMemberExpiryWarningHours", &c.tempMembers.expiryWarningHours);
     AddInt(f, "tempMemberRejoinCooldownDays", &c.tempMembers.rejoinCooldownDays);
+    AddBool(f, "helperEnabled", &c.helpers.enabled);
+    AddFloat(f, "helperOfferChancePerDay", &c.helpers.offerChancePerDay);
+    AddInt(f, "helperMinLevelLead", &c.helpers.minLevelLead);
+    AddInt(f, "helperDaysMin", &c.helpers.daysMin);
+    AddInt(f, "helperDaysMax", &c.helpers.daysMax);
+    AddInt(f, "helperRejectCooldownDays", &c.helpers.rejectCooldownDays);
+    AddFloat(f, "helperExpiryWarningHours", &c.helpers.expiryWarningHours);
+    AddInt(f, "helperDebugKey", &c.helpers.debugKey);
     AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
     AddFloat(f, "relationRefuseAll", &c.relationRefuseAll);
     AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);
@@ -520,6 +541,7 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.animals.temperamentWeight, 0.0f, 2.0f);
     ClampAllyTiers(&g_config.allyTiers);
     ClampTempMembers(&g_config.tempMembers);
+    ClampHelpers(&g_config.helpers);
 
     g_modDirectory = modDirectory;
     LogInfo("Loaded config from " + path);

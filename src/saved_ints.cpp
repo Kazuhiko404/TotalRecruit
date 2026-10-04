@@ -3,6 +3,7 @@
 #include "feeding_ledger.h"
 #include "submission_tracker.h"
 #include "temp_member.h"
+#include "helper.h"
 
 namespace totalrecruit
 {
@@ -14,6 +15,8 @@ const SavedIntField kFields[] = {
     { "total_recruit.reject_cooldown_until", &SavedRejectCooldown, &RestoreSavedRejectCooldown },
     { "total_recruit.temp_expiry_hour", &SavedTempExpiryHour, &RestoreSavedTempExpiryHour },
     { "total_recruit.temp_strikes",     &SavedTempStrikes,    &RestoreSavedTempStrikes },
+    { "total_recruit.helper_expiry_hour", &SavedHelperExpiryHour, &RestoreSavedHelperExpiryHour },
+    { "total_recruit.helper_reject_until", &SavedHelperRejectUntil, &RestoreSavedHelperRejectUntil },
 };
 } // namespace
 

@@ -78,6 +78,7 @@
     <ClCompile Include="personality_groups_tests.cpp" />
     <ClCompile Include="ally_tier_rules_tests.cpp" />
     <ClCompile Include="temp_member_rules_tests.cpp" />
+    <ClCompile Include="helper_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -122,6 +123,7 @@
     <ClCompile Include="..\..\src\personality_groups.cpp" />
     <ClCompile Include="..\..\src\ally_tier_rules.cpp" />
     <ClCompile Include="..\..\src\temp_member_rules.cpp" />
+    <ClCompile Include="..\..\src\helper_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

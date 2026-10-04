@@ -817,6 +817,59 @@
     ],
     "approaching": [
       "Se acerca para hablar contigo"
+    ],
+    "helperOffer": [
+      "Quiere ofrecerte ayuda"
+    ]
+  },
+  "helperEvent": {
+    "_comment": "Ayudante gratis: un aliado mucho mas fuerte se acerca a ofrecerte compania. {name} = su nombre.",
+    "approach": [
+      "{name}: Eh, espera. Puedo ayudarte.",
+      "{name}: Te vi en apuros. Te acompano un tiempo.",
+      "{name}: No vas solo. Dejame ir contigo."
+    ],
+    "approachNotice": [
+      "{name} se acerca para ofrecerte ayuda."
+    ],
+    "rejected": [
+      "Como quieras. Suerte en el camino.",
+      "Esta bien. Otra vez sera."
+    ],
+    "rejectedNotice": [
+      "{name}: rechazaste su ayuda."
+    ],
+    "debugSelect": [
+      "[TotalRecruit] Selecciona un NPC que no sea tuyo."
+    ]
+  },
+  "helper": {
+    "_comment": "Ayudante gratis ya acompanandote. notice.* va sobre su cabeza: una linea corta y sin acentos. {name} = su nombre, {days} = dias que te acompana.",
+    "notice": {
+      "start": [
+        "Te cubro las espaldas"
+      ],
+      "expiring": [
+        "Me ire pronto"
+      ],
+      "farewell": [
+        "Hasta aqui llego. Suerte"
+      ],
+      "betrayed": [
+        "No vuelvo a ayudarte"
+      ],
+      "rearmed": [
+        "Sigo contigo"
+      ]
+    },
+    "started": [
+      "{name} te acompanara {days} dias. No acepta ordenes."
+    ],
+    "left": [
+      "{name} cumplio su palabra y sigue su camino."
+    ],
+    "betrayed": [
+      "{name} dejo de ayudarte: tu grupo lo ataco."
     ]
   },
   "tempMember": {
@@ -1035,6 +1088,9 @@
       "temp": {
         "daysLeft": "Temporal: le quedan {need} dias"
       },
+      "helper": {
+        "daysLeft": "Ayudante: le quedan {need} dias"
+      },
       "faction": {
         "honour": "Su honor no trata con tu reputacion",
         "greedy": "Te odia: ni por dinero"
@@ -1096,6 +1152,9 @@
       "decline": "RECHAZAR",
       "forgive": "PERDONAR"
     },
+    "route": {
+      "helper": "Ayuda"
+    },
     "info": {
       "price": "PRECIO",
       "purse": "TIENES",
@@ -1112,7 +1171,8 @@
       "care": "{name} te debe la comida y las curas, y desea unirse a tu grupo.",
       "rescue": "{name} te debe la vida y desea unirse a tu grupo.",
       "joins": "{name} desea unirse a tu grupo.",
-      "submitted": "{name} se arrodilla y te pide unirse a tu grupo."
+      "submitted": "{name} se arrodilla y te pide unirse a tu grupo.",
+      "helper": "{name} te ofrece acompanarte {days} dias, gratis. No podras darle ordenes."
     },
     "reason": {
       "_comment": "Motivo en rojo cuando GOLPEAR / NOQUEAR no estan en la ventana (submissionAllowBeating apagado): no le pide al jugador que lo hiera.",

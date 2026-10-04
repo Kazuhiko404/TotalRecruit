@@ -98,6 +98,9 @@ std::string FactionStringId(Character* character);
 // The character the player has selected (PlayerInterface::selectedObject), the
 // player's own included. NULL when nothing, or not a character, is selected.
 Character* SafeSelectedCharacter();
+// The character `who` is attacking right now (Character::getAttackTarget), or false
+// when there is none or it cannot be read. The free helper fights it (helper.cpp).
+bool SafeAttackTargetOf(Character* who, Character** out);
 // The raw-pointer answer to "is this object a character?" for one RootObject.
 bool SafeAsCharacter(RootObject* object, Character** out);
 

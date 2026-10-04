@@ -71,5 +71,21 @@ void ReapplyRun(Character* npc);
 // Gives back the speed order BeginRun saved. Safe without a BeginRun; clears the
 // slot either way. NULL (the NPC is gone) only clears it.
 void EndRun(Character* npc);
+
+// The free helper's escort (helper.h), per NPC and stateless, so any number of
+// helpers can use them:
+//   GuardLeader  addOrder(NULL, `task`, leader, no shift, clear, leader's position):
+//                the per-character task the engine's own orders use (Character.h
+//                addOrder, proven in TotalSparring fight_starter.cpp and
+//                TotalPredator predator_logic.cpp). `task` is the engine's TaskType
+//                as an int (BODYGUARD or FOLLOW_PLAYER_ORDER).
+//   AttackFor    TotalSparring fight_starter.cpp IssueAttackOrderGuarded without the
+//                duel's side: addOrder(NULL, FOCUSED_MELEE_ATTACK, target, no shift,
+//                clear, the helper's own position) + attackTarget(target).
+bool GuardLeader(Character* npc, Character* leader, int task);
+bool AttackFor(Character* npc, Character* target);
+// The engine's TaskType values GuardLeader takes, so callers need no engine header.
+int BodyguardTask();
+int FollowPlayerTask();
 } // namespace NpcMotion
 } // namespace totalrecruit

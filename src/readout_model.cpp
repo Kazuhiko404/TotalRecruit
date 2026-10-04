@@ -129,14 +129,15 @@ ReadoutLineView PrimaryLine(const ReadoutInput& in)
 }
 
 
-// A temporary member's card: they already joined, so only the days they have left.
-ReadoutView TempMemberReadout(const ReadoutInput& in)
+// A temporary member's or a helper's card: nothing to decide any more, only the days
+// they have left.
+ReadoutView DaysLeftReadout(int lineId, int daysLeft)
 {
     ReadoutView v;
     v.visible = true;
     v.route = ReadoutRoute_Free;
-    v.primary.id = kLineTempMemberDaysLeft;
-    v.primary.need = in.tempDaysLeft;
+    v.primary.id = lineId;
+    v.primary.need = daysLeft;
     v.primary.tone = ReadoutTone_Good;
     return v;
 }
@@ -146,7 +147,12 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
 {
     if (in.tempMember)
     {
-        return TempMemberReadout(in);
+        return DaysLeftReadout(kLineTempMemberDaysLeft, in.tempDaysLeft);
+    }
+    // A free helper's card (helper.h): the same shape, their own line.
+    if (in.helper)
+    {
+        return DaysLeftReadout(kLineHelperDaysLeft, in.helperDaysLeft);
     }
     ReadoutView v;
     if (IsHiddenReason(in.verdict.reasonKey))

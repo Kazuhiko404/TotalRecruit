@@ -100,6 +100,21 @@ bool ResumeGuarded(Character* npc)
     return true;
 }
 
+bool GuardGuarded(Character* npc, Character* leader, TaskType task)
+{
+    const Ogre::Vector3 at = leader->getPosition();
+    npc->addOrder(NULL, task, leader, false, true, at);
+    return true;
+}
+
+bool AttackForGuarded(Character* npc, Character* target)
+{
+    const Ogre::Vector3 at = npc->getPosition();
+    npc->addOrder(NULL, FOCUSED_MELEE_ATTACK, target, false, true, at);
+    npc->attackTarget(target);
+    return true;
+}
+
 bool SafeReadSpeedOrders(Character* npc, MoveSpeed* out)
 {
     TR_TRY { *out = npc->getMovementSpeedOrders(); return true; }
@@ -257,6 +272,32 @@ void EndRun(Character* npc)
     if (npc == NULL)
         return;
     SafeRestoreSpeed(npc, g_savedSpeed);
+}
+
+bool GuardLeader(Character* npc, Character* leader, int task)
+{
+    if (npc == NULL || leader == NULL)
+        return false;
+    TR_TRY { return GuardGuarded(npc, leader, (TaskType)task); }
+    TR_CATCH { return false; }
+}
+
+bool AttackFor(Character* npc, Character* target)
+{
+    if (npc == NULL || target == NULL)
+        return false;
+    TR_TRY { return AttackForGuarded(npc, target); }
+    TR_CATCH { return false; }
+}
+
+int BodyguardTask()
+{
+    return (int)BODYGUARD;
+}
+
+int FollowPlayerTask()
+{
+    return (int)FOLLOW_PLAYER_ORDER;
 }
 } // namespace NpcMotion
 } // namespace totalrecruit

@@ -220,6 +220,21 @@ var POPUP_STATES = [
     }
   },
   {
+    id: 'helperOffer',
+    title: 'Free helper offers to escort you',
+    note: 'Ayuda, the event (helper.cpp): an allied Good or Neutral NPC more than <code>helperMinLevelLead</code> (10) levels over the leader walked up (the submission walk-up, <code>approach_driver.h</code>) after winning its daily roll (<code>helperOfferChancePerDay</code> 0.15). Free; two answers: ACEPTAR (it escorts and fights for you for the days shown, in its own faction: no orders) and RECHAZAR (no offer again for <code>helperRejectCooldownDays</code>). The X is no answer: it walks off and does not ask again that day. No chance row: the roll was made before it set off.',
+    // facts: BuildHelperOfferView("Beep el Sabio", 4)
+    vm: {
+      title: 'Reclutamiento', name: 'Beep el Sabio', route: 'libre', routeTag: 'Ayuda',
+      body: 'Beep el Sabio te ofrece acompanarte 4 dias, gratis. No podras darle ordenes.',
+      showPrice: true, priceText: 'Gratis', priceFree: true,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: '', cancel: 'RECHAZAR'
+    }
+  },
+  {
     id: 'rescue',
     title: 'Rescue',
     note: 'Rescate: you saved them and they owe you (<code>Reason_RescueJoins</code>). Free: PRECIO says Gratis in green so the player knows no money moves.',

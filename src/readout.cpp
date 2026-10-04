@@ -16,6 +16,7 @@
 #include "recruit_overlay.h"
 #include "rules.h"
 #include "temp_member.h"
+#include "helper.h"
 
 #include <cstdio>
 
@@ -152,6 +153,12 @@ bool WorkOut(Character* character, const char* source)
         // One of the squad for a few days (temp_member.h): the card only counts them.
         input.tempMember = true;
         input.tempDaysLeft = daysLeft;
+    }
+    else if (HelperDaysLeft(character, &daysLeft))
+    {
+        // A free helper (helper.h): the card only counts the days they have left.
+        input.helper = true;
+        input.helperDaysLeft = daysLeft;
     }
     else
     {

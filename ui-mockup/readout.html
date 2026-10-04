@@ -46,6 +46,7 @@ is shown on hover.</p>
   <button class="tab" data-s="notice" aria-pressed="false">Someone wants to talk (head notice)</button>
   <button class="tab" data-s="noticeselect" aria-pressed="false">Select the one who called</button>
   <button class="tab" data-s="tempmember" aria-pressed="false">Temporary member (squad notices)</button>
+  <button class="tab" data-s="helper" aria-pressed="false">Free helper (offer and escort notices)</button>
 </div>
 <div class="scene-wrap"><div class="scene wide" id="scene"></div></div>
 <p class="hint">Who is worth talking to is still marked by the vanilla talk marker (<code>hasDialogue_Fast</code>); that answer is
@@ -257,6 +258,27 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       placeInto(readoutHTML(temp, false), anchorOf(200), null);
       placeInto(headNoticeHTML('Gor el Viejo', TEMP_MEMBER.warning), anchorOf(640), null);
       placeInto(headNoticeHTML('Sana Roja', TEMP_MEMBER.expiring), anchorOf(1040), null);
+      return;
+    }
+    if (mode === 'helper') {
+      // Free helpers (src/helper.cpp). The left one is walking up to offer; the middle one is
+      // escorting the player and is selected: his card only counts the days left; the right
+      // one has just been accepted. None of them is in the squad: no portrait, no orders.
+      h += '<div class="npc" style="left:200px"></div><div class="npc" style="left:640px"></div>' +
+           '<div class="npc" style="left:1040px"></div>';
+      h += '<div class="selring" style="left:629px"></div>';
+      h += '<div class="callout" style="left:300px;top:16px;max-width:560px">Helpers stay in their own faction, ' +
+           'so these are ordinary notices. Walking up: "' + HELPER.offer + '" (the popup "Free helper offers to ' +
+           'escort you", section 5, opens on arrival). Accepted: "' + HELPER.start + '". Before the end: "' +
+           HELPER.expiring + '". Leaving: "' + HELPER.farewell + '", or "' + HELPER.betrayed + '" when the squad ' +
+           'turned on them; after a load: "' + HELPER.rearmed + '". Each also has a roller line with the name.</div>';
+      scene.innerHTML = h;
+      var helper = { name: 'Beep el Sabio', route: 'libre', routeLabel: 'Libre', showStress: false,
+                     showChance: false, showDefeats: false, showFood: false,
+                     why: { text: HELPER.card, tone: 'ok' }, alt: null };
+      placeInto(headNoticeHTML('Sana Roja', HELPER.offer), anchorOf(200), null);
+      placeInto(readoutHTML(helper, false), anchorOf(640), null);
+      placeInto(headNoticeHTML('Gor el Viejo', HELPER.start), anchorOf(1040), null);
       return;
     }
     // Default: the player pressed Hablar on the caged bandit in the middle of the screen.

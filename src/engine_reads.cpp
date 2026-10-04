@@ -379,6 +379,23 @@ bool SafeAsCharacter(RootObject* object, Character** out)
     TR_CATCH { return false; }
 }
 
+// hand has no destructor (TotalSparring fight_starter.cpp InitCombatModeGuarded), so
+// it may live in the guarded frame.
+bool SafeAttackTargetOf(Character* who, Character** out)
+{
+    *out = NULL;
+    if (who == NULL)
+    {
+        return false;
+    }
+    TR_TRY
+    {
+        *out = who->getAttackTarget().getCharacter();
+        return *out != NULL;
+    }
+    TR_CATCH { return false; }
+}
+
 bool CharactersNear(const Ogre::Vector3& centre, float radius, std::vector<Character*>* out)
 {
     lektor<RootObject*> nearby;

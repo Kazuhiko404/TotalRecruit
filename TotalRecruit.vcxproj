@@ -145,6 +145,9 @@
     <ClCompile Include="src\ally_tier_rules.cpp" />
     <ClCompile Include="src\temp_member.cpp" />
     <ClCompile Include="src\temp_member_rules.cpp" />
+    <ClCompile Include="src\helper_rules.cpp" />
+    <ClCompile Include="src\helper.cpp" />
+    <ClCompile Include="src\approach_driver.cpp" />
     <ClCompile Include="src\squad_leave.cpp" />
     <ClCompile Include="src\saved_strings.cpp" />
     <ClCompile Include="src\npc_motion.cpp" />
@@ -236,6 +239,9 @@
     <ClInclude Include="src\ally_tier_rules.h" />
     <ClInclude Include="src\temp_member.h" />
     <ClInclude Include="src\temp_member_rules.h" />
+    <ClInclude Include="src\helper_rules.h" />
+    <ClInclude Include="src\helper.h" />
+    <ClInclude Include="src\approach_driver.h" />
     <ClInclude Include="src\squad_leave.h" />
     <ClInclude Include="src\saved_strings.h" />
     <ClInclude Include="src\npc_motion.h" />

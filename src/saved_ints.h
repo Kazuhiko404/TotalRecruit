@@ -16,6 +16,10 @@
 //                                  submission_tracker  game hour the reject cooldown ends
 //   total_recruit.temp_expiry_hour temp_member.h   game hour a temporary member's stay ends
 //   total_recruit.temp_strikes     temp_member.h   a temporary member's mistreatment strikes
+//   total_recruit.helper_expiry_hour
+//                                  helper.h        game hour a free helper's escort ends
+//   total_recruit.helper_reject_until
+//                                  helper.h        game hour a helper may offer again
 //
 // Strings ride the same hooks through saved_strings.h.
 //

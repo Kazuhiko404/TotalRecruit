@@ -32,6 +32,9 @@ const int kLineAllyPaidAsk = Reason_Count + 4;
 // The id of "Temporal: le quedan {need} dias": a temporary squad member's card
 // (temp_member.h). The days travel in the line's `need`.
 const int kLineTempMemberDaysLeft = Reason_Count + 5;
+// The id of "Ayudante: le quedan {need} dias": a free helper's card (helper.h). The
+// days travel in the line's `need`.
+const int kLineHelperDaysLeft = Reason_Count + 6;
 
 int ReadoutLineCount();
 // messages.json path ("readout.line.cats.ask") and the built-in text used when the

@@ -260,6 +260,7 @@ OfferTexts DefaultOfferTexts()
     t.ignore = "IGNORAR";
     t.decline = "RECHAZAR";
     t.forgive = "PERDONAR";
+    t.routeHelper = "Ayuda";
 
     t.routeFree = "Libre";
     t.routeCaptivity = "Cautiverio";
@@ -284,6 +285,7 @@ OfferTexts DefaultOfferTexts()
     t.bodyRescue = "{name} te debe la vida y desea unirse a tu grupo.";
     t.bodyJoins = "{name} desea unirse a tu grupo.";
     t.bodySubmitted = "{name} se arrodilla y te pide unirse a tu grupo.";
+    t.bodyHelper = "{name} te ofrece acompa\xc3\xb1" "arte {days} d\xc3\xad" "as, gratis. No podr\xc3\xa1s darle \xc3\xb3rdenes.";
     t.reasonDefiantNoBeat = "Sigue desafiante: d\xc3\xa9jalo con hambre";
 
     t.allyFreeBody = "{name} es tu aliado (nivel {level}) y se une gratis por amistad.";
@@ -441,6 +443,21 @@ OfferView BuildMercyOfferView(const std::string& name, const std::string& pleaLi
     view.bodyLine = pleaLine;
     view.acceptLabel = t.accept;
     view.extraLabel = canIgnore ? LetGoLabel(inCage, t.ignore) : std::string();
+    view.cancelLabel = t.decline;
+    return view;
+}
+
+OfferView BuildHelperOfferView(const std::string& name, int days, const OfferTexts& t)
+{
+    OfferView view = Frame(name, ReadoutRoute_Free, t);
+    view.routeTag = t.routeHelper;
+    std::string body = Fill(t.bodyHelper, name, 0);
+    ReplaceAll(&body, "{days}", PercentNumber(days));
+    view.bodyLine = body;
+    view.showPrice = true;
+    view.priceFree = true;
+    view.priceText = t.free;
+    view.acceptLabel = t.accept;
     view.cancelLabel = t.decline;
     return view;
 }

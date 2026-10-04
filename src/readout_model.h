@@ -88,11 +88,15 @@ struct ReadoutInput
     // else above is read.
     bool tempMember;
     int tempDaysLeft;
+    // A free helper escorting the player (helper.h): the card only counts the days
+    // they have left (`helperDaysLeft`), like a temporary member's.
+    bool helper;
+    int helperDaysLeft;
 
     ReadoutInput()
         : route(Route_FreeWorld), haveCore(true), core(), verdict(),
           holdKnown(false), hoursHeld(0.0f), mercyPending(false), rollKeyed(false),
-          tempMember(false), tempDaysLeft(0)
+          tempMember(false), tempDaysLeft(0), helper(false), helperDaysLeft(0)
     {
     }
 };

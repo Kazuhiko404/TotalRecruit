@@ -72,6 +72,8 @@ struct OfferTexts
     std::string decline;
     // The submission event's third answer: let them go (submission_director.h).
     std::string forgive;
+    // The free helper's route tag (helper.h): "Ayuda".
+    std::string routeHelper;
 
     std::string routeFree;
     std::string routeCaptivity;
@@ -97,6 +99,9 @@ struct OfferTexts
     std::string bodyJoins;
     // The submission event: "{name} se arrodilla y te pide unirse a tu grupo."
     std::string bodySubmitted;
+    // The free helper: "{name} te ofrece acompanarte {days} dias, gratis. No podras
+    // darle ordenes."
+    std::string bodyHelper;
 
     // Balanced allies by level (ally_tier_rules.h, popup.ally.*). Templates also
     // take {level} (the NPC's), {pct} (the friendship discount) and {days}.
@@ -276,4 +281,10 @@ OfferView BuildMercyOfferView(const std::string& name, const std::string& pleaLi
 // RECHAZAR (defeats wiped, no recruiting for the cooldown, hostile again).
 OfferView BuildSubmissionOfferView(const std::string& name, bool inCage,
                                    const OfferTexts& texts);
+
+// An ally that walked up to offer free help (helper.cpp): the Ayuda tag, the offer
+// with its `days` as the body, free, and two answers -- ACEPTAR (they escort the
+// player for those days, taking no orders) and RECHAZAR (no offer again for the
+// reject cooldown).
+OfferView BuildHelperOfferView(const std::string& name, int days, const OfferTexts& texts);
 } // namespace totalrecruit
