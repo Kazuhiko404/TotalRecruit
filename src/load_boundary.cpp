@@ -20,6 +20,7 @@
 #include "submission_tracker.h"
 #include "temp_member.h"
 #include "helper.h"
+#include "leave_homing.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4091)
@@ -76,6 +77,7 @@ void ResetSessionState()
     ForgetAllPlayerMeals();
     ForgetAllSubmissionMemory();
     ForgetAllTempMembers();
+    ForgetLeaveHoming();
     SessionHaggleLedger().Clear();
 
     // Last: the ids the keys above were made from.

@@ -18,8 +18,11 @@
 //   - What they say, over their head (head_notice.h RaiseSquadHeadNotice): on
 //     joining, on each strike, the last warning, "me ire pronto", and the farewell
 //     (a roller line too). messages.json block "tempMember".
+//   - The join spot: where they stood when they joined, saved as "x,z"
+//     (saved_strings.h, total_recruit.temp_join_spot; leave_homing_rules.h).
 //   - The leave (squad_leave.h, KEP's dismiss sequence): back to their home faction,
-//     in a platoon of their own. Then the reject cooldown (submission_tracker.h) runs
+//     in a platoon of their own with the Wandering Squad's package; without that
+//     package they walk back to the join spot (leave_homing.h). Then the reject cooldown (submission_tracker.h) runs
 //     for tempMemberRejoinCooldownDays: they want nothing to do with the player for
 //     a while, so they cannot be taken on again straight away.
 //   - The card: a selected temporary member shows "Temporal: le quedan N dias"
@@ -59,4 +62,6 @@ int SavedTempStrikes(const std::string& persistedId);
 void RestoreSavedTempStrikes(const std::string& persistedId, int strikes);
 std::string SavedTempHomeFaction(const std::string& persistedId);
 void RestoreSavedTempHomeFaction(const std::string& persistedId, const std::string& factionId);
+std::string SavedTempJoinSpot(const std::string& persistedId);
+void RestoreSavedTempJoinSpot(const std::string& persistedId, const std::string& spot);
 } // namespace totalrecruit

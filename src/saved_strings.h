@@ -10,6 +10,8 @@
 //
 //   total_recruit.temp_home_faction   temp_member.h   the faction a temporary
 //                                                     member goes back to
+//   total_recruit.temp_join_spot      temp_member.h   where a temporary member
+//                                                     joined, "x,z" world units
 //
 // Contract for each row (the same as saved_ints.h):
 //   saved(id)          the value to write for the character carrying `id`. Always

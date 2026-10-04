@@ -6,8 +6,11 @@
 #include "config.h"
 #include "engine_reads.h"
 #include "head_notice.h"
+#include "leave_homing.h"
+#include "leave_homing_rules.h"
 #include "log.h"
 #include "messages.h"
+#include "npc_motion.h"
 #include "recruit_core.h"
 #include "squad_leave.h"
 #include "submission_rules.h"
@@ -30,6 +33,8 @@ const int kMaxSquad = 256;
 TempMemberBook g_book;
 // The faction each member goes back to, by the same key.
 std::map<CharKey, std::string> g_homeFaction;
+// Where each member stood when they joined, "x,z" in world units (leave_homing_rules.h).
+std::map<CharKey, std::string> g_joinSpot;
 
 struct BookMutex
 {
@@ -70,6 +75,7 @@ void RemoveMember(const CharKey& key)
     Guard lock;
     g_book.Remove(key);
     g_homeFaction.erase(key);
+    g_joinSpot.erase(key);
 }
 
 std::string HomeFactionOf(const CharKey& key)
@@ -77,6 +83,20 @@ std::string HomeFactionOf(const CharKey& key)
     Guard lock;
     std::map<CharKey, std::string>::const_iterator it = g_homeFaction.find(key);
     return it != g_homeFaction.end() ? it->second : std::string();
+}
+
+// The saved join spot, false when none was kept (joined before this was saved).
+bool JoinSpotOf(const CharKey& key, int* x, int* z)
+{
+    std::string text;
+    {
+        Guard lock;
+        std::map<CharKey, std::string>::const_iterator it = g_joinSpot.find(key);
+        if (it == g_joinSpot.end())
+            return false;
+        text = it->second;
+    }
+    return ParseJoinSpot(text, x, z);
 }
 
 bool HaveMembers()
@@ -158,7 +178,10 @@ void Leave(Character* member, const CharKey& key, TempLeave why, double nowHours
 {
     const std::string name = CharacterName(member);
     const bool mistreated = why == TempLeave_Mistreated;
-    if (!LeaveSquad(member, HomeFactionOf(key)))
+    int joinX = 0, joinZ = 0;
+    const bool haveSpot = JoinSpotOf(key, &joinX, &joinZ);
+    bool wander = false;
+    if (!LeaveSquad(member, HomeFactionOf(key), &wander))
     {
         // They stay as an ordinary member rather than being asked again every tick.
         RemoveMember(key);
@@ -185,6 +208,15 @@ void Leave(Character* member, const CharKey& key, TempLeave why, double nowHours
 
     RemoveMember(key);
     LogInfo("[temp] " + name + (mistreated ? " left: mistreated." : " left: time up."));
+
+    // No wander package: they walk back to where they joined instead of standing.
+    if (!wander)
+    {
+        if (haveSpot)
+            StartLeaveHoming(member, joinX, joinZ);
+        else
+            LogError("[temp] " + name + " has no wander package and no saved join spot; they stay put.");
+    }
 }
 
 void WatchMember(Character* member, const CharKey& key, double nowHours, const TempMembers& config)
@@ -229,10 +261,15 @@ void OnRecruitedTemporarily(Character* npc, int days, const std::string& homeFac
     }
 
     const int expiry = TempExpiryHour(now, days);
+    float x = 0.0f, y = 0.0f, z = 0.0f;
+    const bool placed = NpcMotion::Position(npc, &x, &y, &z);
+    const std::string spot = placed ? FormatJoinSpot((int)x, (int)z) : std::string();
     {
         Guard lock;
         g_book.Join(key, expiry);
         g_homeFaction[key] = homeFactionId;
+        if (placed)
+            g_joinSpot[key] = spot;
     }
     RaiseSquadHeadNotice(npc, WithDays(Say("tempMember.notice.join", "Te acompanare {days} dias", npc),
                                        days),
@@ -241,8 +278,8 @@ void OnRecruitedTemporarily(Character* npc, int days, const std::string& homeFac
     char note[96] = { 0 };
     _snprintf_s(note, sizeof(note), _TRUNCATE, " [temp] joined for %d days (until hour %d), home ",
                 days, expiry);
-    LogInfo(name + note + (homeFactionId.empty() ? std::string("unknown") : homeFactionId) +
-            " [key " + key.ToString() + "]");
+    LogInfo(name + note + (homeFactionId.empty() ? std::string("unknown") : homeFactionId) + ", joined at " +
+            (placed ? "(" + spot + ")" : std::string("an unread spot")) + " [key " + key.ToString() + "]");
 }
 
 void TempMemberTick()
@@ -298,6 +335,7 @@ void ForgetAllTempMembers()
     Guard lock;
     g_book.Clear();
     g_homeFaction.clear();
+    g_joinSpot.clear();
     g_nextTick = 0;
 }
 
@@ -351,5 +389,26 @@ void RestoreSavedTempHomeFaction(const std::string& persistedId, const std::stri
         return;
     Guard lock;
     g_homeFaction[CharKey::FromId(persistedId)] = factionId;
+}
+
+std::string SavedTempJoinSpot(const std::string& persistedId)
+{
+    if (persistedId.empty())
+        return std::string();
+    const CharKey key = CharKey::FromId(persistedId);
+    Guard lock;
+    if (g_book.Find(key) == NULL)
+        return std::string();
+    std::map<CharKey, std::string>::const_iterator it = g_joinSpot.find(key);
+    return it != g_joinSpot.end() ? it->second : std::string();
+}
+
+void RestoreSavedTempJoinSpot(const std::string& persistedId, const std::string& spot)
+{
+    int x = 0, z = 0;
+    if (persistedId.empty() || !ParseJoinSpot(spot, &x, &z))
+        return;
+    Guard lock;
+    g_joinSpot[CharKey::FromId(persistedId)] = spot;
 }
 } // namespace totalrecruit

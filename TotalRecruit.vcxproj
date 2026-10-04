@@ -147,6 +147,8 @@
     <ClCompile Include="src\ally_tier_rules.cpp" />
     <ClCompile Include="src\temp_member.cpp" />
     <ClCompile Include="src\temp_member_rules.cpp" />
+    <ClCompile Include="src\leave_homing_rules.cpp" />
+    <ClCompile Include="src\leave_homing.cpp" />
     <ClCompile Include="src\helper_rules.cpp" />
     <ClCompile Include="src\helper.cpp" />
     <ClCompile Include="src\ai_packages.cpp" />
@@ -244,6 +246,8 @@
     <ClInclude Include="src\ally_tier_rules.h" />
     <ClInclude Include="src\temp_member.h" />
     <ClInclude Include="src\temp_member_rules.h" />
+    <ClInclude Include="src\leave_homing_rules.h" />
+    <ClInclude Include="src\leave_homing.h" />
     <ClInclude Include="src\helper_rules.h" />
     <ClInclude Include="src\helper.h" />
     <ClInclude Include="src\ai_packages.h" />

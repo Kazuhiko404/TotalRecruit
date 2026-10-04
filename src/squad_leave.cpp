@@ -1,6 +1,7 @@
 #include "common.h"
 #include "squad_leave.h"
 #include "engine_reads.h"
+#include "ai_packages.h"
 #include "log.h"
 
 // AI/AITaskSystem.h (the task system) and not Tasker.h: the two define taskPriority,
@@ -206,10 +207,31 @@ void LogStep(const std::string& name, const char* what)
 {
     LogError("[temp] " + name + ": leaving the squad stopped at " + what + ".");
 }
+
+// The dismiss reset on the new platoon (ai_packages.h ResetToTemplate). True when the
+// Wandering Squad's package was given.
+bool GiveWanderPackage(Character* member, const std::string& name)
+{
+    const AiPackages::Outcome o = AiPackages::ResetToTemplate(member);
+    if (o.ok)
+    {
+        LogInfo("[temp] " + name + " native wander package " +
+                (o.package.empty() ? std::string("(pending)") : o.package) + " assigned (" + o.why + ").");
+    }
+    else
+    {
+        LogError("[temp] " + name + " native wander package failed: " + o.why + ".");
+    }
+    return o.ok;
+}
 } // namespace
 
-bool LeaveSquad(Character* member, const std::string& homeFactionId)
+bool LeaveSquad(Character* member, const std::string& homeFactionId, bool* wanderAssigned)
 {
+    if (wanderAssigned != NULL)
+    {
+        *wanderAssigned = false;
+    }
     if (member == NULL)
     {
         return false;
@@ -235,12 +257,18 @@ bool LeaveSquad(Character* member, const std::string& homeFactionId)
     }
 
     GameData* squadTemplate = SafeSquadTemplate();
+    bool wander = false;
     if (squadTemplate == NULL || !SafeJoinNewPlatoon(member, faction, squadTemplate))
     {
         // Out of the player's faction already; without a platoon of their own they
-        // stand where they are until their faction's AI picks them up.
+        // stand where they are until their faction's AI picks them up (the caller
+        // walks them back to where they joined).
         LogStep(name, squadTemplate == NULL ? "finding the squad template 5006-squad.mod"
                                             : "creating their own platoon");
+    }
+    else
+    {
+        wander = GiveWanderPackage(member, name);
     }
 
     if (!SafeClearTasks(member))
@@ -258,6 +286,10 @@ bool LeaveSquad(Character* member, const std::string& homeFactionId)
         return false;
     }
     LogInfo("[temp] " + name + " left the squad for faction " + used + ".");
+    if (wanderAssigned != NULL)
+    {
+        *wanderAssigned = wander;
+    }
     return true;
 }
 } // namespace totalrecruit

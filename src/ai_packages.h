@@ -16,6 +16,10 @@
 //                     (PlatoonTool.cpp:170-180): replacementAIPackageSID = "",
 //                     clearAllPackages, addFallbackPackages + addPackages(the platoon's
 //                     squadTemplate), clearPermajobs.
+//   ResetToTemplate   KEP's dismiss (CharacterExtension.cpp:91-105) after a new
+//                     platoon: _flagCleared = true, leader/squad/squad2/slave jobs
+//                     cleared, addPackages(the platoon's squad template). Read back:
+//                     a current package, or at least the package lists filled.
 //   DetachToOwnPlatoon  Faction::createNewEmptyActivePlatoon(the platoon's own squad
 //                     template, permanent, where it stands) + addActiveObject: a
 //                     contract is the whole platoon's, so a helper in a squad of others
@@ -64,6 +68,9 @@ bool HasContract(Character* npc, Character* employerIs);
 
 // Ends the platoon's contract and gives it back the packages of its own template.
 Outcome EndContract(Character* npc);
+
+// The packages of the platoon's own squad template, after a dismiss (see above).
+Outcome ResetToTemplate(Character* npc);
 
 // The platoon's current package name, "" when there is none or it cannot be read.
 std::string CurrentPackageName(Character* npc);

@@ -51,4 +51,5 @@ void RunPersonalityGroupsTests();
 void RunAllyTierRulesTests();
 void RunTempMemberRulesTests();
 void RunHelperRulesTests();
+void RunLeaveHomingRulesTests();
 void RunOverlayVisibilityRulesTests();

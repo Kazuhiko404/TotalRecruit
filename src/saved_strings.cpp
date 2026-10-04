@@ -7,6 +7,7 @@ namespace
 {
 const SavedStringField kFields[] = {
     { "total_recruit.temp_home_faction", &SavedTempHomeFaction, &RestoreSavedTempHomeFaction },
+    { "total_recruit.temp_join_spot",    &SavedTempJoinSpot,    &RestoreSavedTempJoinSpot },
 };
 } // namespace
 

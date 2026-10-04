@@ -196,6 +196,31 @@ bool SafeResetPackages(Blackboard* bb, GameData* squadTemplate)
     TR_CATCH { return false; }
 }
 
+// KEP's dismiss reset. 1 = done, 0 = no template, -1 = faulted.
+int SafeDismissReset(Blackboard* bb, GameData* squadTemplate)
+{
+    if (squadTemplate == NULL)
+        return 0;
+    TR_TRY
+    {
+        bb->_flagCleared = true;
+        bb->leaderJobs.clear();
+        bb->squadJobs.clear();
+        bb->squadJobs2.clear();
+        bb->slaveJobs.clear();
+        bb->addPackages(squadTemplate);
+        return 1;
+    }
+    TR_CATCH { return -1; }
+}
+
+// How many package lists the blackboard holds; -1 unread.
+int SafePackageListCount(Blackboard* bb)
+{
+    TR_TRY { return (int)bb->packagesMain.size(); }
+    TR_CATCH { return -1; }
+}
+
 bool SafeClearPermajobs(Character* npc)
 {
     TR_TRY
@@ -359,6 +384,30 @@ Outcome EndContract(Character* npc)
               (reset ? ", packages reset to the squad template" : ", package reset faulted") +
               (permajobs ? "" : ", clearPermajobs failed");
     out.package = NameOf(bb);
+    return out;
+}
+
+Outcome ResetToTemplate(Character* npc)
+{
+    Outcome out;
+    Platoon* platoon = SafePlatoonOf(npc);
+    Blackboard* bb = SafeBlackboardOf(platoon);
+    if (bb == NULL)
+    {
+        out.why = "no platoon blackboard";
+        return out;
+    }
+    const int reset = SafeDismissReset(bb, SafeSquadTemplateOf(platoon));
+    if (reset <= 0)
+    {
+        out.why = reset == 0 ? "the platoon has no squad template" : "the package reset faulted";
+        return out;
+    }
+    out.package = NameOf(bb);
+    const int lists = SafePackageListCount(bb);
+    out.ok = !out.package.empty() || lists > 0;
+    out.why = out.ok ? (out.package.empty() ? "package lists filled, none active yet" : "package active")
+                     : "no package after addPackages";
     return out;
 }
 
