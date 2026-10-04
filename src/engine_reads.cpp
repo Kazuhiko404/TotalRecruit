@@ -1,4 +1,5 @@
 #include "engine_reads.h"
+#include "temperament_map.h"
 
 #include <kenshi/CharBody.h>
 #include <kenshi/Tasker.h>
@@ -118,6 +119,21 @@ bool SafePlayerLeader(Character** out)
         }
         *out = platoon->getSquadLeader();
         return (*out != NULL);
+    }
+    TR_CATCH { return false; }
+}
+
+bool SafeTemperament(Character* character, Temperament* out)
+{
+    TR_TRY
+    {
+        StateBroadcastData* broadcast = character->getStateBroadcast();
+        if (broadcast == NULL)
+        {
+            return false;
+        }
+        *out = ToTemperament((int)broadcast->myPersonality);
+        return true;
     }
     TR_CATCH { return false; }
 }

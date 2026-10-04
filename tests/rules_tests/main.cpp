@@ -41,6 +41,7 @@ struct Suite
 
 const Suite kSuites[] = {
     { "chance_rules", RunChanceRulesTests },
+    { "beating_stress_rules", RunBeatingStressRulesTests },
     { "price_rules",  RunPriceRulesTests },
     { "route_rules",  RunRouteRulesTests },
     { "defeat_rules", RunDefeatRulesTests },

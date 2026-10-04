@@ -5,6 +5,7 @@
 #include "temp_member.h"
 #include "helper.h"
 #include "duel_challenge_rules.h"
+#include "beating_stress.h"
 
 namespace totalrecruit
 {
@@ -19,6 +20,8 @@ const SavedIntField kFields[] = {
     { "total_recruit.helper_expiry_hour", &SavedHelperExpiryHour, &RestoreSavedHelperExpiryHour },
     { "total_recruit.helper_reject_until", &SavedHelperRejectUntil, &RestoreSavedHelperRejectUntil },
     { "total_recruit.duel_cooldown_until", &SavedDuelCooldownUntil, &RestoreSavedDuelCooldownUntil },
+    { "total_recruit.beating_stress", &SavedBeatingStress, &RestoreSavedBeatingStress },
+    { "total_recruit.beating_stress_hour", &SavedBeatingStressHour, &RestoreSavedBeatingStressHour },
 };
 } // namespace
 

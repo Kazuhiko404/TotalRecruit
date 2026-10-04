@@ -78,22 +78,26 @@ bool GrudgeIsUnforgivable(Temperament personality, const Chance& chance);
 // This is the honest 0..1, where 1 is sated and 0 is starving.
 float HungerToFullness01(float rawHunger);
 
-// The three terms StressFromState adds up, each already weighted and not yet clamped,
+// The four terms StressFromState adds up, each already weighted and not yet clamped,
 // so a readout can say what the bar is made of. Their sum, clamped to 0..1, IS
 // StressFromState; the two cannot drift because StressFromState is built from this.
+// `beaten` is the beating stress (beating_stress_rules.h): already 0..1 and weighed
+// by its own gains, so it enters as it is (clamped).
 struct StressTerms
 {
     float hunger;
     float wounds;
     float tired;
+    float beaten;
 };
 StressTerms StressTermsFromState(float rawHunger, float worstDamage, float restedState,
-                                 const Submission& sub);
+                                 float beatingStress, const Submission& sub);
 
-// How worn down a prisoner is, 0..1, derived from present state only: an empty
-// stomach, the worst wound, and missing rest. Feed them and it falls.
+// How worn down a prisoner is, 0..1: an empty stomach, the worst wound and missing
+// rest (present state: feed them and it falls), plus what Golpear and Noquear left
+// (the beating stress, fading on its own clock).
 float StressFromState(float rawHunger, float worstDamage, float restedState,
-                      const Submission& sub);
+                      float beatingStress, const Submission& sub);
 
 // Sum of every term, clamped to [floor, ceiling]. Neither end is ever certain.
 int JoinChance(const ChanceInputs& in, const Chance& chance, const Submission& sub);

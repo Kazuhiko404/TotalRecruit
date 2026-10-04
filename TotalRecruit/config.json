@@ -85,6 +85,13 @@
 
   "submissionBeatingCooldownHours": 1.0,
   "submissionKnockoutCooldownHours": 1.0,
+  "submissionBeatStressBase": 0.08,
+  "submissionKnockoutStressBase": 0.15,
+  "submissionBeatingStressMin": 0.02,
+  "submissionBeatingStressMax": 0.25,
+  "submissionBeatingStressLevelMin": 0.5,
+  "submissionBeatingStressLevelMax": 1.5,
+  "submissionBeatingStressFadeHours": 24.0,
 
   "submissionEventEnabled": true,
   "submissionApproachSeconds": 60.0,

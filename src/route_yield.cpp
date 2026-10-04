@@ -45,7 +45,7 @@ Verdict DecideFieldYield(const CoreFacts& core, const YieldExtra& extra, const C
     in.personality  = core.temperament;
     in.defeats      = core.defeats;
     in.stress       = StressFromState(core.hunger, core.worstDamage, core.restedState,
-                                      config.submission);
+                                      core.beatingStress, config.submission);
     in.unique       = core.unique;
     in.situation    = config.submission.fieldYieldBonus -
                       (ServesStandingOrganisation(core.archetype)

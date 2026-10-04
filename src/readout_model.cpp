@@ -50,31 +50,38 @@ ReadoutRoute NameRoute(const ReadoutInput& in)
     }
 }
 
-// The three parts of the bar, in whole percentage points that add up to the bar.
+// The four parts of the bar, in whole percentage points that add up to the bar.
 // Each term is scaled the same way the clamp scales the sum (when a config makes
-// the terms add past 1.0 the bar still tops out at 100), floored, and the points
-// lost to flooring go to the largest part.
+// the terms add past 1.0 the bar still tops out at 100), rounded to the nearest
+// point, and what rounding gained or lost is settled on the largest part (the
+// first of equals, in hunger, wounds, tired, beaten order).
 void SplitStress(const ReadoutInput& in, const Submission& sub, int pct, ReadoutView* out)
 {
     const StressTerms t = StressTermsFromState(in.core.hunger, in.core.worstDamage,
-                                               in.core.restedState, sub);
-    const float sum = t.hunger + t.wounds + t.tired;
+                                               in.core.restedState, in.core.beatingStress, sub);
+    const float terms[4] = { t.hunger, t.wounds, t.tired, t.beaten };
+    const float sum = terms[0] + terms[1] + terms[2] + terms[3];
     if (sum <= 0.0f || pct <= 0)
     {
-        out->hungerPts = out->woundsPts = out->tiredPts = 0;
+        out->hungerPts = out->woundsPts = out->tiredPts = out->beatenPts = 0;
         return;
     }
     const float k = (float)pct / (sum * 100.0f);
-    int parts[3] = { (int)(t.hunger * 100.0f * k), (int)(t.wounds * 100.0f * k),
-                     (int)(t.tired * 100.0f * k) };
-    const int leftover = pct - (parts[0] + parts[1] + parts[2]);
+    int parts[4] = { 0, 0, 0, 0 };
+    int total = 0;
     int biggest = 0;
-    if (t.wounds > t.hunger && t.wounds >= t.tired) biggest = 1;
-    if (t.tired > t.hunger && t.tired > t.wounds) biggest = 2;
-    parts[biggest] += leftover;
+    for (int i = 0; i < 4; ++i)
+    {
+        parts[i] = (int)(terms[i] * 100.0f * k + 0.5f);
+        total += parts[i];
+        if (terms[i] > terms[biggest]) biggest = i;
+    }
+    parts[biggest] += pct - total;
+    if (parts[biggest] < 0) parts[biggest] = 0;
     out->hungerPts = parts[0];
     out->woundsPts = parts[1];
     out->tiredPts = parts[2];
+    out->beatenPts = parts[3];
 }
 
 ReadoutLineView LineFor(int id, const ReadoutInput& in)
@@ -200,7 +207,8 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
         const float stress = in.verdict.rolled
                                  ? in.verdict.chanceInputs.stress
                                  : StressFromState(in.core.hunger, in.core.worstDamage,
-                                                   in.core.restedState, config.submission);
+                                                   in.core.restedState, in.core.beatingStress,
+                                                   config.submission);
         v.stressPct = Percent(stress);
         SplitStress(in, config.submission, v.stressPct, &v);
     }

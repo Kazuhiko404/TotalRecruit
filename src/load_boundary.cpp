@@ -15,6 +15,7 @@
 #include "insistence.h"
 #include "haggle_ledger.h"
 #include "cage_commands.h"
+#include "beating_stress.h"
 #include "feeding_ledger.h"
 #include "submission_director.h"
 #include "submission_tracker.h"
@@ -76,6 +77,7 @@ void ResetSessionState()
     ResetHoldClock();
     ResetTalkStates();
     ForgetAllDefeats();
+    ForgetAllBeatingStress();
     ForgetAllPlayerMeals();
     ForgetAllSubmissionMemory();
     ForgetAllTempMembers();

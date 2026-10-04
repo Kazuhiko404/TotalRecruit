@@ -131,6 +131,15 @@ void StressIsShownWhereTheRollReadsIt()
     CHECK(v.hungerPts == 50);
     CHECK(v.woundsPts == 14);
     CHECK(v.tiredPts == 0);
+    CHECK(v.beatenPts == 0);
+
+    // The beatings are the fourth part: 0.64 + 0.2 = 0.84.
+    ReadoutInput beaten = cage;
+    beaten.core.beatingStress = 0.2f;
+    const ReadoutView b = BuildReadout(beaten, kConfig);
+    CHECK(b.stressPct == 84);
+    CHECK(b.beatenPts == 20);
+    CHECK(b.hungerPts + b.woundsPts + b.tiredPts + b.beatenPts == 84);
 
     ReadoutInput yield = cage;
     yield.route = Route_FieldYield;
@@ -154,21 +163,26 @@ void StressIsShownWhereTheRollReadsIt()
 
 void StressPartsAlwaysAddUp()
 {
-    const char* name = "stress: the three parts add up to the bar, clamped or not";
+    const char* name = "stress: the four parts add up to the bar, clamped or not";
     for (int h = 0; h <= 6; ++h)
     {
         for (int d = 0; d <= 4; ++d)
         {
             for (int r = 0; r <= 4; ++r)
             {
-                ReadoutInput in = Input(Route_Cage, Reason_CatsAsk);
-                in.core.hunger = (float)h * 0.5f;
-                in.core.worstDamage = (float)d * 0.25f;
-                in.core.restedState = (float)r * 0.25f;
-                const ReadoutView v = BuildReadout(in, kConfig);
-                CHECK(v.hungerPts + v.woundsPts + v.tiredPts == v.stressPct);
-                CHECK(v.hungerPts >= 0 && v.woundsPts >= 0 && v.tiredPts >= 0);
-                CHECK(v.stressPct >= 0 && v.stressPct <= 100);
+                for (int b = 0; b <= 4; ++b)
+                {
+                    ReadoutInput in = Input(Route_Cage, Reason_CatsAsk);
+                    in.core.hunger = (float)h * 0.5f;
+                    in.core.worstDamage = (float)d * 0.25f;
+                    in.core.restedState = (float)r * 0.25f;
+                    in.core.beatingStress = (float)b * 0.25f;
+                    const ReadoutView v = BuildReadout(in, kConfig);
+                    CHECK(v.hungerPts + v.woundsPts + v.tiredPts + v.beatenPts == v.stressPct);
+                    CHECK(v.hungerPts >= 0 && v.woundsPts >= 0 && v.tiredPts >= 0 &&
+                          v.beatenPts >= 0);
+                    CHECK(v.stressPct >= 0 && v.stressPct <= 100);
+                }
             }
         }
     }
@@ -180,9 +194,11 @@ void StressPartsAlwaysAddUp()
     in.core.hunger = 0.0f;
     in.core.worstDamage = 1.0f;
     in.core.restedState = 0.0f;
+    in.core.beatingStress = 0.5f;
     const ReadoutView v = BuildReadout(in, heavy);
     CHECK(v.stressPct == 100);
-    CHECK(v.hungerPts + v.woundsPts + v.tiredPts == 100);
+    CHECK(v.hungerPts + v.woundsPts + v.tiredPts + v.beatenPts == 100);
+    CHECK(v.beatenPts > 0);
 }
 
 void TheRolledStressIsTheOneShown()
@@ -196,7 +212,7 @@ void TheRolledStressIsTheOneShown()
     in.verdict.chanceInputs.stress = 0.3f;
     const ReadoutView v = BuildReadout(in, kConfig);
     CHECK(v.stressPct == 30);
-    CHECK(v.hungerPts + v.woundsPts + v.tiredPts == 30);
+    CHECK(v.hungerPts + v.woundsPts + v.tiredPts + v.beatenPts == 30);
 }
 
 void TheChanceIsTheVerdictsChance()
@@ -521,18 +537,25 @@ void StressTermsMakeStressFromState()
     {
         for (int d = 0; d <= 4; ++d)
         {
-            const float hunger = (float)h * 0.5f;
-            const float dmg = (float)d * 0.25f;
-            const StressTerms t = StressTermsFromState(hunger, dmg, 0.5f, sub);
-            float sum = t.hunger + t.wounds + t.tired;
-            if (sum > 1.0f) sum = 1.0f;
-            CHECK(sum == StressFromState(hunger, dmg, 0.5f, sub));
+            for (int b = 0; b <= 4; ++b)
+            {
+                const float hunger = (float)h * 0.5f;
+                const float dmg = (float)d * 0.25f;
+                const float beaten = (float)b * 0.25f;
+                const StressTerms t = StressTermsFromState(hunger, dmg, 0.5f, beaten, sub);
+                float sum = t.hunger + t.wounds + t.tired + t.beaten;
+                if (sum > 1.0f) sum = 1.0f;
+                CHECK(sum == StressFromState(hunger, dmg, 0.5f, beaten, sub));
+            }
         }
     }
-    const StressTerms t = StressTermsFromState(0.0f, 1.0f, 0.0f, sub);
+    const StressTerms t = StressTermsFromState(0.0f, 1.0f, 0.0f, 0.4f, sub);
     CHECK(t.hunger == 0.5f);
     CHECK(t.wounds == 0.35f);
     CHECK(t.tired == 0.15f);
+    CHECK(t.beaten == 0.4f);
+    CHECK(StressTermsFromState(3.0f, 0.0f, 1.0f, 3.0f, sub).beaten == 1.0f);
+    CHECK(StressTermsFromState(3.0f, 0.0f, 1.0f, -1.0f, sub).beaten == 0.0f);
 }
 } // namespace
 

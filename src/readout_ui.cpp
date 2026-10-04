@@ -29,6 +29,8 @@ const int kBarHCompact = 5;
 const int kHeadH = 18;
 const int kLabelH = 14;
 const int kLegendH = 12;
+// The stress bar's parts: hunger, wounds, tired, beaten.
+const int kStressParts = 4;
 const int kLineH = 16;
 const int kAltH = 14;
 const int kGap = 4;
@@ -59,7 +61,8 @@ struct Card
     MyGUI::Widget* segHunger;
     MyGUI::Widget* segWounds;
     MyGUI::Widget* segTired;
-    MyGUI::Widget* swatch[3];
+    MyGUI::Widget* segBeaten;
+    MyGUI::Widget* swatch[kStressParts];
 
     MyGUI::Widget* chanceBorder;
     MyGUI::Widget* chanceBg;
@@ -77,7 +80,7 @@ struct Card
     MyGUI::TextBox* tag;
     MyGUI::TextBox* stressLabel;
     MyGUI::TextBox* stressValue;
-    MyGUI::TextBox* legend[3];
+    MyGUI::TextBox* legend[kStressParts];
     MyGUI::TextBox* chanceLabel;
     MyGUI::TextBox* chanceValue;
     MyGUI::TextBox* foodLabel;
@@ -135,9 +138,11 @@ bool BuildUnguarded()
     c.segHunger = MakeFill(c.root, kAmber);
     c.segWounds = MakeFill(c.root, kDanger);
     c.segTired = MakeFill(c.root, kIndigo);
+    c.segBeaten = MakeFill(c.root, kSoftDanger);
     c.swatch[0] = MakeFill(c.root, kAmber);
     c.swatch[1] = MakeFill(c.root, kDanger);
     c.swatch[2] = MakeFill(c.root, kIndigo);
+    c.swatch[3] = MakeFill(c.root, kSoftDanger);
 
     c.chanceBorder = MakeFill(c.root, kLine);
     c.chanceBg = MakeFill(c.root, kSumi);
@@ -156,7 +161,7 @@ bool BuildUnguarded()
     c.tag = MakeLabel(c.root, kSmallFont, kText);
     c.stressLabel = MakeLabel(c.root, kSmallFont, kMuted);
     c.stressValue = MakeLabel(c.root, kBodyFont, kText);
-    for (int i = 0; i < 3; ++i) c.legend[i] = MakeLabel(c.root, kSmallFont, kMuted);
+    for (int i = 0; i < kStressParts; ++i) c.legend[i] = MakeLabel(c.root, kSmallFont, kMuted);
     c.chanceLabel = MakeLabel(c.root, kSmallFont, kMuted);
     c.chanceValue = MakeLabel(c.root, kBodyFont, kAmber);
     c.foodLabel = MakeLabel(c.root, kSmallFont, kMuted);
@@ -185,12 +190,12 @@ void HideAll()
     Card& c = g_card;
     MyGUI::Widget* all[] = {
         c.bg, c.headLine, c.stressBorder, c.stressBg, c.segHunger, c.segWounds, c.segTired,
-        c.chanceBorder, c.chanceBg, c.chanceFill, c.foodBorder, c.foodBg, c.foodFill,
+        c.segBeaten, c.chanceBorder, c.chanceBg, c.chanceFill, c.foodBorder, c.foodBg, c.foodFill,
         c.foodNotch, c.whyLine
     };
     for (size_t i = 0; i < sizeof(all) / sizeof(all[0]); ++i) Hide(all[i]);
     for (int i = 0; i < 4; ++i) { Hide(c.frame[i]); Hide(c.tagFrame[i]); }
-    for (int i = 0; i < 3; ++i) { Hide(c.swatch[i]); Hide(c.legend[i]); }
+    for (int i = 0; i < kStressParts; ++i) { Hide(c.swatch[i]); Hide(c.legend[i]); }
     for (int i = 0; i < kMaxPips; ++i) Hide(c.pip[i]);
     MyGUI::TextBox* texts[] = {
         c.name, c.tag, c.stressLabel, c.stressValue, c.chanceLabel, c.chanceValue,
@@ -255,25 +260,32 @@ void LayoutUnguarded(const ReadoutView& view, const ReadoutTexts& texts, bool co
         y = PlaceBarRow(x, y, inner, barH, compact, c.stressLabel, c.stressValue,
                         texts.stressLabel, texts.stressValue, c.stressBorder, c.stressBg,
                         &bx, &bw, &by);
-        // The three terms side by side; they add up to the bar.
+        // The four terms side by side; they add up to the bar.
         const int hungerW = bw * view.hungerPts / 100;
         const int woundsW = bw * view.woundsPts / 100;
         const int tiredW = bw * view.tiredPts / 100;
+        const int beatenW = bw * view.beatenPts / 100;
         if (hungerW > 0) Place(c.segHunger, bx, by, hungerW, barH);
         if (woundsW > 0) Place(c.segWounds, bx + hungerW, by, woundsW, barH);
         if (tiredW > 0) Place(c.segTired, bx + hungerW + woundsW, by, tiredW, barH);
+        if (beatenW > 0) Place(c.segBeaten, bx + hungerW + woundsW + tiredW, by, beatenW, barH);
         if (!compact)
         {
-            const std::string* legends[3] = { &texts.hungerLegend, &texts.woundsLegend,
-                                              &texts.tiredLegend };
+            // Three legends fill the width; the beatings get a row of their own
+            // (ui-mockup/js/readout.js stressBlock).
+            const std::string* legends[kStressParts] = { &texts.hungerLegend, &texts.woundsLegend,
+                                                         &texts.tiredLegend, &texts.beatenLegend };
             const int cell = inner / 3;
-            for (int i = 0; i < 3; ++i)
+            for (int i = 0; i < kStressParts; ++i)
             {
+                const int col = i % 3;
+                const int row = i / 3;
+                const int ly = y + row * (kLegendH + 1);
                 SetText(c.legend[i], *legends[i]);
-                Place(c.swatch[i], x + i * cell, y + 3, 6, 6);
-                Place(c.legend[i], x + i * cell + 9, y, cell - 9, kLegendH);
+                Place(c.swatch[i], x + col * cell, ly + 3, 6, 6);
+                Place(c.legend[i], x + col * cell + 9, ly, cell - 9, kLegendH);
             }
-            y += kLegendH + gap;
+            y += 2 * kLegendH + 1 + gap;
         }
     }
 
@@ -492,16 +504,16 @@ std::string LayoutKey(const ReadoutView& v, const ReadoutTexts& t, bool compact)
 {
     char nums[192] = { 0 };
     _snprintf_s(nums, sizeof(nums), _TRUNCATE,
-                "%d|%d|%d%d%d%d|%d,%d,%d|%d,%d|%d|%d,%d|%d",
+                "%d|%d|%d%d%d%d|%d,%d,%d,%d|%d,%d|%d|%d,%d|%d",
                 compact ? 1 : 0, (int)v.route,
                 v.showStress ? 1 : 0, v.showFood ? 1 : 0, v.showChance ? 1 : 0,
-                v.showDefeats ? 1 : 0, v.hungerPts, v.woundsPts, v.tiredPts,
+                v.showDefeats ? 1 : 0, v.hungerPts, v.woundsPts, v.tiredPts, v.beatenPts,
                 v.foodPct, v.foodNeededPct, v.chancePct, v.defeats, v.defeatsNeeded,
                 (int)v.primary.tone);
     std::string key(nums);
     const std::string* parts[] = {
         &t.name, &t.route, &t.stressLabel, &t.stressValue, &t.hungerLegend,
-        &t.woundsLegend, &t.tiredLegend, &t.chanceLabel, &t.chanceValue,
+        &t.woundsLegend, &t.tiredLegend, &t.beatenLegend, &t.chanceLabel, &t.chanceValue,
         &t.defeatsLabel, &t.defeatsValue, &t.foodLabel, &t.foodValue,
         &t.primary, &t.secondary
     };

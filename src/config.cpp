@@ -418,6 +418,13 @@ std::vector<Field> ConfigFields(Config& c)
     AddBool(f, "submissionAllowBeating", &c.submission.allowBeating);
     AddFloat(f, "submissionBeatingCooldownHours", &c.submission.beatingCooldownHours);
     AddFloat(f, "submissionKnockoutCooldownHours", &c.submission.knockoutCooldownHours);
+    AddFloat(f, "submissionBeatStressBase", &c.submission.beatStressBase);
+    AddFloat(f, "submissionKnockoutStressBase", &c.submission.knockoutStressBase);
+    AddFloat(f, "submissionBeatingStressMin", &c.submission.beatingStressMin);
+    AddFloat(f, "submissionBeatingStressMax", &c.submission.beatingStressMax);
+    AddFloat(f, "submissionBeatingStressLevelMin", &c.submission.beatingStressLevelMin);
+    AddFloat(f, "submissionBeatingStressLevelMax", &c.submission.beatingStressLevelMax);
+    AddFloat(f, "submissionBeatingStressFadeHours", &c.submission.beatingStressFadeHours);
     AddBool(f, "submissionEventEnabled", &c.submission.eventEnabled);
     AddFloat(f, "submissionApproachSeconds", &c.submission.approachSeconds);
     AddFloat(f, "submissionForgiveSeconds", &c.submission.forgiveSeconds);

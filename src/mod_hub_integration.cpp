@@ -322,6 +322,11 @@ static bool DoRegisterModHub()
     regBool(api, mod, "sub_allow_beating", "Sumision: permitir golpear", "Deja castigar al prisionero en tu jaula", &c.submission.allowBeating);
     regFloat(api, mod, "sub_beating_cooldown", "Sumision: horas entre golpizas", "Horas de juego antes de poder volver a golpearlo", 0.5f, 48.0f, 0.5f, 1, &c.submission.beatingCooldownHours);
     regFloat(api, mod, "sub_knockout_cooldown", "Sumision: horas entre noqueos", "Horas de juego antes de poder volver a noquearlo (cuenta desde que cayo)", 0.5f, 48.0f, 0.5f, 1, &c.submission.knockoutCooldownHours);
+    regFloat(api, mod, "sub_beat_stress_base", "Estres: base por golpe", "Cuanto estres suma un golpe de Golpear antes de niveles y personalidad", 0.0f, 1.0f, 0.01f, 2, &c.submission.beatStressBase);
+    regFloat(api, mod, "sub_knockout_stress_base", "Estres: base por noqueo", "Cuanto estres suma un noqueo de Noquear antes de niveles y personalidad", 0.0f, 1.0f, 0.01f, 2, &c.submission.knockoutStressBase);
+    regFloat(api, mod, "sub_beating_stress_min", "Estres: minimo por golpe", "Lo menos que suma un golpe o un noqueo", 0.0f, 1.0f, 0.01f, 2, &c.submission.beatingStressMin);
+    regFloat(api, mod, "sub_beating_stress_max", "Estres: maximo por golpe", "Lo mas que suma un golpe o un noqueo", 0.0f, 1.0f, 0.01f, 2, &c.submission.beatingStressMax);
+    regFloat(api, mod, "sub_beating_stress_fade", "Estres: horas en desvanecerse", "Horas de juego en que la barra entera de golpes vuelve a cero", 1.0f, 168.0f, 1.0f, 0, &c.submission.beatingStressFadeHours);
     regBool(api, mod, "sub_event_enabled", "Sometido: viene a pedirte unirse", "Un NPC que se rinde camina hasta ti y pide unirse (Aceptar, Perdonar, Rechazar)", &c.submission.eventEnabled);
     regFloat(api, mod, "sub_event_approach", "Sometido: segundos para llegar", "Cuanto puede tardar en llegar; mientras camina no te ataca", 10.0f, 600.0f, 5.0f, 0, &c.submission.approachSeconds);
     regFloat(api, mod, "sub_event_forgive", "Sometido: segundos en calma al perdonar", "Cuanto sigue sin atacarte despues de perdonarlo (puedes hablarle)", 0.0f, 1800.0f, 30.0f, 0, &c.submission.forgiveSeconds);

@@ -155,7 +155,7 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
         // second one does the work.
         in.defeats      = core.defeats;
         in.stress       = StressFromState(core.hunger, core.worstDamage, core.restedState,
-                                          config.submission);
+                                          core.beatingStress, config.submission);
         in.grudge       = core.grudge;
         in.unique       = core.unique;
         in.situation    = config.chance.intimidationBonus;

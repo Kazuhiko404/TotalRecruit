@@ -19,6 +19,7 @@
 #include "submission_rules.h"
 #include "submission_tracker.h"
 #include "npc_level.h"
+#include "beating_stress.h"
 
 #include <kenshi/CharacterAnimal.h>
 #include <kenshi/CharStats.h>
@@ -527,6 +528,7 @@ void GatherCoreFacts(Character* character, CoreFacts* out)
     SafeReadBody(character, &body);
     f.worstDamage = body.worstDamage;
     f.restedState = body.restedState;
+    f.beatingStress = BeatingStressNow(character);
 
     bool pretending = false;
     SafeIsPretending(character, &pretending);

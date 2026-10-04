@@ -1,6 +1,7 @@
 #include "common.h"
 #include "cage_commands.h"
 #include "cage_command_rules.h"
+#include "beating_stress.h"
 #include "char_key_reader.h"
 #include "config.h"
 #include "engine_reads.h"
@@ -413,6 +414,8 @@ bool LandBeatHit(Character* actor, Character* target)
             return false;
         }
         StartCooldown(&g_beatCooldown, target);
+        // Every blow that landed wears them down (beating_stress.h), knockout or not.
+        AddBeatingStress(target, BeatingBlow_Hit);
     }
 
     // CapBeatBlunt assumes the engine takes the blunt off one to one; if it took

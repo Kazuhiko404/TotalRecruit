@@ -54,6 +54,7 @@ ReadoutTexts BuildReadoutTexts(const ReadoutView& view, const std::string& name,
     t.hungerLegend = WithNumber(Say("readout.hunger", "Hambre", NULL), view.hungerPts);
     t.woundsLegend = WithNumber(Say("readout.wounds", "Heridas", NULL), view.woundsPts);
     t.tiredLegend = WithNumber(Say("readout.tired", "Cansancio", NULL), view.tiredPts);
+    t.beatenLegend = WithNumber(Say("readout.beaten", "Golpes", NULL), view.beatenPts);
 
     t.chanceLabel = Say("readout.chance", "CHANCE", NULL);
     t.chanceValue = Pct(view.chancePct);

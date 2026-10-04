@@ -143,12 +143,12 @@ void LogReadout(Character* character, const ReadoutView& view, const ReadoutText
 {
     char buf[320] = { 0 };
     _snprintf_s(buf, sizeof(buf), _TRUNCATE,
-                " route=%s chance=%s stress=%s (hunger %d wounds %d tired %d) defeats=%s "
-                "food=%s line=\"%s\"%s%s [%s]",
+                " route=%s chance=%s stress=%s (hunger %d wounds %d tired %d beaten %d) "
+                "defeats=%s food=%s line=\"%s\"%s%s [%s]",
                 RouteWord(view.route),
                 view.showChance ? texts.chanceValue.c_str() : "-",
                 view.showStress ? texts.stressValue.c_str() : "-",
-                view.hungerPts, view.woundsPts, view.tiredPts,
+                view.hungerPts, view.woundsPts, view.tiredPts, view.beatenPts,
                 view.showDefeats ? texts.defeatsValue.c_str() : "-",
                 view.showFood ? texts.foodValue.c_str() : "-",
                 texts.primary.c_str(),

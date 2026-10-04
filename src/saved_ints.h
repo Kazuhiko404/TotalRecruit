@@ -23,6 +23,11 @@
 //   total_recruit.duel_cooldown_until
 //                                  duel_challenge_rules.h  game hour an NPC who won a
 //                                                  duel may be challenged again
+//   total_recruit.beating_stress   beating_stress.h  the beating stress bar, in
+//                                                  thousandths, as last written
+//   total_recruit.beating_stress_hour
+//                                  beating_stress.h  the game hour (tenths) it was
+//                                                  last written at
 //
 // Strings ride the same hooks through saved_strings.h.
 //

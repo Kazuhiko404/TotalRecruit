@@ -131,6 +131,7 @@ struct ReadoutView
     int hungerPts;
     int woundsPts;
     int tiredPts;
+    int beatenPts;   // the beating stress (Golpear / Noquear), beating_stress_rules.h
 
     bool showChance;
     int chancePct;
@@ -150,7 +151,8 @@ struct ReadoutView
 
     ReadoutView()
         : visible(false), route(ReadoutRoute_Free), showStress(false), stressPct(0),
-          hungerPts(0), woundsPts(0), tiredPts(0), showChance(false), chancePct(0),
+          hungerPts(0), woundsPts(0), tiredPts(0), beatenPts(0), showChance(false),
+          chancePct(0),
           showDefeats(false), defeats(0), defeatsNeeded(0), showFood(false),
           foodPct(0), foodNeededPct(0), primary(), secondary()
     {

@@ -113,14 +113,20 @@ void HungerRunsZeroToThree()
 
 void StressFromStateWeights()
 {
-    const char* name = "stress from state: hunger 0.5, wounds 0.35, exhaustion 0.15";
-    // Fed, unhurt, fully rested: nothing wears them down.
-    CHECK(StressFromState(3.0f, 0.0f, 1.0f, kSub) == 0.0f);
+    const char* name = "stress from state: hunger 0.5, wounds 0.35, exhaustion 0.15, beatings as they are";
+    // Fed, unhurt, fully rested, never beaten: nothing wears them down.
+    CHECK(StressFromState(3.0f, 0.0f, 1.0f, 0.0f, kSub) == 0.0f);
     // Starving alone is half the bar.
-    CHECK(StressFromState(0.0f, 0.0f, 1.0f, kSub) == 0.5f);
+    CHECK(StressFromState(0.0f, 0.0f, 1.0f, 0.0f, kSub) == 0.5f);
     // Everything wrong at once is the whole bar, and no more.
-    CHECK(StressFromState(0.0f, 1.0f, 0.0f, kSub) == 1.0f);
-    CHECK(StressFromState(0.0f, 5.0f, -3.0f, kSub) == 1.0f);
+    CHECK(StressFromState(0.0f, 1.0f, 0.0f, 0.0f, kSub) == 1.0f);
+    CHECK(StressFromState(0.0f, 5.0f, -3.0f, 0.0f, kSub) == 1.0f);
+    // The beating stress is the fourth term, already 0..1 (beating_stress_rules.h).
+    CHECK(StressFromState(3.0f, 0.0f, 1.0f, 0.3f, kSub) == 0.3f);
+    CHECK(StressFromState(0.0f, 0.0f, 1.0f, 0.25f, kSub) == 0.75f);
+    CHECK(StressFromState(0.0f, 0.0f, 1.0f, 0.9f, kSub) == 1.0f);
+    CHECK(StressFromState(3.0f, 0.0f, 1.0f, -2.0f, kSub) == 0.0f);
+    CHECK(StressFromState(3.0f, 0.0f, 1.0f, 7.0f, kSub) == 1.0f);
 }
 
 // ----------------------------------------------------------------- grudge

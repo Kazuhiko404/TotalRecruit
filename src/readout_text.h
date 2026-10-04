@@ -20,6 +20,7 @@ struct ReadoutTexts
     std::string hungerLegend;
     std::string woundsLegend;
     std::string tiredLegend;
+    std::string beatenLegend;
     std::string chanceLabel;
     std::string chanceValue;
     std::string defeatsLabel;

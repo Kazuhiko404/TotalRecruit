@@ -16,6 +16,7 @@
 // this file only reads.
 
 #include "common.h"
+#include "temperament.h"
 
 #include <string>
 
@@ -41,6 +42,10 @@ int SafePlayerCharacters(Character** out, int max);
 
 bool SafeIsPlayerCharacter(Character* character, bool* out);
 bool SafeIsAnimal(Character* character, bool* out);
+
+// The character's personality as the engine-free temperament (StateBroadcastData
+// myPersonality through temperament_map.h ToTemperament).
+bool SafeTemperament(Character* character, Temperament* out);
 bool SafeIsDead(Character* character, bool* out);
 bool SafeIsDown(Character* character, bool* out);
 

@@ -48,6 +48,9 @@ struct CoreFacts
     float bloodFraction;
     float worstDamage;
     float restedState;
+    // The beating stress Golpear and Noquear left, faded to now (0..1,
+    // beating_stress.h BeatingStressNow): the fourth stress term.
+    float beatingStress;
 
     // What they remember and where they are.
     bool grudge;
@@ -66,7 +69,7 @@ struct CoreFacts
           enslaved(false), npcLevel(1), playerLevel(1), pretending(false),
           corpse(false), unconscious(false), dying(false), starving(false),
           wounded(false), hunger(3.0f), health(1.0f), bloodFraction(1.0f),
-          worstDamage(0.0f), restedState(1.0f), grudge(false),
+          worstDamage(0.0f), restedState(1.0f), beatingStress(0.0f), grudge(false),
           rememberedAsSaviour(false), defeats(0), inMyCage(false),
           surrendered(false)
     {

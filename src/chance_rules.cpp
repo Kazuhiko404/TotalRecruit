@@ -125,7 +125,7 @@ float HungerToFullness01(float rawHunger)
 }
 
 StressTerms StressTermsFromState(float rawHunger, float worstDamage, float restedState,
-                                 const Submission& sub)
+                                 float beatingStress, const Submission& sub)
 {
     // Hunger counts fullness, so an empty stomach is the top of this term.
     const float starved = 1.0f - HungerToFullness01(rawHunger);
@@ -138,14 +138,17 @@ StressTerms StressTermsFromState(float rawHunger, float worstDamage, float reste
     terms.hunger = starved * sub.stressFromHunger;
     terms.wounds = hurt * sub.stressFromWounds;
     terms.tired  = tired * sub.stressFromExhaustion;
+    // Already weighed by its gains (beating_stress_rules.h): it enters as it is.
+    terms.beaten = Clamp01(beatingStress);
     return terms;
 }
 
 float StressFromState(float rawHunger, float worstDamage, float restedState,
-                      const Submission& sub)
+                      float beatingStress, const Submission& sub)
 {
-    const StressTerms t = StressTermsFromState(rawHunger, worstDamage, restedState, sub);
-    return Clamp01(t.hunger + t.wounds + t.tired);
+    const StressTerms t = StressTermsFromState(rawHunger, worstDamage, restedState,
+                                               beatingStress, sub);
+    return Clamp01(t.hunger + t.wounds + t.tired + t.beaten);
 }
 
 int JoinChance(const ChanceInputs& in, const Chance& c, const Submission& sub)

@@ -283,7 +283,9 @@ struct Submission
     // The stress bar: how much each kind of hardship contributes, and how much
     // the whole bar can argue for. Derived from present state, so it falls
     // again when the player feeds or treats them -- keeping someone hungry is
-    // a choice that has to be maintained, not a box that stays ticked.
+    // a choice that has to be maintained, not a box that stays ticked. The
+    // fourth term, the beating stress, is weighed by its own gains (below) and
+    // fades on its own clock.
     float stressFromHunger;
     float stressFromWounds;
     float stressFromExhaustion;
@@ -291,6 +293,21 @@ struct Submission
     bool allowBeating;
     float beatingCooldownHours;
     float knockoutCooldownHours;
+    // The beating stress (beating_stress_rules.h): the stress Golpear and Noquear
+    // leave on a prisoner in the player's cage, where their knockouts no longer
+    // count as defeats. One blow adds beatStressBase, one knockout that landed
+    // knockoutStressBase, times the level factor (player / npc level, clamped to
+    // beatingStressLevelMin..Max), divided by the temperament's resolve, clamped
+    // to beatingStressMin..Max. The bar is 0..1 per prisoner, saved with the
+    // character, a fourth stress term next to hunger, wounds and exhaustion, and a
+    // full bar fades to nothing in beatingStressFadeHours game hours.
+    float beatStressBase;
+    float knockoutStressBase;
+    float beatingStressMin;
+    float beatingStressMax;
+    float beatingStressLevelMin;
+    float beatingStressLevelMax;
+    float beatingStressFadeHours;
     // The submission event (submission_director.h): a beaten NPC that yields
     // walks up to the player and asks to join -- Aceptar / Perdonar / Rechazar.
     // `approachSeconds` is how long the walk-up may take (and how long a hostile
@@ -322,6 +339,13 @@ struct Submission
           allowBeating(true),
           beatingCooldownHours(1.0f),
           knockoutCooldownHours(1.0f),
+          beatStressBase(0.08f),
+          knockoutStressBase(0.15f),
+          beatingStressMin(0.02f),
+          beatingStressMax(0.25f),
+          beatingStressLevelMin(0.5f),
+          beatingStressLevelMax(1.5f),
+          beatingStressFadeHours(24.0f),
           eventEnabled(true),
           approachSeconds(60.0f),
           forgiveSeconds(300.0f),
