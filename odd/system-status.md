@@ -75,6 +75,7 @@ Nothing has a formal QA pass mark.
 | Noquear's watch clock stops while the game is paused (no fallback, no land-window timeout during a pause) | `not verified` (12.19 C10h) |
 | Noquear's watch keeps character keys and re-resolves them each tick; a vanished actor drops the watch with no cleanup | `not verified` (12.19 C10i) |
 | R2.3 interval between beatings: Golpear rests `submissionBeatingCooldownHours` per prisoner after a blow and shows the wait in the block and the popup; every click re-reads the facts | `not verified` (12.19 C3c-C3g, 12.13 K6) |
+| Golpear never raises health: a part already at or below the floor gets no blow and is not touched | `not verified` (12.19 C3h) |
 | Caged popup offers GOLPEAR / NOQUEAR, never IGNORAR / PERDONAR | `not verified` (12.22) |
 
 ### 6. Defeats, mercy and the submission event (4)

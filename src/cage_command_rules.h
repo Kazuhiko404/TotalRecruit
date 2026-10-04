@@ -193,6 +193,12 @@ float BeatHealthFloor(float maxHealth);
 // hit and holds the part at the floor if it went further.
 float CapBeatBlunt(float blunt, float health, float maxHealth);
 
+// The health to hold the part at after the blow: `floor` when the blow pushed a
+// part that started above it (`before`) past it (`after` < floor), else `after`
+// unchanged. Never above `before`: a part the blow found already at or below the
+// floor (an earlier fight, a bleed) is never raised -- a blow never heals.
+float BeatHeldHealth(float before, float after, float floor);
+
 // One slot of the target's anatomy, as read from the engine. POD: it is filled
 // inside a guarded frame.
 struct BeatPartFacts

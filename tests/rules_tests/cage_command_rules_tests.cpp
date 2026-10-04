@@ -306,6 +306,26 @@ void TheClickReChecksTheFacts()
     CHECK(JudgeCageClick(f, false) == CageClick_NotAllowed);
     CHECK(BeatReady(CagedAwake()));
 }
+
+// The bug: a part already below the floor (an earlier fight, a bleed) was "held"
+// at the floor after a zero blow -- raised, so the blow healed. The hold only ever
+// pulls a part the blow pushed past the floor back to it, never above where the
+// blow found it.
+void TheBlowNeverRaisesHealth()
+{
+    const char* name = "beat hold: back to the floor only if the blow crossed it, never above the start";
+    // The engine took more than the cap: held at the floor.
+    CHECK(BeatHeldHealth(10.0f, -70.0f, -50.0f) == -50.0f);
+    // Inside the room: untouched.
+    CHECK(BeatHeldHealth(10.0f, -20.0f, -50.0f) == -20.0f);
+    // Already below the floor before the blow: never raised.
+    CHECK(BeatHeldHealth(-80.0f, -80.0f, -50.0f) == -80.0f);
+    CHECK(BeatHeldHealth(-80.0f, -85.0f, -50.0f) == -85.0f);
+    // Exactly at the floor: stays.
+    CHECK(BeatHeldHealth(-50.0f, -50.0f, -50.0f) == -50.0f);
+    // A part already below the floor gets no blow at all.
+    CHECK(CapBeatBlunt(30.0f, -80.0f, 100.0f) == 0.0f);
+}
 } // namespace
 
 void RunCageCommandRulesTests()
@@ -328,4 +348,5 @@ void RunCageCommandRulesTests()
     GolpearRestsForTheCooldownAfterABlow();
     TheBeatLabelCarriesTheWait();
     TheClickReChecksTheFacts();
+    TheBlowNeverRaisesHealth();
 }

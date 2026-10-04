@@ -137,7 +137,8 @@ derrota). El botón sigue en el bloque y en la ventana y muestra la espera
 ("Golpear (4 h)", horas redondeadas hacia arriba); un clic solo la dice ("Podrás
 volver a golpearlo en 4 h"). Cada clic vuelve a leer los hechos: una ventana o un
 menú viejo no actúa sobre un preso liberado, caído o fuera de la jaula ("Ya no
-puedes hacerle eso"). Noquear no descansa.
+puedes hacerle eso"). Noquear no descansa. *(F7)* El golpe nunca sube la vida:
+una parte que ya está en el piso o debajo no recibe golpe ni se toca.
 
 *Estado (2026-10-04, prisoner-module-fixes F4):* con un preso dentro de la jaula
 el menú del juego abre dos columnas (el personaje y la jaula: ABRIR CON LLAVE,

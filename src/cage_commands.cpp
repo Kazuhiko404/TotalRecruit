@@ -401,15 +401,23 @@ bool LandBeatHit(Character* actor, Character* target)
         StartBeatCooldown(target);
     }
 
-    // CapBeatBlunt assumes the engine takes the blunt off one to one; whatever it
-    // did, the part is held at the floor.
-    const float floor = BeatHealthFloor(maxHealth);
+    // CapBeatBlunt assumes the engine takes the blunt off one to one; if it took
+    // more, the part is held at the floor. Only after a blow that landed, and
+    // never above where the blow found it (BeatHeldHealth): a part already at or
+    // below the floor gets no blow and is not touched at all.
     float after = before;
-    float maxAfter = maxHealth;
-    if (SafePartHealth(part, &after, &maxAfter) && after < floor)
+    if (landed > 0.0f)
     {
-        after = floor;
-        SafeSetPartHealth(part, after);
+        float maxAfter = maxHealth;
+        if (SafePartHealth(part, &after, &maxAfter))
+        {
+            const float held = BeatHeldHealth(before, after, BeatHealthFloor(maxHealth));
+            if (held != after)
+            {
+                after = held;
+                SafeSetPartHealth(part, after);
+            }
+        }
     }
     LogBeatHit(actor, target, landed, before, after);
     return true;

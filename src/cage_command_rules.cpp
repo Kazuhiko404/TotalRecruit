@@ -195,6 +195,15 @@ float CapBeatBlunt(float blunt, float health, float maxHealth)
     return wanted < room ? wanted : room;
 }
 
+float BeatHeldHealth(float before, float after, float floor)
+{
+    if (after >= floor || before <= floor)
+    {
+        return after;
+    }
+    return floor;
+}
+
 int PickBeatPart(const BeatPartFacts* parts, int count)
 {
     if (parts == NULL)
