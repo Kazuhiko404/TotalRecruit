@@ -33,8 +33,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)src;$(KENSHILIB_DIR)\Include;$(KENSHILIB_DIR)\Include\ogre;$(BOOST_INCLUDE_PATH);$(IncludePath)</IncludePath>
-    <LibraryPath>$(KENSHILIB_DIR)\Libraries;$(BOOST_INCLUDE_PATH)\stage\lib;$(LibraryPath)</LibraryPath>
+    <!-- KenshiLib 0.5.0 is vendored (deps/kenshilib-0.5.0, see its README.md); it comes first
+         so its KenshiLib.lib wins. Ogre and MyGUI import libraries still come from KENSHILIB_DIR. -->
+    <IncludePath>$(ProjectDir)src;$(ProjectDir)deps\kenshilib-0.5.0\Include;$(ProjectDir)deps\kenshilib-0.5.0\Include\ogre;$(BOOST_INCLUDE_PATH);$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)deps\kenshilib-0.5.0\Libraries;$(KENSHILIB_DIR)\Libraries;$(BOOST_INCLUDE_PATH)\stage\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -47,7 +49,7 @@
       <!-- /EHa: the plugin guards engine memory with __try, which MSVC only
            allows alongside C++ objects under asynchronous exception handling. -->
       <ExceptionHandling>Async</ExceptionHandling>
-      <ForcedIncludeFiles>$(KENSHILIB_DIR)\Include\kenshi\util\OgreUnordered.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles>$(ProjectDir)deps\kenshilib-0.5.0\Include\kenshi\util\OgreUnordered.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

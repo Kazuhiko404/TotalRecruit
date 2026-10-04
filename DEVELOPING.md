@@ -99,6 +99,24 @@ copiá de nuevo, y recién ahí abrí el juego.
 - Variables de entorno `KENSHILIB_DIR` y `BOOST_INCLUDE_PATH`
 - **Release | x64 únicamente.** Debug no linkea contra KenshiLib.
 
+### KenshiLib 0.5.0, vendorizado
+
+TotalRecruit compila contra **KenshiLib 0.5.0**, copiado en
+`deps/kenshilib-0.5.0/` (el `README.md` de esa carpeta indica tag, commit y md5).
+`TotalRecruit.vcxproj` toma de ahí `Include/`, el header forzado
+`OgreUnordered.h` y `Libraries/KenshiLib.lib`. Las librerías de Ogre y MyGUI
+siguen saliendo de `$(KENSHILIB_DIR)\Libraries`.
+
+- Por qué: el juego instalado ya corre KenshiLib 0.5.0 (su `KenshiLib.dll` es
+  idéntico al del release v0.5.0), y solo 0.5.0 trae `AI/Blackboard.h`
+  (paquetes de IA nativos: `replaceAIPackage`, `addPackages`, ...).
+- `KENSHILIB_DIR` sigue en 0.4.0 y lo comparten los otros mods: no se toca.
+- Los archivos de `deps/` son idénticos a los de upstream (`deps/** -text` en
+  `.gitattributes`). No se editan; para actualizar se reemplaza la carpeta entera.
+- Después de cambiar de versión, verificá que cada import del DLL exista en el
+  `KenshiLib.dll` instalado: `dumpbin -imports x64/Release/TotalRecruit.dll`
+  contra `dumpbin -exports` del DLL del juego. Un import que falta = el mod no carga.
+
 Los warnings `C4482` y `C4091` vienen de los headers de KenshiLib, no del
 código propio. Son ruido esperado.
 
@@ -132,7 +150,7 @@ qué existe — leelo antes que el `.cpp`.
 | `ally_tier_rules.cpp/.h` | **Puro.** Aliados por nivel en Balanced (`DecideAllyTier`): de nivel del NPC, nivel del líder, grupo y relación a `Free` / `Paid` (con `discountFraction`) / `Temporary` / `Refuse` y su motivo. Cada nivel de corte pertenece al tramo que empieza (`AllyTierOf`: 20, 50, 80, 100 de `AllyTiers` en `config.h`). Descuento `min(tope del tramo, relación/100 × discountScale)` (`FriendshipDiscount`), `AllyPriceMultiplier` = 1 − descuento solo para `Paid`, `DiscountPercent` redondeado, y los días del miembro temporal (`TemporaryDaysFromSeed` sobre `DailySeed(..., kTempDaysSalt)`). `route_free` decide con `DecideBalancedAllyTier` y `character_facts` (`AllyFriendshipMultiplier`, solo en `GatherFreeExtra`) pone el descuento en `PriceInputs.factionMultiplier`: los dos llaman a la misma función, así el "-14%" del popup es el del precio. Tests: `ally_tier_rules_tests.cpp`, y los casos de ruta en `route_decisions_tests.cpp`. |
 | `temp_member_rules.cpp/.h` | **Puro.** La estadía de un miembro temporal (80+): `TempExpiryHour` (ahora + días × 24), `TempDaysLeft` (redondeo hacia arriba), `IsTempMemberHungry` y `StepTempMember`: faltas por hambre (`tempMemberHungryHours` seguidas bajo `tempMemberHungerThreshold`, o el motor dice hambriento), por un golpe del grupo y por un noqueo del grupo (solo el borde hacia el noqueo), cada tipo a lo sumo una vez cada `tempMemberStrikeCooldownHours`; el aviso en la falta que lo deja a `tempMemberMaxStrikes - 1`, el "me ire pronto" `tempMemberExpiryWarningHours` antes, y la partida (`TempLeave_Mistreated` gana sobre `TempLeave_Expired`). `TempMemberBook`: quién es miembro por `CharKey`, con el puente al save (0 para quien no es miembro). Tests: `temp_member_rules_tests.cpp`. |
 | `temp_member.cpp/.h` | El lado del motor del miembro temporal. `CompleteOffer` lee la facción de origen (`FactionStringId`) **antes** de reclutar y llama `OnRecruitedTemporarily(Character*, días, facción)`: guarda vencimiento, faltas (filas `total_recruit.temp_expiry_hour` / `temp_strikes` de `saved_ints`) y facción (`total_recruit.temp_home_faction` de `saved_strings`), y levanta "Te acompanare N dias". `TempMemberTick` (cada 2 s desde `frame_tick`) recorre el grupo, lee hambre (`SafeHunger`), golpes (`SafeAttackedByPlayer`) y noqueos (`SafeIsKnockedOut` + `SafeDefeatedByPlayer`, no si fue de hambre), y aplica `StepTempMember`: carteles de grupo (`RaiseSquadHeadNotice`) en cada falta, el aviso y "me ire pronto"; al irse, `LeaveSquad`, cartel de despedida, linea en el roller y el enfriamiento de rechazo (`SetRejectCooldownUntil`, `tempMemberRejoinCooldownDays`) para que no se lo pueda volver a tomar enseguida. `TempMemberDaysLeft` / `SelectedTempMember` alimentan la tarjeta. Tabla con lock; `load_boundary` la vacia (`ForgetAllTempMembers`). El camino FCS (`ConsumePendingRecruit`) no lo llama. |
-| `squad_leave.cpp/.h` | Sacar a alguien del grupo, nativo: port del dismiss de KEP (`CharacterExtension.cpp:72-108`). Facción de origen por string id (si no, `1233-gamedata.base`, si no la vacía; nunca una del jugador), `unselectPlayerCharacter`, `_NV_setFaction(facción, NULL)`, `createNewEmptyActivePlatoon("5006-squad.mod" = "Wandering Squad" vanilla, permanente, donde está)` + `_NV_addActiveObject`, limpiar el sistema de tareas (`taskSystemAI` leído en su offset 0x20 porque `AI/AI.h` choca con `Character.h`) y `reThinkCurrentAIAction`. Se salta el blackboard de KEP (`AI/Blackboard.h` no está en este KenshiLib): la IA del pelotón nuevo y el re-pensar le dan su rutina. |
+| `squad_leave.cpp/.h` | Sacar a alguien del grupo, nativo: port del dismiss de KEP (`CharacterExtension.cpp:72-108`). Facción de origen por string id (si no, `1233-gamedata.base`, si no la vacía; nunca una del jugador), `unselectPlayerCharacter`, `_NV_setFaction(facción, NULL)`, `createNewEmptyActivePlatoon("5006-squad.mod" = "Wandering Squad" vanilla, permanente, donde está)` + `_NV_addActiveObject`, limpiar el sistema de tareas (`taskSystemAI` leído en su offset 0x20 porque `AI/AI.h` choca con `Character.h`) y `reThinkCurrentAIAction`. Se salta el blackboard de KEP (`AI/Blackboard.h` no estaba en KenshiLib 0.4.0; con 0.5.0 lo retoma `odd/tasks/native-ai-packages.md` T3): la IA del pelotón nuevo y el re-pensar le dan su rutina. |
 | `helper_rules.cpp/.h` | **Puro.** El ayudante gratis (T3). `ScreenHelperCandidate`: activo, Balanced, no tuyo, no animal, de pie, sin jaula, no ocupado (ya ayudante), sin pelear, a 40 m o menos del lider, aliado (`friendlyRelation`), Bueno o Neutral (`HelperPersonalityAllowed`, `personality_groups`), nivel > lider + `helperMinLevelLead`, sin enfriamiento, sin tirada hoy; cada salto con su motivo (`HelperSkipText`). `HelperOfferRoll` (semilla % 10000 < chance × 10000, `DailySeed` con `kHelperOfferSalt`) y `HelperDaysFromSeed` (`helperDaysMin..Max`). `StepHelper`: muerto, reclutado, noqueado por el grupo, atacado por el grupo, vencido (en ese orden) y el aviso `helperExpiryWarningHours` antes; el vencimiento es `TempExpiryHour`. La escalera de escolta (`NextFarChecks` / `NextEscortRung`): BODYGUARD, FOLLOW_PLAYER_ORDER, la orden de caminar del walk-up; sube tras 3 chequeos seguidos a mas de 15 m fuera de combate. `ShouldAssist`: el blanco del lider mientras pelea, nunca uno del grupo, el mismo, su faccion o alguien caido. `HelperBook`: contratos, enfriamiento de rechazo y dia de tirada por `CharKey`, con el puente al save. Tests: `helper_rules_tests.cpp`. |
 | `helper.cpp/.h` | El lado del motor del ayudante, desde `frame_tick` (`HelperTick`). **Mecanismo B (escolta por codigo), no el contrato nativo**: sin `AI/Blackboard.h` no se puede leer ni limpiar `contractJob`, `_doActions` / `startConversation` son privados y el puente de dialogo nunca se probo en juego, y la linea gratis vanilla (14191) tiene duracion fija compartida con los esclavos fugados. Oferta: barrido cada 5 s (sin ventana, con el slot de `approach_driver` libre), una tirada por NPC por dia; camina con el walk-up del sometido, cartel "Quiere ofrecerte ayuda", al llegar `BuildHelperOfferView` (ACEPTAR / RECHAZAR; la X no es respuesta). Contrato cada 3 s: `StepHelper`, limpiar marcas de enemigo con el grupo (`SafeClearTempEnemies`), pelear el blanco del lider (`SafeAttackTargetOf` + `AttackFor`, FOCUSED_MELEE_ATTACK) o re-emitir la escolta del peldaño (`GuardLeader` BODYGUARD / FOLLOW_PLAYER_ORDER, o `MoveTo`); loguea la tarea real del motor cuando cambia. Fin: vencido ("Hasta aqui llego"), traicionado ("No vuelvo a ayudarte" + enfriamiento), muerto o reclutado; siempre `ResumeRoutine`. Filas `total_recruit.helper_expiry_hour` y `helper_reject_until` de `saved_ints`; tras cargar, el primero a 100 m del lider se re-arma ("Sigo contigo"). Tecla de prueba `helperDebugKey` (codigo virtual de Windows, `GetAsyncKeyState`, solo con el juego al frente): el NPC seleccionado se ofrece ya. Tabla con lock; `load_boundary` llama `ForgetHelpers`. Log `[helper]` siempre. |
 | `approach_driver.cpp/.h` | El walk-up compartido, extraido de `submission_director` para que el ayudante no lo copie: el slot de un evento a la vez (`ClaimApproachSlot` / `ReleaseApproachSlot`: sometido y ayudante nunca a la vez), el reloj de segundos reales congelado en pausa (`EventClock`), y el caminante (`WalkUp`: NPC + clave, `BeginWalkUp`, `ReassertCalm`, `StepWalkUp` = `ApproachStep` + repath / esperar parado / llegar y mirar al lider). Llegar y abortar los decide cada director. |
@@ -228,8 +246,9 @@ ejecutable de tests (sección 7).
    un crash o una sesión de debug. Leelo antes de tocar nada.
 2. **`PLAN.md`** — el diseño y las APIs verificadas. La **§8** separa lo
    confirmado jugando de lo que solo compila.
-3. Los headers en `../KenshiLib_Examples_deps/kenshilib/Include/kenshi/` — la
-   única fuente de verdad sobre qué existe.
+3. Los headers en `deps/kenshilib-0.5.0/Include/kenshi/` — la única fuente de
+   verdad sobre qué existe (TotalRecruit usa 0.5.0; las rutas de §5 apuntan a la
+   copia 0.4.0 compartida, que sirve para buscar pero puede diferir).
 
 ---
 
@@ -309,7 +328,7 @@ La salida más simple: escribir el texto sin acentos.
 Que el header lo declare no garantiza que exista en la lib. Verificá:
 
 ```bash
-cd /f/Proyectos/Kenshi-mods/KenshiLib_Examples_deps/kenshilib/Libraries
+cd /f/Proyectos/Kenshi-mods/TotalRecruit/deps/kenshilib-0.5.0/Libraries
 "$DUMPBIN" //LINKERMEMBER:1 KenshiLib.lib | grep -o "?[A-Za-z_]*@ClaseQueSea@@[^ ]*" | sort -u
 ```
 
