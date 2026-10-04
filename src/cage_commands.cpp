@@ -297,12 +297,14 @@ float BeatHoursLeft(Character* target)
     return g_beatCooldown.HoursLeft(key, now, GetConfig().submission.beatingCooldownHours);
 }
 
-void RememberCredit(Character* target)
+// `windowMs`: kBeatCreditWindowMs for a blow, kOrderedKnockoutWindowMs for the
+// knockout order.
+void RememberCredit(Character* target, unsigned int windowMs)
 {
     CharKey key;
     if (SafeCharKey(target, &key))
     {
-        g_credit.Remember(key, GetTickCount());
+        g_credit.Remember(key, GetTickCount(), windowMs);
     }
 }
 
@@ -386,11 +388,11 @@ bool LandBeatHit(Character* actor, Character* target)
     const float landed = CapBeatBlunt(BeatBlunt(readable, attack.cut, attack.blunt, attack.pierce),
                                       before, maxHealth);
 
-    // Before the blow: a knockout it causes may fire the hook at once.
-    RememberCredit(target);
-
     if (landed > 0.0f)
     {
+        // Before the blow (a knockout it causes may fire the hook at once), only
+        // for a blow that can knock out at all, and only for a moment.
+        RememberCredit(target, kBeatCreditWindowMs);
         // A fist: blunt only, no bleeding, no armour penetration.
         const Damages blow(0.0f, landed, 0.0f, 0.0f, 0.0f);
         if (!SafeApplyDamage(part, blow))
@@ -474,7 +476,7 @@ bool IssueKnockoutOrder(Character* actor, Character* target)
         LogInfo("[cage] " + CharacterName(actor) + " -> " + CharacterName(target) + line);
     }
 
-    RememberCredit(target);
+    RememberCredit(target, kOrderedKnockoutWindowMs);
 
     g_watch.active = true;
     g_watch.phase = KnockoutPhase_AwaitingTake;

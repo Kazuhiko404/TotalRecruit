@@ -88,7 +88,7 @@ void AnOrderedKnockoutIsCreditedOnceInsideTheWindow()
     OrderedKnockoutCredit credit;
     const CharKey prisoner(7u, 1u);
     const CharKey other(8u, 1u);
-    credit.Remember(prisoner, 1000u);
+    credit.Remember(prisoner, 1000u, kOrderedKnockoutWindowMs);
     CHECK(credit.Size() == 1);
     CHECK(!credit.Claim(other, 2000u));
     CHECK(credit.Claim(prisoner, 2000u));
@@ -101,15 +101,15 @@ void AnExpiredOrderIsNotCredited()
     const char* name = "credit bridge: past the window the knockout is not the ordered one";
     OrderedKnockoutCredit credit;
     const CharKey prisoner(7u, 1u);
-    credit.Remember(prisoner, 1000u);
+    credit.Remember(prisoner, 1000u, kOrderedKnockoutWindowMs);
     CHECK(!credit.Claim(prisoner, 1000u + kOrderedKnockoutWindowMs));
     CHECK(credit.Size() == 0);
 
     // GetTickCount wraps: the difference is still the elapsed time.
-    credit.Remember(prisoner, 0xFFFFFF00u);
+    credit.Remember(prisoner, 0xFFFFFF00u, kOrderedKnockoutWindowMs);
     CHECK(credit.Claim(prisoner, 0x00000100u));
 
-    credit.Remember(prisoner, 5u);
+    credit.Remember(prisoner, 5u, kOrderedKnockoutWindowMs);
     credit.Clear();
     CHECK(!credit.Claim(prisoner, 6u));
 }
@@ -119,8 +119,8 @@ void ANewOrderRestartsTheWindow()
     const char* name = "credit bridge: ordering again restarts the window";
     OrderedKnockoutCredit credit;
     const CharKey prisoner(7u, 1u);
-    credit.Remember(prisoner, 0u);
-    credit.Remember(prisoner, kOrderedKnockoutWindowMs);
+    credit.Remember(prisoner, 0u, kOrderedKnockoutWindowMs);
+    credit.Remember(prisoner, kOrderedKnockoutWindowMs, kOrderedKnockoutWindowMs);
     CHECK(credit.Size() == 1);
     CHECK(credit.Claim(prisoner, kOrderedKnockoutWindowMs + 10u));
 }
@@ -326,6 +326,33 @@ void TheBlowNeverRaisesHealth()
     // A part already below the floor gets no blow at all.
     CHECK(CapBeatBlunt(30.0f, -80.0f, 100.0f) == 0.0f);
 }
+
+// The bug: Golpear remembered the credit for the knockout order's 2 minutes, so
+// any knockout in that time (a starvation collapse) counted as the player's.
+// A blow knocks out at once, if at all: its credit lasts kBeatCreditWindowMs.
+void ABlowsCreditLastsOnlyAMoment()
+{
+    const char* name = "credit: a blow's credit lasts the short beat window, the knockout order's 2 min";
+    CHECK(kBeatCreditWindowMs <= 10000u);
+    CHECK(kBeatCreditWindowMs < kOrderedKnockoutWindowMs);
+
+    OrderedKnockoutCredit credit;
+    const CharKey prisoner = CharKey::FromId("p");
+    credit.Remember(prisoner, 1000u, kBeatCreditWindowMs);
+    CHECK(credit.Claim(prisoner, 1000u + kBeatCreditWindowMs - 1u));
+
+    credit.Remember(prisoner, 1000u, kBeatCreditWindowMs);
+    CHECK(!credit.Claim(prisoner, 1000u + kBeatCreditWindowMs));
+
+    // A knockout order keeps its long window.
+    credit.Remember(prisoner, 1000u, kOrderedKnockoutWindowMs);
+    CHECK(credit.Claim(prisoner, 1000u + 60000u));
+
+    // The newest remember decides the window: a blow after an order shortens it.
+    credit.Remember(prisoner, 1000u, kOrderedKnockoutWindowMs);
+    credit.Remember(prisoner, 2000u, kBeatCreditWindowMs);
+    CHECK(!credit.Claim(prisoner, 2000u + kBeatCreditWindowMs + 1u));
+}
 } // namespace
 
 void RunCageCommandRulesTests()
@@ -349,4 +376,5 @@ void RunCageCommandRulesTests()
     TheBeatLabelCarriesTheWait();
     TheClickReChecksTheFacts();
     TheBlowNeverRaisesHealth();
+    ABlowsCreditLastsOnlyAMoment();
 }

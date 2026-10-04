@@ -7,6 +7,8 @@ namespace totalrecruit
 const unsigned int kOrderWatchTimeoutMs = 1500;
 // Two real minutes: the knockout order walks the actor to the cage and the door.
 const unsigned int kOrderedKnockoutWindowMs = 120000;
+// Five real seconds: the blow's knockout, if it comes, comes at once.
+const unsigned int kBeatCreditWindowMs = 5000;
 
 bool CageCommandsAllowed(const CageCommandFacts& facts)
 {
@@ -102,9 +104,13 @@ OrderWatchVerdict JudgeOrderWatch(int taskBefore, int ordered, bool readNow, int
     return elapsedMs >= timeoutMs ? OrderWatch_TimedOut : OrderWatch_Pending;
 }
 
-void OrderedKnockoutCredit::Remember(const CharKey& target, unsigned int nowMs)
+void OrderedKnockoutCredit::Remember(const CharKey& target, unsigned int nowMs,
+                                     unsigned int windowMs)
 {
-    pending_[target] = nowMs;
+    Entry entry;
+    entry.atMs = nowMs;
+    entry.windowMs = windowMs;
+    pending_[target] = entry;
 }
 
 bool OrderedKnockoutCredit::Claim(const CharKey& target, unsigned int nowMs)
@@ -115,7 +121,7 @@ bool OrderedKnockoutCredit::Claim(const CharKey& target, unsigned int nowMs)
         return false;
     }
     // Unsigned subtraction: correct across a GetTickCount wrap.
-    const bool inWindow = (nowMs - it->second) < kOrderedKnockoutWindowMs;
+    const bool inWindow = (nowMs - it->second.atMs) < it->second.windowMs;
     pending_.erase(it);
     return inWindow;
 }

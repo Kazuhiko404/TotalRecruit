@@ -14,7 +14,7 @@
 //   JudgeOrderWatch         did the actor take the knockout order, or does the
 //                           fallback have to run (the first phase of
 //                           knockout_watch_rules.h NextKnockoutWatchStep).
-//   OrderedKnockoutCredit   a knockout the player ordered through the mod counts
+//   OrderedKnockoutCredit   a knockout the player caused through the mod counts
 //                           as the player's, even when the engine names nobody.
 //   KnockoutLabel           "NOQUEAR 72%" from the engine's own odds.
 //
@@ -92,20 +92,28 @@ OrderWatchVerdict JudgeOrderWatch(int taskBefore, int ordered, bool readNow, int
 
 // --- the credit bridge -----------------------------------------------------
 
-// How long after the order a knockout still counts as the one the player ordered.
-// A knockout order walks to the cage first; a blow that knocks out is immediate.
+// How long after Noquear's order a knockout still counts as the one the player
+// ordered: the order walks the actor to the cage and the door first.
 extern const unsigned int kOrderedKnockoutWindowMs;
 
-// The knockouts the player ordered through the mod and that have not landed yet,
-// by target. The knockout hook claims one when it fires; an expired one is
-// forgotten. Session-only: the load boundary clears it.
+// How long after Golpear's blow a knockout still counts as the blow's: a few
+// seconds around the hit (the engine settles the collapse on its next updates).
+// Anything later -- a starvation collapse, someone else's blow -- is not the
+// player's blow, and the ordinary credit rules decide it.
+extern const unsigned int kBeatCreditWindowMs;
+
+// The knockouts the player caused through the mod and that have not landed yet,
+// by target, each with its own window. The knockout hook claims one when it
+// fires; an expired one is forgotten. Session-only: the load boundary clears it.
 class OrderedKnockoutCredit
 {
 public:
-    // The player just ordered a beating or a knockout on `target`.
-    void Remember(const CharKey& target, unsigned int nowMs);
+    // The player just landed a blow (kBeatCreditWindowMs) or ordered a knockout
+    // (kOrderedKnockoutWindowMs) on `target`. A newer remember replaces an older
+    // one, window included.
+    void Remember(const CharKey& target, unsigned int nowMs, unsigned int windowMs);
 
-    // True (once) when `target` has a pending order younger than the window;
+    // True (once) when `target` has a pending credit younger than its window;
     // consumes it either way.
     bool Claim(const CharKey& target, unsigned int nowMs);
 
@@ -113,7 +121,12 @@ public:
     int Size() const;
 
 private:
-    typedef std::map<CharKey, unsigned int> Pending;
+    struct Entry
+    {
+        unsigned int atMs;
+        unsigned int windowMs;
+    };
+    typedef std::map<CharKey, Entry> Pending;
     Pending pending_;
 };
 

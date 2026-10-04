@@ -47,11 +47,13 @@
 // block or a popup built a while ago never acts on a prisoner freed, knocked out
 // or out of the cage since.
 //
-// Credit: the knockout hook (defeats.cpp) counts the defeat. A blow or a
-// knockout the player gave here is remembered for kOrderedKnockoutWindowMs, and
-// the hook claims it (ClaimOrderedKnockoutCredit), so a knockout it causes counts
-// as the player's even when the engine's lastGuyWhoDefeatedMe names nobody --
-// the direct blow and the fallback knockout are exactly such cases. The pure
+// Credit: the knockout hook (defeats.cpp) counts the defeat. A blow that landed is
+// remembered for kBeatCreditWindowMs (a few seconds around the hit: its knockout
+// comes at once or not at all), a knockout order for kOrderedKnockoutWindowMs (it
+// walks to the cage first), and the hook claims it (ClaimOrderedKnockoutCredit),
+// so a knockout they cause counts as the player's even when the engine's
+// lastGuyWhoDefeatedMe names nobody -- the direct blow and the fallback knockout
+// are exactly such cases. A later knockout (a starvation collapse) is not. The pure
 // parts live in cage_command_rules.h.
 //
 // Log (probeOnClick): "[cage] <actor> -> <target> beat hit (blunt X, part health

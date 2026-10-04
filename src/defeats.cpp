@@ -285,9 +285,11 @@ void Knockout_hook(MedicalSystem* thisptr, float skill)
         LogInfo("[defeat-hook] knockout fired for " + CharacterName(victim) +
                 (readBefore && !downBefore ? " (was standing)" : " (already down)"));
     }
-    // A knockout the player ordered through Golpear / Noquear is the player's,
-    // whatever the engine recorded as the winner: the fallback knockout names
-    // nobody at all. Claimed once, inside a short window (cage_command_rules.h).
+    // A knockout the player caused with Golpear's blow or Noquear's order is the
+    // player's, whatever the engine recorded as the winner: the blow and the
+    // fallback knockout name nobody at all. Claimed once, inside that command's
+    // window: 5 s around a blow, 2 min after a knockout order (cage_command_rules.h
+    // kBeatCreditWindowMs / kOrderedKnockoutWindowMs).
     const bool ordered = ClaimOrderedKnockoutCredit(victim);
     RecordDefeat(victim, ordered,
                  (readBefore && !downBefore) ? DefeatEpisode::Sighting_KnockoutFromStanding
