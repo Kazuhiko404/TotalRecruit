@@ -83,6 +83,9 @@
   "duelWinCooldownMaxHoursUnder100": 72.0,
   "duelWinCooldownMaxHours": 120.0,
 
+  "submissionBeatingCooldownHours": 1.0,
+  "submissionKnockoutCooldownHours": 1.0,
+
   "submissionEventEnabled": true,
   "submissionApproachSeconds": 60.0,
   "submissionForgiveSeconds": 300.0,

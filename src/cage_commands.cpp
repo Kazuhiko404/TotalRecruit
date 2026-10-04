@@ -162,8 +162,10 @@ struct OrderWatch
 
 OrderWatch g_watch;
 OrderedKnockoutCredit g_credit;
-// R2.3: when Golpear last landed on each prisoner (game hours, session-only).
-BeatCooldownLedger g_beatCooldown;
+// R2.3: when Golpear last landed on each prisoner, and when Noquear last put each
+// one down (game hours, session-only).
+CageCooldownLedger g_beatCooldown;
+CageCooldownLedger g_knockoutCooldown;
 
 bool SafePosition(Character* character, Ogre::Vector3* out)
 {
@@ -273,38 +275,48 @@ void LogBeatHit(Character* actor, Character* target, float blunt, float before, 
     }
 }
 
-// Starts Golpear's rest on `target` (R2.3), from the game hour the blow landed.
-void StartBeatCooldown(Character* target)
+// Starts a command's rest on `target` (R2.3), from the game hour it landed.
+void StartCooldown(CageCooldownLedger* ledger, Character* target)
 {
     CharKey key;
     double now = 0.0;
     if (SafeCharKey(target, &key) && SafeGameHours(&now))
     {
-        g_beatCooldown.Remember(key, now);
+        ledger->Remember(key, now);
     }
 }
 
-// Game hours until Golpear may land on `target` again (0: ready, or unreadable --
-// a wait the player cannot be shown is no wait).
-float BeatHoursLeft(Character* target)
+// Game hours until a command may land on `target` again (0: ready, or unreadable
+// -- a wait the player cannot be shown is no wait).
+float CooldownHoursLeft(const CageCooldownLedger& ledger, Character* target, float cooldownHours)
 {
     CharKey key;
     double now = 0.0;
-    if (!SafeFindCharKey(target, &key) || !SafeGameHours(&now))
+    if (target == NULL || !SafeFindCharKey(target, &key) || !SafeGameHours(&now))
     {
         return 0.0f;
     }
-    return g_beatCooldown.HoursLeft(key, now, GetConfig().submission.beatingCooldownHours);
+    return ledger.HoursLeft(key, now, cooldownHours);
 }
 
-// `windowMs`: kBeatCreditWindowMs for a blow, kOrderedKnockoutWindowMs for the
-// knockout order.
-void RememberCredit(Character* target, unsigned int windowMs)
+float BeatHoursLeft(Character* target)
+{
+    return CooldownHoursLeft(g_beatCooldown, target, GetConfig().submission.beatingCooldownHours);
+}
+
+float KnockoutHoursLeft(Character* target)
+{
+    return CooldownHoursLeft(g_knockoutCooldown, target,
+                             GetConfig().submission.knockoutCooldownHours);
+}
+
+// A blow, or the knockout order: each kind has its own window (CreditWindowMs).
+void RememberCredit(Character* target, OrderedCreditKind kind)
 {
     CharKey key;
     if (SafeCharKey(target, &key))
     {
-        g_credit.Remember(key, GetTickCount(), windowMs);
+        g_credit.Remember(key, GetTickCount(), kind);
     }
 }
 
@@ -392,7 +404,7 @@ bool LandBeatHit(Character* actor, Character* target)
     {
         // Before the blow (a knockout it causes may fire the hook at once), only
         // for a blow that can knock out at all, and only for a moment.
-        RememberCredit(target, kBeatCreditWindowMs);
+        RememberCredit(target, OrderedCredit_Beat);
         // A fist: blunt only, no bleeding, no armour penetration.
         const Damages blow(0.0f, landed, 0.0f, 0.0f, 0.0f);
         if (!SafeApplyDamage(part, blow))
@@ -400,7 +412,7 @@ bool LandBeatHit(Character* actor, Character* target)
             LogFailure(actor, target, "beat", "applyDamage raised");
             return false;
         }
-        StartBeatCooldown(target);
+        StartCooldown(&g_beatCooldown, target);
     }
 
     // CapBeatBlunt assumes the engine takes the blunt off one to one; if it took
@@ -476,7 +488,7 @@ bool IssueKnockoutOrder(Character* actor, Character* target)
         LogInfo("[cage] " + CharacterName(actor) + " -> " + CharacterName(target) + line);
     }
 
-    RememberCredit(target, kOrderedKnockoutWindowMs);
+    RememberCredit(target, OrderedCredit_Knockout);
 
     g_watch.active = true;
     g_watch.phase = KnockoutPhase_AwaitingTake;
@@ -535,6 +547,7 @@ CageCommandFacts ReadCageCommandFacts(Character* target)
     bool dead = false;
     facts.down = (SafeIsDown(target, &down) && down) || (SafeIsDead(target, &dead) && dead);
     facts.beatHoursLeft = facts.inPlayerCage ? BeatHoursLeft(target) : 0.0f;
+    facts.knockoutHoursLeft = facts.inPlayerCage ? KnockoutHoursLeft(target) : 0.0f;
     return facts;
 }
 
@@ -586,7 +599,7 @@ CageCommandResult CheckClick(Character* target, bool beat)
     switch (JudgeCageClick(ReadCageCommandFacts(target), beat))
     {
     case CageClick_NotAllowed: return CageCommand_NotAllowed;
-    case CageClick_Resting:    return CageCommand_Resting;
+    case CageClick_Resting:    return beat ? CageCommand_BeatResting : CageCommand_KnockoutResting;
     case CageClick_Go:
     default:                   return CageCommand_Issued;
     }
@@ -633,9 +646,12 @@ std::string CageCommandProblem(CageCommandResult result, Character* target)
         return Say("cage.failed", "No se pudo dar la orden", NULL);
     case CageCommand_NotAllowed:
         return Say("cage.notAllowed", "Ya no puedes hacerle eso", NULL);
-    case CageCommand_Resting:
+    case CageCommand_BeatResting:
         return Fill(Say("cage.beatResting", "Podr\xc3\xa1s volver a golpearlo en {hours} h", NULL),
-                    CharacterName(target), 0, BeatRestHoursShown(BeatHoursLeft(target)));
+                    CharacterName(target), 0, RestHoursShown(BeatHoursLeft(target)));
+    case CageCommand_KnockoutResting:
+        return Fill(Say("cage.knockoutResting", "Podr\xc3\xa1s volver a noquearlo en {hours} h", NULL),
+                    CharacterName(target), 0, RestHoursShown(KnockoutHoursLeft(target)));
     case CageCommand_Issued:
     default:
         return std::string();
@@ -644,15 +660,15 @@ std::string CageCommandProblem(CageCommandResult result, Character* target)
 
 std::string BeatButtonLabel(Character* target)
 {
-    const float hoursLeft = target != NULL ? BeatHoursLeft(target) : 0.0f;
-    return BeatLabel(Say("cage.button.beat", "Golpear", NULL), hoursLeft);
+    return RestLabel(Say("cage.button.beat", "Golpear", NULL), BeatHoursLeft(target));
 }
 
 std::string KnockoutButtonLabel(Character* target)
 {
     float probability = 0.0f;
     const bool haveOdds = ReadKnockoutOdds(target, &probability);
-    return KnockoutLabel(Say("cage.button.knockout", "Noquear", NULL), haveOdds, probability);
+    return KnockoutCaption(Say("cage.button.knockout", "Noquear", NULL), KnockoutHoursLeft(target),
+                           haveOdds, probability);
 }
 
 void TickCageCommands()
@@ -724,19 +740,25 @@ void TickCageCommands()
     EndWatch(why.c_str());
 }
 
-bool ClaimOrderedKnockoutCredit(Character* victim)
+OrderedCreditKind ResolveCageKnockout(Character* victim)
 {
     // Cheapest first: almost every knockout in the world was not ordered here.
     if (victim == NULL || g_credit.Size() == 0)
     {
-        return false;
+        return OrderedCredit_None;
     }
     CharKey key;
     if (!SafeFindCharKey(victim, &key))
     {
-        return false;
+        return OrderedCredit_None;
     }
-    return g_credit.Claim(key, GetTickCount());
+    const OrderedCreditKind kind = g_credit.Claim(key, GetTickCount());
+    if (kind == OrderedCredit_Knockout)
+    {
+        // Noquear landed: it rests from now (Golpear's rest started with the blow).
+        StartCooldown(&g_knockoutCooldown, victim);
+    }
+    return kind;
 }
 
 void ForgetCageCommands()
@@ -746,5 +768,6 @@ void ForgetCageCommands()
     EndWatch("at load");
     g_credit.Clear();
     g_beatCooldown.Clear();
+    g_knockoutCooldown.Clear();
 }
 } // namespace totalrecruit

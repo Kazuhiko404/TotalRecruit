@@ -290,7 +290,7 @@ void Knockout_hook(MedicalSystem* thisptr, float skill)
     // fallback knockout name nobody at all. Claimed once, inside that command's
     // window: 5 s around a blow, 2 min after a knockout order (cage_command_rules.h
     // kBeatCreditWindowMs / kOrderedKnockoutWindowMs).
-    const bool ordered = ClaimOrderedKnockoutCredit(victim);
+    const bool ordered = ResolveCageKnockout(victim) != OrderedCredit_None;
     RecordDefeat(victim, ordered,
                  (readBefore && !downBefore) ? DefeatEpisode::Sighting_KnockoutFromStanding
                                              : DefeatEpisode::Sighting_FoundDown);

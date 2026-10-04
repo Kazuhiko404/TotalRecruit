@@ -22,21 +22,27 @@ bool BeatReady(const CageCommandFacts& facts)
     return CageCommandsAllowed(facts) && facts.beatHoursLeft <= 0.0f;
 }
 
+bool KnockoutReady(const CageCommandFacts& facts)
+{
+    return CageCommandsAllowed(facts) && facts.knockoutHoursLeft <= 0.0f;
+}
+
 CageClickVerdict JudgeCageClick(const CageCommandFacts& facts, bool beat)
 {
     if (!CageCommandsAllowed(facts))
     {
         return CageClick_NotAllowed;
     }
-    return (beat && facts.beatHoursLeft > 0.0f) ? CageClick_Resting : CageClick_Go;
+    const float hoursLeft = beat ? facts.beatHoursLeft : facts.knockoutHoursLeft;
+    return hoursLeft > 0.0f ? CageClick_Resting : CageClick_Go;
 }
 
-void BeatCooldownLedger::Remember(const CharKey& target, double nowHours)
+void CageCooldownLedger::Remember(const CharKey& target, double nowHours)
 {
     last_[target] = nowHours;
 }
 
-float BeatCooldownLedger::HoursLeft(const CharKey& target, double nowHours,
+float CageCooldownLedger::HoursLeft(const CharKey& target, double nowHours,
                                     float cooldownHours) const
 {
     Last::const_iterator it = last_.find(target);
@@ -53,12 +59,12 @@ float BeatCooldownLedger::HoursLeft(const CharKey& target, double nowHours,
     return left > 0.0 ? (float)left : 0.0f;
 }
 
-void BeatCooldownLedger::Clear()
+void CageCooldownLedger::Clear()
 {
     last_.clear();
 }
 
-int BeatRestHoursShown(float hoursLeft)
+int RestHoursShown(float hoursLeft)
 {
     if (hoursLeft <= 0.0f)
     {
@@ -68,9 +74,9 @@ int BeatRestHoursShown(float hoursLeft)
     return ((float)whole < hoursLeft) ? whole + 1 : whole;
 }
 
-std::string BeatLabel(const std::string& base, float hoursLeft)
+std::string RestLabel(const std::string& base, float hoursLeft)
 {
-    const int hours = BeatRestHoursShown(hoursLeft);
+    const int hours = RestHoursShown(hoursLeft);
     if (hours <= 0)
     {
         return base;
@@ -104,26 +110,38 @@ OrderWatchVerdict JudgeOrderWatch(int taskBefore, int ordered, bool readNow, int
     return elapsedMs >= timeoutMs ? OrderWatch_TimedOut : OrderWatch_Pending;
 }
 
+unsigned int CreditWindowMs(OrderedCreditKind kind)
+{
+    switch (kind)
+    {
+    case OrderedCredit_Beat:     return kBeatCreditWindowMs;
+    case OrderedCredit_Knockout: return kOrderedKnockoutWindowMs;
+    case OrderedCredit_None:
+    default:                     return 0u;
+    }
+}
+
 void OrderedKnockoutCredit::Remember(const CharKey& target, unsigned int nowMs,
-                                     unsigned int windowMs)
+                                     OrderedCreditKind kind)
 {
     Entry entry;
     entry.atMs = nowMs;
-    entry.windowMs = windowMs;
+    entry.kind = kind;
     pending_[target] = entry;
 }
 
-bool OrderedKnockoutCredit::Claim(const CharKey& target, unsigned int nowMs)
+OrderedCreditKind OrderedKnockoutCredit::Claim(const CharKey& target, unsigned int nowMs)
 {
     Pending::iterator it = pending_.find(target);
     if (it == pending_.end())
     {
-        return false;
+        return OrderedCredit_None;
     }
     // Unsigned subtraction: correct across a GetTickCount wrap.
-    const bool inWindow = (nowMs - it->second.atMs) < it->second.windowMs;
+    const Entry entry = it->second;
     pending_.erase(it);
-    return inWindow;
+    const bool inWindow = (nowMs - entry.atMs) < CreditWindowMs(entry.kind);
+    return inWindow ? entry.kind : OrderedCredit_None;
 }
 
 void OrderedKnockoutCredit::Clear()
@@ -153,6 +171,13 @@ std::string KnockoutLabel(const std::string& base, bool haveOdds, float probabil
     char buffer[16];
     _snprintf_s(buffer, sizeof(buffer), _TRUNCATE, " %d%%", KnockoutPercent(probability));
     return base + buffer;
+}
+
+std::string KnockoutCaption(const std::string& base, float hoursLeft, bool haveOdds,
+                            float probability)
+{
+    return hoursLeft > 0.0f ? RestLabel(base, hoursLeft)
+                            : KnockoutLabel(base, haveOdds, probability);
 }
 
 float SkillFraction(float statLevel)

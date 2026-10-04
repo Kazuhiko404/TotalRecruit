@@ -5,6 +5,7 @@
 
 #include "test_support.h"
 #include "cage_command_rules.h"
+#include "config.h"
 
 using namespace totalrecruit;
 
@@ -88,11 +89,11 @@ void AnOrderedKnockoutIsCreditedOnceInsideTheWindow()
     OrderedKnockoutCredit credit;
     const CharKey prisoner(7u, 1u);
     const CharKey other(8u, 1u);
-    credit.Remember(prisoner, 1000u, kOrderedKnockoutWindowMs);
+    credit.Remember(prisoner, 1000u, OrderedCredit_Knockout);
     CHECK(credit.Size() == 1);
-    CHECK(!credit.Claim(other, 2000u));
-    CHECK(credit.Claim(prisoner, 2000u));
-    CHECK(!credit.Claim(prisoner, 2100u));
+    CHECK(credit.Claim(other, 2000u) == OrderedCredit_None);
+    CHECK(credit.Claim(prisoner, 2000u) == OrderedCredit_Knockout);
+    CHECK(credit.Claim(prisoner, 2100u) == OrderedCredit_None);
     CHECK(credit.Size() == 0);
 }
 
@@ -101,17 +102,34 @@ void AnExpiredOrderIsNotCredited()
     const char* name = "credit bridge: past the window the knockout is not the ordered one";
     OrderedKnockoutCredit credit;
     const CharKey prisoner(7u, 1u);
-    credit.Remember(prisoner, 1000u, kOrderedKnockoutWindowMs);
-    CHECK(!credit.Claim(prisoner, 1000u + kOrderedKnockoutWindowMs));
+    credit.Remember(prisoner, 1000u, OrderedCredit_Knockout);
+    CHECK(credit.Claim(prisoner, 1000u + kOrderedKnockoutWindowMs) == OrderedCredit_None);
     CHECK(credit.Size() == 0);
 
     // GetTickCount wraps: the difference is still the elapsed time.
-    credit.Remember(prisoner, 0xFFFFFF00u, kOrderedKnockoutWindowMs);
-    CHECK(credit.Claim(prisoner, 0x00000100u));
+    credit.Remember(prisoner, 0xFFFFFF00u, OrderedCredit_Knockout);
+    CHECK(credit.Claim(prisoner, 0x00000100u) == OrderedCredit_Knockout);
 
-    credit.Remember(prisoner, 5u, kOrderedKnockoutWindowMs);
+    credit.Remember(prisoner, 5u, OrderedCredit_Knockout);
     credit.Clear();
-    CHECK(!credit.Claim(prisoner, 6u));
+    CHECK(credit.Claim(prisoner, 6u) == OrderedCredit_None);
+}
+
+// cage-beating-stress: the hook needs to know which command caused the knockout
+// (Noquear's starts its rest and its stress; Golpear's blow already did both).
+void TheClaimSaysWhichCommandCausedIt()
+{
+    const char* name = "credit bridge: the claim names the command (beat or knockout order)";
+    OrderedKnockoutCredit credit;
+    const CharKey a(7u, 1u);
+    const CharKey b(8u, 1u);
+    credit.Remember(a, 1000u, OrderedCredit_Beat);
+    credit.Remember(b, 1000u, OrderedCredit_Knockout);
+    CHECK(credit.Claim(a, 1500u) == OrderedCredit_Beat);
+    CHECK(credit.Claim(b, 1500u) == OrderedCredit_Knockout);
+    CHECK(CreditWindowMs(OrderedCredit_Beat) == kBeatCreditWindowMs);
+    CHECK(CreditWindowMs(OrderedCredit_Knockout) == kOrderedKnockoutWindowMs);
+    CHECK(CreditWindowMs(OrderedCredit_None) == 0u);
 }
 
 void ANewOrderRestartsTheWindow()
@@ -119,10 +137,10 @@ void ANewOrderRestartsTheWindow()
     const char* name = "credit bridge: ordering again restarts the window";
     OrderedKnockoutCredit credit;
     const CharKey prisoner(7u, 1u);
-    credit.Remember(prisoner, 0u, kOrderedKnockoutWindowMs);
-    credit.Remember(prisoner, kOrderedKnockoutWindowMs, kOrderedKnockoutWindowMs);
+    credit.Remember(prisoner, 0u, OrderedCredit_Knockout);
+    credit.Remember(prisoner, kOrderedKnockoutWindowMs, OrderedCredit_Knockout);
     CHECK(credit.Size() == 1);
-    CHECK(credit.Claim(prisoner, kOrderedKnockoutWindowMs + 10u));
+    CHECK(credit.Claim(prisoner, kOrderedKnockoutWindowMs + 10u) == OrderedCredit_Knockout);
 }
 
 void TheKnockoutLabelCarriesTheNativeOdds()
@@ -239,12 +257,13 @@ void TheBlowLandsOnTheTorso()
     CHECK(PickBeatPart(NULL, 3) == -1);
 }
 
-// R2.3: an interval between beatings. Golpear rests per prisoner for the
-// configured game hours after a blow; Noquear never rests.
+// R2.3: an interval between beatings, and between knockouts. Golpear rests per
+// prisoner for the configured game hours after a blow, Noquear after a knockout
+// that landed; each command keeps its own ledger.
 void GolpearRestsForTheCooldownAfterABlow()
 {
-    const char* name = "beat cooldown: game hours left since the last blow, per prisoner";
-    BeatCooldownLedger ledger;
+    const char* name = "cage cooldown: game hours left since the last blow, per prisoner";
+    CageCooldownLedger ledger;
     const CharKey warden = CharKey::FromId("warden");
     const CharKey other = CharKey::FromId("other");
     CHECK(ledger.HoursLeft(warden, 100.0, 6.0f) == 0.0f);
@@ -265,17 +284,38 @@ void GolpearRestsForTheCooldownAfterABlow()
     CHECK(ledger.HoursLeft(warden, 106.0, 6.0f) == 0.0f);
 }
 
-void TheBeatLabelCarriesTheWait()
+void TheRestLabelCarriesTheWait()
 {
-    const char* name = "beat label: the plain verb when ready, the hours left rounded up while resting";
-    CHECK(BeatLabel("Golpear", 0.0f) == "Golpear");
-    CHECK(BeatLabel("Golpear", -1.0f) == "Golpear");
-    CHECK(BeatLabel("Golpear", 3.2f) == "Golpear (4 h)");
-    CHECK(BeatLabel("GOLPEAR", 4.0f) == "GOLPEAR (4 h)");
-    CHECK(BeatLabel("Golpear", 0.1f) == "Golpear (1 h)");
-    CHECK(BeatRestHoursShown(0.0f) == 0);
-    CHECK(BeatRestHoursShown(0.01f) == 1);
-    CHECK(BeatRestHoursShown(5.5f) == 6);
+    const char* name = "rest label: the plain verb when ready, the hours left rounded up while resting";
+    CHECK(RestLabel("Golpear", 0.0f) == "Golpear");
+    CHECK(RestLabel("Golpear", -1.0f) == "Golpear");
+    CHECK(RestLabel("Golpear", 3.2f) == "Golpear (4 h)");
+    CHECK(RestLabel("GOLPEAR", 4.0f) == "GOLPEAR (4 h)");
+    CHECK(RestLabel("Golpear", 0.1f) == "Golpear (1 h)");
+    CHECK(RestHoursShown(0.0f) == 0);
+    CHECK(RestHoursShown(0.01f) == 1);
+    CHECK(RestHoursShown(5.5f) == 6);
+}
+
+// Noquear's caption: the engine's odds while it is ready, the wait while it rests
+// (a resting command has no odds worth showing).
+void TheKnockoutCaptionShowsTheWaitOrTheOdds()
+{
+    const char* name = "knockout caption: \"Noquear 72%\" when ready, \"Noquear (1 h)\" while resting";
+    CHECK(KnockoutCaption("Noquear", 0.0f, true, 0.72f) == "Noquear 72%");
+    CHECK(KnockoutCaption("Noquear", 0.0f, false, 0.72f) == "Noquear");
+    CHECK(KnockoutCaption("Noquear", 0.4f, true, 0.72f) == "Noquear (1 h)");
+    CHECK(KnockoutCaption("NOQUEAR", 1.0f, false, 0.0f) == "NOQUEAR (1 h)");
+    CHECK(KnockoutCaption("Noquear", -2.0f, true, 0.5f) == "Noquear 50%");
+}
+
+// The 1 h default the user asked for ("4h es mucho"), for both commands.
+void BothCooldownsDefaultToOneHour()
+{
+    const char* name = "config: Golpear and Noquear rest 1 game hour by default";
+    const Submission sub;
+    CHECK(sub.beatingCooldownHours == 1.0f);
+    CHECK(sub.knockoutCooldownHours == 1.0f);
 }
 
 // The click re-reads the facts the button was shown for: a stale block or popup
@@ -283,7 +323,7 @@ void TheBeatLabelCarriesTheWait()
 // never acts while it rests.
 void TheClickReChecksTheFacts()
 {
-    const char* name = "cage click: not allowed any more, resting (Golpear only), or go";
+    const char* name = "cage click: not allowed any more, resting (each command its own), or go";
     CageCommandFacts f = CagedAwake();
     CHECK(JudgeCageClick(f, true) == CageClick_Go);
     CHECK(JudgeCageClick(f, false) == CageClick_Go);
@@ -292,6 +332,15 @@ void TheClickReChecksTheFacts()
     CHECK(JudgeCageClick(f, true) == CageClick_Resting);
     CHECK(JudgeCageClick(f, false) == CageClick_Go);
     CHECK(!BeatReady(f));
+    CHECK(KnockoutReady(f));
+
+    f = CagedAwake();
+    f.knockoutHoursLeft = 0.5f;
+    CHECK(JudgeCageClick(f, false) == CageClick_Resting);
+    CHECK(JudgeCageClick(f, true) == CageClick_Go);
+    CHECK(!KnockoutReady(f));
+    CHECK(BeatReady(f));
+    CHECK(CageCommandsAllowed(f));   // a rest never hides the buttons
 
     f = CagedAwake();
     f.down = true;
@@ -300,7 +349,10 @@ void TheClickReChecksTheFacts()
     f = CagedAwake();
     f.inPlayerCage = false;
     f.beatHoursLeft = 2.5f;   // not allowed wins over resting
+    f.knockoutHoursLeft = 2.5f;
     CHECK(JudgeCageClick(f, true) == CageClick_NotAllowed);
+    CHECK(JudgeCageClick(f, false) == CageClick_NotAllowed);
+    CHECK(!KnockoutReady(f));
     f = CagedAwake();
     f.allowBeating = false;
     CHECK(JudgeCageClick(f, false) == CageClick_NotAllowed);
@@ -338,20 +390,20 @@ void ABlowsCreditLastsOnlyAMoment()
 
     OrderedKnockoutCredit credit;
     const CharKey prisoner = CharKey::FromId("p");
-    credit.Remember(prisoner, 1000u, kBeatCreditWindowMs);
-    CHECK(credit.Claim(prisoner, 1000u + kBeatCreditWindowMs - 1u));
+    credit.Remember(prisoner, 1000u, OrderedCredit_Beat);
+    CHECK(credit.Claim(prisoner, 1000u + kBeatCreditWindowMs - 1u) == OrderedCredit_Beat);
 
-    credit.Remember(prisoner, 1000u, kBeatCreditWindowMs);
-    CHECK(!credit.Claim(prisoner, 1000u + kBeatCreditWindowMs));
+    credit.Remember(prisoner, 1000u, OrderedCredit_Beat);
+    CHECK(credit.Claim(prisoner, 1000u + kBeatCreditWindowMs) == OrderedCredit_None);
 
     // A knockout order keeps its long window.
-    credit.Remember(prisoner, 1000u, kOrderedKnockoutWindowMs);
-    CHECK(credit.Claim(prisoner, 1000u + 60000u));
+    credit.Remember(prisoner, 1000u, OrderedCredit_Knockout);
+    CHECK(credit.Claim(prisoner, 1000u + 60000u) == OrderedCredit_Knockout);
 
     // The newest remember decides the window: a blow after an order shortens it.
-    credit.Remember(prisoner, 1000u, kOrderedKnockoutWindowMs);
-    credit.Remember(prisoner, 2000u, kBeatCreditWindowMs);
-    CHECK(!credit.Claim(prisoner, 2000u + kBeatCreditWindowMs + 1u));
+    credit.Remember(prisoner, 1000u, OrderedCredit_Knockout);
+    credit.Remember(prisoner, 2000u, OrderedCredit_Beat);
+    CHECK(credit.Claim(prisoner, 2000u + kBeatCreditWindowMs + 1u) == OrderedCredit_None);
 }
 } // namespace
 
@@ -365,6 +417,7 @@ void RunCageCommandRulesTests()
     AnOrderedKnockoutIsCreditedOnceInsideTheWindow();
     AnExpiredOrderIsNotCredited();
     ANewOrderRestartsTheWindow();
+    TheClaimSaysWhichCommandCausedIt();
     TheKnockoutLabelCarriesTheNativeOdds();
     TheFallbackKnockoutReadsTheSkillAsAFraction();
     TheBeatHitIsTheAttackersOwnDamageAsBlunt();
@@ -373,7 +426,9 @@ void RunCageCommandRulesTests()
     TheBlowIsCappedAtTheFloor();
     TheBlowLandsOnTheTorso();
     GolpearRestsForTheCooldownAfterABlow();
-    TheBeatLabelCarriesTheWait();
+    TheRestLabelCarriesTheWait();
+    TheKnockoutCaptionShowsTheWaitOrTheOdds();
+    BothCooldownsDefaultToOneHour();
     TheClickReChecksTheFacts();
     TheBlowNeverRaisesHealth();
     ABlowsCreditLastsOnlyAMoment();

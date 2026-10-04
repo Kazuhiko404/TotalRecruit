@@ -338,7 +338,7 @@ void CagedRefusalOffersTheCageCommands()
 }
 
 // R2.3: while Golpear rests the popup keeps GOLPEAR, with the hours left, exactly
-// as the context menu's block does (BeatLabel).
+// as the context menu's block does (RestLabel).
 void CagedRefusalShowsGolpearResting()
 {
     const char* name = "caged refusal: GOLPEAR carries the hours left while it rests";
@@ -348,6 +348,21 @@ void CagedRefusalShowsGolpearResting()
     const OfferView v = BuildOfferView(in, t);
     CHECK(v.beatLabel == t.beat + " (4 h)");
     CHECK(v.knockoutLabel == t.knockout);
+}
+
+// cage-beating-stress S1: Noquear rests after a knockout that landed; the popup
+// keeps NOQUEAR with the wait in place of the odds (KnockoutCaption).
+void CagedRefusalShowsNoquearResting()
+{
+    const char* name = "caged refusal: NOQUEAR carries the hours left, not the odds, while it rests";
+    const OfferTexts t = Texts();
+    OfferInput in = CagedDefiant();
+    in.knockoutOddsKnown = true;
+    in.knockoutOdds = 0.72f;
+    in.cage.knockoutHoursLeft = 0.4f;
+    const OfferView v = BuildOfferView(in, t);
+    CHECK(v.knockoutLabel == t.knockout + " (1 h)");
+    CHECK(v.beatLabel == t.beat);
 }
 
 void CagedHungryOffersFoodAndTheCageCommands()
@@ -1043,6 +1058,7 @@ void RunOfferViewTests()
     CagedPleaHasNoIgnore();
     CagedRefusalOffersTheCageCommands();
     CagedRefusalShowsGolpearResting();
+    CagedRefusalShowsNoquearResting();
     CagedHungryOffersFoodAndTheCageCommands();
     CageCommandsFollowTheContextMenuRule();
     CagedYesKeepsAcceptAndCancel();

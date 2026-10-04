@@ -7,8 +7,10 @@
 //   ComposeContextBlock     which buttons stand beside the context menu.
 //   JudgeCageClick          what a click on Golpear / Noquear may do now (the
 //                           facts re-read at click time).
-//   BeatCooldownLedger      R2.3's interval between beatings, per prisoner, and
-//   BeatLabel               the wait on Golpear's caption.
+//   CageCooldownLedger      R2.3's interval between beatings (and between
+//                           knockouts), per prisoner and per command, and
+//   RestLabel               the wait on a resting command's caption.
+//   KnockoutCaption         Noquear's caption: the wait, or the engine's odds.
 //   BeatBlunt .. PickBeatPart  Golpear's one capped blow: how hard, where, and
 //                           the floor it never crosses.
 //   JudgeOrderWatch         did the actor take the knockout order, or does the
@@ -44,17 +46,24 @@ struct CageCommandFacts
     bool inPlayerCage;   // the target sits in one of the player's cages
     bool down;           // already unconscious (or dead): nothing left to beat
     float beatHoursLeft; // game hours until Golpear may land again on them (0: ready)
+    float knockoutHoursLeft; // game hours until Noquear may be ordered again (0: ready)
 
-    CageCommandFacts() : allowBeating(true), inPlayerCage(false), down(false), beatHoursLeft(0.0f) {}
+    CageCommandFacts()
+        : allowBeating(true), inPlayerCage(false), down(false), beatHoursLeft(0.0f),
+          knockoutHoursLeft(0.0f) {}
 };
 
 // True when Golpear and Noquear apply: a prisoner of the player's, awake, and the
-// player allowed beating. The buttons show whenever this holds; Golpear's rest
-// only changes its caption (BeatLabel) and what its click does (JudgeCageClick).
+// player allowed beating. The buttons show whenever this holds; a command's rest
+// only changes its caption (RestLabel, KnockoutCaption) and what its click does
+// (JudgeCageClick).
 bool CageCommandsAllowed(const CageCommandFacts& facts);
 
 // True when Golpear may land now: the commands apply and it is not resting.
 bool BeatReady(const CageCommandFacts& facts);
+
+// True when Noquear may be ordered now: the commands apply and it is not resting.
+bool KnockoutReady(const CageCommandFacts& facts);
 
 // What a click on a cage command may do, judged on the facts read at the click
 // (a block or a popup may have been built a while ago).
@@ -62,7 +71,8 @@ enum CageClickVerdict
 {
     CageClick_Go,          // act
     CageClick_NotAllowed,  // the commands no longer apply (freed, down, beating off)
-    CageClick_Resting      // Golpear only: still inside the interval between beatings
+    CageClick_Resting      // the clicked command is still inside its rest (Golpear:
+                           // between beatings; Noquear: between knockouts)
 };
 
 CageClickVerdict JudgeCageClick(const CageCommandFacts& facts, bool beat);
@@ -102,20 +112,30 @@ extern const unsigned int kOrderedKnockoutWindowMs;
 // player's blow, and the ordinary credit rules decide it.
 extern const unsigned int kBeatCreditWindowMs;
 
+// Which cage command a pending credit came from.
+enum OrderedCreditKind
+{
+    OrderedCredit_None,      // nothing pending (or it expired)
+    OrderedCredit_Beat,      // Golpear's blow
+    OrderedCredit_Knockout   // Noquear's order
+};
+
+// The window each kind lasts: kBeatCreditWindowMs, kOrderedKnockoutWindowMs, 0.
+unsigned int CreditWindowMs(OrderedCreditKind kind);
+
 // The knockouts the player caused through the mod and that have not landed yet,
-// by target, each with its own window. The knockout hook claims one when it
+// by target, each with its kind's window. The knockout hook claims one when it
 // fires; an expired one is forgotten. Session-only: the load boundary clears it.
 class OrderedKnockoutCredit
 {
 public:
-    // The player just landed a blow (kBeatCreditWindowMs) or ordered a knockout
-    // (kOrderedKnockoutWindowMs) on `target`. A newer remember replaces an older
-    // one, window included.
-    void Remember(const CharKey& target, unsigned int nowMs, unsigned int windowMs);
+    // The player just landed a blow or ordered a knockout on `target`. A newer
+    // remember replaces an older one, kind and window included.
+    void Remember(const CharKey& target, unsigned int nowMs, OrderedCreditKind kind);
 
-    // True (once) when `target` has a pending credit younger than its window;
-    // consumes it either way.
-    bool Claim(const CharKey& target, unsigned int nowMs);
+    // The kind (once) when `target` has a pending credit younger than its window,
+    // else OrderedCredit_None; consumes it either way.
+    OrderedCreditKind Claim(const CharKey& target, unsigned int nowMs);
 
     void Clear();
     int Size() const;
@@ -124,25 +144,28 @@ private:
     struct Entry
     {
         unsigned int atMs;
-        unsigned int windowMs;
+        OrderedCreditKind kind;
     };
     typedef std::map<CharKey, Entry> Pending;
     Pending pending_;
 };
 
-// --- the interval between beatings (R2.3) ----------------------------------
+// --- the rest between beatings and between knockouts (R2.3) -----------------
 //
 // Golpear rests per prisoner for submission.beatingCooldownHours game hours after
-// a blow that landed. Session-only, like the defeat episodes (defeats.cpp): the
-// load boundary clears it, so an earlier save never inherits a later clock.
-class BeatCooldownLedger
+// a blow that landed; Noquear for submission.knockoutCooldownHours after a
+// knockout order that put the prisoner down. One ledger per command. Session-only,
+// like the defeat episodes (defeats.cpp): the load boundary clears it, so an
+// earlier save never inherits a later clock.
+class CageCooldownLedger
 {
 public:
-    // A blow just landed on `target` at game hour `nowHours`.
+    // The command just landed on `target` at game hour `nowHours`.
     void Remember(const CharKey& target, double nowHours);
 
-    // Game hours until Golpear may land on `target` again: 0 when it never landed,
-    // when the cooldown is 0 or less, or when the clock reads earlier than the blow.
+    // Game hours until the command may land on `target` again: 0 when it never
+    // landed, when the cooldown is 0 or less, or when the clock reads earlier than
+    // the landing.
     float HoursLeft(const CharKey& target, double nowHours, float cooldownHours) const;
 
     void Clear();
@@ -153,10 +176,11 @@ private:
 };
 
 // The whole hours a wait shows: rounded up, 0 when there is none.
-int BeatRestHoursShown(float hoursLeft);
+int RestHoursShown(float hoursLeft);
 
-// `base` when Golpear is ready, else "<base> (<hours> h)" with the hours rounded up.
-std::string BeatLabel(const std::string& base, float hoursLeft);
+// `base` when the command is ready, else "<base> (<hours> h)" with the hours
+// rounded up.
+std::string RestLabel(const std::string& base, float hoursLeft);
 
 // --- the knockout label ----------------------------------------------------
 
@@ -166,6 +190,11 @@ int KnockoutPercent(float probability);
 
 // `base` alone when the odds could not be read, otherwise "<base> <pct>%".
 std::string KnockoutLabel(const std::string& base, bool haveOdds, float probability);
+
+// Noquear's caption: the wait while it rests ("Noquear (1 h)", RestLabel), else
+// the engine's odds (KnockoutLabel).
+std::string KnockoutCaption(const std::string& base, float hoursLeft, bool haveOdds,
+                            float probability);
 
 // --- the fallback knockout -------------------------------------------------
 

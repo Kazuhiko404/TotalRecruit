@@ -263,9 +263,11 @@ struct Submission
     // selected character (cage_commands.h): it may knock the prisoner out, never
     // kills, and how long they stay down is the engine's. beatingCooldownHours is
     // the interval between beatings: after a blow that landed, Golpear rests on
-    // that prisoner for that many game hours (the context menu's Golpear and the
-    // popup's GOLPEAR show the wait; Noquear never rests). The old
-    // submissionBeatingKnockoutSeconds key is no longer read.
+    // that prisoner for that many game hours; knockoutCooldownHours is the same
+    // for Noquear, counted from a knockout order that put the prisoner down. Both
+    // 1 h by default (the context menu's buttons and the popup's GOLPEAR /
+    // NOQUEAR show the wait). The old submissionBeatingKnockoutSeconds key is no
+    // longer read.
     // Route C -- yielding in the field, with no cage involved. How many times
     // the player has to beat the same person before they will consider giving
     // in. This is the route the spec asks for and it had become unreachable:
@@ -288,6 +290,7 @@ struct Submission
     int maxStressChance;
     bool allowBeating;
     float beatingCooldownHours;
+    float knockoutCooldownHours;
     // The submission event (submission_director.h): a beaten NPC that yields
     // walks up to the player and asks to join -- Aceptar / Perdonar / Rechazar.
     // `approachSeconds` is how long the walk-up may take (and how long a hostile
@@ -317,7 +320,8 @@ struct Submission
           stressFromExhaustion(0.15f),
           maxStressChance(45),
           allowBeating(true),
-          beatingCooldownHours(6.0f),
+          beatingCooldownHours(1.0f),
+          knockoutCooldownHours(1.0f),
           eventEnabled(true),
           approachSeconds(60.0f),
           forgiveSeconds(300.0f),

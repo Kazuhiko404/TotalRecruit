@@ -69,8 +69,8 @@ struct OfferTexts
     std::string notNow;
     std::string feed;
     std::string feedMore;
-    // The cage commands as popup buttons: "GOLPEAR" (+ " (4 h)" while it rests,
-    // BeatLabel), "NOQUEAR" (+ " 72%").
+    // The cage commands as popup buttons: "GOLPEAR" (+ " (1 h)" while it rests,
+    // RestLabel), "NOQUEAR" (+ " 72%", or " (1 h)" while it rests: KnockoutCaption).
     std::string beat;
     std::string knockout;
     std::string ignore;

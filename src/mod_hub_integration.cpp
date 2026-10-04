@@ -321,6 +321,7 @@ static bool DoRegisterModHub()
     regInt(api, mod, "sub_max_stress", "Estres: chance maxima", "Cuanta chance puede sumar la barra entera", 0, 90, 5, &c.submission.maxStressChance);
     regBool(api, mod, "sub_allow_beating", "Sumision: permitir golpear", "Deja castigar al prisionero en tu jaula", &c.submission.allowBeating);
     regFloat(api, mod, "sub_beating_cooldown", "Sumision: horas entre golpizas", "Horas de juego antes de poder volver a golpearlo", 0.5f, 48.0f, 0.5f, 1, &c.submission.beatingCooldownHours);
+    regFloat(api, mod, "sub_knockout_cooldown", "Sumision: horas entre noqueos", "Horas de juego antes de poder volver a noquearlo (cuenta desde que cayo)", 0.5f, 48.0f, 0.5f, 1, &c.submission.knockoutCooldownHours);
     regBool(api, mod, "sub_event_enabled", "Sometido: viene a pedirte unirse", "Un NPC que se rinde camina hasta ti y pide unirse (Aceptar, Perdonar, Rechazar)", &c.submission.eventEnabled);
     regFloat(api, mod, "sub_event_approach", "Sometido: segundos para llegar", "Cuanto puede tardar en llegar; mientras camina no te ataca", 10.0f, 600.0f, 5.0f, 0, &c.submission.approachSeconds);
     regFloat(api, mod, "sub_event_forgive", "Sometido: segundos en calma al perdonar", "Cuanto sigue sin atacarte despues de perdonarlo (puedes hablarle)", 0.0f, 1800.0f, 30.0f, 0, &c.submission.forgiveSeconds);
