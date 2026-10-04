@@ -261,9 +261,11 @@ struct Submission
     // R2.3 -- roughing up a prisoner in your own cage (allowBeating,
     // beatingCooldownHours). Golpear is one direct, capped blow from the
     // selected character (cage_commands.h): it may knock the prisoner out, never
-    // kills, and how long they stay down is the engine's; the cooldown only gates
-    // the popup's GOLPEARLO remedy. The old submissionBeatingKnockoutSeconds key
-    // is no longer read.
+    // kills, and how long they stay down is the engine's. beatingCooldownHours is
+    // the interval between beatings: after a blow that landed, Golpear rests on
+    // that prisoner for that many game hours (the context menu's Golpear and the
+    // popup's GOLPEAR show the wait; Noquear never rests). The old
+    // submissionBeatingKnockoutSeconds key is no longer read.
     // Route C -- yielding in the field, with no cage involved. How many times
     // the player has to beat the same person before they will consider giving
     // in. This is the route the spec asks for and it had become unreachable:

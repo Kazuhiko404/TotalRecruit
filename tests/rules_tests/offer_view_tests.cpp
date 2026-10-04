@@ -337,6 +337,19 @@ void CagedRefusalOffersTheCageCommands()
     CHECK(v.knockoutLabel == t.knockout);
 }
 
+// R2.3: while Golpear rests the popup keeps GOLPEAR, with the hours left, exactly
+// as the context menu's block does (BeatLabel).
+void CagedRefusalShowsGolpearResting()
+{
+    const char* name = "caged refusal: GOLPEAR carries the hours left while it rests";
+    const OfferTexts t = Texts();
+    OfferInput in = CagedDefiant();
+    in.cage.beatHoursLeft = 3.2f;
+    const OfferView v = BuildOfferView(in, t);
+    CHECK(v.beatLabel == t.beat + " (4 h)");
+    CHECK(v.knockoutLabel == t.knockout);
+}
+
 void CagedHungryOffersFoodAndTheCageCommands()
 {
     const char* name = "caged and hungry with food: DARLE COMIDA + GOLPEAR + NOQUEAR + CERRAR";
@@ -1029,6 +1042,7 @@ void RunOfferViewTests()
     MercyHasThreeAnswers();
     CagedPleaHasNoIgnore();
     CagedRefusalOffersTheCageCommands();
+    CagedRefusalShowsGolpearResting();
     CagedHungryOffersFoodAndTheCageCommands();
     CageCommandsFollowTheContextMenuRule();
     CagedYesKeepsAcceptAndCancel();

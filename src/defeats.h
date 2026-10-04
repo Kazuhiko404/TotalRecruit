@@ -57,11 +57,6 @@ void NoteIfDown(Character* character);
 // episode is still marked counted.
 void NoteSeenStanding(Character* character);
 
-// R2.3 -- whether the popup offers the GOLPEARLO remedy for this character: in
-// the player's own cage, awake, beating allowed, and the cooldown since the last
-// counted defeat has run. The beating itself is cage_commands.h.
-bool CanBeatPrisoner(Character* character, double* outHoursLeft);
-
 // Who is told when a defeat leaves someone close enough to death to plead. The
 // defeat tracker only knows that it happened; what a plea does (a window, three
 // answers) is mercy.cpp's business, and mercy.cpp already depends on the recruit

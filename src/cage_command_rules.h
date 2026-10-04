@@ -5,6 +5,10 @@
 // blow or issues the knockout order and asks these rules what the facts mean.
 //
 //   ComposeContextBlock     which buttons stand beside the context menu.
+//   JudgeCageClick          what a click on Golpear / Noquear may do now (the
+//                           facts re-read at click time).
+//   BeatCooldownLedger      R2.3's interval between beatings, per prisoner, and
+//   BeatLabel               the wait on Golpear's caption.
 //   BeatBlunt .. PickBeatPart  Golpear's one capped blow: how hard, where, and
 //                           the floor it never crosses.
 //   JudgeOrderWatch         did the actor take the knockout order, or does the
@@ -39,13 +43,29 @@ struct CageCommandFacts
     bool allowBeating;   // config: submission.allowBeating
     bool inPlayerCage;   // the target sits in one of the player's cages
     bool down;           // already unconscious (or dead): nothing left to beat
+    float beatHoursLeft; // game hours until Golpear may land again on them (0: ready)
 
-    CageCommandFacts() : allowBeating(true), inPlayerCage(false), down(false) {}
+    CageCommandFacts() : allowBeating(true), inPlayerCage(false), down(false), beatHoursLeft(0.0f) {}
 };
 
 // True when Golpear and Noquear apply: a prisoner of the player's, awake, and the
-// player allowed beating.
+// player allowed beating. The buttons show whenever this holds; Golpear's rest
+// only changes its caption (BeatLabel) and what its click does (JudgeCageClick).
 bool CageCommandsAllowed(const CageCommandFacts& facts);
+
+// True when Golpear may land now: the commands apply and it is not resting.
+bool BeatReady(const CageCommandFacts& facts);
+
+// What a click on a cage command may do, judged on the facts read at the click
+// (a block or a popup may have been built a while ago).
+enum CageClickVerdict
+{
+    CageClick_Go,          // act
+    CageClick_NotAllowed,  // the commands no longer apply (freed, down, beating off)
+    CageClick_Resting      // Golpear only: still inside the interval between beatings
+};
+
+CageClickVerdict JudgeCageClick(const CageCommandFacts& facts, bool beat);
 
 // The block for one menu: Hablar always, then Golpear and Noquear when the cage
 // commands apply.
@@ -96,6 +116,34 @@ private:
     typedef std::map<CharKey, unsigned int> Pending;
     Pending pending_;
 };
+
+// --- the interval between beatings (R2.3) ----------------------------------
+//
+// Golpear rests per prisoner for submission.beatingCooldownHours game hours after
+// a blow that landed. Session-only, like the defeat episodes (defeats.cpp): the
+// load boundary clears it, so an earlier save never inherits a later clock.
+class BeatCooldownLedger
+{
+public:
+    // A blow just landed on `target` at game hour `nowHours`.
+    void Remember(const CharKey& target, double nowHours);
+
+    // Game hours until Golpear may land on `target` again: 0 when it never landed,
+    // when the cooldown is 0 or less, or when the clock reads earlier than the blow.
+    float HoursLeft(const CharKey& target, double nowHours, float cooldownHours) const;
+
+    void Clear();
+
+private:
+    typedef std::map<CharKey, double> Last;
+    Last last_;
+};
+
+// The whole hours a wait shows: rounded up, 0 when there is none.
+int BeatRestHoursShown(float hoursLeft);
+
+// `base` when Golpear is ready, else "<base> (<hours> h)" with the hours rounded up.
+std::string BeatLabel(const std::string& base, float hoursLeft);
 
 // --- the knockout label ----------------------------------------------------
 

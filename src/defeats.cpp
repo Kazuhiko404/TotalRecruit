@@ -31,10 +31,6 @@ NearDeathListener g_nearDeathListener = NULL;
 struct Record
 {
     DefeatEpisode::State episode;
-    // Game hour of the last counted defeat: the beating's cooldown runs from it.
-    double lastHour;
-
-    Record() : lastHour(-1000.0) {}
 };
 
 std::map<CharKey, Record> g_records;
@@ -201,12 +197,6 @@ void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Si
         return;
     }
 
-    double now = 0.0;
-    if (!SafeGameHours(&now))
-    {
-        return;
-    }
-
     // One knockout raises several engine calls as the body settles, and the
     // right-click looks at the same body again on every click: only the first
     // sighting of the episode counts, and only seeing them up again re-arms it.
@@ -225,7 +215,6 @@ void RecordDefeat(Character* character, bool creditedToPlayer, DefeatEpisode::Si
         return;
     }
     record.episode = DefeatEpisode::AfterCount(record.episode, nowMs);
-    record.lastHour = now;
     const int count = LedgerAdd(key);
 
     if (creditedToPlayer)
@@ -331,49 +320,6 @@ void ClearDefeats(Character* character)
     LedgerSet(key, 0);
     g_records.erase(key);
     LogInfo("[defeat] " + CharacterName(character) + ": defeats cleared");
-}
-
-bool CanBeatPrisoner(Character* character, double* outHoursLeft)
-{
-    if (outHoursLeft) *outHoursLeft = 0.0;
-
-    const Submission& sub = GetConfig().submission;
-    if (character == NULL || !sub.allowBeating)
-    {
-        return false;
-    }
-
-    if (!IsInPlayerCage(character))
-    {
-        return false;
-    }
-
-    // Hitting someone who is already unconscious teaches them nothing and only
-    // risks killing them.
-    bool down = false;
-    if (SafeIsDown(character, &down) && down)
-    {
-        return false;
-    }
-
-    CharKey key;
-    double now = 0.0;
-    if (!SafeFindCharKey(character, &key) || !SafeGameHours(&now))
-    {
-        return false;
-    }
-
-    std::map<CharKey, Record>::const_iterator it = g_records.find(key);
-    if (it != g_records.end())
-    {
-        const double since = now - it->second.lastHour;
-        if (since < sub.beatingCooldownHours)
-        {
-            if (outHoursLeft) *outHoursLeft = sub.beatingCooldownHours - since;
-            return false;
-        }
-    }
-    return true;
 }
 
 // A second way in, because MedicalSystem::knockout may not be the call that

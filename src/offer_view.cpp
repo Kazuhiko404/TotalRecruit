@@ -210,7 +210,8 @@ void ApplyCageCommands(const OfferInput& in, const OfferTexts& t, OfferView* vie
                          CageCommandsAllowed(in.cage);
     if (offered)
     {
-        view->beatLabel = t.beat;
+        // While Golpear rests it stays, with the hours left (the block's caption).
+        view->beatLabel = BeatLabel(t.beat, in.cage.beatHoursLeft);
         view->knockoutLabel = KnockoutLabel(t.knockout, in.knockoutOddsKnown, in.knockoutOdds);
         return;
     }

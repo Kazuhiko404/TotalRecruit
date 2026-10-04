@@ -74,6 +74,7 @@ Nothing has a formal QA pass mark.
 | Noquear's cleanup keeps the player's other orders (the order is dropped only when it is ours and alone in the queue); the sweep removes goals only, only for a prisoner in the player's cage; an abandoned order ends the watch clean | `not verified` (12.19 C10e-C10g) |
 | Noquear's watch clock stops while the game is paused (no fallback, no land-window timeout during a pause) | `not verified` (12.19 C10h) |
 | Noquear's watch keeps character keys and re-resolves them each tick; a vanished actor drops the watch with no cleanup | `not verified` (12.19 C10i) |
+| R2.3 interval between beatings: Golpear rests `submissionBeatingCooldownHours` per prisoner after a blow and shows the wait in the block and the popup; every click re-reads the facts | `not verified` (12.19 C3c-C3g, 12.13 K6) |
 | Caged popup offers GOLPEAR / NOQUEAR, never IGNORAR / PERDONAR | `not verified` (12.22) |
 
 ### 6. Defeats, mercy and the submission event (4)

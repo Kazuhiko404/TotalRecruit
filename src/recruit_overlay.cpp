@@ -139,11 +139,11 @@ bool IsActingButton(MyGUI::MouseButton button)
 }
 
 // A cage command that could not be given says why, in the player's words.
-void ReportCageCommand(CageCommandResult result)
+void ReportCageCommand(CageCommandResult result, Character* target)
 {
     if (result != CageCommand_Issued)
     {
-        TellPlayer(CageCommandProblem(result), true);
+        TellPlayer(CageCommandProblem(result, target), true);
     }
 }
 
@@ -178,11 +178,11 @@ void OnButtonEvent(ContextButtonKind kind, MyGUI::MouseButton button)
     switch (kind)
     {
     case ContextButton_Beat:
-        ReportCageCommand(OrderSelectedToBeat(target));
+        ReportCageCommand(OrderSelectedToBeat(target), target);
         return;
 
     case ContextButton_Knockout:
-        ReportCageCommand(OrderSelectedToKnockout(target));
+        ReportCageCommand(OrderSelectedToKnockout(target), target);
         return;
 
     case ContextButton_Talk:
@@ -394,7 +394,7 @@ void CaptionBlock(Character* character)
         std::string caption;
         switch (kind)
         {
-        case ContextButton_Beat:     caption = BeatButtonLabel(); break;
+        case ContextButton_Beat:     caption = BeatButtonLabel(character); break;
         case ContextButton_Knockout: caption = KnockoutButtonLabel(character); break;
         case ContextButton_Talk:
         default:                     caption = GetConfig().recruitLabel; break;

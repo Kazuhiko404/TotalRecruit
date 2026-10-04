@@ -951,7 +951,9 @@ void AnswerHelper(Character* npc, OfferAnswer answer)
 
 // GOLPEAR / NOQUEAR: the very orders of the context menu's Golpear / Noquear,
 // given to the selected character; the engine decides how it goes. The window
-// is already closed: the order is the answer. Nobody selected says so.
+// is already closed: the order is the answer. The facts are re-read at the click
+// (OrderSelectedTo*): a window left open while the prisoner was freed or knocked
+// out, or while GOLPEAR rests, does nothing but say why. Nobody selected says so.
 void OrderCageCommand(Character* npc, OfferAnswer answer)
 {
     const CageCommandResult result = (answer == Answer_Knockout)
@@ -959,7 +961,7 @@ void OrderCageCommand(Character* npc, OfferAnswer answer)
                                          : OrderSelectedToBeat(npc);
     if (result != CageCommand_Issued)
     {
-        TellPlayer(CageCommandProblem(result), true);
+        TellPlayer(CageCommandProblem(result, npc), true);
     }
 }
 

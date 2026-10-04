@@ -15,6 +15,69 @@ bool CageCommandsAllowed(const CageCommandFacts& facts)
     return facts.allowBeating && facts.inPlayerCage && !facts.down;
 }
 
+bool BeatReady(const CageCommandFacts& facts)
+{
+    return CageCommandsAllowed(facts) && facts.beatHoursLeft <= 0.0f;
+}
+
+CageClickVerdict JudgeCageClick(const CageCommandFacts& facts, bool beat)
+{
+    if (!CageCommandsAllowed(facts))
+    {
+        return CageClick_NotAllowed;
+    }
+    return (beat && facts.beatHoursLeft > 0.0f) ? CageClick_Resting : CageClick_Go;
+}
+
+void BeatCooldownLedger::Remember(const CharKey& target, double nowHours)
+{
+    last_[target] = nowHours;
+}
+
+float BeatCooldownLedger::HoursLeft(const CharKey& target, double nowHours,
+                                    float cooldownHours) const
+{
+    Last::const_iterator it = last_.find(target);
+    if (it == last_.end() || cooldownHours <= 0.0f)
+    {
+        return 0.0f;
+    }
+    const double since = nowHours - it->second;
+    if (since < 0.0)
+    {
+        return 0.0f;
+    }
+    const double left = (double)cooldownHours - since;
+    return left > 0.0 ? (float)left : 0.0f;
+}
+
+void BeatCooldownLedger::Clear()
+{
+    last_.clear();
+}
+
+int BeatRestHoursShown(float hoursLeft)
+{
+    if (hoursLeft <= 0.0f)
+    {
+        return 0;
+    }
+    const int whole = (int)hoursLeft;
+    return ((float)whole < hoursLeft) ? whole + 1 : whole;
+}
+
+std::string BeatLabel(const std::string& base, float hoursLeft)
+{
+    const int hours = BeatRestHoursShown(hoursLeft);
+    if (hours <= 0)
+    {
+        return base;
+    }
+    char buffer[24];
+    _snprintf_s(buffer, sizeof(buffer), _TRUNCATE, " (%d h)", hours);
+    return base + buffer;
+}
+
 std::vector<ContextButtonKind> ComposeContextBlock(bool cageCommands)
 {
     std::vector<ContextButtonKind> block;

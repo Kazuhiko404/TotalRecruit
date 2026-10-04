@@ -738,7 +738,9 @@
       "knockout": "Noquear"
     },
     "noActor": "Selecciona a alguien de tu grupo para hacerlo",
-    "failed": "No se pudo dar la orden"
+    "failed": "No se pudo dar la orden",
+    "notAllowed": "Ya no puedes hacerle eso",
+    "beatResting": "Podrás volver a golpearlo en {hours} h"
   },
   "grudge": {
     "never": [

@@ -38,6 +38,15 @@
 // would send every order to the fallback. The order watch decides instead -- an
 // actor who never changes task did not take the order, whatever the reason.
 //
+// Rest (R2.3): after a blow that landed, Golpear rests on that prisoner for
+// submission.beatingCooldownHours game hours (BeatCooldownLedger, session-only
+// like the defeat episodes). The buttons stay; Golpear's caption carries the wait
+// ("Golpear (4 h)", BeatLabel) and its click only says so. Noquear never rests.
+//
+// Every click re-reads the facts the button was shown for (JudgeCageClick): a
+// block or a popup built a while ago never acts on a prisoner freed, knocked out
+// or out of the cage since.
+//
 // Credit: the knockout hook (defeats.cpp) counts the defeat. A blow or a
 // knockout the player gave here is remembered for kOrderedKnockoutWindowMs, and
 // the hook claims it (ClaimOrderedKnockoutCredit), so a knockout it causes counts
@@ -67,12 +76,16 @@ enum CageCommandResult
     CageCommand_Issued,    // the blow landed, or the knockout order went in (the
                            // watch may still fall back)
     CageCommand_NoActor,   // nobody of the player's is selected and awake
-    CageCommand_Failed     // the blow or the order could not be given at all (logged)
+    CageCommand_Failed,    // the blow or the order could not be given at all (logged)
+    CageCommand_NotAllowed, // at the click the commands no longer apply (freed, down,
+                            // out of the cage, beating off): nothing was done
+    CageCommand_Resting    // Golpear only: still inside the interval between beatings
 };
 
 // The facts CageCommandsAllowed judges, read for this character now: in the
-// player's cage, down (unconscious or dead), submission.allowBeating. The popup
-// (offer_view.h OfferInput::cage) and the context menu read the same facts.
+// player's cage, down (unconscious or dead), submission.allowBeating, and the game
+// hours Golpear still rests on them. The popup (offer_view.h OfferInput::cage),
+// the context menu and every click read the same facts.
 CageCommandFacts ReadCageCommandFacts(Character* target);
 
 // Whether Golpear and Noquear apply to this character now: in the player's cage,
@@ -95,19 +108,22 @@ Character* SelectedSquadActor(Character* target);
 bool IssueBeat(Character* actor, Character* target);
 bool IssueKnockout(Character* actor, Character* target);
 
-// The same with the selected character as the actor (SelectedSquadActor).
+// The same with the selected character as the actor (SelectedSquadActor), after
+// re-reading the facts at the click (NotAllowed / Resting: nothing is done).
 CageCommandResult OrderSelectedToBeat(Character* target);
 CageCommandResult OrderSelectedToKnockout(Character* target);
 
 // The line the caller tells the player for a result that is not Issued
-// (messages.json "cage.noActor" / "cage.failed"); empty for Issued.
-std::string CageCommandProblem(CageCommandResult result);
+// (messages.json "cage.noActor" / "cage.failed" / "cage.notAllowed" /
+// "cage.beatResting", the last with the hours left on `target`); empty for Issued.
+std::string CageCommandProblem(CageCommandResult result, Character* target);
 
-// Button captions (messages.json "cage.button.*"). The knockout one carries the
-// engine's own odds for the selected characters
+// Button captions (messages.json "cage.button.*"). Golpear carries the hours it
+// still rests on `target` ("Golpear (4 h)", BeatLabel). The knockout one carries
+// the engine's own odds for the selected characters
 // (PlayerInterface::getPlayerTaskProbability, STEALTH_KNOCKOUT): "Noquear 72%",
 // the plain label when the engine gives none.
-std::string BeatButtonLabel();
+std::string BeatButtonLabel(Character* target);
 std::string KnockoutButtonLabel(Character* target);
 
 // The frame tick: watches the last knockout order (fallback when the actor never

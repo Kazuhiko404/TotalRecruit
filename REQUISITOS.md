@@ -129,6 +129,16 @@ actor abandona la orden (otra tarea, sin orden ni meta de noqueo, 3 s seguidos),
 la vigilancia termina limpia y sin respaldo. *(F9)* Los tiempos de la vigilancia
 no corren con el juego en pausa.
 
+*Estado (2026-10-04, prisoner-module-fixes F6):* **intervalo entre golpizas.**
+Tras un golpe que pegó, Golpear descansa sobre ese preso
+`submissionBeatingCooldownHours` horas de juego (Mod Hub "Sumision: horas entre
+golpizas", 6 por defecto; por preso y solo de sesión, como los episodios de
+derrota). El botón sigue en el bloque y en la ventana y muestra la espera
+("Golpear (4 h)", horas redondeadas hacia arriba); un clic solo la dice ("Podrás
+volver a golpearlo en 4 h"). Cada clic vuelve a leer los hechos: una ventana o un
+menú viejo no actúa sobre un preso liberado, caído o fuera de la jaula ("Ya no
+puedes hacerle eso"). Noquear no descansa.
+
 *Estado (2026-10-04, prisoner-module-fixes F4):* con un preso dentro de la jaula
 el menú del juego abre dos columnas (el personaje y la jaula: ABRIR CON LLAVE,
 DESMANTELAR, PONER EN LIBERTAD). El bloque Hablar / Golpear / Noquear se ubica

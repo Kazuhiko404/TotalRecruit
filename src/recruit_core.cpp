@@ -1159,7 +1159,7 @@ void ChallengeToDuel(Character* npc)
     Character* challenger = SelectedSquadActor(npc);
     if (challenger == NULL)
     {
-        TellPlayer(CageCommandProblem(CageCommand_NoActor), true);
+        TellPlayer(CageCommandProblem(CageCommand_NoActor, npc), true);
         return;
     }
 

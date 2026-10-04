@@ -238,6 +238,74 @@ void TheBlowLandsOnTheTorso()
     CHECK(PickBeatPart(limbs, 0) == -1);
     CHECK(PickBeatPart(NULL, 3) == -1);
 }
+
+// R2.3: an interval between beatings. Golpear rests per prisoner for the
+// configured game hours after a blow; Noquear never rests.
+void GolpearRestsForTheCooldownAfterABlow()
+{
+    const char* name = "beat cooldown: game hours left since the last blow, per prisoner";
+    BeatCooldownLedger ledger;
+    const CharKey warden = CharKey::FromId("warden");
+    const CharKey other = CharKey::FromId("other");
+    CHECK(ledger.HoursLeft(warden, 100.0, 6.0f) == 0.0f);
+
+    ledger.Remember(warden, 100.0);
+    CHECK(ledger.HoursLeft(warden, 100.0, 6.0f) == 6.0f);
+    CHECK(ledger.HoursLeft(warden, 102.0, 6.0f) == 4.0f);
+    CHECK(ledger.HoursLeft(warden, 106.0, 6.0f) == 0.0f);
+    CHECK(ledger.HoursLeft(warden, 130.0, 6.0f) == 0.0f);
+    CHECK(ledger.HoursLeft(other, 102.0, 6.0f) == 0.0f);
+    // A cooldown switched to zero, or a clock that went backwards: no wait.
+    CHECK(ledger.HoursLeft(warden, 102.0, 0.0f) == 0.0f);
+    CHECK(ledger.HoursLeft(warden, 99.0, 6.0f) == 0.0f);
+    // A newer blow restarts it; Clear (the load boundary) forgets everyone.
+    ledger.Remember(warden, 104.0);
+    CHECK(ledger.HoursLeft(warden, 106.0, 6.0f) == 4.0f);
+    ledger.Clear();
+    CHECK(ledger.HoursLeft(warden, 106.0, 6.0f) == 0.0f);
+}
+
+void TheBeatLabelCarriesTheWait()
+{
+    const char* name = "beat label: the plain verb when ready, the hours left rounded up while resting";
+    CHECK(BeatLabel("Golpear", 0.0f) == "Golpear");
+    CHECK(BeatLabel("Golpear", -1.0f) == "Golpear");
+    CHECK(BeatLabel("Golpear", 3.2f) == "Golpear (4 h)");
+    CHECK(BeatLabel("GOLPEAR", 4.0f) == "GOLPEAR (4 h)");
+    CHECK(BeatLabel("Golpear", 0.1f) == "Golpear (1 h)");
+    CHECK(BeatRestHoursShown(0.0f) == 0);
+    CHECK(BeatRestHoursShown(0.01f) == 1);
+    CHECK(BeatRestHoursShown(5.5f) == 6);
+}
+
+// The click re-reads the facts the button was shown for: a stale block or popup
+// never acts on someone freed, knocked out or out of the cage since, and Golpear
+// never acts while it rests.
+void TheClickReChecksTheFacts()
+{
+    const char* name = "cage click: not allowed any more, resting (Golpear only), or go";
+    CageCommandFacts f = CagedAwake();
+    CHECK(JudgeCageClick(f, true) == CageClick_Go);
+    CHECK(JudgeCageClick(f, false) == CageClick_Go);
+
+    f.beatHoursLeft = 2.5f;
+    CHECK(JudgeCageClick(f, true) == CageClick_Resting);
+    CHECK(JudgeCageClick(f, false) == CageClick_Go);
+    CHECK(!BeatReady(f));
+
+    f = CagedAwake();
+    f.down = true;
+    CHECK(JudgeCageClick(f, true) == CageClick_NotAllowed);
+    CHECK(JudgeCageClick(f, false) == CageClick_NotAllowed);
+    f = CagedAwake();
+    f.inPlayerCage = false;
+    f.beatHoursLeft = 2.5f;   // not allowed wins over resting
+    CHECK(JudgeCageClick(f, true) == CageClick_NotAllowed);
+    f = CagedAwake();
+    f.allowBeating = false;
+    CHECK(JudgeCageClick(f, false) == CageClick_NotAllowed);
+    CHECK(BeatReady(CagedAwake()));
+}
 } // namespace
 
 void RunCageCommandRulesTests()
@@ -257,4 +325,7 @@ void RunCageCommandRulesTests()
     TheHealthFloorIsHalfTheMaxBelowZero();
     TheBlowIsCappedAtTheFloor();
     TheBlowLandsOnTheTorso();
+    GolpearRestsForTheCooldownAfterABlow();
+    TheBeatLabelCarriesTheWait();
+    TheClickReChecksTheFacts();
 }

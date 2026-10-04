@@ -162,6 +162,8 @@ struct OrderWatch
 
 OrderWatch g_watch;
 OrderedKnockoutCredit g_credit;
+// R2.3: when Golpear last landed on each prisoner (game hours, session-only).
+BeatCooldownLedger g_beatCooldown;
 
 bool SafePosition(Character* character, Ogre::Vector3* out)
 {
@@ -271,6 +273,30 @@ void LogBeatHit(Character* actor, Character* target, float blunt, float before, 
     }
 }
 
+// Starts Golpear's rest on `target` (R2.3), from the game hour the blow landed.
+void StartBeatCooldown(Character* target)
+{
+    CharKey key;
+    double now = 0.0;
+    if (SafeCharKey(target, &key) && SafeGameHours(&now))
+    {
+        g_beatCooldown.Remember(key, now);
+    }
+}
+
+// Game hours until Golpear may land on `target` again (0: ready, or unreadable --
+// a wait the player cannot be shown is no wait).
+float BeatHoursLeft(Character* target)
+{
+    CharKey key;
+    double now = 0.0;
+    if (!SafeFindCharKey(target, &key) || !SafeGameHours(&now))
+    {
+        return 0.0f;
+    }
+    return g_beatCooldown.HoursLeft(key, now, GetConfig().submission.beatingCooldownHours);
+}
+
 void RememberCredit(Character* target)
 {
     CharKey key;
@@ -372,6 +398,7 @@ bool LandBeatHit(Character* actor, Character* target)
             LogFailure(actor, target, "beat", "applyDamage raised");
             return false;
         }
+        StartBeatCooldown(target);
     }
 
     // CapBeatBlunt assumes the engine takes the blunt off one to one; whatever it
@@ -497,6 +524,7 @@ CageCommandFacts ReadCageCommandFacts(Character* target)
     bool down = false;
     bool dead = false;
     facts.down = (SafeIsDown(target, &down) && down) || (SafeIsDead(target, &dead) && dead);
+    facts.beatHoursLeft = facts.inPlayerCage ? BeatHoursLeft(target) : 0.0f;
     return facts;
 }
 
@@ -540,8 +568,28 @@ bool IssueKnockout(Character* actor, Character* target)
     return IssueKnockoutOrder(actor, target);
 }
 
+namespace
+{
+// The facts the button was shown for, read again at the click.
+CageCommandResult CheckClick(Character* target, bool beat)
+{
+    switch (JudgeCageClick(ReadCageCommandFacts(target), beat))
+    {
+    case CageClick_NotAllowed: return CageCommand_NotAllowed;
+    case CageClick_Resting:    return CageCommand_Resting;
+    case CageClick_Go:
+    default:                   return CageCommand_Issued;
+    }
+}
+} // namespace
+
 CageCommandResult OrderSelectedToBeat(Character* target)
 {
+    const CageCommandResult check = CheckClick(target, true);
+    if (check != CageCommand_Issued)
+    {
+        return check;
+    }
     Character* actor = SelectedSquadActor(target);
     if (actor == NULL)
     {
@@ -552,6 +600,11 @@ CageCommandResult OrderSelectedToBeat(Character* target)
 
 CageCommandResult OrderSelectedToKnockout(Character* target)
 {
+    const CageCommandResult check = CheckClick(target, false);
+    if (check != CageCommand_Issued)
+    {
+        return check;
+    }
     Character* actor = SelectedSquadActor(target);
     if (actor == NULL)
     {
@@ -560,7 +613,7 @@ CageCommandResult OrderSelectedToKnockout(Character* target)
     return IssueKnockoutOrder(actor, target) ? CageCommand_Issued : CageCommand_Failed;
 }
 
-std::string CageCommandProblem(CageCommandResult result)
+std::string CageCommandProblem(CageCommandResult result, Character* target)
 {
     switch (result)
     {
@@ -568,15 +621,21 @@ std::string CageCommandProblem(CageCommandResult result)
         return Say("cage.noActor", "Selecciona a alguien de tu grupo para hacerlo", NULL);
     case CageCommand_Failed:
         return Say("cage.failed", "No se pudo dar la orden", NULL);
+    case CageCommand_NotAllowed:
+        return Say("cage.notAllowed", "Ya no puedes hacerle eso", NULL);
+    case CageCommand_Resting:
+        return Fill(Say("cage.beatResting", "Podr\xc3\xa1s volver a golpearlo en {hours} h", NULL),
+                    CharacterName(target), 0, BeatRestHoursShown(BeatHoursLeft(target)));
     case CageCommand_Issued:
     default:
         return std::string();
     }
 }
 
-std::string BeatButtonLabel()
+std::string BeatButtonLabel(Character* target)
 {
-    return Say("cage.button.beat", "Golpear", NULL);
+    const float hoursLeft = target != NULL ? BeatHoursLeft(target) : 0.0f;
+    return BeatLabel(Say("cage.button.beat", "Golpear", NULL), hoursLeft);
 }
 
 std::string KnockoutButtonLabel(Character* target)
@@ -676,5 +735,6 @@ void ForgetCageCommands()
     // before its pointer is dropped (the goal would otherwise be saved with it).
     EndWatch("at load");
     g_credit.Clear();
+    g_beatCooldown.Clear();
 }
 } // namespace totalrecruit
