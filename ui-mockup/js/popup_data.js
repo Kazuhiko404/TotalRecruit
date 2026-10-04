@@ -160,6 +160,21 @@ var POPUP_STATES = [
     }
   },
   {
+    id: 'cagedResting',
+    title: 'Caged and defiant, GOLPEAR resting',
+    note: 'The same Holy Warden two game hours after a blow, with <code>submissionBeatingCooldownHours</code> = 6 (R2.3: an interval between beatings). GOLPEAR stays in the row and carries the hours left, rounded up (<code>BeatLabel</code>, <code>beatHoursLeft</code> from <code>BeatCooldownLedger</code>, session-only like the defeat episodes). A click closes the window and only says "Podrás volver a golpearlo en 4 h" (<code>cage.beatResting</code>); the click re-reads the facts, so a window left open while he was freed or knocked out says "Ya no puedes hacerle eso" (<code>cage.notAllowed</code>). NOQUEAR never rests.',
+    // facts: as cagedDefiant; cage.beatHoursLeft 3.2
+    vm: {
+      title: 'Reclutamiento', name: 'Holy Warden', route: 'cautiverio', routeTag: 'Cautiverio',
+      body: 'Holy Warden no se une todavia.',
+      showPrice: false, priceText: '', priceFree: false,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: true, chanceText: '87%',
+      reason: 'Sigue desafiante: dejalo con hambre o hierelo', reasonRed: true,
+      accept: '', extra: '', beat: 'GOLPEAR (4 h)', knockout: 'NOQUEAR 72%', cancel: 'CERRAR'
+    }
+  },
+  {
     id: 'cagedHungry',
     title: 'Caged and hungry: four buttons, two rows',
     note: 'The same prisoner starving, and you carry food: DARLE COMIDA plus the cage commands. Four buttons do not fit one row (DARLE COMIDA would not hold), so the actions share the first row and CERRAR wraps alone to the right of a second one (<code>kButtonsPerRow</code> = 3).',

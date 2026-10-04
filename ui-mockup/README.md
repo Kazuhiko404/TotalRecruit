@@ -112,6 +112,12 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     Noquear shows the game's own odds ("Noquear 72%", `getPlayerTaskProbability`), plain "Noquear" when there are none.
     Labels are title case like Hablar (`cage.button.*` in `messages.json`). Each button arms its own press-and-release
     gesture.
+    **Golpear rests** (tab "Menu on your prisoner, Golpear resting"; R2.3, prisoner-module-fixes F6). After each blow
+    on a prisoner, Golpear rests for `submissionBeatingCooldownHours` game hours (Mod Hub "Sumision: horas entre
+    golpizas", 6 by default; per prisoner, session-only like the defeat episodes). The button stays in the block and
+    carries the hours left, rounded up: "Golpear (4 h)" (`BeatLabel`). A click only tells the wait ("Podrás volver a
+    golpearlo en 4 h", `cage.beatResting`). Every click re-reads the facts the block was built on: a prisoner freed,
+    knocked out or out of the cage since says "Ya no puedes hacerle eso" (`cage.notAllowed`). Noquear never rests.
     **Two native columns** (tab "Menu on your prisoner, two columns"; prisoner-module-fixes F4). A character inside a
     building opens two columns side by side: the character (`ContextMenu::menuGUI`) and the building (`menuGUI2`, e.g.
     "Jaula de Prisionero": ABRIR CON LLAVE, DESMANTELAR, PONER EN LIBERTAD). The block is placed beside the rectangle
@@ -124,7 +130,8 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     CERRAR; same orders, same selected actor, the same "Selecciona a alguien" line; the window closes. A yes keeps
     ACEPTAR / CANCELAR only, and the haggle slider owns its row, so neither carries them. Beating off: no buttons,
     and a defiant prisoner reads "Sigue desafiante: dejalo con hambre" (`popup.reason.defiantNoBeat`). The old
-    cooldown-gated GOLPEARLO remedy is gone. Someone who cannot leave (caged, shackled, carried) never gets IGNORAR
+    GOLPEARLO remedy is gone; GOLPEAR rests between blows exactly as in the block above ("GOLPEAR (4 h)", state
+    "Caged and defiant, GOLPEAR resting"). Someone who cannot leave (caged, shackled, carried) never gets IGNORAR
     (mercy) or PERDONAR (submission). States "Caged and defiant", "Caged and hungry", "Mercy plea from someone who
     cannot leave".
 
