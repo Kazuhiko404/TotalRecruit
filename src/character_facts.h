@@ -44,8 +44,10 @@ void GatherCoreFacts(Character* character, CoreFacts* out);
 
 // A decision may leave marks (it starts a prisoner's hold clock, it mints the id a roll
 // is seeded from). A peek is the same read with none of that, for the readout: it
-// looks at a clock that is already running and supplies no roll key at all, so the
-// roll cannot pass and nobody gets an id for being looked at.
+// looks at a clock that is already running and never mints an id, so nobody gets one
+// for being looked at. The rescue route's peek still rolls, from the id the NPC
+// already has (SafeFindCharKey), so the card and the click agree on a saved life;
+// the other routes' peeks supply no roll key and the card shows their odds.
 enum GatherMode
 {
     Gather_Decide,

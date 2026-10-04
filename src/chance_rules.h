@@ -14,6 +14,8 @@
 
 namespace totalrecruit
 {
+struct RollFact;   // entry_facts.h
+
 struct ChanceInputs
 {
     int npcLevel;
@@ -138,4 +140,12 @@ bool DailyRoll(const CharKey& key, int dayIndex, unsigned int salt, int percent)
 // than refusing. The day arrives as an argument (RollFact.dayIndex, read on the
 // engine side from the same game clock as the hold clock); this stays pure.
 bool RollsToJoin(bool haveKey, const CharKey& key, int dayIndex, int percent);
+
+// The roll a route draws on, from what the engine side read: the character's key
+// (`haveKey` false when it could not be read) and the game clock (`haveClock`
+// false when it could not be read). Both or no key: without either there is no
+// stable seed. Which key is the caller's choice -- the click mints one
+// (SafeCharKey), the card's peek only finds the existing one (SafeFindCharKey) --
+// so for an NPC that already has an id both draw the same roll and agree.
+RollFact RollFactFrom(bool haveKey, const CharKey& key, bool haveClock, double gameHours);
 } // namespace totalrecruit

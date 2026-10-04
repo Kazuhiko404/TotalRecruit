@@ -198,6 +198,7 @@ I5 **no es un bug**: el estado vive en memoria. Está anotado como pendiente.
 | R3 | **Que uno se niegue** | Te **entrega** sus cats | `X paid the player N cats for the rescue` |
 | R4 | Volver a hablarle tras R3 | Sigue en deuda, **no** te paga otra vez | No hay segunda línea `paid the player` |
 | R5 | Rescatar a uno sin dinero | Se niega y no paga — correcto | Sin línea `paid` |
+| R6 | Con la tarjeta de lectura visible sobre alguien que rescataste (con id: ya le hablaste o lo derrotaste antes), mirar la tarjeta y luego clic derecho (prisoner-module-fixes F3) | La tarjeta y el menú dicen lo mismo: si la tarjeta dice que se une, el menú dice CAN JOIN; si dice "No puede seguirte: te paga con lo suyo", el menú dice que no | `[readout] <nombre> route=rescue chance=N% ... line="..."` y `Context menu: <nombre> -> CAN JOIN ...` (o el rechazo) coinciden |
 
 **R3 es el bug que arreglé:** antes decía *"te deja algo en pago"* y no daba nada.
 **R4 es la garantía:** el pago se cobra una vez.

@@ -231,6 +231,11 @@ posterior puede cambiar la respuesta. **La negativa no cierra la puerta.**
 Vendar a alguien y dejarlo a medias no vale lo mismo que dejarlo entero. La
 cantidad de cuidado recibido debe pesar en la chance.
 
+*Estado (2026-10-04, prisoner-module-fixes F3):* la tarjeta de lectura y el menú
+dan el mismo veredicto de rescate. El vistazo de la tarjeta tira con el id que el
+NPC ya tiene (sin crear uno); antes no tiraba y decía "No puede seguirte: te paga
+con lo suyo" mientras el clic decía que se unía.
+
 **R4.5 — Los animales solo piden comida.** *(P1, ya cumplido)*
 Sin cambios.
 

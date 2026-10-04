@@ -39,7 +39,7 @@ Nothing has a formal QA pass mark.
 | Daily join roll: re-seeded once per game day, no reroll on click (R0.3) | `not verified` (12.18, QA C8) |
 | Stress derived from hunger, wounds and tiredness (never stored) | `not verified` (12.8) |
 | Readout card over the selected NPC: route, stress bar, chance, defeats, stomach, one blocking line, hours left | `not verified` (12.8, 12.11, 12.16) |
-| `EvaluatePeek`: the card asks the same decision with no side effects | `not verified` (12.8 U17) |
+| `EvaluatePeek`: the card asks the same decision with no side effects; a rescue's peek rolls from the existing id, so card and menu agree | `not verified` (12.8 U17, §6 R6) |
 | Card pinned beside the offer on Hablar; dismissed by a click elsewhere | `not verified` (12.9, 12.17) |
 | Card and head notices hide while a Kenshi dialogue or modal message is open | `not verified` (12.27) |
 | Card duel line refreshes after every bout ("Duelos: W-L, si ganas X% se une") | `play-tested informally` (12.31 F1) |

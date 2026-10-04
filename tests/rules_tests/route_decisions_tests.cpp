@@ -308,6 +308,54 @@ void WithoutAKeyARescueIsNotAGiven()
     CHECK(!v.willJoin);
 }
 
+// The bug: the card's peek took no roll key, RollsToJoin said no without one, and
+// the card read "cannot follow you: pays with what they have" while the click on
+// the same NPC said CAN JOIN. The peek now builds the roll from the id the NPC
+// already has (never minting one), the click from the id it mints or finds: for an
+// NPC with an id both are the same key on the same day, so the verdicts agree.
+void RescuePeekAndDecideAgreeForAKeyedNpc()
+{
+    const char* name = "rescue: the card's peek and the click give the same verdict for a keyed NPC";
+    const double hours = 3.0 * 24.0 + 7.5;   // day 3
+    CharKey key;
+    for (unsigned int i = 1; i < 100000; ++i)
+    {
+        key = CharKey(i, 1u);
+        if (RollsToJoin(true, key, DayIndexFromHours(hours), 95))
+        {
+            break;
+        }
+    }
+    CoreFacts core = Core();
+    core.health = 1.0f;
+    RescueExtra decide;
+    decide.relation = Relation(80.0f);
+    decide.roll = RollFactFrom(true, key, true, hours);   // the click: minted or found
+    RescueExtra peek;
+    peek.relation = Relation(80.0f);
+    peek.roll = RollFactFrom(true, key, true, hours);     // the card: found only
+
+    const Verdict byClick = DecideRescue(core, decide, kConfig);
+    const Verdict byCard = DecideRescue(core, peek, kConfig);
+    CHECK(byClick.chancePercent == 95);
+    CHECK(byClick.willJoin);
+    CHECK(byCard.willJoin == byClick.willJoin);
+    CHECK(byCard.reasonKey == byClick.reasonKey);
+    CHECK(byCard.currency == byClick.currency);
+}
+
+void ARollNeedsTheKeyAndTheClock()
+{
+    const char* name = "roll fact: no key or no game clock -> no stable seed, no key";
+    const CharKey key(7u, 1u);
+    const RollFact both = RollFactFrom(true, key, true, 50.0);
+    CHECK(both.haveKey);
+    CHECK(both.key == key);
+    CHECK(both.dayIndex == 2);
+    CHECK(!RollFactFrom(false, key, true, 50.0).haveKey);
+    CHECK(!RollFactFrom(true, key, false, 50.0).haveKey);
+}
+
 // --------------------------------------------------------------------- yield
 
 void FieldYieldRollsAtTheBeatingChance()
@@ -1461,6 +1509,8 @@ void RunRouteDecisionsTests()
     ARescuedOneWhoCannotFollowPaysItForward();
     HealingThemMoreArguesMore();
     WithoutAKeyARescueIsNotAGiven();
+    RescuePeekAndDecideAgreeForAKeyedNpc();
+    ARollNeedsTheKeyAndTheClock();
     FieldYieldRollsAtTheBeatingChance();
     FieldYieldNotYetNamesTheWayOut();
     FieldYieldReadsStressAndUniqueButNotTheGrudge();

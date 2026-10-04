@@ -321,11 +321,24 @@ PurseFact ReadPurse()
 // has no stable seed either.
 RollFact MintRollKey(Character* character)
 {
-    RollFact fact;
+    CharKey key;
+    const bool haveKey = SafeCharKey(character, &key);
     double nowHours = 0.0;
-    fact.haveKey = SafeCharKey(character, &fact.key) && SafeGameHours(&nowHours);
-    fact.dayIndex = DayIndexFromHours(nowHours);
-    return fact;
+    const bool haveClock = haveKey && SafeGameHours(&nowHours);
+    return RollFactFrom(haveKey, key, haveClock, nowHours);
+}
+
+// The same roll for a peek, from the id the character already has (the way
+// ReadHaggle reads it): never mints one, so a bystander the card looks at gets no
+// id, and a keyed NPC draws exactly the roll a click would. Without an existing
+// id there is no roll, as before.
+RollFact PeekRollKey(Character* character)
+{
+    CharKey key;
+    const bool haveKey = SafeFindCharKey(character, &key);
+    double nowHours = 0.0;
+    const bool haveClock = haveKey && SafeGameHours(&nowHours);
+    return RollFactFrom(haveKey, key, haveClock, nowHours);
 }
 
 // Whether this NPC was offended by a lowball today. Uses the existing id only
@@ -581,10 +594,9 @@ RescueExtra GatherRescueExtra(Character* character, GatherMode mode)
 {
     RescueExtra extra;
     extra.relation = ReadRelation(character, PlayerFaction());
-    if (mode == Gather_Decide)
-    {
-        extra.roll = MintRollKey(character);
-    }
+    // The peek rolls too, from the existing id: a card that skipped the roll read
+    // "cannot follow you" while the click said CAN JOIN.
+    extra.roll = (mode == Gather_Decide) ? MintRollKey(character) : PeekRollKey(character);
     return extra;
 }
 

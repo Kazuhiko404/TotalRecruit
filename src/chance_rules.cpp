@@ -1,4 +1,5 @@
 #include "chance_rules.h"
+#include "entry_facts.h"
 
 #include <cmath>
 
@@ -243,6 +244,18 @@ bool RollsToJoin(bool haveKey, const CharKey& key, int dayIndex, int percent)
     if (percent <= 0)   return false;
     if (!haveKey)       return false;
     return DailyRoll(key, dayIndex, kJoinRollSalt, percent);
+}
+
+RollFact RollFactFrom(bool haveKey, const CharKey& key, bool haveClock, double gameHours)
+{
+    RollFact fact;
+    fact.haveKey = haveKey && haveClock;
+    if (haveKey)
+    {
+        fact.key = key;
+    }
+    fact.dayIndex = DayIndexFromHours(haveClock ? gameHours : 0.0);
+    return fact;
 }
 
 bool StableRoll(const CharKey& key, int percent)
