@@ -16,6 +16,7 @@
 #include "route_decisions.h"
 #include "haggle_ledger.h"
 #include "feeding_ledger.h"
+#include "healing_ledger.h"
 #include "submission_rules.h"
 #include "submission_tracker.h"
 #include "npc_level.h"
@@ -601,7 +602,11 @@ CheatFacts GatherCheatFacts(Character* character, GatherMode mode)
             if (SafeFindCharKey(character, &key))
             {
                 facts.fedByPlayer = PlayerMeals(key) > 0;
+                // The other two gestures (animal-duel-submission D4): a cure from the
+                // player's hand, and any knockout the player's squad dealt it.
+                facts.healedByPlayer = HealedByPlayer(key);
             }
+            facts.defeatedByPlayer = DefeatCount(character) >= 1;
         }
     }
     return facts;

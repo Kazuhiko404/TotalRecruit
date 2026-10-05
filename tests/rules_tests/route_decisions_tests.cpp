@@ -291,6 +291,88 @@ void CheatWithoutACageIsUnchangedForAnimals()
     CHECK(DecideCheat(facts, config).reasonKey == Reason_CheatJoinsFreely);
 }
 
+// animal-duel-submission D4: in Cheat a cure or one knockout by the squad is the
+// gesture too, like a meal.
+CheatFacts FreeAnimalOutside()
+{
+    CheatFacts facts;
+    facts.animal = true;
+    return facts;
+}
+
+void CheatAHealedAnimalJoinsWithoutTheCage()
+{
+    const char* name = "cheat: an animal the player healed joins at once, no cage";
+    CheatFacts facts = FreeAnimalOutside();
+    facts.healedByPlayer = true;
+    const Verdict v = DecideCheat(facts, kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.isAnimal);
+    CHECK(v.currency == Currency_None);
+    CHECK(!v.wantsFood);
+    CHECK(v.reasonKey == Reason_CheatAnimalHealed);
+}
+
+void CheatADefeatedAnimalJoinsWhenSpokenTo()
+{
+    const char* name = "cheat: an animal the squad knocked out joins when spoken to";
+    CheatFacts facts = FreeAnimalOutside();
+    facts.defeatedByPlayer = true;
+    Verdict v = DecideCheat(facts, kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.isAnimal);
+    CHECK(v.currency == Currency_None);
+    CHECK(v.reasonKey == Reason_CheatAnimalDefeated);
+
+    // In the cage it does not wait the minute either.
+    facts.inMyCage = true;
+    facts.hoursHeld = 0.0f;
+    v = DecideCheat(facts, kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.reasonKey == Reason_CheatAnimalDefeated);
+}
+
+void CheatTheMealIsNamedFirst()
+{
+    const char* name = "cheat: fed, healed and beaten reads as the meal; healed and beaten as the cure";
+    CheatFacts facts = FreeAnimalOutside();
+    facts.fedByPlayer = true;
+    facts.healedByPlayer = true;
+    facts.defeatedByPlayer = true;
+    CHECK(DecideCheat(facts, kConfig).reasonKey == Reason_TameReady);
+    facts.fedByPlayer = false;
+    CHECK(DecideCheat(facts, kConfig).reasonKey == Reason_CheatAnimalHealed);
+}
+
+void CheatAnOwnedAnimalIsStillCageOnly()
+{
+    const char* name = "cheat: someone else's animal, healed or beaten, still needs the cage";
+    CheatFacts facts = FreeAnimalOutside();
+    facts.belongsToSomeone = true;
+    facts.healedByPlayer = true;
+    facts.defeatedByPlayer = true;
+    const Verdict v = DecideCheat(facts, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.currency == Currency_Refused);
+    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+}
+
+void CheatAPersonIsNotMovedByACureOrABeating()
+{
+    const char* name = "cheat: a healed or beaten person outside the cage still needs the cage";
+    CheatFacts facts;
+    facts.healedByPlayer = true;
+    facts.defeatedByPlayer = true;
+    Verdict v = DecideCheat(facts, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(!v.isAnimal);
+    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+    facts.inMyCage = true;
+    facts.hoursHeld = 0.0f;
+    v = DecideCheat(facts, kConfig);
+    CHECK(v.reasonKey == Reason_CheatWaiting);
+}
+
 // -------------------------------------------------------------------- rescue
 
 void OutColdAndOwingWaitsForThemToWake()
@@ -1716,6 +1798,11 @@ void AnAnimalNeverHearsTheInsistenceLockout()
 
 void RunRouteDecisionsTests()
 {
+    CheatAHealedAnimalJoinsWithoutTheCage();
+    CheatADefeatedAnimalJoinsWhenSpokenTo();
+    CheatTheMealIsNamedFirst();
+    CheatAnOwnedAnimalIsStillCageOnly();
+    CheatAPersonIsNotMovedByACureOrABeating();
     AnAnimalYieldsAtAPlainBeatingChance();
     AnAnimalThatDoesNotYieldCanStillBeFed();
     ATamedAnimalJoinsEvenWhenTheRollFails();

@@ -732,7 +732,19 @@
       "acaba de entrar: dale un minuto",
       "aun no: vuelve en un momento",
       "esperalo, no va a tardar"
-    ]
+    ],
+    "animal": {
+      "healed": [
+        "lo curaste: confia en ti y te sigue",
+        "no olvida quien le curo las heridas: camina a tu lado",
+        "te lame la mano que lo curo y ya no se separa de ti"
+      ],
+      "defeated": [
+        "lo venciste: te reconoce como el mas fuerte y te sigue",
+        "perdio contra los tuyos y ahora es parte de tu manada",
+        "agacha la cabeza ante quien lo vencio: te sigue"
+      ]
+    }
   },
   "captive": {
     "intimidated": [
@@ -1128,7 +1140,11 @@
         "joinsFreely": "Se une",
         "needsCage": "Metelo en una jaula",
         "waiting": "Espera un momento en la jaula",
-        "joins": "Quiere hablar: se une"
+        "joins": "Quiere hablar: se une",
+        "animal": {
+          "healed": "Lo curaste: te sigue",
+          "defeated": "Lo venciste: te sigue"
+        }
       },
       "unconscious": {
         "owesYou": "Inconsciente: te lo debe al despertar",

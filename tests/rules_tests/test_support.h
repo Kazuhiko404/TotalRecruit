@@ -64,4 +64,5 @@ void RunPresetRulesTests();
 void RunCheatWaitsTests();
 void RunCaredForRulesTests();
 void RunInsistenceRulesTests();
+void RunHealingLedgerTests();
 void RunDuelNarrationRulesTests();

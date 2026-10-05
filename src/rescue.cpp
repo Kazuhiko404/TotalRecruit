@@ -9,6 +9,7 @@
 #include "recruit_core.h"
 #include "log.h"
 #include "mercy.h"
+#include "animal_healing.h"
 
 namespace totalrecruit
 {
@@ -86,6 +87,8 @@ bool ApplyFirstAid_hook(MedicalSystem* thisptr, float skill, Item* equipment,
                         float frameTime, Character* who)
 {
     NoteTreatment(thisptr, who);
+    // The same healer, for Cheat's "healed by the player" (animal_healing.h).
+    NoteAnimalTreatment(thisptr, who);
     return g_applyFirstAid_orig != NULL
                ? g_applyFirstAid_orig(thisptr, skill, equipment, frameTime, who)
                : false;
@@ -95,6 +98,7 @@ bool ApplyDoctoring_hook(MedicalSystem* thisptr, float skill, Item* equipment,
                          float frameTime, Character* who)
 {
     NoteTreatment(thisptr, who);
+    NoteAnimalTreatment(thisptr, who);
     return g_applyDoctoring_orig != NULL
                ? g_applyDoctoring_orig(thisptr, skill, equipment, frameTime, who)
                : false;

@@ -12,6 +12,7 @@
 //
 //   total_recruit.player_defeats   defeats.h       knockouts the player dealt
 //   total_recruit.fed_by_player    feeding_ledger  meals the player gave (animals)
+//   total_recruit.healed_by_player healing_ledger  1 once the player treated it (animals)
 //   total_recruit.reject_cooldown_until
 //                                  submission_tracker  game hour the reject cooldown ends
 //   total_recruit.temp_expiry_hour temp_member.h   game hour a temporary member's stay ends

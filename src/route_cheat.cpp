@@ -12,6 +12,22 @@ bool FreeAnimal(const CheatFacts& facts)
 {
     return facts.animal && (facts.inMyCage || !facts.belongsToSomeone);
 }
+
+// The other two gestures a free animal answers in Cheat (animal-duel-submission D4):
+// the player healed it, or the player's squad beat it. The meal is named first, then
+// the cure, then the beating. Reason_None when none of them happened.
+ReasonKey AnimalGestureReason(const CheatFacts& facts)
+{
+    if (facts.healedByPlayer)
+    {
+        return Reason_CheatAnimalHealed;
+    }
+    if (facts.defeatedByPlayer)
+    {
+        return Reason_CheatAnimalDefeated;
+    }
+    return Reason_None;
+}
 } // namespace
 
 // R1.1 / R1.2 -- Cheat keeps the gesture and drops the price.
@@ -20,8 +36,9 @@ bool FreeAnimal(const CheatFacts& facts)
 // no cage, no wait, no moment where the prisoner decides. The cage is required now
 // and the wait is a minute of game time, because in Cheat time is a gesture rather
 // than a cost. Nothing else is asked -- no cats, no food, no submission, no level,
-// no standing. The one other gesture is an animal's meal: fed by the player, an
-// animal that belongs to nobody joins on the spot, no cage needed.
+// no standing. The one other gesture is for an animal that belongs to nobody: a
+// meal from the player, a cure from the player, or a knockout by the player's squad,
+// and it joins on the spot, no cage needed.
 Verdict DecideCheat(const CheatFacts& facts, const Config& config)
 {
     Verdict v;
@@ -42,6 +59,19 @@ Verdict DecideCheat(const CheatFacts& facts, const Config& config)
         v.isAnimal = true;
         v.currency = Currency_Care;
         v.reasonKey = Reason_TameReady;
+        return v;
+    }
+
+    // "Lo mismo con curar", "si lo vence mi NPC deberia dejarme hablar para que se
+    // una": a cure from the player's hand or a knockout by the player's squad is the
+    // same gesture, caged or not, with no wait.
+    const ReasonKey gesture = FreeAnimal(facts) ? AnimalGestureReason(facts) : Reason_None;
+    if (gesture != Reason_None)
+    {
+        v.willJoin = true;
+        v.isAnimal = true;
+        v.currency = Currency_None;
+        v.reasonKey = gesture;
         return v;
     }
 

@@ -170,10 +170,16 @@ struct CheatFacts
     bool animal;
     bool belongsToSomeone;
     bool fedByPlayer;
+    // The other two gestures (animal-duel-submission D4), read for an animal only:
+    // one of the player's characters treated it (healing_ledger.h, recorded by the
+    // first-aid / doctoring hooks), and the player's squad knocked it out at least once
+    // (the defeat ledger, defeats.h DefeatCount >= 1).
+    bool healedByPlayer;
+    bool defeatedByPlayer;
 
     CheatFacts()
         : inMyCage(false), hoursHeld(0.0f), animal(false), belongsToSomeone(false),
-          fedByPlayer(false)
+          fedByPlayer(false), healedByPlayer(false), defeatedByPlayer(false)
     {
     }
 };

@@ -17,6 +17,7 @@
 #include "cage_commands.h"
 #include "beating_stress.h"
 #include "feeding_ledger.h"
+#include "healing_ledger.h"
 #include "submission_director.h"
 #include "submission_tracker.h"
 #include "temp_member.h"
@@ -79,6 +80,7 @@ void ResetSessionState()
     ForgetAllDefeats();
     ForgetAllBeatingStress();
     ForgetAllPlayerMeals();
+    ForgetAllPlayerHealing();
     ForgetAllSubmissionMemory();
     ForgetAllTempMembers();
     ForgetLeaveHoming();
@@ -92,7 +94,7 @@ void ResetSessionState()
     CharacterIdentity::AbandonWorldState();
     LogInfo("[identity] load begin: session state cleared (offer window, overlay, readout and cursor targets, "
             "conversation, cage command watch and credits, submission event, mercy, hails, hold clock, "
-            "insistence, defeats, meals from the player, submission asks and reject cooldowns, temporary "
+            "insistence, defeats, meals and cures from the player, submission asks and reject cooldowns, temporary "
             "members, duel challenges and cooldowns, queued TotalSparring bouts, haggle offences, "
             "identity registry).");
 }

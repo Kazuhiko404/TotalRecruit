@@ -117,6 +117,11 @@ enum ReasonKey
     Reason_AnimalYieldJoins,
     Reason_AnimalYieldNotYet,
 
+    // Cheat (animal-duel-submission D4): a free animal the player healed, or one the
+    // player's squad knocked out, joins like a fed one (route_cheat.cpp).
+    Reason_CheatAnimalHealed,
+    Reason_CheatAnimalDefeated,
+
     // Not a reason: the number of them, for tables indexed by one.
     Reason_Count
 };
