@@ -74,6 +74,13 @@ bool SafeSpeakerBestStat(Character* speaker, int* out);
 // id or no clock) means there is no stable seed and so no haggle.
 HaggleTerms ReadHaggleTerms(Character* npc);
 
+// Whether this animal is someone else's: outside the player's cage and belonging to
+// a real faction of people (the taming route's own test, animals.ownedNeedCage
+// included). Caged by the player it is already theirs to take; an unreadable owner
+// reads as free, like the taming route. The duel gate asks it for an animal
+// (animal-duel-submission D1); false for a person is not a promise of anything.
+bool IsOwnedAnimal(Character* character);
+
 // The submission event's reject cooldown (submission_tracker.h): true while it
 // runs for this character, with the hours left in `outHoursLeft` (may be NULL).
 // Read without minting an id: a character never rejected has none to find.

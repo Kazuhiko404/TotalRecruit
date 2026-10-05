@@ -430,6 +430,16 @@ Faction* PlayerFaction()
 }
 } // namespace
 
+// Declared in character_facts.h: the duel gate's animal ownership (D1).
+bool IsOwnedAnimal(Character* character)
+{
+    if (character == NULL || IsInPlayerCage(character))
+    {
+        return false;
+    }
+    return BelongsToSomeone(character);
+}
+
 // Declared in character_facts.h: read by the haggle popup for the speaker.
 bool SafeSpeakerBestStat(Character* speaker, int* out)
 {

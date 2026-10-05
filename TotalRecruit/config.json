@@ -80,6 +80,8 @@
   "duelWinCooldownMinHours": 24.0,
   "duelWinCooldownMaxHoursUnder100": 72.0,
   "duelWinCooldownMaxHours": 120.0,
+  "duelAnimalsEnabled": true,
+  "duelAnimalsFromLevel": 40,
 
   "submissionBeatingCooldownHours": 1.0,
   "submissionKnockoutCooldownHours": 1.0,

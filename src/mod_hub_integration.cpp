@@ -277,6 +277,9 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "duel_win_cooldown_min_hours", "Duelo: horas minimas tras ganar", "Si le ganas y no se une, horas minimas antes de poder retarlo otra vez", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.winCooldownMinHours);
     regFloat(api, mod, "duel_win_cooldown_max_hours_under100", "Duelo: horas maximas tras ganar (80-99)", "Si le ganas y no se une, horas maximas de espera para un NPC de nivel 80 a 99", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.winCooldownMaxHoursUnder100);
     regFloat(api, mod, "duel_win_cooldown_max_hours", "Duelo: horas maximas tras ganar (100+)", "Si le ganas y no se une, horas maximas de espera para un NPC de nivel 100 o mas", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.winCooldownMaxHours);
+    // Reto a duelo a animales sin dueno (ambos presets).
+    regBool(api, mod, "duel_animals_enabled", "Duelo: retar animales", "Con TotalSparring instalado, un animal sin dueno de nivel suficiente tambien ofrece RETAR A DUELO (Balanced: la misma chance que una persona; Cheat: se une)", &c.duelChallenges.animalsEnabled);
+    regInt(api, mod, "duel_animals_from_level", "Duelo: nivel minimo de animales", "Nivel desde el que un animal sin dueno puede ser retado a duelo", 1, 500, 5, &c.duelChallenges.animalsFromLevel);
     regBool(api, mod, "cheat_needs_cage","Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
     regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame; en Cheat toda espera es como mucho 1 minuto", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
     regInt(api, mod, "rescue_base_bonus", "Rescate: peso de la deuda", "Cuanto pesa haberle salvado la vida, antes de contar la cura", 0, 90, 5, &c.rescueBaseBonus);

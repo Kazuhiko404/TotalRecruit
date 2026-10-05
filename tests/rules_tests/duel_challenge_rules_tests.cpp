@@ -321,8 +321,82 @@ void TheRecordReadsWinsDashLosses()
 }
 } // namespace
 
+// A free animal of level 52, duelAnimalsEnabled, not excluded, TotalSparring ready.
+DuelOfferFacts OfferableAnimal()
+{
+    DuelOfferFacts f;
+    f.enabled = true;
+    f.tsAvailable = true;
+    f.isAnimal = true;
+    f.animalAllowed = true;
+    f.animalOwned = false;
+    f.animalFromLevel = 40;
+    f.npcLevel = 52;
+    f.eliteFromLevel = 80;
+    return f;
+}
+
+void AFreeAnimalIsOfferedTheDuelInBothPresets()
+{
+    const char* name = "offer: a free animal at duelAnimalsFromLevel gets the duel, no tier, no 80+ cut";
+    DuelOfferFacts f = OfferableAnimal();
+    CHECK(CanOfferDuel(f));               // Balanced: an animal is never allyTiered
+    f.cheatPreset = true;
+    CHECK(CanOfferDuel(f));               // Cheat too
+    f = OfferableAnimal();
+    f.npcLevel = 40;
+    CHECK(CanOfferDuel(f));               // the cut level belongs to it
+    f.npcLevel = 39;
+    CHECK(!CanOfferDuel(f));
+    f = OfferableAnimal();
+    f.animalFromLevel = 60;
+    CHECK(!CanOfferDuel(f));              // the configured cut, not a literal 40
+}
+
+void AnOwnedDisallowedOrCoolingAnimalGetsNoDuel()
+{
+    const char* name = "offer: owned, switched off / excluded, cooldown or no TotalSparring hides an animal's duel";
+    DuelOfferFacts f = OfferableAnimal();
+    f.animalOwned = true;
+    CHECK(!CanOfferDuel(f));
+    f.cheatPreset = true;
+    CHECK(!CanOfferDuel(f));              // owned is owned in Cheat as well
+    f = OfferableAnimal();
+    f.animalAllowed = false;
+    CHECK(!CanOfferDuel(f));
+    f = OfferableAnimal();
+    f.onCooldown = true;
+    CHECK(!CanOfferDuel(f));
+    f = OfferableAnimal();
+    f.tsAvailable = false;
+    CHECK(!CanOfferDuel(f));
+    f = OfferableAnimal();
+    f.enabled = false;
+    CHECK(!CanOfferDuel(f));
+}
+
+void ThePersonBranchIgnoresTheAnimalFacts()
+{
+    const char* name = "offer: a person keeps the 80+ tiered/Cheat gate whatever the animal facts say";
+    DuelOfferFacts f = Offerable();
+    f.npcLevel = 52;
+    f.animalAllowed = true;
+    f.animalFromLevel = 40;
+    CHECK(!CanOfferDuel(f));              // a 52 person is under the elite cut
+    f = Offerable();
+    f.animalOwned = true;
+    CHECK(CanOfferDuel(f));               // ownership is an animal fact only
+    f = Offerable();
+    f.allyTiered = false;
+    f.animalAllowed = true;
+    CHECK(!CanOfferDuel(f));              // a person in Balanced still needs the tier
+}
+
 void RunDuelChallengeRulesTests()
 {
+    AFreeAnimalIsOfferedTheDuelInBothPresets();
+    AnOwnedDisallowedOrCoolingAnimalGetsNoDuel();
+    ThePersonBranchIgnoresTheAnimalFacts();
     TheDuelIsOfferedToAnEliteAllyWhenTotalSparringIsThere();
     EachMissingFactTakesTheDuelAway();
     AWonDuelRecruits();

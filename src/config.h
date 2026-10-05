@@ -598,6 +598,10 @@ struct DuelChallenges
     float winCooldownMinHours;
     float winCooldownMaxHoursUnder100;
     float winCooldownMaxHours;
+    // A free animal (no owner) can be challenged too, in both presets, from this level
+    // up (animal-duel-submission D1): no ally tier and no 80+ cut. Off, only people.
+    bool animalsEnabled;
+    int animalsFromLevel;
 
     DuelChallenges()
         : enabled(true),
@@ -607,7 +611,9 @@ struct DuelChallenges
           joinChancePerWin(20),
           winCooldownMinHours(24.0f),
           winCooldownMaxHoursUnder100(72.0f),
-          winCooldownMaxHours(120.0f)
+          winCooldownMaxHours(120.0f),
+          animalsEnabled(true),
+          animalsFromLevel(40)
     {
     }
 };

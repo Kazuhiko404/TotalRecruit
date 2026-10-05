@@ -1113,21 +1113,38 @@ bool DuelOfferedFor(Character* npc, const Verdict& verdict)
     const Config& config = GetConfig();
     DuelOfferFacts facts;
     facts.enabled = config.duelChallenges.enabled;
+    if (!facts.enabled)
+    {
+        return false;
+    }
     facts.allyTiered = verdict.allyTiered;
     // Cheat has no ally tiers: the level alone decides, for any person.
     facts.cheatPreset = config.preset == Preset_Cheat;
-    if (!facts.enabled || !(facts.allyTiered || facts.cheatPreset))
+    // The Cheat verdict never reads who they are, so it may not know an animal.
+    facts.isAnimal = verdict.isAnimal;
+    bool animal = false;
+    if (!facts.isAnimal && SafeIsAnimal(npc, &animal))
+    {
+        facts.isAnimal = animal;
+    }
+    if (facts.isAnimal)
+    {
+        // A free animal of the animal level, in both presets (animal-duel-submission
+        // D1). exclude.animals always wins; Balanced also needs animals switched on.
+        facts.animalAllowed = config.duelChallenges.animalsEnabled && !config.exclude.animals &&
+                              (facts.cheatPreset || config.animalsEnabled);
+        if (!facts.animalAllowed)
+        {
+            return false;
+        }
+        facts.animalOwned = IsOwnedAnimal(npc);
+        facts.animalFromLevel = config.duelChallenges.animalsFromLevel;
+    }
+    else if (!(facts.allyTiered || facts.cheatPreset))
     {
         return false;
     }
     facts.tsAvailable = TsAvailable();
-    facts.isAnimal = verdict.isAnimal;
-    bool animal = false;
-    if (facts.cheatPreset && !facts.isAnimal && SafeIsAnimal(npc, &animal))
-    {
-        // The Cheat verdict never reads who they are, so it does not know.
-        facts.isAnimal = animal;
-    }
     // The level TotalSparring shows (npc_level.h); the tier's own read otherwise.
     facts.npcLevel = verdict.allyLevel;
     SafeNpcLevel(npc, &facts.npcLevel);

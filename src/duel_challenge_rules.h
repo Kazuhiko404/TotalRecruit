@@ -97,16 +97,27 @@ struct DuelOfferFacts
     int eliteFromLevel;
     // A lost duel's cooldown still runs for this NPC.
     bool onCooldown;
+    // The animal branch (animal-duel-submission D1), read only when `isAnimal`:
+    // duelChallenges.animalsEnabled with the animal not excluded (exclude.animals) and,
+    // in Balanced, animals switched on; whether it belongs to someone (the taming
+    // route's BelongsToSomeone, outside the player's cage); and the level it needs
+    // (duelChallenges.animalsFromLevel, 40).
+    bool animalAllowed;
+    bool animalOwned;
+    int animalFromLevel;
 
     DuelOfferFacts()
         : enabled(false), tsAvailable(false), allyTiered(false), cheatPreset(false), isAnimal(false),
-          npcLevel(0), eliteFromLevel(80), onCooldown(false)
+          npcLevel(0), eliteFromLevel(80), onCooldown(false), animalAllowed(false),
+          animalOwned(false), animalFromLevel(40)
     {
     }
 };
 
-// The one predicate: enabled, TotalSparring available, a Balanced tiered ally or the
-// Cheat preset, not an animal, at the elite cut level or above, and no cooldown running.
+// The one predicate: enabled, TotalSparring available and no cooldown running; then
+//   a person:  a Balanced tiered ally or the Cheat preset, at the elite cut level or above;
+//   an animal: allowed, owned by nobody, at animalFromLevel or above (both presets: an
+//              animal has no ally tier and no 80+ cut).
 bool CanOfferDuel(const DuelOfferFacts& facts);
 
 // The game hour a lost duel's cooldown ends: ceil(now + hours). Hours of 0 or less

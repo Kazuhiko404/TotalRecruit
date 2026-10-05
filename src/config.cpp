@@ -166,6 +166,7 @@ void ClampDuelChallenges(DuelChallenges* d)
     ClampFloat(&d->winCooldownMinHours, 0.0f, 720.0f);
     ClampFloat(&d->winCooldownMaxHoursUnder100, 0.0f, 720.0f);
     ClampFloat(&d->winCooldownMaxHours, 0.0f, 720.0f);
+    ClampInt(&d->animalsFromLevel, 1, 500);
 }
 
 void ReadFloat(const std::string& text, const std::string& key, float* target)
@@ -364,6 +365,8 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "duelWinCooldownMinHours", &c.duelChallenges.winCooldownMinHours);
     AddFloat(f, "duelWinCooldownMaxHoursUnder100", &c.duelChallenges.winCooldownMaxHoursUnder100);
     AddFloat(f, "duelWinCooldownMaxHours", &c.duelChallenges.winCooldownMaxHours);
+    AddBool(f, "duelAnimalsEnabled", &c.duelChallenges.animalsEnabled);
+    AddInt(f, "duelAnimalsFromLevel", &c.duelChallenges.animalsFromLevel);
     AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
     AddFloat(f, "relationRefuseAll", &c.relationRefuseAll);
     AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);

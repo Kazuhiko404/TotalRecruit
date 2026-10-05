@@ -7,11 +7,29 @@
 
 namespace totalrecruit
 {
+namespace
+{
+// An animal (animal-duel-submission D1): no ally tier and no 80+ cut, in either
+// preset; it has to be allowed, free and at the animal level.
+bool AnimalMayDuel(const DuelOfferFacts& facts)
+{
+    return facts.animalAllowed && !facts.animalOwned && facts.npcLevel >= facts.animalFromLevel;
+}
+
+// A person: a Balanced tiered ally or the Cheat preset, at the elite cut level.
+bool PersonMayDuel(const DuelOfferFacts& facts)
+{
+    return (facts.allyTiered || facts.cheatPreset) && facts.npcLevel >= facts.eliteFromLevel;
+}
+} // namespace
+
 bool CanOfferDuel(const DuelOfferFacts& facts)
 {
-    return facts.enabled && facts.tsAvailable && (facts.allyTiered || facts.cheatPreset) &&
-           !facts.isAnimal &&
-           facts.npcLevel >= facts.eliteFromLevel && !facts.onCooldown;
+    if (!facts.enabled || !facts.tsAvailable || facts.onCooldown)
+    {
+        return false;
+    }
+    return facts.isAnimal ? AnimalMayDuel(facts) : PersonMayDuel(facts);
 }
 
 int DuelCooldownUntilHour(double nowHours, float cooldownHours)
