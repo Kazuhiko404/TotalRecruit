@@ -102,7 +102,7 @@
 
   "submissionEventEnabled": true,
   "submissionApproachSeconds": 60.0,
-  "submissionForgiveSeconds": 300.0,
+  "submissionForgiveSeconds": 30.0,
   "submissionRejectCooldownHours": 72.0,
 
   "dialoguePackage": "",

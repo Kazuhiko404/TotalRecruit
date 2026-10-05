@@ -346,7 +346,7 @@ struct Submission
           beatingStressFadeHours(24.0f),
           eventEnabled(true),
           approachSeconds(60.0f),
-          forgiveSeconds(300.0f),
+          forgiveSeconds(30.0f),
           rejectCooldownHours(72.0f)
     {
     }

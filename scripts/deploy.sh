@@ -108,7 +108,7 @@ merge_file() {  # name, extra args...
     "$PY" "$MERGE" "$shipped" "$deployed" "$@" || die "merge of $name failed; the backup is $deployed.bak-$STAMP"
   fi
 }
-merge_file config.json --set-if catsPerLevel 90 32 --set-if catsCeiling 28000 10000 --set-if headNoticeSeconds 300 90.0
+merge_file config.json --set-if catsPerLevel 90 32 --set-if catsCeiling 28000 10000 --set-if headNoticeSeconds 300 90.0 --set-if submissionForgiveSeconds 300 30.0
 merge_file messages.json
 
 # 5. md5 of the three DLLs.

@@ -94,7 +94,7 @@ they yield. No cage needed — the fight itself was the argument.
 running from you) walks up on its own, calm — a hostile one stops attacking for
 the walk (`submissionApproachSeconds`, 60 s) — kneels, and asks to join:
 **Aceptar** (they join), **Ignorar** (they run off and stay calm for
-`submissionForgiveSeconds`, 5 minutes, so you can still talk to them; then back
+`submissionForgiveSeconds`, 30 seconds, so you can still talk to them; then back
 to what they were) or **Rechazar** (nothing: the window closes and they go back
 to what they were doing, hostile again only if they were before; no defeats
 wiped, no cooldown). Closing the window with the X is no answer:

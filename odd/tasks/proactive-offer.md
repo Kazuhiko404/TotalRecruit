@@ -37,7 +37,7 @@ Despues de un gesto del jugador (duelo ganado, cura, derrota), si la tirada es b
 - D6 Cura de un NPC por la ruta de rescate (`viaRescue`): la peticion se consume, porque la ruta de rescate ya ofrece al despertar (evita dos ventanas). Hablar a mano (`AttemptRecruit`) tambien consume la peticion.
 - D7 Un gesto = una peticion: cada duelo ganado es un gesto nuevo; una cura que sigue (el gancho llama cada cuadro) es el mismo gesto mientras no pasen 30 s sin curar. Una peticion no servida expira a los 300 s reales (congelados en pausa). Duelo ganado fuera de 120 m del lider: comportamiento viejo.
 - D8 Interruptores apagados (`offerOnDuelWin` / `offerOnHeal`): el duelo vuelve al comportamiento viejo; la cura solo marca el ledger. Las ofertas pedidas no dependen de `submissionEventEnabled` (ese interruptor sigue gobernando el barrido de derrotas).
-- D9 `submissionForgiveSeconds` sigue en 300 (plantilla y config del usuario); el pedido dice "unos 30 s". No se cambia un valor desplegado sin `--set-if`; queda anotado en QA 12.37.
+- D9 `submissionForgiveSeconds` pasa de 300 a 30 ("unos 30 s"): default en `config.h` y plantilla, y `deploy.sh --set-if submissionForgiveSeconds 300 30.0` (solo si el config del usuario sigue en el viejo default).
 
 ## Restricciones
 - Toolset v100: sin C++11. Lecturas del motor detras de `TR_TRY/TR_CATCH` en marcos POD.
