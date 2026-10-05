@@ -223,7 +223,7 @@ var POPUP_STATES = [
   {
     id: 'mercyCaged',
     title: 'Mercy plea from someone who cannot leave',
-    note: 'The same plea from someone in a cage, shackled or carried (<code>SafeInPrison</code>): there is nowhere to let them go, so IGNORAR is never offered, whatever their temperament. Take them or leave them where they are. The submission event follows the same rule: no PERDONAR for anyone who cannot leave (the director already skips the caged; this covers one picked up on the way).',
+    note: 'The same plea from someone in a cage, shackled or carried (<code>SafeInPrison</code>): there is nowhere to let them go, so IGNORAR is never offered, whatever their temperament. Take them or leave them where they are. The submission event follows the same rule: no IGNORAR (the old PERDONAR) for anyone who cannot leave (the director already skips the caged; this covers one picked up on the way).',
     // facts: mercy plea, CanBuyTheirLife true, inCage true
     vm: {
       title: 'Reclutamiento', name: 'Bandido Hambriento', route: 'piedad', routeTag: 'Piedad',
@@ -238,7 +238,7 @@ var POPUP_STATES = [
   {
     id: 'submission',
     title: 'Submitted NPC asks to join',
-    note: 'Sometido, the event (submission_director.cpp): a beaten NPC that yields walks up to the player, calm, and kneels. Free; three answers: ACEPTAR (joins), PERDONAR (runs off and stays calm for <code>submissionForgiveSeconds</code>, you can still talk to it), RECHAZAR (defeats wiped, no recruiting for <code>submissionRejectCooldownHours</code>, hostile again). The X is no answer: calm in place for the same window.',
+    note: 'Sometido, the event (submission_director.cpp): a beaten NPC that yields walks up to the player, calm, and kneels. Free; three answers: ACEPTAR (joins), IGNORAR (the old PERDONAR, label from <code>popup.button.ignore</code>: runs off 80 m and stays calm for <code>submissionForgiveSeconds</code>, you can still talk to it), RECHAZAR (proactive-offer: does nothing; the popup closes, the event ends and it goes back to what it was doing, hostile again only if it was hostile before; no defeats wiped, no reject cooldown). The X is no answer: calm in place for the same window.',
     // facts: BuildSubmissionOfferView("Bandido Hambriento")
     vm: {
       title: 'Reclutamiento', name: 'Bandido Hambriento', route: 'sometido', routeTag: 'Sometido',
@@ -247,7 +247,7 @@ var POPUP_STATES = [
       showPurse: false, purseText: '', affordable: true,
       showChance: false, chanceText: '',
       reason: '', reasonRed: false,
-      accept: 'ACEPTAR', extra: 'PERDONAR', cancel: 'RECHAZAR'
+      accept: 'ACEPTAR', extra: 'IGNORAR', cancel: 'RECHAZAR'
     }
   },
   {
@@ -426,7 +426,7 @@ var POPUP_STATES = [
   {
     id: 'animalYield',
     title: 'Wild animal beaten twice yields (Balanced)',
-    note: 'animal-duel-submission D3. Two defeats in the open and the field-yield roll passed (<code>Reason_AnimalYieldJoins</code>): Sumision currency, free, the odds that were rolled. The animal does not walk up and ask (the submission event stays for people: it speaks); Hablar is the way in. A failed roll reads "Todavia no se somete: vencelo otra vez, o dale de comer" and keeps the food button.',
+    note: 'animal-duel-submission D3. Two defeats in the open and the field-yield roll passed (<code>Reason_AnimalYieldJoins</code>): Sumision currency, free, the odds that were rolled. Hablar is one way in; since proactive-offer the animal also walks up by itself and the window "Animal walks up and offers to join" opens (no words of its own: a narrator line). A failed roll reads "Todavia no se somete: vencelo otra vez, o dale de comer" and keeps the food button.',
     // facts: verdict willJoin, Currency_Submission, isAnimal, rolled 38%
     vm: {
       title: 'Reclutamiento', name: 'Perro hueso alfa', route: 'animal', routeTag: 'Animal',
@@ -436,6 +436,36 @@ var POPUP_STATES = [
       showChance: true, chanceText: '38%',
       reason: '', reasonRed: false,
       accept: 'ACEPTAR', extra: '', cancel: 'CANCELAR'
+    }
+  },
+  {
+    id: 'offerDuelWin',
+    title: 'Duel rival walks up and offers to join (proactive offer)',
+    note: 'proactive-offer. After a gesture of the player the rival comes to the player instead of waiting for Hablar: a won duel (both presets, <code>offerOnDuelWin</code>; Cheat always, Balanced when the duel join roll passes), a heal by the player\'s squad (<code>offerOnHeal</code>: first aid or doctoring, the usual verdict decides), or the defeats of the submission event. The rival walks up calm (the submission walk-up) and the same window opens: ACEPTAR (joins, free), IGNORAR (runs off 80 m, calm for <code>submissionForgiveSeconds</code>), RECHAZAR (nothing happens: back to what it was doing; the request is used up until a new gesture). A bad roll never opens it: the rival stops attacking for <code>offerFailCalmSeconds</code> (20) where it stands, with one roller line. A rival out of the event\'s 120 m when the duel ends keeps the old behaviour (joins at once in Cheat, rolls in Balanced).',
+    // facts: BuildSubmissionOfferView("Soldado Holy Nation") after OnDuelWon -> RequestOffer(DuelWin, Join)
+    vm: {
+      title: 'Reclutamiento', name: 'Soldado Holy Nation', route: 'sometido', routeTag: 'Sometido',
+      body: 'Soldado Holy Nation se arrodilla y te pide unirse a tu grupo.',
+      showPrice: true, priceText: 'Gratis', priceFree: true,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: 'IGNORAR', cancel: 'RECHAZAR'
+    }
+  },
+  {
+    id: 'offerAnimal',
+    title: 'Animal walks up and offers to join (proactive offer)',
+    note: 'proactive-offer. The same event for a free animal: a won duel, a heal by the squad (Cheat: one heal is enough, <code>Reason_CheatAnimalHealed</code>), one defeat in Cheat or two defeats and a passed roll in Balanced. An animal never speaks: no head notice, no words over its head; the roller tells it ("Perro hueso alfa se acerca con la cabeza gacha.", <code>submissionEvent.animal.approachNotice</code>). Route tag Animal and its own body line (<code>popup.body.animalSubmitted</code>). The answers are the same three; IGNORAR is hidden for an animal in a cage.',
+    // facts: BuildAnimalSubmissionOfferView("Perro hueso alfa", inCage false)
+    vm: {
+      title: 'Reclutamiento', name: 'Perro hueso alfa', route: 'animal', routeTag: 'Animal',
+      body: 'Perro hueso alfa agacha la cabeza frente a ti: quiere seguirte.',
+      showPrice: true, priceText: 'Gratis', priceFree: true,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: 'IGNORAR', cancel: 'RECHAZAR'
     }
   }
 ];

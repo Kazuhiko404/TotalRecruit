@@ -320,5 +320,28 @@ var HUB = [
   ['Estres: horas en desvanecerse', 'submissionBeatingStressFadeHours', '24',
    'Horas de juego en que la barra entera de golpes vuelve a cero'],
   ['Cheat: cualquier jaula', 'cheatAnyCage', 'ON',
-   'En Cheat sirve la jaula o grillete de cualquier faccion, no solo la tuya']
+   'En Cheat sirve la jaula o grillete de cualquier faccion, no solo la tuya'],
+  ['Oferta: al ganar un duelo', 'offerOnDuelWin', 'ON',
+   'Al ganarle un duelo, si la tirada sale bien camina hasta ti y te ofrece unirse (Aceptar, Ignorar, Rechazar). Apagado: se une al instante como antes'],
+  ['Oferta: al curarlo', 'offerOnHeal', 'ON',
+   'Si alguien de tu grupo cura a un NPC o animal que no es tuyo, al levantarse viene a ofrecerse si la tirada sale bien'],
+  ['Oferta: segundos en calma si no se une', 'offerFailCalmSeconds', '20',
+   'Tras un duelo ganado, una cura o una derrota con mala tirada, deja de atacarte estos segundos donde esta']
 ];
+
+// The proactive offer (src/offer_requests.h, src/submission_director.cpp): after a gesture of
+// the player (a won duel, a heal by the squad, the defeats) the NPC or animal walks up and opens
+// the submission window by itself. A person speaks and carries the head notice; an animal never
+// does: the roller narrates it (src/offer_narration_rules.h). A bad roll calms it in place.
+var OFFER_EVENT = {
+  personApproach: 'Bandido Hambriento: Espera... no quiero pelear mas.',      // submissionEvent.approach (over its head, spoken)
+  personNotice: 'Bandido Hambriento se acerca para hablar contigo.',          // submissionEvent.approachNotice (roller)
+  animalNotice: 'Perro hueso alfa se acerca con la cabeza gacha.',            // submissionEvent.animal.approachNotice (roller)
+  personCalm: 'Bandido Hambriento no quiere unirse, pero deja de pelear por 20 s.',  // submissionEvent.calmNotice
+  animalCalm: 'Perro hueso alfa se calma y deja de atacarte por 20 s.',        // submissionEvent.animal.calmNotice
+  personIgnored: 'Bandido Hambriento: lo ignoraste y se aleja.',              // submissionEvent.ignoredNotice
+  animalIgnored: 'Perro hueso alfa se aleja trotando.',                       // submissionEvent.animal.ignoredNotice
+  personJoined: 'Bandido Hambriento: se une a ti.',                           // submissionEvent.joinedNotice
+  animalJoined: 'Perro hueso alfa te sigue: ahora es parte de tu grupo.',     // submissionEvent.animal.joinedNotice
+  failCalmSeconds: 20                                                         // offerFailCalmSeconds default (config.h)
+};

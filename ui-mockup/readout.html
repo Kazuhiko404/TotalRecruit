@@ -49,6 +49,7 @@ is shown on hover.</p>
   <button class="tab" data-s="noticeselect" aria-pressed="false">Select the one who called</button>
   <button class="tab" data-s="tempmember" aria-pressed="false">Temporary member (squad notices)</button>
   <button class="tab" data-s="helper" aria-pressed="false">Free helper (offer and escort notices)</button>
+  <button class="tab" data-s="offer" aria-pressed="false">Proactive offer (person and animal walk up; bad roll calms)</button>
 </div>
 <div class="scene-wrap"><div class="scene wide" id="scene"></div></div>
 <p class="hint">Who is worth talking to is still marked by the vanilla talk marker (<code>hasDialogue_Fast</code>); that answer is
@@ -338,6 +339,25 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       placeInto(headNoticeHTML('Sana Roja', HELPER.offer), anchorOf(200), null);
       placeInto(readoutHTML(helper, false), anchorOf(640), null);
       placeInto(headNoticeHTML('Gor el Viejo', HELPER.start), anchorOf(1040), null);
+      return;
+    }
+    if (mode === 'offer') {
+      // The proactive offer (proactive-offer). Left: a person whose duel the player won walks up
+      // and carries the "approaching" head notice. Middle: a free animal the squad healed walks up
+      // with no notice over its head (it does not speak; the roller narrates). Right: a rival whose
+      // roll failed calms where it stands for offerFailCalmSeconds: no notice, one roller line.
+      h += '<div class="npc" style="left:200px"></div><div class="npc" style="left:640px"></div>' +
+           '<div class="npc" style="left:1040px"></div>';
+      h += '<div class="callout" style="left:300px;top:16px;max-width:560px">After a gesture (a won duel, a heal ' +
+           'by your squad, the defeats) the rival comes to you: no need to press Hablar. A person says "' +
+           OFFER_EVENT.personApproach + '" and the roller "' + OFFER_EVENT.personNotice + '"; an animal gets only ' +
+           'the roller: "' + OFFER_EVENT.animalNotice + '". On arrival the window opens (section 5, "Duel rival walks ' +
+           'up" / "Animal walks up"). A bad roll opens nothing: "' + OFFER_EVENT.personCalm + '" / "' +
+           OFFER_EVENT.animalCalm + '" (' + OFFER_EVENT.failCalmSeconds + ' s, offerFailCalmSeconds). IGNORAR: "' +
+           OFFER_EVENT.personIgnored + '" / "' + OFFER_EVENT.animalIgnored + '". ACEPTAR: "' +
+           OFFER_EVENT.personJoined + '" / "' + OFFER_EVENT.animalJoined + '". RECHAZAR says nothing.</div>';
+      scene.innerHTML = h;
+      placeInto(headNoticeHTML('Bandido Hambriento', HEAD_NOTICE.approaching), anchorOf(200), null);
       return;
     }
     // Default: the player pressed Hablar on the caged bandit in the middle of the screen.

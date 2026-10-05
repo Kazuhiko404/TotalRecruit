@@ -7,7 +7,7 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 
 | File | What it holds | C++ it mirrors |
 |---|---|---|
-| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / menu on your prisoner with Golpear and Noquear, one column and two columns / press Hablar / head notice and selecting the one who called), the per-route table, the Mod Hub controls, the recruit popup gallery (section 5) | -- |
+| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / menu on your prisoner with Golpear and Noquear, one column and two columns / press Hablar / head notice and selecting the one who called / proactive offer: a person and an animal walk up, a bad roll calms), the per-route table, the Mod Hub controls, the recruit popup gallery (section 5) | -- |
 | `css/base.css` | palette tokens | `ui_style.h` / `ui_style.cpp` colours |
 | `css/readout.css` | the card: widths, padding, bar heights, segment colours | `kCardWidth`, `kCardWidthCompact`, `kPad`, `kBarH` ... |
 | `js/data.js` | one view-model per state (the facts that produce it are in a comment above each); `PLACEMENT` timings and gaps; `HUB` rows | `readout_model.cpp` output (`ReadoutView`); `readout.cpp` / `readout_ui.cpp` constants; `mod_hub_integration.cpp` |
