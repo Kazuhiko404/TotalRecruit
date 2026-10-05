@@ -85,9 +85,14 @@ struct WalkUp
 // The walker's NPC while its key still matches, else NULL.
 Character* WalkUpNpc(const WalkUp& walk);
 
-// Starts a walk-up of `npc` to `leader` at event time `now`: mints the key, calms
-// it toward the squad and gives the move order. False when the key cannot be read
-// (nothing was done). `moving` says whether the move order went through.
+// Takes `npc` as the walker at event time `now` without moving it: mints the key and
+// calms it toward the squad. False when the key cannot be read (nothing was done).
+// The proactive offer's calm after a failed roll starts here (submission_director.cpp).
+bool BeginWalkerInPlace(WalkUp* walk, Character* npc, float now);
+
+// Starts a walk-up of `npc` to `leader` at event time `now`: BeginWalkerInPlace, then
+// the move order. False when the key cannot be read (nothing was done). `moving` says
+// whether the move order went through.
 bool BeginWalkUp(WalkUp* walk, Character* npc, Character* leader, float now, bool* moving);
 
 // The calm, once a second: notes whether the last one held, then clears hostility

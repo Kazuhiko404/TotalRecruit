@@ -32,6 +32,7 @@
 #include "head_notice.h"
 #include "npc_motion.h"
 #include "approach_rules.h"
+#include "offer_requests.h"
 
 #include <algorithm>
 
@@ -609,6 +610,10 @@ void AttemptRecruit(Character* character)
 
     const std::string name = CharacterName(character);
 
+    // proactive-offer: the player is talking by hand, so a pending offer request is
+    // used up (no second window walking up afterwards).
+    ConsumeRequestedOffer(character, "the player talked by hand");
+
     // Config exclusions come first: they are the player's own opt-outs, and
     // they outrank anything the rules would say.
     std::string excluded;
@@ -1025,6 +1030,35 @@ void OnDuelWonStays(Character* npc, const std::string& name, const DuelResolveRe
 // A won duel: Cheat joins for good; Balanced rolls the seeded join chance
 // (duel_join_rules.h) and either joins for good -- a plain Recruit, never a temporary
 // stay -- or starts the win cooldown.
+// proactive-offer: a won duel asks the submission event for an offer instead of
+// recruiting on the spot (offer_requests.h). True when it did: the rival walks up and
+// opens the window (a passed roll), or stops attacking for a while (a failed one, after
+// the usual win cooldown and line). Off (offerOnDuelWin) or out of the event's reach, the
+// old behaviour runs.
+bool RequestDuelOffer(Character* npc, const std::string& name, const DuelResolveResult& result,
+                      const DuelWinDecision& decision, double nowHours, const std::string& head)
+{
+    if (!GetConfig().offer.onDuelWin)
+    {
+        return false;
+    }
+    if (!WithinOfferReach(npc))
+    {
+        LogInfo("[offer] " + name + " is out of the event's reach: the duel win resolves as before");
+        return false;
+    }
+    if (!decision.joins)
+    {
+        LogInfo(head + "stays; the offer event calms it [key " + result.npc.ToString() + "]");
+        OnDuelWonStays(npc, name, result, decision, nowHours);
+        RequestOffer(npc, OfferTrigger_DuelWin, OfferVerdict_Calm);
+        return true;
+    }
+    LogInfo(head + "the offer event brings " + name + " over [key " + result.npc.ToString() + "]");
+    RequestOffer(npc, OfferTrigger_DuelWin, OfferVerdict_Join);
+    return true;
+}
+
 void OnDuelWon(const DuelResolveResult& result, double nowHours)
 {
     Character* npc = FindNearSquad(result.npc);
@@ -1058,6 +1092,10 @@ void OnDuelWon(const DuelResolveResult& result, double nowHours)
     const std::string head = "[duel] " + winnerName + " won (wins " + IntToString(facts.wins) +
                              "): join chance " + IntToString(decision.chance) + "%, roll " +
                              IntToString(decision.roll) + " -> ";
+    if (RequestDuelOffer(npc, name, result, decision, nowHours, head))
+    {
+        return;
+    }
     if (!decision.joins)
     {
         char hours[32] = { 0 };

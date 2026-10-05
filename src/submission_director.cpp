@@ -25,8 +25,11 @@
 #include "config.h"
 #include "log.h"
 #include "cheat_waits.h"
+#include "offer_requests.h"
+#include "offer_narration_rules.h"
 
 #include <cstdio>
+#include <cstring>
 
 // The submission event's director: TotalSparring's challenge_director.cpp
 // (state machine :91-96, paused-aware clock :50-85, walk-up :886-893, hold,
@@ -35,6 +38,12 @@
 // one-event slot in approach_driver.h (shared with the helper's offer); the engine
 // calls in npc_motion.h (moving) and pacify.h (calm and hostility). This file
 // reads, asks, acts, logs.
+//
+// proactive-offer: the sweep first serves the offers a gesture of the player asked
+// for (offer_requests.h: a won duel, a heal), then the candidates it finds by
+// defeats. Animals walk up too (a narrator tells it: offer_narration_rules.h), and a
+// failed roll calms a hostile NPC in place for offerFailCalmSeconds (Outcome_RollFailed)
+// instead of leaving it attacking.
 
 namespace totalrecruit
 {
@@ -53,6 +62,7 @@ struct Event
 {
     SubmissionState state;
     WalkUp walk;
+    bool animal;
     bool wasHostile;
     float windowSec;
     bool fleeing;
@@ -60,7 +70,7 @@ struct Event
     GroundPoint fleeTo;
 
     Event()
-        : state(Submission_Idle), walk(), wasHostile(false), windowSec(0.0f),
+        : state(Submission_Idle), walk(), animal(false), wasHostile(false), windowSec(0.0f),
           fleeing(false), fleeArrived(false), fleeTo()
     {
     }
@@ -74,6 +84,12 @@ PleaTracker g_onScreen;
 void Log(const std::string& line)
 {
     LogInfo("[submission] " + line);
+}
+
+// The proactive offer's own steps, so QA can follow a gesture end to end.
+void OfferLog(const std::string& line)
+{
+    LogInfo("[offer] " + line);
 }
 
 std::string Fmt(const char* format, double a, double b)
@@ -98,6 +114,12 @@ bool IsMine(Character* npc)
 {
     bool mine = false;
     return npc != NULL && SafeIsPlayerCharacter(npc, &mine) && mine;
+}
+
+bool IsAnimal(Character* npc)
+{
+    bool animal = false;
+    return npc != NULL && SafeIsAnimal(npc, &animal) && animal;
 }
 
 // The calm, once a second (approach_driver.h ReassertCalm).
@@ -125,6 +147,24 @@ std::string Line(const char* key, const char* fallback, Character* npc, int hour
     return Fill(Say(key, fallback, npc), CharacterName(npc), 0, hours, 0);
 }
 
+// A roller line of the event in this NPC's form (offer_narration_rules.h); {seconds}
+// carries the calm window.
+std::string Narration(OfferNarrationId id, Character* npc, bool animal, float seconds)
+{
+    const OfferNarration line = OfferNarrationFor(id, animal);
+    std::string text = Line(line.key, line.fallback, npc, 0);
+    char number[16] = { 0 };
+    _snprintf_s(number, sizeof(number), _TRUNCATE, "%.0f", (double)seconds);
+    const std::string key = "{seconds}";
+    std::string::size_type at = 0;
+    while ((at = text.find(key, at)) != std::string::npos)
+    {
+        text.replace(at, key.size(), number);
+        at += std::strlen(number);
+    }
+    return text;
+}
+
 // ----------------------------------------------------------------- Outcomes
 void EnterForgiven(Character* npc, SubmissionOutcome outcome, bool flee)
 {
@@ -132,7 +172,8 @@ void EnterForgiven(Character* npc, SubmissionOutcome outcome, bool flee)
     g_event.state = Submission_Forgiven;
     g_event.walk.phaseStart = g_clock.Now();
     g_event.walk.lastReassert = g_clock.Now() - kSubmissionReassertSec;
-    g_event.windowSec = ForgivenWindowSec(outcome, config.submission.forgiveSeconds);
+    g_event.windowSec =
+        ForgivenWindowSec(outcome, config.submission.forgiveSeconds, config.offer.failCalmSeconds);
     g_event.fleeing = false;
     g_event.fleeArrived = false;
 
@@ -155,6 +196,11 @@ void EnterForgiven(Character* npc, SubmissionOutcome outcome, bool flee)
     }
     Log(g_event.walk.name + Fmt(": calm for %.0f s", g_event.windowSec, 0.0) +
         (flee ? (g_event.fleeing ? ", running off" : ", running off FAILED (stays)") : ", in place"));
+    if (outcome == Outcome_RollFailed)
+    {
+        OfferLog("calm: " + g_event.walk.name + Fmt(" stops attacking for %.0f s in place",
+                                                     g_event.windowSec, 0.0));
+    }
 }
 
 // Acts on an outcome with the plan PlanFor gives it, then either enters the
@@ -178,9 +224,17 @@ void Apply(SubmissionOutcome outcome)
     {
         if (outcome == Outcome_Forgiven)
         {
-            SpeakAloud(npc, Say("submissionEvent.forgiven", "Gracias... no lo olvidar\xc3\xa9.", npc));
-            TellPlayer(Line("submissionEvent.forgivenNotice", "{name}: lo perdonaste y se aleja.",
-                            npc, 0),
+            if (OfferSpeaks(g_event.animal))
+            {
+                SpeakAloud(npc, Say("submissionEvent.forgiven", "Gracias... no lo olvidar\xc3\xa9.", npc));
+            }
+            TellPlayer(Narration(OfferNarration_IgnoredNotice, npc, g_event.animal, 0.0f), false);
+            OfferLog("outcome: " + name + " ignored: runs off and stays calm");
+        }
+        else if (outcome == Outcome_RollFailed)
+        {
+            TellPlayer(Narration(OfferNarration_CalmNotice, npc, g_event.animal,
+                                 GetConfig().offer.failCalmSeconds),
                        false);
         }
         EnterForgiven(npc, outcome, plan.flee);
@@ -221,6 +275,12 @@ void Apply(SubmissionOutcome outcome)
                    false);
     }
 
+    if (outcome == Outcome_Rejected)
+    {
+        OfferLog("outcome: " + name + " rejected: nothing changes (no defeats wiped, no cooldown" +
+                 (plan.markHostile ? ", hostile again as before)" : ")"));
+    }
+
     if (npc != NULL && plan.markHostile)
     {
         SafeMarkHostile(npc, leader);
@@ -236,8 +296,9 @@ void Apply(SubmissionOutcome outcome)
         std::string message;
         if (Recruit(npc, &message))
         {
-            TellPlayer(Line("submissionEvent.joinedNotice", "{name}: se une a ti.", npc, 0), false);
+            TellPlayer(Narration(OfferNarration_JoinedNotice, npc, g_event.animal, 0.0f), false);
             Log(name + ": joined the squad");
+            OfferLog("outcome: " + name + " accepted: joined the squad");
         }
         else
         {
@@ -253,10 +314,12 @@ void Apply(SubmissionOutcome outcome)
 bool OpenPopup(Character* npc)
 {
     // ScreenCandidate kept the caged out, but the player can pick the NPC up on
-    // the way: read it again, so someone who cannot leave is never offered PERDONAR.
+    // the way: read it again, so someone who cannot leave is never offered IGNORAR.
     bool caged = false;
     const bool inCage = SafeInPrison(npc, &caged) && caged;
-    const OfferView view = BuildSubmissionOfferView(g_event.walk.name, inCage, OfferWording());
+    const OfferView view =
+        g_event.animal ? BuildAnimalSubmissionOfferView(g_event.walk.name, inCage, OfferWording())
+                       : BuildSubmissionOfferView(g_event.walk.name, inCage, OfferWording());
     if (!ShowOffer(npc, view))
     {
         return false;
@@ -416,8 +479,6 @@ CandidateFacts CheapFacts(Character* npc)
     f.mayAsk = true;
     f.beaten = true;
     f.mine = IsMine(npc);
-    bool animal = false;
-    f.animal = SafeIsAnimal(npc, &animal) && animal;
     f.up = NpcMotion::IsUp(npc);
     bool caged = false;
     f.caged = SafeInPrison(npc, &caged) && caged;
@@ -434,16 +495,21 @@ void CostlyFacts(Character* npc, int day, int defeats, CandidateFacts* f)
         f->mayAsk = MaySubmissionAsk(key, defeats);
         f->rolledNoToday = SubmissionRollFailedOn(key, day);
     }
-    f->beaten = defeats >= GetConfig().submission.defeatsToBreak || HasYieldedToPlayer(npc);
+    const Config& config = GetConfig();
+    f->beaten = SubmissionBeaten(defeats, config.submission.defeatsToBreak, HasYieldedToPlayer(npc),
+                                 IsAnimal(npc), config.preset == Preset_Cheat);
 }
 
-bool Start(Character* npc, Character* leader, int defeats, const Verdict& verdict)
+// `request` is the gesture that asked for this offer, or NULL for the defeats.
+bool Start(Character* npc, Character* leader, int defeats, const Verdict& verdict,
+           const OfferRequest* request)
 {
     if (!ClaimApproachSlot(ApproachOwner_Submission))
     {
         return false;
     }
     g_event = Event();
+    g_event.animal = IsAnimal(npc);
     // Read before the walk-up's calm clears it.
     g_event.wasHostile = HostileBefore(npc);
     bool moving = false;
@@ -457,26 +523,143 @@ bool Start(Character* npc, Character* leader, int defeats, const Verdict& verdic
     MarkSubmissionAsked(key, defeats);
     g_event.state = Submission_Approaching;
 
-    SpeakAloud(npc, Line("submissionEvent.approach",
-                         "{name}: Espera... no quiero pelear m\xc3\xa1s.", npc, 0));
-    TellPlayer(Line("submissionEvent.approachNotice", "{name} se acerca para hablar contigo.",
-                    npc, 0),
-               false);
-    RaiseHeadNotice(npc, Say("headNotice.approaching", "Se acerca para hablar contigo", npc));
+    // An animal does not speak: no words and no notice over its head, a narrator line.
+    if (OfferSpeaks(g_event.animal))
+    {
+        SpeakAloud(npc, Line("submissionEvent.approach",
+                             "{name}: Espera... no quiero pelear m\xc3\xa1s.", npc, 0));
+        RaiseHeadNotice(npc, Say("headNotice.approaching", "Se acerca para hablar contigo", npc));
+    }
+    TellPlayer(Narration(OfferNarration_ApproachNotice, npc, g_event.animal, 0.0f), false);
 
     float meters = -1.0f;
     NpcMotion::DistanceMeters(npc, leader, &meters);
-    Log(g_event.walk.name + " submitted (" + ReasonMessageKey(verdict.reasonKey, "") + "), walks up" +
+    const std::string why = request != NULL
+                                ? std::string("offer requested by ") + OfferTriggerName(request->trigger)
+                                : ReasonMessageKey(verdict.reasonKey, "");
+    Log(g_event.walk.name + " submitted (" + why + "), walks up" +
         Fmt(" from %.1f m, defeats %.0f", meters, (double)defeats) + "; hostile before " +
-        (g_event.wasHostile ? "yes" : "no") + (moving ? "" : "; move order FAILED") + " [key " +
-        key.ToString() + "]");
+        (g_event.wasHostile ? "yes" : "no") + (g_event.animal ? "; animal" : "") +
+        (moving ? "" : "; move order FAILED") + " [key " + key.ToString() + "]");
+    if (request != NULL)
+    {
+        OfferLog("walk-up: " + g_event.walk.name + " comes to offer (" +
+                 OfferTriggerName(request->trigger) + ")" + (g_event.animal ? " (animal)" : ""));
+    }
     return true;
+}
+
+// A failed roll: no window, the NPC stops attacking where it stands for
+// offerFailCalmSeconds (Outcome_RollFailed), then goes back to what it was.
+bool StartCalm(Character* npc, const std::string& why)
+{
+    if (!ClaimApproachSlot(ApproachOwner_Submission))
+    {
+        return false;
+    }
+    g_event = Event();
+    g_event.animal = IsAnimal(npc);
+    g_event.wasHostile = HostileBefore(npc);
+    if (!BeginWalkerInPlace(&g_event.walk, npc, g_clock.Now()))
+    {
+        g_event = Event();
+        ReleaseApproachSlot(ApproachOwner_Submission);
+        return false;
+    }
+    OfferLog("calm: " + g_event.walk.name + ": " + why + "; hostile before " +
+             (g_event.wasHostile ? "yes" : "no") + (g_event.animal ? "; animal" : "") + " [key " +
+             g_event.walk.key.ToString() + "]");
+    Apply(Outcome_RollFailed);
+    return true;
+}
+
+// One requested offer (offer_requests.h), screened already: its plan, then the walk-up
+// or the calm. True when an event started (the request is then used up).
+bool ServeRequest(Character* npc, Character* leader, const OfferRequest& request)
+{
+    const std::string name = CharacterName(npc);
+    Verdict verdict;
+    bool joinsFree = false;
+    if (request.verdict == OfferVerdict_Roll)
+    {
+        // The same decision Hablar makes, with its key and its roll.
+        verdict = Evaluate(npc);
+        joinsFree = JoinsForFree(verdict.willJoin, verdict.currency, verdict.cats, verdict.temporary);
+        OfferLog("roll: " + name + " -> " + (verdict.willJoin ? "joins" : "no") +
+                 Fmt(" (%.0f%%)", (double)verdict.chancePercent, 0.0) + " " +
+                 ReasonMessageKey(verdict.reasonKey, "") +
+                 (verdict.willJoin && !joinsFree ? " (not free or not lasting: talk to it)" : ""));
+        if (verdict.willJoin && verdict.viaRescue && GetConfig().rescueEnabled)
+        {
+            // The rescue route offers by itself when the patient gets up (rescue.cpp).
+            ConsumeRequestedOffer(npc, "the rescue route offers when it wakes");
+            return false;
+        }
+    }
+    const bool hostile = HostileBefore(npc);
+    const RequestedOfferPlan plan = PlanRequestedOffer(request.verdict, joinsFree, hostile);
+    OfferLog("serve: " + name + " (" + OfferTriggerName(request.trigger) + ", " +
+             OfferVerdictName(request.verdict) + ", hostile " + (hostile ? "yes" : "no") + ") -> " +
+             RequestedPlanName(plan));
+    if (plan == RequestedPlan_Nothing)
+    {
+        ConsumeRequestedOffer(npc, "a no from someone not hostile");
+        return false;
+    }
+    const bool started = plan == RequestedPlan_WalkUp
+                             ? Start(npc, leader, DefeatCount(npc), verdict, &request)
+                             : StartCalm(npc, "the roll failed");
+    if (started)
+    {
+        ConsumeRequestedOffer(npc, "served");
+    }
+    return started;
+}
+
+// The requested offers first: anyone with a pending request within the event's reach.
+// A skip that can never clear (already the player's, excluded, caged) uses it up; one
+// that can (down, busy) leaves it waiting.
+bool SweepRequested(Character* leader, float lx, float ly, float lz)
+{
+    std::vector<Character*> nearby;
+    if (!CharactersNear(Ogre::Vector3(lx, ly, lz), MetersToWorldUnits(kSubmissionAbortMeters),
+                        &nearby))
+    {
+        return false;
+    }
+    for (unsigned int i = 0; i < nearby.size(); ++i)
+    {
+        Character* npc = nearby[i];
+        OfferRequest request;
+        if (npc == NULL || npc == leader || !FindRequestedOffer(npc, &request))
+        {
+            continue;
+        }
+        CandidateFacts facts = CheapFacts(npc);
+        facts.requested = true;
+        facts.recruitable = IsRecruitable(npc, NULL);
+        const CandidateSkip skip = ScreenCandidate(facts);
+        if (skip != CandidateSkip_None)
+        {
+            if (RequestSkipConsumes(skip))
+            {
+                ConsumeRequestedOffer(npc, CandidateSkipText(skip));
+            }
+            continue;
+        }
+        if (ServeRequest(npc, leader, request))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Sweep()
 {
     const Config& config = GetConfig();
-    if (!config.submission.eventEnabled || IsOfferOpen() ||
+    const bool requests = HasRequestedOffers();
+    if ((!config.submission.eventEnabled && !requests) || IsOfferOpen() ||
         !ApproachSlotFreeFor(ApproachOwner_Submission))
     {
         return;
@@ -496,6 +679,16 @@ void Sweep()
         return;
     }
     const int day = DayIndexFromHours(now);
+
+    // A gesture's request is served before anyone found by defeats.
+    if (requests && SweepRequested(leader, lx, ly, lz))
+    {
+        return;
+    }
+    if (!config.submission.eventEnabled)
+    {
+        return;
+    }
 
     std::vector<Character*> nearby;
     if (!CharactersNear(Ogre::Vector3(lx, ly, lz),
@@ -545,11 +738,16 @@ void Sweep()
                 }
                 Log(CharacterName(npc) + Fmt(": field yield not today (%.0f%%, day %.0f)",
                                              (double)verdict.chancePercent, (double)day));
+                // proactive-offer: a bad roll leaves it neutral for a while, not attacking.
+                if (HostileBefore(npc) && StartCalm(npc, "the field yield roll failed"))
+                {
+                    return;
+                }
                 continue;
             }
         }
 
-        if (Start(npc, leader, defeats, verdict))
+        if (Start(npc, leader, defeats, verdict, NULL))
         {
             return;
         }
@@ -560,6 +758,7 @@ void Sweep()
 void SubmissionTick()
 {
     g_clock.Advance();
+    OfferRequestsTick();
 
     switch (g_event.state)
     {
@@ -655,5 +854,6 @@ void ForgetSubmission()
     ResetEvent();
     g_clock.Reset();
     g_nextSweep = 0;
+    ForgetOfferRequests();
 }
 } // namespace totalrecruit

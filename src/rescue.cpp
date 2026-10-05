@@ -10,6 +10,7 @@
 #include "log.h"
 #include "mercy.h"
 #include "animal_healing.h"
+#include "offer_requests.h"
 
 namespace totalrecruit
 {
@@ -89,6 +90,8 @@ bool ApplyFirstAid_hook(MedicalSystem* thisptr, float skill, Item* equipment,
     NoteTreatment(thisptr, who);
     // The same healer, for Cheat's "healed by the player" (animal_healing.h).
     NoteAnimalTreatment(thisptr, who);
+    // And for the proactive offer: the patient comes to offer once it is up (offer_requests.h).
+    NoteHealForOffer(thisptr, who);
     return g_applyFirstAid_orig != NULL
                ? g_applyFirstAid_orig(thisptr, skill, equipment, frameTime, who)
                : false;
@@ -99,6 +102,7 @@ bool ApplyDoctoring_hook(MedicalSystem* thisptr, float skill, Item* equipment,
 {
     NoteTreatment(thisptr, who);
     NoteAnimalTreatment(thisptr, who);
+    NoteHealForOffer(thisptr, who);
     return g_applyDoctoring_orig != NULL
                ? g_applyDoctoring_orig(thisptr, skill, equipment, frameTime, who)
                : false;

@@ -152,6 +152,7 @@
     <ClCompile Include="src\hold_duration_rules.cpp" />
     <ClCompile Include="src\offer_request_rules.cpp" />
     <ClCompile Include="src\offer_narration_rules.cpp" />
+    <ClCompile Include="src\offer_requests.cpp" />
     <ClCompile Include="src\feeding_ledger.cpp" />
     <ClCompile Include="src\saved_ints.cpp" />
     <ClCompile Include="src\approach_rules.cpp" />
@@ -234,6 +235,7 @@
     <ClInclude Include="src\hold_duration_rules.h" />
     <ClInclude Include="src\offer_request_rules.h" />
     <ClInclude Include="src\offer_narration_rules.h" />
+    <ClInclude Include="src\offer_requests.h" />
     <ClInclude Include="src\menu_button_release.h" />
     <ClInclude Include="src\menu_obstacles.h" />
     <ClInclude Include="src\button_style.h" />

@@ -112,7 +112,7 @@ void ReassertCalm(WalkUp* walk, Character* npc)
     SafeCalmToward(npc, squad, count);
 }
 
-bool BeginWalkUp(WalkUp* walk, Character* npc, Character* leader, float now, bool* moving)
+bool BeginWalkerInPlace(WalkUp* walk, Character* npc, float now)
 {
     CharKey key;
     if (npc == NULL || !SafeCharKey(npc, &key))
@@ -126,6 +126,13 @@ bool BeginWalkUp(WalkUp* walk, Character* npc, Character* leader, float now, boo
 
     ReassertCalm(walk, npc);
     walk->strikes = 0;
+    return true;
+}
+
+bool BeginWalkUp(WalkUp* walk, Character* npc, Character* leader, float now, bool* moving)
+{
+    if (!BeginWalkerInPlace(walk, npc, now))
+        return false;
     *moving = NpcMotion::MoveTo(npc, leader);
     return true;
 }

@@ -20,8 +20,9 @@
 //     pause) is dropped: the character never got up or never came within reach.
 //
 // The plan for a served request: a settled yes walks up and opens the window, a settled
-// no calms in place; a Roll asks the verdict (rules.h Evaluate) and walks up only for a
-// free, lasting join (the window is free and ACEPTAR is a plain Recruit).
+// no calms in place (when it is hostile); a Roll asks the verdict (rules.h Evaluate) and
+// walks up only for a free, lasting join (the window is free and ACEPTAR is a plain
+// Recruit).
 // tests/rules_tests/offer_request_rules_tests.cpp.
 
 #include "char_key.h"
@@ -105,13 +106,16 @@ private:
 enum RequestedOfferPlan
 {
     RequestedPlan_WalkUp = 0,   // walk up to the player and open the window
-    RequestedPlan_Calm          // stop attacking for failCalmSeconds where it stands
+    RequestedPlan_Calm,         // stop attacking for failCalmSeconds where it stands
+    RequestedPlan_Nothing       // a no from someone not hostile: nothing to calm, no line
 };
 
 const char* RequestedPlanName(RequestedOfferPlan plan);
 
-// PURE: Join walks up, Calm calms; Roll walks up when the verdict is a free join.
-RequestedOfferPlan PlanRequestedOffer(OfferRequestVerdict verdict, bool joinsFree);
+// PURE: Join walks up; Roll walks up when the verdict is a free join. A no (Calm, or a
+// Roll that is not a free join) calms only someone `hostile` to the squad -- the calm
+// is the user's "unos segundos de neutralidad" instead of being attacked.
+RequestedOfferPlan PlanRequestedOffer(OfferRequestVerdict verdict, bool joinsFree, bool hostile);
 
 // PURE: whether a verdict is a join the event's window can offer: free (no cats
 // asked), lasting (not an ally's temporary stay) and a yes.

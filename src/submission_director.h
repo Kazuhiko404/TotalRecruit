@@ -23,17 +23,25 @@
 //     (npc_motion.h). Arrives at kSubmissionArriveMeters; the approach window
 //     (submissionApproachSeconds, real seconds frozen on pause) is the timeout.
 //   Holding: the NPC stands facing the leader and the popup is up
-//     (BuildSubmissionOfferView): ACEPTAR / PERDONAR / RECHAZAR.
-//   Accept: Recruit. Forgive: runs kSubmissionFleeMeters away and stays calm
-//     for submissionForgiveSeconds (the player can still talk to it), then goes
-//     back to what it was. Reject: its defeats are wiped, it refuses every
-//     recruit route for submissionRejectCooldownHours (saved with it), and it is
-//     hostile to the player leader again.
+//     (BuildSubmissionOfferView, BuildAnimalSubmissionOfferView for an animal):
+//     ACEPTAR / IGNORAR / RECHAZAR.
+//   Accept: Recruit. Ignore (was Forgive): runs kSubmissionFleeMeters away and
+//     stays calm for submissionForgiveSeconds (the player can still talk to it),
+//     then goes back to what it was. Reject (proactive-offer): nothing -- the
+//     event ends and it goes back to what it was doing, hostile again only if it
+//     was before; no defeats wiped, no reject cooldown.
 //   The popup closed with no answer (X, hidden, replaced): treated like a
 //     forgive without the flight -- calm in place for the forgive window, then
 //     back to what it was.
 //   Abort (gone, down, calm broken, too far, timeout): orders cleared, pace
 //     given back, and a hostile NPC is hostile again.
+//
+// proactive-offer (offer_requests.h): before the defeats, the sweep serves the
+// offers a gesture of the player asked for (a won duel, a heal by the squad),
+// animals included (narrator lines, offer_narration_rules.h). The verdict decides:
+// a free, lasting join walks up and opens the window; a no calms a hostile NPC in
+// place for offerFailCalmSeconds (Outcome_RollFailed). A field yield roll that
+// fails in the defeat sweep calms a hostile NPC the same way.
 //
 // Never changes a faction relation.
 

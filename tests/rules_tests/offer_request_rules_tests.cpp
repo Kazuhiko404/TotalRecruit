@@ -105,11 +105,23 @@ void APendingRequestExpiresAndAUsedOneIsForgotten()
 void ARequestPlansAWalkUpOrACalm()
 {
     const char* name = "offer plan: a settled yes walks up, a settled no calms, a roll asks the verdict";
-    CHECK(PlanRequestedOffer(OfferVerdict_Join, false) == RequestedPlan_WalkUp);
-    CHECK(PlanRequestedOffer(OfferVerdict_Calm, true) == RequestedPlan_Calm);
-    CHECK(PlanRequestedOffer(OfferVerdict_Roll, true) == RequestedPlan_WalkUp);
-    CHECK(PlanRequestedOffer(OfferVerdict_Roll, false) == RequestedPlan_Calm);
+    CHECK(PlanRequestedOffer(OfferVerdict_Join, false, true) == RequestedPlan_WalkUp);
+    CHECK(PlanRequestedOffer(OfferVerdict_Join, false, false) == RequestedPlan_WalkUp);
+    CHECK(PlanRequestedOffer(OfferVerdict_Calm, true, true) == RequestedPlan_Calm);
+    CHECK(PlanRequestedOffer(OfferVerdict_Roll, true, true) == RequestedPlan_WalkUp);
+    CHECK(PlanRequestedOffer(OfferVerdict_Roll, false, true) == RequestedPlan_Calm);
     CHECK(RequestedPlanName(RequestedPlan_Calm)[0] != '\0');
+}
+
+// The calm is "unos segundos de neutralidad" for someone who keeps attacking: a
+// townsperson the squad patched up who will not join is left alone, with no line.
+void ANoFromSomeoneCalmNeedsNoCalm()
+{
+    const char* name = "offer plan: a no from someone not hostile does nothing";
+    CHECK(PlanRequestedOffer(OfferVerdict_Calm, false, false) == RequestedPlan_Nothing);
+    CHECK(PlanRequestedOffer(OfferVerdict_Roll, false, false) == RequestedPlan_Nothing);
+    CHECK(PlanRequestedOffer(OfferVerdict_Roll, true, false) == RequestedPlan_WalkUp);
+    CHECK(RequestedPlanName(RequestedPlan_Nothing)[0] != '\0');
 }
 
 void OnlyAFreeLastingYesIsOfferedForNothing()
@@ -155,6 +167,7 @@ void RunOfferRequestRulesTests()
     EveryDuelWinIsANewGesture();
     APendingRequestExpiresAndAUsedOneIsForgotten();
     ARequestPlansAWalkUpOrACalm();
+    ANoFromSomeoneCalmNeedsNoCalm();
     OnlyAFreeLastingYesIsOfferedForNothing();
     ALastingSkipUsesTheRequestUp();
     EveryNameIsReadable();

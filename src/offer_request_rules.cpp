@@ -160,17 +160,20 @@ void OfferRequestQueue::Clear()
 
 const char* RequestedPlanName(RequestedOfferPlan plan)
 {
-    return plan == RequestedPlan_WalkUp ? "walk up and offer" : "calm in place";
+    switch (plan)
+    {
+    case RequestedPlan_WalkUp:  return "walk up and offer";
+    case RequestedPlan_Calm:    return "calm in place";
+    case RequestedPlan_Nothing: return "nothing (not hostile)";
+    }
+    return "unknown";
 }
 
-RequestedOfferPlan PlanRequestedOffer(OfferRequestVerdict verdict, bool joinsFree)
+RequestedOfferPlan PlanRequestedOffer(OfferRequestVerdict verdict, bool joinsFree, bool hostile)
 {
-    switch (verdict)
-    {
-    case OfferVerdict_Join: return RequestedPlan_WalkUp;
-    case OfferVerdict_Calm: return RequestedPlan_Calm;
-    default:                return joinsFree ? RequestedPlan_WalkUp : RequestedPlan_Calm;
-    }
+    if (verdict == OfferVerdict_Join || (verdict == OfferVerdict_Roll && joinsFree))
+        return RequestedPlan_WalkUp;
+    return hostile ? RequestedPlan_Calm : RequestedPlan_Nothing;
 }
 
 bool JoinsForFree(bool willJoin, Currency currency, int cats, bool temporary)
