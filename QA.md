@@ -1005,3 +1005,18 @@ Con `"probeOnClick": true`, Cheat (`"preset": 0`) y los valores por defecto (`ch
 | X7 | Tu propia jaula en Cheat | Igual que H2/H3; el log dice tu jaula | `<nombre> [hold] clock started: seen in your cage` |
 | X8 | Abrir el menu de un preso en jaula ajena | Sin GOLPEAR / NOQUEAR: los comandos de jaula siguen siendo solo para tus jaulas | -- |
 | X9 | Balanced (`"preset": 1`): un preso en jaula ajena | Sin cambios: sigue la respuesta de acceso de Balanced (jaula ajena) | sin `seen in a cage` |
+
+### 12.36 La tarjeta dice cuanto lleva encerrado (prisoner-hold-time)
+
+Con `"probeOnClick": true`. La linea va justo bajo la cabecera (nombre + etiqueta de ruta), tambien en tarjeta compacta, en tiempo de juego y redondeada hacia abajo. Texto en `messages.json` `readout.line.hold.elapsed` ("Encerrado: {time}"). Mockup: filas "Caged bandit" / "Caged prisoner you cared for" y la ultima, "Cheat: a prisoner held in another faction's cage", en `ui-mockup/readout.html`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| T1 | Balanced: meter a un preso en tu jaula y seleccionarlo enseguida | "Encerrado: 0 min" (o "1 min") bajo la cabecera | `[readout] <nombre> ... held=Encerrado: 0 min line=...` |
+| T2 | Dejarlo 2 h 15 min de juego y seleccionarlo (la tarjeta se refresca cada 2 s) | "Encerrado: 2 h 15 min"; a las 2 h justas "Encerrado: 2 h" | `held=Encerrado: 2 h 15 min` |
+| T3 | Mas de un dia | "Encerrado: 1 d 3 h" (sin minutos); a las 24 h justas "Encerrado: 1 d" | `held=Encerrado: 1 d 3 h` |
+| T4 | Un NPC libre, un animal libre, un miembro temporal o un ayudante | Sin linea de encierro | `held=-` |
+| T5 | Un preso que el barrido todavia no vio en tu jaula (recien encerrado fuera de rango) | Sin linea hasta el primer avistaje: la tarjeta no arranca el reloj | `held=-` y luego `[hold] clock started: seen in your cage` |
+| T6 | Cheat con `cheatAnyCage` ON: un preso en jaula ajena tras X1 | "Encerrado: N min" | `held=Encerrado: ...` |
+| T7 | Cheat con `cheatAnyCage` OFF, o Balanced: un preso en jaula ajena | Sin linea de encierro | `held=-` |
+| T8 | Guardar y cargar con el preso aun en tu jaula | Conserva sus horas (P3): la linea sigue desde donde estaba | `held=Encerrado: ...` |

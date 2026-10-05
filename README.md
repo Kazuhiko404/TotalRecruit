@@ -252,7 +252,9 @@ over their head: the route that answers them (Captivity, Surrender, Animal, Free
 Rescue, Mercy), a three-colour stress bar (hunger, wounds, tiredness), the join
 chance, the defeats counted against the threshold, the stomach bar for animals,
 one short line saying what stands in the way, and the cared-for bonus when it
-applies. Every number is one the decision itself computed. The card
+applies. A prisoner in your cage (or, in Cheat with "any cage" on, in any cage)
+also shows how long they have been held, in game time, right under the header
+("Encerrado: 2 h 15 min"). Every number is one the decision itself computed. The card
 shows the odds, never whether the roll will pass, and asking has no side effects.
 It follows the selection: deselect the NPC and it goes, select another and it
 switches. It is worked out when the selection changes and refreshed every 2
