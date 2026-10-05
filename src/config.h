@@ -618,6 +618,20 @@ struct DuelChallenges
     }
 };
 
+// The proactive offer (proactive-offer, offer_requests.h): which gestures of the
+// player ask the submission event for an offer -- the NPC or animal walks up and
+// opens the window by itself -- and how long a failed roll keeps it calm where it
+// stands instead of attacking. Off, a won duel keeps the old behaviour (Cheat joins
+// at once, Balanced rolls) and a heal only marks the ledger.
+struct ProactiveOffer
+{
+    bool onDuelWin;
+    bool onHeal;
+    float failCalmSeconds;
+
+    ProactiveOffer() : onDuelWin(true), onHeal(true), failCalmSeconds(20.0f) {}
+};
+
 // Which dialogue records the plugin fires. Empty means "no FCS package
 // installed" -- the plugin then falls back to acting directly, so the mod still
 // works as a code-only install.
@@ -740,6 +754,7 @@ struct Config
     TempMembers tempMembers;
     Helpers helpers;
     DuelChallenges duelChallenges;
+    ProactiveOffer offer;
     DialogueIds dialogue;
     Exclusions exclude;
 

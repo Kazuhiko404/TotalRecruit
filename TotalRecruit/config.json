@@ -84,6 +84,10 @@
   "duelAnimalsEnabled": true,
   "duelAnimalsFromLevel": 40,
 
+  "offerOnDuelWin": true,
+  "offerOnHeal": true,
+  "offerFailCalmSeconds": 20.0,
+
   "submissionBeatingCooldownHours": 1.0,
   "submissionKnockoutCooldownHours": 1.0,
   "submissionCaredForBonusMin": 5,

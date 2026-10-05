@@ -280,6 +280,10 @@ static bool DoRegisterModHub()
     // Reto a duelo a animales sin dueno (ambos presets).
     regBool(api, mod, "duel_animals_enabled", "Duelo: retar animales", "Con TotalSparring instalado, un animal sin dueno de nivel suficiente tambien ofrece RETAR A DUELO (Balanced: la misma chance que una persona; Cheat: se une)", &c.duelChallenges.animalsEnabled);
     regInt(api, mod, "duel_animals_from_level", "Duelo: nivel minimo de animales", "Nivel desde el que un animal sin dueno puede ser retado a duelo", 1, 500, 5, &c.duelChallenges.animalsFromLevel);
+    // proactive-offer: the NPC or animal walks up and offers itself after a gesture.
+    regBool(api, mod, "offer_on_duel_win", "Oferta: al ganar un duelo", "Al ganarle un duelo, si la tirada sale bien camina hasta ti y te ofrece unirse (Aceptar, Ignorar, Rechazar). Apagado: se une al instante como antes", &c.offer.onDuelWin);
+    regBool(api, mod, "offer_on_heal", "Oferta: al curarlo", "Si alguien de tu grupo cura a un NPC o animal que no es tuyo, al levantarse viene a ofrecerse si la tirada sale bien", &c.offer.onHeal);
+    regFloat(api, mod, "offer_fail_calm_seconds", "Oferta: segundos en calma si no se une", "Tras un duelo ganado, una cura o una derrota con mala tirada, deja de atacarte estos segundos donde esta", 0.0f, 600.0f, 5.0f, 0, &c.offer.failCalmSeconds);
     regBool(api, mod, "cheat_needs_cage","Cheat: exige jaula", "En Cheat hay que enjaularlo igual (sin ninguna otra condicion)", &c.cheatNeedsCage);
     regBool(api, mod, "cheat_any_cage", "Cheat: cualquier jaula", "En Cheat sirve la jaula o grillete de cualquier faccion, no solo la tuya", &c.cheatAnyCage);
     regFloat(api, mod, "cheat_hours_caged", "Cheat: espera en jaula", "Horas de juego antes de que te llame; en Cheat toda espera es como mucho 1 minuto", 0.0f, 24.0f, 0.01f, 2, &c.cheatHoursCaged);
@@ -331,10 +335,10 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "sub_beating_stress_min", "Estres: minimo por golpe", "Lo menos que suma un golpe o un noqueo", 0.0f, 1.0f, 0.01f, 2, &c.submission.beatingStressMin);
     regFloat(api, mod, "sub_beating_stress_max", "Estres: maximo por golpe", "Lo mas que suma un golpe o un noqueo", 0.0f, 1.0f, 0.01f, 2, &c.submission.beatingStressMax);
     regFloat(api, mod, "sub_beating_stress_fade", "Estres: horas en desvanecerse", "Horas de juego en que la barra entera de golpes vuelve a cero", 1.0f, 168.0f, 1.0f, 0, &c.submission.beatingStressFadeHours);
-    regBool(api, mod, "sub_event_enabled", "Sometido: viene a pedirte unirse", "Un NPC que se rinde camina hasta ti y pide unirse (Aceptar, Perdonar, Rechazar)", &c.submission.eventEnabled);
+    regBool(api, mod, "sub_event_enabled", "Sometido: viene a pedirte unirse", "Un NPC o animal que se rinde camina hasta ti y pide unirse (Aceptar, Ignorar, Rechazar)", &c.submission.eventEnabled);
     regFloat(api, mod, "sub_event_approach", "Sometido: segundos para llegar", "Cuanto puede tardar en llegar; mientras camina no te ataca", 10.0f, 600.0f, 5.0f, 0, &c.submission.approachSeconds);
-    regFloat(api, mod, "sub_event_forgive", "Sometido: segundos en calma al perdonar", "Cuanto sigue sin atacarte despues de perdonarlo (puedes hablarle)", 0.0f, 1800.0f, 30.0f, 0, &c.submission.forgiveSeconds);
-    regFloat(api, mod, "sub_event_reject_cooldown", "Sometido: horas sin reclutar al rechazar", "Horas de juego en que un NPC rechazado no se une por ninguna via", 0.0f, 720.0f, 6.0f, 0, &c.submission.rejectCooldownHours);
+    regFloat(api, mod, "sub_event_forgive", "Sometido: segundos en calma al ignorar", "Cuanto sigue sin atacarte despues de Ignorar (se aleja 80 m; puedes hablarle)", 0.0f, 1800.0f, 30.0f, 0, &c.submission.forgiveSeconds);
+    regFloat(api, mod, "sub_event_reject_cooldown", "Sometido: horas sin reclutar al rechazar", "Horas de un rechazo viejo (guardado antes de la oferta proactiva): Rechazar ya no castiga", 0.0f, 720.0f, 6.0f, 0, &c.submission.rejectCooldownHours);
 
     regFloat(api, mod, "animal_nutrition_per_meal", "Animal: comida por racion", "Cuanto llena el estomago una racion (escala 0..3 del motor)", 0.05f, 3.0f, 0.05f, 2, &c.animals.nutritionPerMeal);
     regBool(api, mod, "animal_personality_matters", "Animal: cuenta la personalidad", "Un animal desconfiado pide mas comida que uno timido", &c.animals.personalityMatters);

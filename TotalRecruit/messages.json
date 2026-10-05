@@ -832,7 +832,28 @@
     ],
     "rejectedNotice": [
       "{name}: lo rechazaste. No querra saber nada de ti en {hours} h."
-    ]
+    ],
+    "calmNotice": [
+      "{name} no quiere unirse, pero deja de pelear por {seconds} s."
+    ],
+    "ignoredNotice": [
+      "{name}: lo ignoraste y se aleja."
+    ],
+    "animal": {
+      "_comment": "Oferta proactiva de un animal: camina hasta ti y abre la ventana. Un animal no habla: lineas de narrador, sin cartel sobre la cabeza. {name} = su nombre, {seconds} = segundos de calma tras una mala tirada (offerFailCalmSeconds).",
+      "approachNotice": [
+        "{name} se acerca con la cabeza gacha."
+      ],
+      "calmNotice": [
+        "{name} se calma y deja de atacarte por {seconds} s."
+      ],
+      "ignoredNotice": [
+        "{name} se aleja trotando."
+      ],
+      "joinedNotice": [
+        "{name} te sigue: ahora es parte de tu grupo."
+      ]
+    }
   },
   "_avisoCabeza": [
     "Cartel sobre la cabeza de quien quiere hablar contigo (se va al seleccionarlo o al pasar headNoticeSeconds).",
@@ -1283,6 +1304,7 @@
       "rescue": "{name} te debe la vida y desea unirse a tu grupo.",
       "joins": "{name} desea unirse a tu grupo.",
       "submitted": "{name} se arrodilla y te pide unirse a tu grupo.",
+      "animalSubmitted": "{name} agacha la cabeza frente a ti: quiere seguirte.",
       "helper": "{name} te ofrece acompanarte {days} dias, gratis. No podras darle ordenes."
     },
     "reason": {

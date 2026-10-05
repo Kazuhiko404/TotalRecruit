@@ -367,6 +367,9 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "duelWinCooldownMaxHours", &c.duelChallenges.winCooldownMaxHours);
     AddBool(f, "duelAnimalsEnabled", &c.duelChallenges.animalsEnabled);
     AddInt(f, "duelAnimalsFromLevel", &c.duelChallenges.animalsFromLevel);
+    AddBool(f, "offerOnDuelWin", &c.offer.onDuelWin);
+    AddBool(f, "offerOnHeal", &c.offer.onHeal);
+    AddFloat(f, "offerFailCalmSeconds", &c.offer.failCalmSeconds);
     AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
     AddFloat(f, "relationRefuseAll", &c.relationRefuseAll);
     AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);
@@ -568,6 +571,8 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.submission.approachSeconds, 10.0f, 600.0f);
     ClampFloat(&g_config.submission.forgiveSeconds, 0.0f, 1800.0f);
     ClampFloat(&g_config.submission.rejectCooldownHours, 0.0f, 720.0f);
+    // The proactive offer's calm after a failed roll: a few seconds to ten minutes.
+    ClampFloat(&g_config.offer.failCalmSeconds, 0.0f, 600.0f);
     ClampInt(&g_config.submission.caredForBonusMin, 0, 50);
     ClampInt(&g_config.submission.caredForBonusMax, 0, 50);
     for (int i = 0; i < Temperament_Count; ++i)
