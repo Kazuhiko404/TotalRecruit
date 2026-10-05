@@ -255,6 +255,13 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     stomach bar (states "Wild animal beaten ..."); a failed roll keeps food as the other way in. In Cheat a meal, a
     cure or one knockout by the squad is the gesture ("Comio de tu mano / Lo curaste / Lo venciste: te sigue").
 
+28. **In Cheat any cage counts** (cheat-any-cage, user request 2026-10-05: "for cheat mode drop the limit of only
+    recruiting from your cell"). With `cheatAnyCage` on (Mod Hub "Cheat: cualquier jaula", last `HUB` row) a
+    prisoner in another faction's cage, shackles or carried off (`SafeInPrison`) gets the same one-minute wait and
+    joins, on the cage route. No card or popup state changes, so the mockup only gains the Mod Hub row: the refusal
+    text "metelo en una de tus jaulas" stays true (your cage still works) and the cage commands (Golpear / Noquear)
+    stay on the player's own cages. Balanced is unchanged.
+
 ### Native windows (sections 2 and 5: the card and the head notices)
 
 24. **The card and the notices step aside for Kenshi's own dialogue** (user report 2026-10-03: "if I talk to the

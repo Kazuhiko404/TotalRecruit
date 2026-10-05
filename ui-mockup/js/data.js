@@ -300,5 +300,7 @@ var HUB = [
   ['Estres: maximo por golpe', 'submissionBeatingStressMax', '0.25',
    'Lo mas que suma un golpe o un noqueo'],
   ['Estres: horas en desvanecerse', 'submissionBeatingStressFadeHours', '24',
-   'Horas de juego en que la barra entera de golpes vuelve a cero']
+   'Horas de juego en que la barra entera de golpes vuelve a cero'],
+  ['Cheat: cualquier jaula', 'cheatAnyCage', 'ON',
+   'En Cheat sirve la jaula o grillete de cualquier faccion, no solo la tuya']
 ];
