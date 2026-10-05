@@ -251,6 +251,11 @@ Poné `"preset": 0` y **reiniciá el juego**.
 | H9 | Con `cheatNeedsCage: false`, rechazar al sometido que se acerca (12.21) y volver a hablarle | Vuelve a aceptar en la proxima hora entera de juego (como mucho ~1 h), no en 72 h; el aviso dice "en 1 h" | Dice "en 72 h" |
 | H10 | Retar a duelo a un 80+ (12.29 J7) y perder | Se lo puede retar otra vez en la proxima hora entera de juego (como mucho ~1 h), no en 24 h | `no challenge until hour` 24 h despues |
 
+| H11 | Con un animal libre sin dueño: darle de comer desde la ventana (Dar comida) y Hablar | **Se une** al momento, sin jaula ni espera: "comió de tu mano y te sigue"; la tarjeta dice "Comio de tu mano: te sigue" (animal-insistence-cheat-feed A2) | Pide jaula — el camino de la comida no está |
+| H12 | Un animal libre que nunca comió de tu mano: Hablar | Pide la jaula ("metelo en una de tus jaulas...") y la ventana ofrece Dar comida si llevas | Se une sin comer, o no hay boton de comida |
+| H13 | Un animal herido y con hambre que ya comió de tu mano | Se une igual: en Cheat ni heridas ni barriga cuentan | "cúralo" o "le falta N% de barriga" |
+| H14 | Un animal con dueño (de otra facción), alimentado | Solo por la jaula: pide jaula, sin boton de comida; en la jaula + 1 minuto se une (H2-H3) | Se une fuera de la jaula |
+
 **H3 y H4 juntos son la definición de Cheat:** cualquiera, incluidos animales y
 únicos, sin ninguna condición más que el gesto.
 

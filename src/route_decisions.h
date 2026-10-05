@@ -36,7 +36,9 @@ bool DecideGate(const CoreFacts& core, const Config& config, Verdict* out);
 
 // route_cheat: R1.1 / R1.2 -- Cheat keeps the gesture and drops the price. The cage
 // is required and the wait is a minute of game time, because in Cheat time is a
-// gesture rather than a cost. Nothing else is asked.
+// gesture rather than a cost. Nothing else is asked. An animal the player fed (and
+// that belongs to nobody) joins at once instead, caged or not (Reason_TameReady);
+// unfed and outside the cage it asks for the cage and takes food.
 Verdict DecideCheat(const CheatFacts& facts, const Config& config);
 
 // route_rescue

@@ -573,6 +573,24 @@ CheatFacts GatherCheatFacts(Character* character, GatherMode mode)
             facts.hoursHeld = HoursHeld(character);
         }
     }
+    // An animal is taken by its meal as well as by the cage (route_cheat.cpp), so
+    // the same facts Balanced's animal route reads: who owns it (only outside the
+    // player's cage, like GatherAnimal) and the meals from the player's hand, read
+    // without minting an id.
+    if (config.cheatNeedsCage)
+    {
+        bool animal = false;
+        facts.animal = SafeIsAnimal(character, &animal) && animal;
+        if (facts.animal)
+        {
+            facts.belongsToSomeone = !facts.inMyCage && BelongsToSomeone(character);
+            CharKey key;
+            if (SafeFindCharKey(character, &key))
+            {
+                facts.fedByPlayer = PlayerMeals(key) > 0;
+            }
+        }
+    }
     return facts;
 }
 

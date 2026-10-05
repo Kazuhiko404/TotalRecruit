@@ -32,6 +32,7 @@ Nothing has a formal QA pass mark.
 | Field yield ("Sometido"): beaten in the field; respects other cages, lockout and loyalty | `not verified` (12.14) |
 | Player defeats saved in the character save, one per knockout (`total_recruit.player_defeats`); the hook's twin call inside 5 s is the same knockout | `not verified` (12.13 K4b) |
 | Cheat preset: cage plus a one-minute hold, nothing else (`cheatNeedsCage`) | `verified in game` (§8, R1.3) |
+| Cheat: an animal that belongs to nobody joins as soon as it has eaten from the player's hand, caged or not, no wait (`DecideCheat`, `CheatFacts::fedByPlayer`); unfed outside the cage it asks for the cage and the popup offers food (animal-insistence-cheat-feed A2) | `needs in-game QA` (§8 H11-H14) |
 | Cheat: every wait is one game minute (`cheat_waits`: cage wait, hail first and repeat, Golpear/Noquear rests, reject and lost-duel cooldowns; the last two end at the next whole game hour) | `needs in-game QA` (§8 H7-H10, 12.33 W1-W2) |
 
 ### 2. Chance, stress and the readout card (7)

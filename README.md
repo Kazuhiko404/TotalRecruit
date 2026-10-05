@@ -159,7 +159,9 @@ itself.
 
 - **Cheat** — the cage and a one-minute wait, nothing else: the character must be
   in your cage and held for `cheatHoursCaged` (0.02 game hours); no cats, food,
-  submission, level or standing. `cheatNeedsCage` turns the cage requirement off.
+  submission, level or standing. An animal that belongs to nobody also joins the
+  moment it has eaten from your hand, caged or not (the popup offers food to an
+  unfed one). `cheatNeedsCage` turns the cage requirement off.
 - **Balanced** — the prices above, and allies by level. *(default)*
 
 v1 ships these two. Vanilla+ (faction relation shifting the price) was retired:

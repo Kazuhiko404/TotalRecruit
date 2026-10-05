@@ -159,8 +159,19 @@ struct CheatFacts
     // Hours held in the cage, only read when it can matter (0 when a peek finds
     // no running clock).
     float hoursHeld;
+    // An animal, and what the fed path needs (animal-insistence-cheat-feed A2):
+    // whether it belongs to someone (BelongsToSomeone, only read outside the
+    // player's cage) and whether it ever ate from the player's hand (the same
+    // PlayerMeals fact AnimalExtra::fedByPlayer carries for Balanced).
+    bool animal;
+    bool belongsToSomeone;
+    bool fedByPlayer;
 
-    CheatFacts() : inMyCage(false), hoursHeld(0.0f) {}
+    CheatFacts()
+        : inMyCage(false), hoursHeld(0.0f), animal(false), belongsToSomeone(false),
+          fedByPlayer(false)
+    {
+    }
 };
 
 struct RescueExtra

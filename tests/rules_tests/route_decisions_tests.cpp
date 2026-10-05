@@ -194,6 +194,103 @@ void CheatWaitsAMinuteThenJoins()
     CHECK(v.reasonKey == Reason_CheatJoins);
 }
 
+// An animal that ate from the player's hand (the same PlayerMeals fact Balanced's
+// animal route reads) joins in Cheat at once: no cage, no wait, no bar.
+CheatFacts FedAnimal(bool inCage)
+{
+    CheatFacts facts;
+    facts.animal = true;
+    facts.fedByPlayer = true;
+    facts.inMyCage = inCage;
+    return facts;
+}
+
+void CheatAFedAnimalJoinsWithoutTheCage()
+{
+    const char* name = "cheat: an animal fed by the player joins at once, no cage";
+    const Verdict v = DecideCheat(FedAnimal(false), kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.isAnimal);
+    CHECK(v.currency == Currency_Care);
+    CHECK(!v.wantsFood);
+    CHECK(v.reasonKey == Reason_TameReady);
+}
+
+void CheatAFedAnimalInTheCageDoesNotWait()
+{
+    const char* name = "cheat: a fed animal in the cage joins without the minute";
+    CheatFacts facts = FedAnimal(true);
+    facts.hoursHeld = 0.0f;
+    const Verdict v = DecideCheat(facts, kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.reasonKey == Reason_TameReady);
+}
+
+void CheatAnUnfedAnimalOutsideStillNeedsTheCage()
+{
+    const char* name = "cheat: an unfed animal outside the cage asks for the cage, and takes food";
+    CheatFacts facts = FedAnimal(false);
+    facts.fedByPlayer = false;
+    const Verdict v = DecideCheat(facts, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.isAnimal);
+    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+    // The feed button (RemedyFor) needs care and an appetite: food is the other way in.
+    CHECK(v.currency == Currency_Care);
+    CHECK(v.wantsFood);
+}
+
+void CheatAnUnfedAnimalInTheCageWaitsTheMinute()
+{
+    const char* name = "cheat: an unfed animal in the cage keeps the cage path";
+    CheatFacts facts = FedAnimal(true);
+    facts.fedByPlayer = false;
+    facts.hoursHeld = 0.0f;
+    Verdict v = DecideCheat(facts, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.reasonKey == Reason_CheatWaiting);
+    facts.hoursHeld = kConfig.cheatHoursCaged;
+    v = DecideCheat(facts, kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.reasonKey == Reason_CheatJoins);
+}
+
+void CheatAnOwnedAnimalOutsideNeedsTheCageFedOrNot()
+{
+    const char* name = "cheat: an animal that belongs to someone is only taken through the cage";
+    CheatFacts facts = FedAnimal(false);
+    facts.belongsToSomeone = true;
+    const Verdict v = DecideCheat(facts, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.currency == Currency_Refused);
+    CHECK(!v.wantsFood);
+    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+}
+
+void CheatFoodMeansNothingToAPerson()
+{
+    const char* name = "cheat: a person outside the cage still needs the cage";
+    CheatFacts facts;
+    facts.fedByPlayer = true;
+    const Verdict v = DecideCheat(facts, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(!v.isAnimal);
+    CHECK(v.currency == Currency_Refused);
+    CHECK(!v.wantsFood);
+    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+}
+
+void CheatWithoutACageIsUnchangedForAnimals()
+{
+    const char* name = "cheat: with the cage switched off a fed or unfed animal simply joins";
+    Config config;
+    config.cheatNeedsCage = false;
+    CheatFacts facts = FedAnimal(false);
+    CHECK(DecideCheat(facts, config).reasonKey == Reason_CheatJoinsFreely);
+    facts.fedByPlayer = false;
+    CHECK(DecideCheat(facts, config).reasonKey == Reason_CheatJoinsFreely);
+}
+
 // -------------------------------------------------------------------- rescue
 
 void OutColdAndOwingWaitsForThemToWake()
@@ -1543,6 +1640,13 @@ void RunRouteDecisionsTests()
     CheatWithoutACageJoinsAtOnce();
     CheatAsksForTheCage();
     CheatWaitsAMinuteThenJoins();
+    CheatAFedAnimalJoinsWithoutTheCage();
+    CheatAFedAnimalInTheCageDoesNotWait();
+    CheatAnUnfedAnimalOutsideStillNeedsTheCage();
+    CheatAnUnfedAnimalInTheCageWaitsTheMinute();
+    CheatAnOwnedAnimalOutsideNeedsTheCageFedOrNot();
+    CheatFoodMeansNothingToAPerson();
+    CheatWithoutACageIsUnchangedForAnimals();
     OutColdAndOwingWaitsForThemToWake();
     OutColdAndDyingWantsCare();
     OutColdAndNothingElseJustWaits();

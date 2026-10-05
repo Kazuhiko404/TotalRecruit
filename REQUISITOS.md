@@ -66,6 +66,16 @@ No se borro logica: cada lectura pasa por el modulo y Balanced no cambia.
 Ni cats, ni comida, ni sumisión, ni nivel, ni relación. Cheat es "cualquiera,
 incluidos animales y únicos", y eso no cambia.
 
+*Estado (2026-10-04, animal-insistence-cheat-feed A2):* **un animal entra por la
+comida o por la jaula.** Un animal que comió de la mano del jugador (el mismo
+dato `PlayerMeals` que lee la ruta animal de Balanced) y que no tiene dueño se
+une al momento, con o sin jaula, sin espera y sin heridas, barriga ni
+insistencia de por medio ("comió de tu mano y te sigue"). Sin comer y fuera de
+la jaula sigue pidiendo la jaula, pero la ventana ofrece **Dar comida**: la
+comida es el otro camino. La jaula + 1 minuto sigue igual para todos. Un animal
+con dueño solo entra por la jaula, como antes; las exclusiones del config
+(`exclude.animals`) siguen mandando y `cheatNeedsCage: false` no cambia.
+
 **R1.4 — Umbral de amistad configurable, por defecto 20.** *(P1)*
 La ruta amistosa deja de usar un 25 fijo. Se configura, y arranca en 20.
 
