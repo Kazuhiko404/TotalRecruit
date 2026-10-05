@@ -4,6 +4,7 @@
 #include "engine_reads.h"
 #include "char_key_reader.h"
 #include "config.h"
+#include "route_decisions.h"
 #include "log.h"
 
 namespace totalrecruit
@@ -71,25 +72,40 @@ bool NoteCageState(Character* character)
 {
     const bool caged = IsInPlayerCage(character);
 
+    // cheat-any-cage: in Cheat with cheatAnyCage on, any cage, shackles or kidnap
+    // runs the clock too, so the minute is already counting when the player talks.
+    // The return value stays "in the player's cage" (hail.cpp's captive sightings).
+    const Config& config = GetConfig();
+    bool foreign = false;
+    if (!caged && HoldClockCountsAnyCage(config))
+    {
+        bool inPrison = false;
+        foreign = SafeInPrison(character, &inPrison) && inPrison;
+    }
+    const bool held = caged || foreign;
+
     double now = 0.0;
     CharKey key;
     // Looks at everyone in range, so it must not mint an id for each bystander:
-    // a character that is not caged and has no id cannot have a running clock.
-    const bool haveKey = caged ? SafeCharKey(character, &key)
-                               : SafeFindCharKey(character, &key);
+    // a character that is not held and has no id cannot have a running clock.
+    const bool haveKey = held ? SafeCharKey(character, &key)
+                              : SafeFindCharKey(character, &key);
     if (SafeGameHours(&now) && haveKey)
     {
         bool wasHeld = false;
         {
             HoldGuard lock;
             wasHeld = g_holdClock.IsTracked(key);
-            g_holdClock.Observe(key, caged, now);
+            g_holdClock.Observe(key, held, now);
         }
-        if (GetConfig().probeOnClick && wasHeld != caged)
+        if (config.probeOnClick && wasHeld != held)
         {
             LogInfo(CharacterName(character) +
-                    (caged ? " [hold] clock started: seen in your cage"
-                           : " [hold] clock dropped: no longer in your cage"));
+                    (caged     ? " [hold] clock started: seen in your cage"
+                     : foreign ? " [hold] clock started: seen in a cage"
+                     : HoldClockCountsAnyCage(config)
+                               ? " [hold] clock dropped: no longer in a cage"
+                               : " [hold] clock dropped: no longer in your cage"));
         }
     }
     return caged;

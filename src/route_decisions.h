@@ -42,6 +42,15 @@ bool DecideGate(const CoreFacts& core, const Config& config, Verdict* out);
 // caged or not; otherwise, outside the cage, it asks for the cage and takes food.
 Verdict DecideCheat(const CheatFacts& facts, const Config& config);
 
+// route_cheat (cheat-any-cage): whether the prisoner's cage is a cage Cheat accepts:
+// the player's own, or any cage, shackles or kidnap while Config::cheatAnyCage is on.
+// Only meaningful under Preset_Cheat (the caller already is).
+bool CheatCageSatisfied(bool inMyCage, bool inAnyCage, const Config& config);
+
+// route_cheat (cheat-any-cage): whether the hold clock (hold_tracking.cpp) runs for
+// any cage, not only the player's: Cheat, with the cage required and cheatAnyCage on.
+bool HoldClockCountsAnyCage(const Config& config);
+
 // route_rescue
 Verdict DecideUnconscious(const CoreFacts& core, const Config& config);
 Verdict DecideDying(const CoreFacts& core);

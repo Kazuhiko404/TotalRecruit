@@ -16,6 +16,7 @@
   "headNoticeInfoSeconds": 25.0,
 
   "preset": 1,
+  "cheatAnyCage": true,
 
   "rescueEnabled": true,
   "rescuePlayerOnly": true,

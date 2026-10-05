@@ -194,6 +194,84 @@ void CheatWaitsAMinuteThenJoins()
     CHECK(v.reasonKey == Reason_CheatJoins);
 }
 
+// cheat-any-cage: with cheatAnyCage on (the default) another faction's cage,
+// shackles or a kidnap is a cage too, with the same minute.
+void CheatAnyCageWaitsAMinuteThenJoins()
+{
+    const char* name = "cheat any cage: in someone else's cage they wait the minute and join";
+    Config config;
+    CHECK(config.cheatAnyCage);
+    CheatFacts facts;
+    facts.inMyCage = false;
+    facts.inAnyCage = true;
+    facts.hoursHeld = config.cheatHoursCaged - 0.001f;
+    Verdict v = DecideCheat(facts, config);
+    CHECK(!v.willJoin);
+    CHECK(v.currency == Currency_Refused);
+    CHECK(v.reasonKey == Reason_CheatWaiting);
+
+    facts.hoursHeld = config.cheatHoursCaged;
+    v = DecideCheat(facts, config);
+    CHECK(v.willJoin);
+    CHECK(v.currency == Currency_None);
+    CHECK(v.reasonKey == Reason_CheatJoins);
+}
+
+void CheatAnyCageOffKeepsYourCageOnly()
+{
+    const char* name = "cheat any cage: switched off, someone else's cage still asks for yours";
+    Config config;
+    config.cheatAnyCage = false;
+    CheatFacts facts;
+    facts.inMyCage = false;
+    facts.inAnyCage = true;
+    facts.hoursHeld = 99.0f;
+    const Verdict v = DecideCheat(facts, config);
+    CHECK(!v.willJoin);
+    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+}
+
+void CheatAnyCageStillNeedsACage()
+{
+    const char* name = "cheat any cage: free in the open is still the cage answer";
+    Config config;
+    CheatFacts facts;
+    facts.inMyCage = false;
+    facts.inAnyCage = false;
+    facts.hoursHeld = 99.0f;
+    const Verdict v = DecideCheat(facts, config);
+    CHECK(!v.willJoin);
+    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+}
+
+void CheatCageCountsRule()
+{
+    const char* name = "cheat any cage: which cage satisfies Cheat";
+    Config config;
+    CHECK(CheatCageSatisfied(true, true, config));
+    CHECK(CheatCageSatisfied(true, false, config));
+    CHECK(CheatCageSatisfied(false, true, config));
+    CHECK(!CheatCageSatisfied(false, false, config));
+    config.cheatAnyCage = false;
+    CHECK(CheatCageSatisfied(true, true, config));
+    CHECK(!CheatCageSatisfied(false, true, config));
+}
+
+void CheatAnyCageHoldClockRule()
+{
+    const char* name = "cheat any cage: the hold clock counts any cage only in Cheat with the switch on";
+    Config config;
+    config.preset = Preset_Balanced;
+    CHECK(!HoldClockCountsAnyCage(config));
+    config.preset = Preset_Cheat;
+    CHECK(HoldClockCountsAnyCage(config));
+    config.cheatAnyCage = false;
+    CHECK(!HoldClockCountsAnyCage(config));
+    config.cheatAnyCage = true;
+    config.cheatNeedsCage = false;
+    CHECK(!HoldClockCountsAnyCage(config));
+}
+
 // An animal that ate from the player's hand (the same PlayerMeals fact Balanced's
 // animal route reads) joins in Cheat at once: no cage, no wait, no bar.
 CheatFacts FedAnimal(bool inCage)
@@ -1817,6 +1895,11 @@ void RunRouteDecisionsTests()
     CheatWithoutACageJoinsAtOnce();
     CheatAsksForTheCage();
     CheatWaitsAMinuteThenJoins();
+    CheatAnyCageWaitsAMinuteThenJoins();
+    CheatAnyCageOffKeepsYourCageOnly();
+    CheatAnyCageStillNeedsACage();
+    CheatCageCountsRule();
+    CheatAnyCageHoldClockRule();
     CheatAFedAnimalJoinsWithoutTheCage();
     CheatAFedAnimalInTheCageDoesNotWait();
     CheatAnUnfedAnimalOutsideStillNeedsTheCage();

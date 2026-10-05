@@ -574,9 +574,19 @@ CheatFacts GatherCheatFacts(Character* character, GatherMode mode)
     const Config& config = GetConfig();
     CheatFacts facts;
     facts.inMyCage = IsInPlayerCage(character);
+    // Any cage, shackles or kidnap (cheat-any-cage): only read when it can count.
+    if (config.cheatNeedsCage && config.cheatAnyCage && !facts.inMyCage)
+    {
+        bool inPrison = false;
+        facts.inAnyCage = SafeInPrison(character, &inPrison) && inPrison;
+    }
+    else
+    {
+        facts.inAnyCage = facts.inMyCage;
+    }
     // Reading the hold also notes the sighting, so it is only done once it can
     // decide something.
-    if (config.cheatNeedsCage && facts.inMyCage)
+    if (config.cheatNeedsCage && CheatCageSatisfied(facts.inMyCage, facts.inAnyCage, config))
     {
         if (mode == Gather_Peek)
         {

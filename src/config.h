@@ -717,6 +717,9 @@ struct Config
     // R1.1 / R1.2 -- Cheat keeps the ritual (a cage and a moment) and drops
     // every condition. Turn the cage off to get the old instant behaviour.
     bool cheatNeedsCage;
+    // cheat-any-cage -- with the cage required, any cage counts in Cheat: another
+    // faction's cage, shackles or a kidnap (SafeInPrison), not only the player's.
+    bool cheatAnyCage;
     // Game hours in the cage before a Cheat prisoner calls out. In Cheat every
     // wait is at most one game minute (cheat_waits.h), so this only shortens it.
     float cheatHoursCaged;
@@ -763,6 +766,7 @@ struct Config
           relationRefuseGoodNatured(-15.0f),
           relationRefuseAll(-30.0f),
           cheatNeedsCage(true),
+          cheatAnyCage(true),
           cheatHoursCaged(0.02f),
           rescueBaseBonus(25),
           rescueHealWeight(30.0f),

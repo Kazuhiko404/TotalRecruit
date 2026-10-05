@@ -160,6 +160,10 @@ struct AnimalExtra
 struct CheatFacts
 {
     bool inMyCage;
+    // In any cage at all (cheat-any-cage): a cage of any faction, shackles or
+    // carried off (SafeInPrison). Counts as the cage when Config::cheatAnyCage is
+    // on (CheatCageSatisfied).
+    bool inAnyCage;
     // Hours held in the cage, only read when it can matter (0 when a peek finds
     // no running clock).
     float hoursHeld;
@@ -178,7 +182,7 @@ struct CheatFacts
     bool defeatedByPlayer;
 
     CheatFacts()
-        : inMyCage(false), hoursHeld(0.0f), animal(false), belongsToSomeone(false),
+        : inMyCage(false), inAnyCage(false), hoursHeld(0.0f), animal(false), belongsToSomeone(false),
           fedByPlayer(false), healedByPlayer(false), defeatedByPlayer(false)
     {
     }

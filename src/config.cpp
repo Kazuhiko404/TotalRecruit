@@ -370,6 +370,7 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "relationRefuseGoodNatured", &c.relationRefuseGoodNatured);
     AddFloat(f, "relationRefuseAll", &c.relationRefuseAll);
     AddBool(f, "cheatNeedsCage", &c.cheatNeedsCage);
+    AddBool(f, "cheatAnyCage", &c.cheatAnyCage);
     AddFloat(f, "cheatHoursCaged", &c.cheatHoursCaged);
     AddInt(f, "rescueBaseBonus", &c.rescueBaseBonus);
     AddFloat(f, "rescueHealWeight", &c.rescueHealWeight);

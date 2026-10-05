@@ -134,7 +134,9 @@ Verdict Run(Character* character, GatherMode mode, EvaluationDetail* detail)
         const CheatFacts facts = GatherCheatFacts(character, mode);
         if (detail != NULL)
         {
-            detail->route = facts.inMyCage ? Route_Cage : Route_FreeWorld;
+            // Any cage Cheat accepts is the cage route (cheat-any-cage).
+            detail->route = CheatCageSatisfied(facts.inMyCage, facts.inAnyCage, config)
+                                ? Route_Cage : Route_FreeWorld;
         }
         return Finish(DecideCheat(facts, config), character, NULL, mode);
     }

@@ -19,12 +19,15 @@ namespace totalrecruit
 
 // Looks at where this character is right now and keeps the hold clock honest:
 // caged starts it (once), free drops it, so Cheat's wait counts time in THIS
-// cage. Returns whether they are in the player's cage. Called by the periodic
-// sweep for everyone in range.
+// cage. In Cheat with cheatAnyCage on (HoldClockCountsAnyCage) any cage, shackles
+// or kidnap counts as caged for the clock (cheat-any-cage). Returns whether they
+// are in the player's cage -- never the wider any-cage answer. Called by the
+// periodic sweep for everyone in range.
 bool NoteCageState(Character* character);
 
 // Hours held, in in-game hours. Only called for a prisoner already known to be in
-// the player's cage, so the sighting it makes is a caged one: that is the fallback
+// a cage the clock counts (the player's, or in Cheat with cheatAnyCage any cage,
+// CheatCageSatisfied), so the sighting it makes is a caged one: that is the fallback
 // for a prisoner the periodic sweep has not reached yet (out of range, or caged
 // this very moment), and it never restarts a clock the sweep already started.
 float HoursHeld(Character* character);

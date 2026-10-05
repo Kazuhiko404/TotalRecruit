@@ -25,7 +25,11 @@ El preso se une pero sigue encerrado en la jaula ajena: hay que abrir el candado
 
 ## Checklist
 - [x] C0 Maqueta: fila Mod Hub `cheatAnyCage` en `ui-mockup/` (al final de la lista, sin mover indices). Evidencia: ultima fila de `HUB` en `ui-mockup/js/data.js`, decision 28 en `ui-mockup/README.md`; `node --check ui-mockup/js/data.js` OK. Commit `docs(mockup): add the Cheat any-cage Mod Hub row` (hash en Progreso).
-- [ ] C1 Regla + hechos + reloj + config: RED en `tests/rules_tests` (DecideCheat con preso en jaula ajena), GREEN, DLL compila.
+- [x] C1 Regla + hechos + reloj + config: RED en `tests/rules_tests` (DecideCheat con preso en jaula ajena), GREEN, DLL compila.
+  - RED: rules_tests no compilaba: `C2039 'cheatAnyCage' : is not a member of 'totalrecruit::Config'`, `C2039 'inAnyCage' : is not a member of 'totalrecruit::CheatFacts'`, `C3861 'CheatCageSatisfied': identifier not found`.
+  - GREEN: `53/53 suites passed, 0/72757 checks failed`; `TotalRecruit.vcxproj -> x64\Release\TotalRecruit.dll` (solo los C4482 de KenshiLib); `deploy.sh --dry-run`: `+ cheatAnyCage`, `1 key(s) added, 0 value(s) changed`.
+  - Decisiones: regla pura `CheatCageSatisfied` y `HoldClockCountsAnyCage` en `route_cheat.cpp`; la ruta del lector (`rules.cpp`) es Cage cuando la jaula cuenta, asi la tarjeta dice captividad para un preso ajeno en Cheat. El reloj (`NoteCageState`) en Cheat+`cheatAnyCage` arranca en cualquier `SafeInPrison` y acuna id para esos presos (como ya hacia con los de tu jaula); devuelve igual "en tu jaula" para `hail.cpp`. Logs: `clock started: seen in your cage` / `seen in a cage`, `clock dropped: no longer in a cage` (en modo cualquier jaula) o `no longer in your cage`. El texto `cheat.needsCage` ("metelo en una de tus jaulas") no cambia: sigue siendo cierto y la plantilla solo admite claves nuevas. Comandos de jaula sin cambios.
+  - Commit `feat(cheat): any cage satisfies the Cheat cage` (hash en Progreso).
 - [ ] C2 Docs: REQUISITOS (R1 Cheat), QA (caso nuevo con lineas de log), README, DEVELOPING, `odd/system-status.md`.
 
 ## Criterios de aceptacion

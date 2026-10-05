@@ -30,6 +30,18 @@ ReasonKey AnimalGestureReason(const CheatFacts& facts)
 }
 } // namespace
 
+// "Para cheat mode sacar la limitacion de solo reclutar de tu celda": with
+// cheatAnyCage on, another faction's cage, shackles or a kidnap is a cage too.
+bool CheatCageSatisfied(bool inMyCage, bool inAnyCage, const Config& config)
+{
+    return inMyCage || (config.cheatAnyCage && inAnyCage);
+}
+
+bool HoldClockCountsAnyCage(const Config& config)
+{
+    return config.preset == Preset_Cheat && config.cheatNeedsCage && config.cheatAnyCage;
+}
+
 // R1.1 / R1.2 -- Cheat keeps the gesture and drops the price.
 //
 // It used to return here for anyone, anywhere, which left nothing of the ritual:
@@ -75,7 +87,7 @@ Verdict DecideCheat(const CheatFacts& facts, const Config& config)
         return v;
     }
 
-    if (!facts.inMyCage)
+    if (!CheatCageSatisfied(facts.inMyCage, facts.inAnyCage, config))
     {
         v.currency = Currency_Refused;
         v.reasonKey = Reason_CheatNeedsCage;
