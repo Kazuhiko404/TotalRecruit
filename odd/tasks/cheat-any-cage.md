@@ -30,7 +30,7 @@ El preso se une pero sigue encerrado en la jaula ajena: hay que abrir el candado
   - GREEN: `53/53 suites passed, 0/72757 checks failed`; `TotalRecruit.vcxproj -> x64\Release\TotalRecruit.dll` (solo los C4482 de KenshiLib); `deploy.sh --dry-run`: `+ cheatAnyCage`, `1 key(s) added, 0 value(s) changed`.
   - Decisiones: regla pura `CheatCageSatisfied` y `HoldClockCountsAnyCage` en `route_cheat.cpp`; la ruta del lector (`rules.cpp`) es Cage cuando la jaula cuenta, asi la tarjeta dice captividad para un preso ajeno en Cheat. El reloj (`NoteCageState`) en Cheat+`cheatAnyCage` arranca en cualquier `SafeInPrison` y acuna id para esos presos (como ya hacia con los de tu jaula); devuelve igual "en tu jaula" para `hail.cpp`. Logs: `clock started: seen in your cage` / `seen in a cage`, `clock dropped: no longer in a cage` (en modo cualquier jaula) o `no longer in your cage`. El texto `cheat.needsCage` ("metelo en una de tus jaulas") no cambia: sigue siendo cierto y la plantilla solo admite claves nuevas. Comandos de jaula sin cambios.
   - Commit `feat(cheat): any cage satisfies the Cheat cage` (hash en Progreso).
-- [ ] C2 Docs: REQUISITOS (R1 Cheat), QA (caso nuevo con lineas de log), README, DEVELOPING, `odd/system-status.md`.
+- [x] C2 Docs: REQUISITOS (R1 Cheat), QA (caso nuevo con lineas de log), README, DEVELOPING, `odd/system-status.md`. Evidencia: estado en R1.1, QA 12.35 X1-X9, README (preset Cheat), DEVELOPING (filas `route_decisions` y `hold_tracking`), system-status fila `needs in-game QA`. Commit `docs: Cheat any-cage in requirements, QA and module notes`.
 
 ## Criterios de aceptacion
 - Cheat + `cheatAnyCage`: un preso en jaula ajena se une tras el minuto de espera; uno libre fuera de jaula sigue con `Reason_CheatNeedsCage`.
@@ -43,3 +43,7 @@ El preso se une pero sigue encerrado en la jaula ajena: hay que abrir el candado
 
 ## Progreso
 - Documento creado antes de tocar el codigo.
+- C0 `31bc59b` docs(mockup): add the Cheat any-cage Mod Hub row.
+- C1 `a2dacdd` feat(cheat): any cage satisfies the Cheat cage.
+- C2: este commit de docs (ver `git log`).
+- Pendiente: QA en juego (12.35), deploy y commit de las DLL los decide el usuario.

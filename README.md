@@ -169,7 +169,10 @@ itself.
   moment it has eaten from your hand, been healed by one of your characters, or
   been knocked out by your squad, caged or not (the popup offers food to an unfed
   one); beating it in a duel recruits it too. `cheatNeedsCage` turns the cage
-  requirement off.
+  requirement off. With `cheatAnyCage` (on by default) any cage counts: a
+  prisoner in another faction's cage, in shackles or carried off waits the same
+  minute and joins (still locked in: open the cage, and its guards may treat it
+  as an escape); off, only your cages count.
 - **Balanced** — the prices above, and allies by level. *(default)*
 
 v1 ships these two. Vanilla+ (faction relation shifting the price) was retired:

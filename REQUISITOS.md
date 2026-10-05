@@ -48,6 +48,15 @@ decir qué lo cambiaría.
 Hoy Cheat recluta al instante a cualquiera, en cualquier estado. Debe exigir que
 el NPC esté en una jaula del jugador. Sin jaula, no hay oferta.
 
+*Estado (cheat-any-cage, pedido del usuario 2026-10-05):* con `cheatAnyCage`
+(on por defecto, Mod Hub "Cheat: cualquier jaula") en Cheat sirve **cualquier**
+jaula: la de otra faccion, grilletes o cargado por otro (`SafeInPrison`), con el
+mismo minuto de espera (`CheatCageSatisfied`, `src/route_cheat.cpp`; el reloj de
+encierro corre para esos presos en Cheat, `HoldClockCountsAnyCage`). Sigue
+encerrado en la jaula ajena: hay que abrirla, y los guardias pueden reaccionar
+como a una fuga. Golpear / Noquear siguen siendo solo para tus jaulas. Con
+`cheatAnyCage: false`, solo tus jaulas. Balanced no cambia.
+
 **R1.2 — Un minuto de juego, y avisa.** *(P1)*
 Metido en la jaula, pasa un tiempo corto —del orden de un minuto de juego— y el
 NPC llama al jugador para decir que quiere hablar y unirse. No son horas: en

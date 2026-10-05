@@ -989,3 +989,19 @@ Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`
 | A18 | Cheat: darle de comer a un animal libre (§8 H11) | Igual que antes: "comio de tu mano y te sigue" | `Fed <animal> ...; meals from the player 1` |
 | A19 | Cheat: un animal **con dueno** curado o noqueado, fuera de la jaula | Sigue pidiendo la jaula ("Metelo en una jaula") | `Refused <animal> (rechazo): metelo en una de tus jaulas ...` |
 | A20 | Cheat: una **persona** noqueada o curada por ti, fuera de la jaula | Sin cambios: pide la jaula | `Refused <nombre> (rechazo): metelo en una de tus jaulas ...` |
+
+### 12.35 Cheat: sirve cualquier jaula (cheat-any-cage)
+
+Con `"probeOnClick": true`, Cheat (`"preset": 0`) y los valores por defecto (`cheatNeedsCage` on, `cheatAnyCage` on, Mod Hub "Cheat: cualquier jaula"). "Jaula ajena" = jaula de otra faccion (esclavistas, prision de una ciudad), grilletes o cargado por otro (`SafeInPrison`). Mockup: ultima fila de la tabla Mod Hub en `ui-mockup/readout.html`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| X1 | Acercarse a un preso en una jaula ajena (que el barrido lo vea) | El reloj arranca sin hablarle | `<nombre> [hold] clock started: seen in a cage` |
+| X2 | Hablarle enseguida (antes del minuto) | "esta dentro: dale un momento y te llamara"; la tarjeta muestra la ruta de captividad | `Refused <nombre> (...): esta dentro: dale un momento y te llamara` |
+| X3 | Esperar un minuto de juego y hablarle | Se une sin condiciones (sigue encerrado: hay que abrir la jaula, y los guardias pueden reaccionar como a una fuga) | sin `Refused`; `Recruited <nombre>.` |
+| X4 | Mod Hub "Cheat: cualquier jaula" OFF y repetir X2/X3 con otro preso ajeno | Pide tu jaula como antes ("metelo en una de tus jaulas") y el reloj no arranca por la jaula ajena | `Refused <nombre> (rechazo): metelo en una de tus jaulas ...`; sin `seen in a cage` |
+| X5 | Cheat ON: un NPC libre en la calle | Sin cambios: pide la jaula (H1) | `Refused <nombre> (rechazo): metelo en una de tus jaulas ...` |
+| X6 | Liberar al preso de X1 antes de hablarle (o que salga de la jaula) | El reloj se pierde; al volver a una jaula empieza de cero | `<nombre> [hold] clock dropped: no longer in a cage` |
+| X7 | Tu propia jaula en Cheat | Igual que H2/H3; el log dice tu jaula | `<nombre> [hold] clock started: seen in your cage` |
+| X8 | Abrir el menu de un preso en jaula ajena | Sin GOLPEAR / NOQUEAR: los comandos de jaula siguen siendo solo para tus jaulas | -- |
+| X9 | Balanced (`"preset": 1`): un preso en jaula ajena | Sin cambios: sigue la respuesta de acceso de Balanced (jaula ajena) | sin `seen in a cage` |
