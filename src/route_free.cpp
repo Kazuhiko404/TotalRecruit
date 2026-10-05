@@ -121,8 +121,10 @@ bool DecideAccessRefusal(const CoreFacts& core, const AccessFact& access, Verdic
         return true;
     }
 
-    // Insistence check: the player has pestered them once too often.
-    if (access.ignoringPlayer)
+    // Insistence check: the player has pestered them once too often. Never an
+    // animal (insistence_rules.h): one with a lockout left in memory from before
+    // animals stopped counting is heard again at once.
+    if (access.ignoringPlayer && !core.animal)
     {
         Verdict v = BaseVerdict(core);
         v.currency = Currency_Refused;

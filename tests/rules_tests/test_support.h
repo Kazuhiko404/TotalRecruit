@@ -63,3 +63,4 @@ void RunMenuAnchorTests();
 void RunPresetRulesTests();
 void RunCheatWaitsTests();
 void RunCaredForRulesTests();
+void RunInsistenceRulesTests();

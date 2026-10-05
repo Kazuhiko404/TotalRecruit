@@ -14,6 +14,7 @@ namespace totalrecruit
 bool IsIgnoringPlayer(Character* character, double* outRemainingHours = 0);
 
 // Records an interaction attempt for insistence tracking. Returns true if ignored.
+// Called only for a talk that counts (CountsAsInsistence, insistence_rules.h).
 bool RecordInteraction(Character* character, double nowHours);
 
 // Forgets every insistence record (who has been pestered, who is ignoring the

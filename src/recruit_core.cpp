@@ -4,6 +4,7 @@
 #include "log.h"
 #include "rules.h"
 #include "insistence.h"
+#include "insistence_rules.h"
 #include "rescue_memory.h"
 #include "pacify.h"
 #include "npc_speech.h"
@@ -616,14 +617,18 @@ void AttemptRecruit(Character* character)
         return;
     }
 
-    // Registra la interacción para evitar spam/insistencia (ignorar temporalmente tras 3 intentos seguidos)
-    if (ou != NULL)
+    const Verdict verdict = Evaluate(character);
+
+    // R2.4 -- insistence. Only a real no counts (a failed roll, a personality
+    // refusal), and never from an animal: a state ("heal them first", out cold)
+    // or an instruction is what the player is busy acting on, not pestering
+    // (insistence_rules.h). Recorded after the verdict, so the talk that fills the
+    // counter still hears its own reason and the next one hears "harto".
+    if (ou != NULL && CountsAsInsistence(verdict, verdict.isAnimal))
     {
         double nowHours = ou->getTimeStamp_inGameHours().getTotalHours();
         RecordInteraction(character, nowHours);
     }
-
-    const Verdict verdict = Evaluate(character);
 
     // A refusal is not the end of the interaction -- it is the moment the
     // player most needs somewhere to act. So it goes through the same popup as

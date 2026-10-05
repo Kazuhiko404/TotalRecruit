@@ -90,6 +90,7 @@ const Suite kSuites[] = {
     { "preset_rules", RunPresetRulesTests },
     { "cheat_waits", RunCheatWaitsTests },
     { "cared_for_rules", RunCaredForRulesTests },
+    { "insistence_rules", RunInsistenceRulesTests },
 };
 } // namespace
 

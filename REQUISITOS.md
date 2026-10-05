@@ -198,6 +198,27 @@ Hoy funciona pero con horas fijas. Debe pasar a:
 *Pendiente de investigación:* hay que confirmar que el conteo de intentos
 sobrevive una recarga. Si no sobrevive, aplica el patrón de R3.3.
 
+*Estado (2026-10-04, animal-insistence-cheat-feed A1):* **solo cuenta un no
+real.** Antes cada Hablar sumaba un intento antes de evaluar: un animal herido al
+que el mod le pedía curarlo, alguien inconsciente o hasta un sí llenaban el
+contador, y el jugador terminaba en "está harto de tu insistencia" por seguir
+las instrucciones del propio mod. Ahora el intento se registra después del
+veredicto y solo si es un rechazo que el NPC decide contra el jugador (regla pura
+`CountsAsInsistence`, tabla completa en `insistence_rules.h`): tirada fallida
+(`FieldYieldNotYet`, `AllyMaybe`, `Defiant`), personalidad u honor
+(`FactionHonour`, `FactionGreedy`, `HonourRefusesBribe`, `MilitaryLoyalty`,
+`UniqueZealot`), rencor (`GrudgeNever`) y los tiers de aliados
+(`AllyLeaderTooWeak`, `AllyCruel`, `AllyGreedy`). No cuentan los estados (herido,
+hambriento, inconsciente, muriéndose, en jaula ajena), las instrucciones
+(jaula, espera, comida, precio), los bloqueos (enfriamiento de rechazo, la
+propia insistencia), las puertas ni ningún sí; una razón nueva que nadie
+clasificó **no cuenta** (lo más seguro para el jugador). **Los animales no
+tienen insistencia:** nunca suman y un registro viejo en memoria no los bloquea
+(`DecideAccessRefusal` lo ignora para un animal). El conteo sigue viviendo solo
+en memoria: una recarga lo olvida, así que no hay saves trabados que sanar. Como
+el intento se registra después de contestar, el tercer no real todavía dice su
+motivo y es la cuarta charla la que oye "harto".
+
 ---
 
 ## 3. BALANCED — sumisión

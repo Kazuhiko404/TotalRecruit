@@ -170,13 +170,22 @@ nadie lo llamó nunca desde un plugin. Si no hace nada, R2.3 es una fachada.
 
 | # | Qué hacer | Esperado | Falla si |
 |---|---|---|---|
-| I1 | Hablarle 3 veces seguidas | A la 3ª te ignora | Sigue atendiendo |
+| I1 | Hablarle 3 veces seguidas a alguien que **se niega de verdad** (honor, lealtad, tirada fallida) | Los 3 dicen su motivo; a la 4ª te ignora (animal-insistence-cheat-feed A1: el intento se cuenta despues de contestar) | Sigue atendiendo |
 | I2 | Insistir hasta 5 veces | El castigo **crece**: 4h, 8h, 12h | Siempre 4h — no acumula |
 | I3 | Insistir 20 veces | Corta en 48h | Sube sin freno |
 | I4 | Esperar 2h de juego sin hablarle, volver | Contador en cero | Sigue castigado |
 | I5 | Guardar y recargar durante el castigo | **Se olvida** — limitación conocida (I5) | — |
 
 I5 **no es un bug**: el estado vive en memoria. Está anotado como pendiente.
+
+Solo cuenta un no real (animal-insistence-cheat-feed A1, tabla en `src/insistence_rules.h`):
+
+| # | Qué hacer | Esperado | Línea del log |
+|---|---|---|---|
+| I6 | Balanced: un animal herido libre; Hablar 5+ veces seguidas | Siempre su motivo de cuidados, **nunca** "harto" | `refuses (cuidados) ...` cada vez, sin `está harto de tu insistencia` |
+| I7 | Un NPC inconsciente, o herido en tu jaula ("herido: cúralo"); Hablar 5+ veces | Siempre su estado; al despertar o curarlo atiende normal | `Refused ... inconsciente: espera a que despierte` / `herido: cúralo`, sin `harto` |
+| I8 | Un animal libre sin comer de tu mano, Hablar 5+ veces, darle comida y Hablar | Nunca "harto"; tras la comida sigue la barra de domesticacion (12.20) | sin `harto`; la tarjeta nunca muestra "Harto de ti" |
+| I9 | Un honorable que no acepta sobornos: Hablar 3 veces, luego una 4ª | 3 veces "su honor le impide aceptar sobornos..."; la 4ª "está harto de tu insistencia" | `Refused ... (rechazo): está harto de tu insistencia` |
 
 ---
 
@@ -433,7 +442,7 @@ T8 es un refactor: **el comportamiento no debe cambiar** salvo A1 (golpiza) y la
 | C4 | Cargar con un `config.json` viejo (sin las claves nuevas) | Carga normal con los valores de antes; no se escribe nada hasta tocar el hub | `Loaded config from ...` |
 | R1 | Prisionero con 6h de encierro (modo fácil), NPC en rescate, cheat, animal con hambre, animal en jaula | Todas las rutas responden como antes (mismos motivos, mismos precios, misma barra de domesticación) | `[route] <ruta>`, `[chance] ...`, `[price] ...`, `[hold] held=...` |
 | R2 | Disparar un plea por vida baja (mercy) y por golpiza hasta casi matar | La ventana de piedad sigue abriendose (ahora por el listener de `defeats`, ya no por una llamada directa) | `defeated by the player (...) nearDeath=yes` y la ventana |
-| N1 | Insistir 5+ veces a un prisionero **en jaula** | **No** pasa nada: la insistencia no corta la charla de jaula (se registra el intento pero nadie consulta el castigo). R2.4 no dice nada de jaulas; queda como estaba y anotado en el doc de la feature | (sin `harto` en la linea del NPC) |
+| N1 | Insistir 5+ veces a un prisionero **en jaula** | **No** pasa nada: la insistencia no corta la charla de jaula (solo un desafiante o un zelote registran el intento, y nadie consulta el castigo en la jaula). R2.4 no dice nada de jaulas; queda como estaba y anotado en el doc de la feature | (sin `harto` en la linea del NPC) |
 
 ### 12.8 Lectura de estres y chance (T9)
 
