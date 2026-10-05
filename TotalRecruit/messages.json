@@ -955,7 +955,23 @@
     ],
     "failed": [
       "No se pudo abrir el duelo de TotalSparring."
-    ]
+    ],
+    "animal": {
+      "_comment": "Duelo con un animal sin dueno (nivel duelAnimalsFromLevel o mas). Un animal no habla: lineas de narrador, sin cartel sobre la cabeza. {name}, {hours}, {chance} como arriba.",
+      "challenged": [
+        "{name} grune y se planta frente a ti: elige el duelo en la ventana de TotalSparring."
+      ],
+      "joined": [
+        "{name} agacha la cabeza y te sigue: ahora es parte de tu grupo.",
+        "{name} deja de pelear, te olfatea y camina detras de ti."
+      ],
+      "stays": [
+        "{name} se sacude y se aleja sin seguirte ({chance}% de que se uniera). Podras retarlo otra vez en {hours} h."
+      ],
+      "lost": [
+        "{name} gana el duelo y se aleja sin volverse. Podras retarlo otra vez en {hours} h."
+      ]
+    }
   },
   "_razones": [
     "Los motivos que el jugador lee cuando un NPC no se une todavia, o por que si.",

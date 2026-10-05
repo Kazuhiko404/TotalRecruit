@@ -25,6 +25,7 @@
 #include "temp_member.h"
 #include "duel_challenge_rules.h"
 #include "duel_join_rules.h"
+#include "duel_narration_rules.h"
 #include "cheat_waits.h"
 #include "npc_level.h"
 #include "ts_bridge.h"
@@ -972,6 +973,21 @@ int WinsAgainst(const DuelResolveResult& result, Character* npc, std::string* wi
     return wins < 1 ? 1 : wins;
 }
 
+// An animal is told about by a narrator and raises no notice over its head
+// (duel_narration_rules.h); an unreadable flag reads as a person, the old behaviour.
+bool DuelNpcIsAnimal(Character* npc)
+{
+    bool animal = false;
+    return npc != NULL && SafeIsAnimal(npc, &animal) && animal;
+}
+
+// The duel line for `id` in this NPC's form, from messages.json or its built-in text.
+std::string DuelLine(DuelNarrationId id, Character* npc, bool animal)
+{
+    const DuelNarration line = DuelNarrationFor(id, animal);
+    return Say(line.key, line.fallback, npc);
+}
+
 std::string WithChance(const std::string& text, int chance)
 {
     std::string out = text;
@@ -995,13 +1011,13 @@ void OnDuelWonStays(Character* npc, const std::string& name, const DuelResolveRe
     SetDuelCooldownUntil(result.npc, decision.cooldownUntilHour);
     const double left = (double)decision.cooldownUntilHour - nowHours;
     const int hours = left > 0.0 ? (int)(left + 0.999) : 0;
-    RaiseHeadNotice(npc, Say("duel.notice.stays", "Buena pelea. Retame otra vez", npc),
-                    HeadNoticeKind_Info);
-    TellPlayer(WithChance(Fill(Say("duel.stays",
-                                   "{name} perdio el duelo, pero no se une ({chance}% de que se uniera). "
-                                   "Podras retarlo otra vez en {hours} h.",
-                                   npc),
-                              name, 0, hours),
+    const bool animal = DuelNpcIsAnimal(npc);
+    if (DuelRaisesHeadNotice(animal))
+    {
+        RaiseHeadNotice(npc, Say("duel.notice.stays", "Buena pelea. Retame otra vez", npc),
+                        HeadNoticeKind_Info);
+    }
+    TellPlayer(WithChance(Fill(DuelLine(DuelNarration_Stays, npc, animal), name, 0, hours),
                           decision.chance),
                false);
 }
@@ -1061,12 +1077,15 @@ void OnDuelWon(const DuelResolveResult& result, double nowHours)
         TellPlayer(name + ": " + message, true);
         return;
     }
-    RaiseSquadHeadNotice(npc, Say("duel.notice.joined", "Me ganaste. Me uno a ti", npc),
-                         HeadNoticeKind_Info);
-    TellPlayer(Fill(Say("duel.joined", "{name} perdio el duelo y se une a tu grupo para siempre.", npc),
-                    name, 0, 0),
-               false);
-    LogInfo("[duel] " + name + " lost the duel and joins for good [key " + result.npc.ToString() + "]");
+    const bool animal = DuelNpcIsAnimal(npc);
+    if (DuelRaisesHeadNotice(animal))
+    {
+        RaiseSquadHeadNotice(npc, Say("duel.notice.joined", "Me ganaste. Me uno a ti", npc),
+                             HeadNoticeKind_Info);
+    }
+    TellPlayer(Fill(DuelLine(DuelNarration_Joined, npc, animal), name, 0, 0), false);
+    LogInfo("[duel] " + name + " lost the duel and joins for good" + (animal ? " (animal)" : "") +
+            " [key " + result.npc.ToString() + "]");
 }
 
 // A lost (or drawn) duel: they tell the player to come back stronger, and the
@@ -1077,16 +1096,13 @@ void OnDuelLost(const DuelResolveResult& result, double nowHours)
     const std::string name = npc != NULL ? CharacterName(npc) : std::string("Tu rival");
     const double left = (double)result.cooldownUntilHour - nowHours;
     const int hours = left > 0.0 ? (int)(left + 0.999) : 0;
-    if (npc != NULL)
+    const bool animal = DuelNpcIsAnimal(npc);
+    if (npc != NULL && DuelRaisesHeadNotice(animal))
     {
         RaiseHeadNotice(npc, Say("duel.notice.lost", "Vuelve cuando seas mas fuerte", npc),
                         HeadNoticeKind_Info);
     }
-    TellPlayer(Fill(Say("duel.lost",
-                        "{name} gano el duelo. Vuelve cuando seas mas fuerte (podras retarlo en {hours} h).",
-                        npc),
-                    name, 0, hours),
-               false);
+    TellPlayer(Fill(DuelLine(DuelNarration_Lost, npc, animal), name, 0, hours), false);
     LogInfo("[duel] " + name + " won the duel: no challenge until hour " +
             IntToString(result.cooldownUntilHour) + " [key " + result.npc.ToString() + "]");
 }
@@ -1202,9 +1218,7 @@ void ChallengeToDuel(Character* npc)
     const TsOpenResult opened = TsOpenDuel(npc, challenger);
     if (opened == TsOpen_Opened)
     {
-        TellPlayer(Fill(Say("duel.challenged",
-                            "{name} acepta el reto: elige el duelo en la ventana de TotalSparring.", npc),
-                        name, 0, 0),
+        TellPlayer(Fill(DuelLine(DuelNarration_Challenged, npc, DuelNpcIsAnimal(npc)), name, 0, 0),
                    false);
         LogInfo("[duel] " + CharacterName(challenger) + " challenges " + name + " [key " +
                 npcKey.ToString() + "]");
