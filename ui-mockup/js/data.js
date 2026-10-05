@@ -16,6 +16,7 @@ var STATES = [
       showChance: true, chancePct: 58, ready: false,
       showDefeats: true, defeats: 1, defeatsNeeded: 2,
       showFood: false,
+      held: 'Encerrado: 2 h 15 min',
       why:  { text: 'Precio 9.570 cats (tienes 12.000)', tone: '' }
     }
   },
@@ -31,6 +32,7 @@ var STATES = [
       showChance: true, chancePct: 70, ready: false, caredForPct: 12,
       showDefeats: true, defeats: 1, defeatsNeeded: 2,
       showFood: false,
+      held: 'Encerrado: 2 h 15 min',
       why:  { text: 'Precio 9.570 cats (tienes 12.000)', tone: '' }
     }
   },
@@ -182,6 +184,22 @@ var STATES = [
       showDefeats: false, defeats: 0, defeatsNeeded: 0,
       showFood: false,
       why:  { text: 'Lo venciste: te sigue', tone: 'ok' },
+      alt:  null
+    }
+  },
+  {
+    id: 'cheatHeldAnyCage',
+    title: 'Cheat: a prisoner held in another faction\'s cage',
+    note: 'prisoner-hold-time. The line under the header is how long the hold clock (<code>hold_tracking.cpp PeekCountedHoursHeld</code>) has had them, on the game clock, rounded down (<code>hold_duration_rules.h</code>: "{m} min", "{h} h {m} min", "{d} d {h} h"; a zero part is left out). The card only peeks: it never starts a clock. Shown in every preset for the player\'s cage; in Cheat with <code>cheatAnyCage</code> on, any cage, shackles or kidnap counts too. No clock yet (the sweep has not seen them caged) means no line. Cheat reads no core facts, so no bars.',
+    // facts: Preset_Cheat, cheatNeedsCage, cheatAnyCage, in another faction's cage, hoursHeld 1.5 -> willJoin
+    vm: {
+      name: 'Esclavo de Shek', route: 'cautiverio', routeLabel: 'Cautiverio',
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
+      showChance: false, chancePct: 0, ready: true,
+      showDefeats: false, defeats: 0, defeatsNeeded: 0,
+      showFood: false,
+      held: 'Encerrado: 1 h 30 min',
+      why:  { text: 'Quiere hablar: se une', tone: 'ok' },
       alt:  null
     }
   }

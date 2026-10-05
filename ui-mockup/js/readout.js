@@ -70,6 +70,9 @@ function readoutHTML(vm, compact, noArrow) {
   var h = '<div class="rd' + (compact ? ' compact' : '') + (noArrow ? ' noarrow' : '') + '">';
   h += '<div class="hd"><span class="nm">' + esc(vm.name) + '</span>' +
        '<span class="tag r-' + vm.route + '">' + esc(vm.routeLabel) + '</span></div>';
+  // How long the prisoner has been held (prisoner-hold-time), right under the header,
+  // compact too. C++ twin: readout_ui.cpp held row.
+  if (vm.held) h += '<div class="held">' + esc(vm.held) + '</div>';
   if (vm.showStress) h += stressBlock(vm, compact);
   if (vm.showFood) h += foodBlock(vm);
   if (vm.showChance) h += chanceBlock(vm);
