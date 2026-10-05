@@ -94,6 +94,8 @@ const Suite kSuites[] = {
     { "healing_ledger", RunHealingLedgerTests },
     { "duel_narration_rules", RunDuelNarrationRulesTests },
     { "hold_duration_rules", RunHoldDurationRulesTests },
+    { "offer_request_rules", RunOfferRequestRulesTests },
+    { "offer_narration_rules", RunOfferNarrationRulesTests },
 };
 } // namespace
 

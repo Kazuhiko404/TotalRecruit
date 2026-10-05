@@ -20,7 +20,7 @@
 //    never carries them, and neither does a haggle (the slider owns that row).
 //    Without them a defiant prisoner's reason drops "hurt them".
 //  - Someone who cannot leave (in a cage, shackled, carried) is never offered the
-//    answers that let them go: no IGNORAR on a plea, no PERDONAR on a submission.
+//    answers that let them go: no IGNORAR on a plea or on a submission.
 //  - A free join says so; the odds appear only when the verdict rolled.
 //  - A cats price can be haggled (OfferHaggleInput): a slider from the floor to
 //    the ask, the live odds of AcceptOdds, the purse checked against the offer,
@@ -75,8 +75,6 @@ struct OfferTexts
     std::string knockout;
     std::string ignore;
     std::string decline;
-    // The submission event's third answer: let them go (submission_director.h).
-    std::string forgive;
     // The free helper's route tag (helper.h): "Ayuda".
     std::string routeHelper;
 
@@ -105,6 +103,9 @@ struct OfferTexts
     std::string bodyJoins;
     // The submission event: "{name} se arrodilla y te pide unirse a tu grupo."
     std::string bodySubmitted;
+    // proactive-offer: an animal walked up to offer itself (a narrator's line, it
+    // never speaks): "{name} agacha la cabeza frente a ti: quiere seguirte."
+    std::string bodyAnimalSubmitted;
     // The free helper: "{name} te ofrece acompanarte {days} dias, gratis. No podras
     // darle ordenes."
     std::string bodyHelper;
@@ -336,10 +337,15 @@ OfferView BuildMercyOfferView(const std::string& name, const std::string& pleaLi
 
 // A beaten NPC that walked up to ask (submission_director.cpp): the Sometido
 // tag, the kneeling line as the body, a free join, and three answers --
-// ACEPTAR (they join), PERDONAR (they go, calm for a while; never when `inCage`),
-// RECHAZAR (defeats wiped, no recruiting for the cooldown, hostile again).
+// ACEPTAR (they join), IGNORAR (the old PERDONAR: they go, calm for a while; never
+// when `inCage`), RECHAZAR (nothing: back to what they were doing, proactive-offer).
 OfferView BuildSubmissionOfferView(const std::string& name, bool inCage,
                                    const OfferTexts& texts);
+
+// The same window for an animal that walked up (proactive-offer): the Animal tag and
+// the animal's body line; the same three answers.
+OfferView BuildAnimalSubmissionOfferView(const std::string& name, bool inCage,
+                                         const OfferTexts& texts);
 
 // An ally that walked up to offer free help (helper.cpp): the Ayuda tag, the offer
 // with its `days` as the body, free, and two answers -- ACEPTAR (they escort the

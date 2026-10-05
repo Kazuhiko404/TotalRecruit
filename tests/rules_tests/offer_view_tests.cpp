@@ -689,10 +689,31 @@ void SubmissionHasAcceptForgiveReject()
     CHECK(!v.showPurse && !v.showChance);
     CHECK(v.reasonText.empty() && !v.reasonRefused);
     CHECK(v.acceptLabel == t.accept);
-    CHECK(v.extraLabel == t.forgive);
+    // proactive-offer: the user's "Aceptar / Ignorar / Rechazar" -- the let-go answer
+    // reads IGNORAR (popup.button.ignore), the label the mercy plea already uses.
+    CHECK(v.extraLabel == t.ignore);
+    CHECK(t.ignore == "IGNORAR");
     CHECK(v.cancelLabel == t.decline);
-    CHECK(t.forgive == "PERDONAR");
     CHECK(t.bodySubmitted.find("{name}") != std::string::npos);
+}
+
+// proactive-offer: an animal walked up to offer itself. Animal tag, a narrator body
+// about it (it never speaks), free, the same three answers.
+void AnimalSubmissionReadsAsAnAnimal()
+{
+    const char* name = "submission event, animal: Animal tag, its own body, free, Accept / Ignore / Reject";
+    const OfferTexts t = Texts();
+    OfferView v = BuildAnimalSubmissionOfferView("Perro hueso alfa", false, t);
+    CHECK(v.route == ReadoutRoute_Animal);
+    CHECK(v.routeTag == t.routeAnimal);
+    CHECK(v.bodyLine == "Perro hueso alfa agacha la cabeza frente a ti: quiere seguirte.");
+    CHECK(v.showPrice && v.priceFree && v.priceText == t.free);
+    CHECK(v.acceptLabel == t.accept);
+    CHECK(v.extraLabel == t.ignore);
+    CHECK(v.cancelLabel == t.decline);
+    v = BuildAnimalSubmissionOfferView("Perro hueso alfa", true, t);
+    CHECK(v.extraLabel.empty());
+    CHECK(t.bodyAnimalSubmitted.find("{name}") != std::string::npos);
 }
 
 // The director screens out the caged (ScreenCandidate), but the player can pick
@@ -1095,5 +1116,6 @@ void RunOfferViewTests()
     FreeRoutesNeverHaggle();
     SubmissionHasAcceptForgiveReject();
     CagedSubmissionHasNoForgive();
+    AnimalSubmissionReadsAsAnAnimal();
     HelperOffersFreeHelpWithAcceptAndReject();
 }

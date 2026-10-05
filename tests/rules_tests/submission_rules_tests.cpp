@@ -116,7 +116,7 @@ CandidateFacts Ready()
 
 void ACandidateIsScreenedCheapestFirst()
 {
-    const char* name = "trigger: disabled, busy, mine, animal, excluded, down, caged, cooldown, asked, rolled, unbeaten";
+    const char* name = "trigger: disabled, busy, mine, excluded, down, caged, cooldown, asked, rolled, unbeaten";
     CHECK(ScreenCandidate(Ready()) == CandidateSkip_None);
 
     CandidateFacts f = Ready();
@@ -128,8 +128,6 @@ void ACandidateIsScreenedCheapestFirst()
     CHECK(ScreenCandidate(f) == CandidateSkip_Busy);
     f = Ready(); f.mine = true;
     CHECK(ScreenCandidate(f) == CandidateSkip_Mine);
-    f = Ready(); f.animal = true;
-    CHECK(ScreenCandidate(f) == CandidateSkip_Animal);
     f = Ready(); f.recruitable = false;
     CHECK(ScreenCandidate(f) == CandidateSkip_Excluded);
     f = Ready(); f.up = false;
@@ -159,6 +157,58 @@ void ThePeekFiresRollsOrSkips()
     CHECK(JudgePeek(Reason_Insistence, false, false, 0) == Peek_Skip);
     CHECK(JudgePeek(Reason_CatsAsk, false, true, 50) == Peek_Skip);
     CHECK(JudgePeek(Reason_RejectCooldown, false, false, 0) == Peek_Skip);
+}
+
+// proactive-offer P1: a requested offer (a won duel, a heal) is the gesture itself, so
+// the checks that stand for "beaten and not asked since" do not apply; what still
+// applies (the event, mine, excluded, up, caged) does.
+void ARequestedOfferSkipsTheDefeatChecks()
+{
+    const char* name = "trigger: a requested offer skips cooldown, asked, rolled and unbeaten";
+    CandidateFacts f = Ready();
+    f.requested = true;
+    f.onRejectCooldown = true;
+    f.mayAsk = false;
+    f.rolledNoToday = true;
+    f.beaten = false;
+    CHECK(ScreenCandidate(f) == CandidateSkip_None);
+    f.up = false;
+    CHECK(ScreenCandidate(f) == CandidateSkip_NotUp);
+    f.up = true; f.caged = true;
+    CHECK(ScreenCandidate(f) == CandidateSkip_Caged);
+    f.caged = false; f.mine = true;
+    CHECK(ScreenCandidate(f) == CandidateSkip_Mine);
+    f.mine = false; f.recruitable = false;
+    CHECK(ScreenCandidate(f) == CandidateSkip_Excluded);
+    f.recruitable = true; f.popupOpen = true;
+    CHECK(ScreenCandidate(f) == CandidateSkip_Busy);
+}
+
+// animal-duel-submission / proactive-offer: Cheat takes a free animal with one defeat
+// (DecideCheat), Balanced the same break count as a person.
+void AnAnimalInCheatIsBeatenAfterOneDefeat()
+{
+    const char* name = "trigger: beaten = defeats at the break count (Cheat animal: one) or yielded";
+    CHECK(SubmissionBeaten(2, 2, false, false, false));
+    CHECK(!SubmissionBeaten(1, 2, false, false, false));
+    CHECK(SubmissionBeaten(0, 2, true, false, false));
+    CHECK(!SubmissionBeaten(1, 2, false, true, false));
+    CHECK(SubmissionBeaten(2, 2, false, true, false));
+    CHECK(SubmissionBeaten(1, 2, false, true, true));
+    CHECK(!SubmissionBeaten(0, 2, false, true, true));
+    // A person in Cheat keeps the break count.
+    CHECK(!SubmissionBeaten(1, 2, false, false, true));
+}
+
+void TheAnimalVerdictsFireOrRoll()
+{
+    const char* name = "trigger: an animal's yield fires or rolls like a person's; Cheat's defeat fires";
+    CHECK(JudgePeek(Reason_AnimalYieldJoins, true, true, 38) == Peek_Fire);
+    CHECK(JudgePeek(Reason_AnimalYieldNotYet, false, true, 38) == Peek_Roll);
+    CHECK(JudgePeek(Reason_AnimalYieldNotYet, false, true, 0) == Peek_Skip);
+    CHECK(JudgePeek(Reason_CheatAnimalDefeated, true, false, 0) == Peek_Fire);
+    CHECK(JudgePeek(Reason_CheatAnimalDefeated, false, false, 0) == Peek_Skip);
+    CHECK(JudgePeek(Reason_TameNotFed, false, false, 0) == Peek_Skip);
 }
 
 void AnNpcAsksOnceUntilBeatenAgain()
@@ -262,8 +312,20 @@ void ForgiveRunsOffAndTheWindowCloseStaysPut()
     p = PlanFor(Outcome_Dismissed, true, true);
     CHECK(p.next == Submission_Forgiven && !p.flee);
     CHECK(!p.markHostile && !p.recruit);
-    CHECK(Near(ForgivenWindowSec(Outcome_Forgiven, 300.0f), 300.0f));
-    CHECK(Near(ForgivenWindowSec(Outcome_Dismissed, 300.0f), 300.0f));
+    CHECK(Near(ForgivenWindowSec(Outcome_Forgiven, 300.0f, 20.0f), 300.0f));
+    CHECK(Near(ForgivenWindowSec(Outcome_Dismissed, 300.0f, 20.0f), 300.0f));
+}
+
+// proactive-offer: a bad roll after a gesture opens no window; the NPC stops attacking
+// where it stands for offerFailCalmSeconds, then goes back to what it was.
+void ABadRollCalmsInPlaceForItsOwnWindow()
+{
+    const char* name = "plan: a failed roll calms in place for failCalmSeconds, no flight, no window";
+    const RestorePlan p = PlanFor(Outcome_RollFailed, true, true);
+    CHECK(p.next == Submission_Forgiven && !p.flee);
+    CHECK(!p.markHostile && !p.recruit && !p.clearDefeats && !p.startCooldown);
+    CHECK(Near(ForgivenWindowSec(Outcome_RollFailed, 300.0f, 20.0f), 20.0f));
+    CHECK(SubmissionOutcomeName(Outcome_RollFailed)[0] != '\0');
 }
 
 void TheForgiveWindowEndingPutsBackWhatWasThere()
@@ -277,13 +339,20 @@ void TheForgiveWindowEndingPutsBackWhatWasThere()
     CHECK(!p.resumeRoutine && !p.markHostile && p.restoreSpeed);
 }
 
-void RejectWipesCoolsDownAndTurnsHostile()
+// proactive-offer (user request): "rechazar no hace nada: que el npc o animal haga lo
+// que estaba haciendo, limpiar todos los flags y dismiss el popup".
+void RejectOnlyPutsBackWhatWasThere()
 {
-    const char* name = "plan: reject wipes defeats, starts the cooldown, hostile again";
-    const RestorePlan p = PlanFor(Outcome_Rejected, false, true);
+    const char* name = "plan: reject does nothing but end the event: no wipe, no cooldown, hostile only if it was";
+    RestorePlan p = PlanFor(Outcome_Rejected, false, true);
     CHECK(p.next == Submission_Done);
-    CHECK(p.clearDefeats && p.startCooldown && p.markHostile && p.resumeRoutine && p.restoreSpeed);
+    CHECK(p.resumeRoutine && p.restoreSpeed);
+    CHECK(!p.clearDefeats && !p.startCooldown && !p.markHostile);
     CHECK(!p.recruit && !p.flee);
+    p = PlanFor(Outcome_Rejected, true, true);
+    CHECK(p.markHostile && !p.clearDefeats && !p.startCooldown);
+    p = PlanFor(Outcome_Rejected, true, false);
+    CHECK(!p.markHostile && !p.resumeRoutine && p.restoreSpeed);
 }
 
 void AbortsAndLoadsOnlyGiveBack()
@@ -367,14 +436,18 @@ void RunSubmissionRulesTests()
     TheClockStopsWhilePausedAndCapsAHitch();
     ACandidateIsScreenedCheapestFirst();
     ThePeekFiresRollsOrSkips();
+    ARequestedOfferSkipsTheDefeatChecks();
+    AnAnimalInCheatIsBeatenAfterOneDefeat();
+    TheAnimalVerdictsFireOrRoll();
     AnNpcAsksOnceUntilBeatenAgain();
     TheCalmBreaksAfterThreeStrikesInARow();
     TheHoldLastsWhileThePopupIsOurs();
     TheForgiveWindowEndsOnTimeOrEarlier();
     AcceptRecruitsAndRestoresTheSpeed();
     ForgiveRunsOffAndTheWindowCloseStaysPut();
+    ABadRollCalmsInPlaceForItsOwnWindow();
     TheForgiveWindowEndingPutsBackWhatWasThere();
-    RejectWipesCoolsDownAndTurnsHostile();
+    RejectOnlyPutsBackWhatWasThere();
     AbortsAndLoadsOnlyGiveBack();
     TheFlightGoesStraightAwayOnTheGround();
     TheCooldownEndsOnAWholeHour();

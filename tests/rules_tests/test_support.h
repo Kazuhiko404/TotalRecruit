@@ -67,3 +67,5 @@ void RunInsistenceRulesTests();
 void RunHealingLedgerTests();
 void RunDuelNarrationRulesTests();
 void RunHoldDurationRulesTests();
+void RunOfferRequestRulesTests();
+void RunOfferNarrationRulesTests();

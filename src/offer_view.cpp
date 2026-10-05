@@ -255,7 +255,7 @@ void ApplyDuelChallenge(const OfferInput& in, const OfferTexts& t, OfferView* vi
     }
 }
 
-// The answers that let someone go (IGNORAR on a plea, PERDONAR on a submission)
+// The answers that let someone go (IGNORAR on a plea or a submission)
 // mean nothing to someone who cannot leave: a cage, shackles, a shoulder.
 std::string LetGoLabel(bool inCage, const std::string& label)
 {
@@ -295,7 +295,6 @@ OfferTexts DefaultOfferTexts()
     t.knockout = "NOQUEAR";
     t.ignore = "IGNORAR";
     t.decline = "RECHAZAR";
-    t.forgive = "PERDONAR";
     t.routeHelper = "Ayuda";
 
     t.routeFree = "Libre";
@@ -322,6 +321,7 @@ OfferTexts DefaultOfferTexts()
     t.bodyRescue = "{name} te debe la vida y desea unirse a tu grupo.";
     t.bodyJoins = "{name} desea unirse a tu grupo.";
     t.bodySubmitted = "{name} se arrodilla y te pide unirse a tu grupo.";
+    t.bodyAnimalSubmitted = "{name} agacha la cabeza frente a ti: quiere seguirte.";
     t.bodyHelper = "{name} te ofrece acompa\xc3\xb1" "arte {days} d\xc3\xad" "as, gratis. No podr\xc3\xa1s darle \xc3\xb3rdenes.";
     t.reasonDefiantNoBeat = "Sigue desafiante: d\xc3\xa9jalo con hambre";
 
@@ -520,8 +520,17 @@ OfferView BuildSubmissionOfferView(const std::string& name, bool inCage, const O
     view.priceFree = true;
     view.priceText = t.free;
     view.acceptLabel = t.accept;
-    view.extraLabel = LetGoLabel(inCage, t.forgive);
+    view.extraLabel = LetGoLabel(inCage, t.ignore);
     view.cancelLabel = t.decline;
+    return view;
+}
+
+OfferView BuildAnimalSubmissionOfferView(const std::string& name, bool inCage, const OfferTexts& t)
+{
+    OfferView view = BuildSubmissionOfferView(name, inCage, t);
+    view.route = ReadoutRoute_Animal;
+    view.routeTag = RouteTag(ReadoutRoute_Animal, t);
+    view.bodyLine = Fill(t.bodyAnimalSubmitted, name, 0);
     return view;
 }
 } // namespace totalrecruit

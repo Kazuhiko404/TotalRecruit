@@ -5,9 +5,9 @@
 namespace totalrecruit
 {
 CandidateFacts::CandidateFacts()
-    : eventEnabled(false), eventRunning(false), popupOpen(false), mine(false), animal(false),
+    : eventEnabled(false), eventRunning(false), popupOpen(false), mine(false),
       recruitable(false), up(false), caged(false), onRejectCooldown(false), mayAsk(false),
-      rolledNoToday(false), beaten(false)
+      rolledNoToday(false), beaten(false), requested(false)
 {
 }
 
@@ -62,10 +62,11 @@ CandidateSkip ScreenCandidate(const CandidateFacts& f)
     if (!f.eventEnabled) return CandidateSkip_Disabled;
     if (f.eventRunning || f.popupOpen) return CandidateSkip_Busy;
     if (f.mine) return CandidateSkip_Mine;
-    if (f.animal) return CandidateSkip_Animal;
     if (!f.recruitable) return CandidateSkip_Excluded;
     if (!f.up) return CandidateSkip_NotUp;
     if (f.caged) return CandidateSkip_Caged;
+    // A requested offer is the gesture itself: the verdict (Evaluate) decides the rest.
+    if (f.requested) return CandidateSkip_None;
     if (f.onRejectCooldown) return CandidateSkip_Cooldown;
     if (!f.mayAsk) return CandidateSkip_AlreadyAsked;
     if (f.rolledNoToday) return CandidateSkip_RolledNoToday;
@@ -81,7 +82,6 @@ const char* CandidateSkipText(CandidateSkip skip)
     case CandidateSkip_Disabled:      return "event disabled";
     case CandidateSkip_Busy:          return "busy";
     case CandidateSkip_Mine:          return "already the player's";
-    case CandidateSkip_Animal:        return "animal";
     case CandidateSkip_Excluded:      return "excluded";
     case CandidateSkip_NotUp:         return "not up";
     case CandidateSkip_Caged:         return "caged";
@@ -93,15 +93,26 @@ const char* CandidateSkipText(CandidateSkip skip)
     return "unknown";
 }
 
+bool SubmissionBeaten(int defeats, int defeatsToBreak, bool yielded, bool animal, bool cheat)
+{
+    if (yielded)
+        return true;
+    const int needed = (animal && cheat) ? 1 : defeatsToBreak;
+    return defeats >= needed;
+}
+
 SubmissionPeek JudgePeek(ReasonKey reason, bool willJoin, bool rolled, int chancePercent)
 {
     if (reason == Reason_Surrendered && willJoin)
         return Peek_Fire;
     if (reason == Reason_FieldYieldJoins && willJoin)
         return Peek_Fire;
+    if ((reason == Reason_AnimalYieldJoins || reason == Reason_CheatAnimalDefeated) && willJoin)
+        return Peek_Fire;
     // A peek supplies no roll key, so an open field yield always reads "not yet";
     // only a chance above 0 is worth one keyed draw.
-    if (reason == Reason_FieldYieldNotYet && rolled && chancePercent > 0)
+    if ((reason == Reason_FieldYieldNotYet || reason == Reason_AnimalYieldNotYet) && rolled &&
+        chancePercent > 0)
         return Peek_Roll;
     return Peek_Skip;
 }
@@ -228,6 +239,7 @@ const char* SubmissionOutcomeName(SubmissionOutcome outcome)
     case Outcome_JoinedLater:    return "joined later";
     case Outcome_CombatTookOver: return "combat took over";
     case Outcome_Unloaded:       return "unloaded";
+    case Outcome_RollFailed:     return "roll failed";
     }
     return "unknown";
 }
@@ -252,14 +264,13 @@ RestorePlan PlanFor(SubmissionOutcome outcome, bool wasHostile, bool npcUp)
         p.next = Submission_Forgiven;
         break;
 
-    case Outcome_Rejected:
-        p.restoreSpeed = true;
-        p.resumeRoutine = true;
-        p.markHostile = true;
-        p.clearDefeats = true;
-        p.startCooldown = true;
+    case Outcome_RollFailed:
+        p.next = Submission_Forgiven;
         break;
 
+    // proactive-offer: RECHAZAR does nothing but end the event -- no defeats wiped, no
+    // reject cooldown -- so it is put back exactly like an aborted walk-up.
+    case Outcome_Rejected:
     case Outcome_Aborted:
     case Outcome_ForgiveOver:
         p.restoreSpeed = true;
@@ -280,8 +291,10 @@ RestorePlan PlanFor(SubmissionOutcome outcome, bool wasHostile, bool npcUp)
     return p;
 }
 
-float ForgivenWindowSec(SubmissionOutcome /*entered*/, float forgiveSeconds)
+float ForgivenWindowSec(SubmissionOutcome entered, float forgiveSeconds, float failCalmSeconds)
 {
+    if (entered == Outcome_RollFailed)
+        return failCalmSeconds;
     // Forgiven and dismissed get the same window: "treat the closed window like a
     // forgive without the flight" (cage-animals-submission T3).
     return forgiveSeconds;

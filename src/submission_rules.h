@@ -1,8 +1,10 @@
 #pragma once
 
 // The submission event, without the engine: a beaten NPC walks up to the
-// player and asks to join, and the player answers Aceptar / Perdonar /
-// Rechazar.
+// player and asks to join, and the player answers Aceptar / Ignorar (was
+// Perdonar) / Rechazar. Since proactive-offer it also carries the offers a
+// gesture of the player asked for (a won duel, a heal: offer_request_rules.h),
+// animals included, and a failed roll calms in place (Outcome_RollFailed).
 //
 // The shape is TotalSparring's NPC challenge (src/duel/challenge/
 // challenge_director.cpp: Idle -> Approaching -> Holding, a paused-aware
@@ -71,7 +73,6 @@ struct CandidateFacts
     bool eventRunning;      // another submission is already in progress
     bool popupOpen;         // the recruit popup (or a mercy plea) is on screen
     bool mine;              // already the player's
-    bool animal;
     bool recruitable;       // the exclusion list allows them (IsRecruitable)
     bool up;                // alive, conscious, on their feet, not carried
     bool caged;             // in anyone's cage, shackled or carried off
@@ -79,6 +80,10 @@ struct CandidateFacts
     bool mayAsk;            // not asked before, or beaten again since (MayAskAgain)
     bool rolledNoToday;     // their field-yield roll already failed today
     bool beaten;            // defeats >= the break count, or yielded to the player
+    // proactive-offer: a gesture of the player (a won duel, a heal) asked for this
+    // offer (offer_request_rules.h). The gesture stands for "beaten and not asked
+    // since", so the cooldown, asked, rolled and beaten checks do not apply.
+    bool requested;
 
     CandidateFacts();
 };
@@ -89,7 +94,6 @@ enum CandidateSkip
     CandidateSkip_Disabled,
     CandidateSkip_Busy,
     CandidateSkip_Mine,
-    CandidateSkip_Animal,
     CandidateSkip_Excluded,
     CandidateSkip_NotUp,
     CandidateSkip_Caged,
@@ -100,8 +104,14 @@ enum CandidateSkip
 };
 
 // PURE: why this character is not a candidate, in the order above, or
-// CandidateSkip_None when the verdict is worth a peek.
+// CandidateSkip_None when the verdict is worth a peek. Animals are candidates too
+// (proactive-offer): they walk up and the roller narrates for them.
 CandidateSkip ScreenCandidate(const CandidateFacts& facts);
+
+// PURE: whether `defeats` (or a yield to the player) make this NPC beaten enough to
+// be asked: the break count, except a free animal in Cheat, which DecideCheat takes
+// after one defeat (animal-duel-submission D4).
+bool SubmissionBeaten(int defeats, int defeatsToBreak, bool yielded, bool animal, bool cheat);
 const char* CandidateSkipText(CandidateSkip skip);
 
 // What the peek at the verdict (rules.h EvaluatePeek: no roll key outside the
@@ -115,7 +125,8 @@ enum SubmissionPeek
 
 // PURE: Reason_Surrendered (or a joining field yield) fires; a field yield
 // that rolled with a chance above 0 and only lacked the key rolls; anything
-// else (a refusal, an access no, 0%) skips.
+// else (a refusal, an access no, 0%) skips. An animal's field yield
+// (Reason_AnimalYield*) reads the same, and Cheat's defeated animal fires.
 SubmissionPeek JudgePeek(ReasonKey reason, bool willJoin, bool rolled, int chancePercent);
 
 // PURE: an NPC is asked once; after that only a new defeat (a higher count than
@@ -219,14 +230,15 @@ const char* ForgivenReleaseText(ForgivenReleaseReason reason);
 enum SubmissionOutcome
 {
     Outcome_Accepted = 0,   // ACEPTAR: they join
-    Outcome_Forgiven,       // PERDONAR: they run off, calm for the forgive window
+    Outcome_Forgiven,       // IGNORAR (was PERDONAR): they run off, calm for the forgive window
     Outcome_Dismissed,      // the popup closed with no answer: calm for the window, in place
-    Outcome_Rejected,       // RECHAZAR: defeats wiped, cooldown, hostile again
+    Outcome_Rejected,       // RECHAZAR: nothing; back to what they were doing (proactive-offer)
     Outcome_Aborted,        // the walk-up or the hold gave up
     Outcome_ForgiveOver,    // the forgive window ran out
     Outcome_JoinedLater,    // recruited by hand during the forgive window
     Outcome_CombatTookOver, // the calm broke: the fight owns the NPC
-    Outcome_Unloaded        // a load began mid-event
+    Outcome_Unloaded,       // a load began mid-event
+    Outcome_RollFailed      // a gesture's roll failed: calm in place for failCalmSeconds, no window
 };
 
 const char* SubmissionOutcomeName(SubmissionOutcome outcome);
@@ -252,8 +264,9 @@ struct RestorePlan
 // that: a hostile NPC is hostile again, a calm one stays calm.
 RestorePlan PlanFor(SubmissionOutcome outcome, bool wasHostile, bool npcUp);
 
-// PURE: the window the Forgiven state lasts, by how it was entered.
-float ForgivenWindowSec(SubmissionOutcome entered, float forgiveSeconds);
+// PURE: the window the Forgiven state lasts, by how it was entered: a failed roll
+// gets `failCalmSeconds` (offerFailCalmSeconds), anything else `forgiveSeconds`.
+float ForgivenWindowSec(SubmissionOutcome entered, float forgiveSeconds, float failCalmSeconds);
 
 // --------------------------------------------------------------- The flight
 struct GroundPoint
