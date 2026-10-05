@@ -33,6 +33,7 @@ Nothing has a formal QA pass mark.
 | Player defeats saved in the character save, one per knockout (`total_recruit.player_defeats`); the hook's twin call inside 5 s is the same knockout | `not verified` (12.13 K4b) |
 | Cheat preset: cage plus a one-minute hold, nothing else (`cheatNeedsCage`) | `verified in game` (§8, R1.3) |
 | Cheat: an animal that belongs to nobody joins as soon as it has eaten from the player's hand, caged or not, no wait (`DecideCheat`, `CheatFacts::fedByPlayer`); unfed outside the cage it asks for the cage and the popup offers food (animal-insistence-cheat-feed A2) | `needs in-game QA` (§8 H11-H14) |
+| Cheat: a free animal also joins when one of the player's characters healed it (first-aid / doctoring hooks name the healer, `healing_ledger`, saved as `total_recruit.healed_by_player`) or the player's squad knocked it out once (defeat ledger) (animal-duel-submission D4) | `needs in-game QA` (12.34 A15-A20) |
 | Cheat: every wait is one game minute (`cheat_waits`: cage wait, hail first and repeat, Golpear/Noquear rests, reject and lost-duel cooldowns; the last two end at the next whole game hour) | `needs in-game QA` (§8 H7-H10, 12.33 W1-W2) |
 
 ### 2. Chance, stress and the readout card (7)
@@ -96,6 +97,7 @@ Nothing has a formal QA pass mark.
 | Tamed by the hunger bar, scaled by maturity, level and temperament (R5) | `verified in game` (R5.1, earlier rule) |
 | Only animals the player fed at least once can be tamed (meals saved as `total_recruit.fed_by_player`) | `not verified` (12.20) |
 | Owned and domestic animals are kept out | `verified in game` (§7) |
+| Balanced: a free animal beaten twice in the open takes the field-yield roll (temperament Normal, no loyalty penalty); a failed roll falls back to food; card shows DERROTAS n/2 (animal-duel-submission D3) | `needs in-game QA` (12.34 A9-A14) |
 
 ### 8. Allies by level, temporary members and helpers (7)
 | Feature | Status |
@@ -115,6 +117,7 @@ Nothing has a formal QA pass mark.
 | Loss or draw: 24 h saved cooldown; spars and undecided bouts never count | `play-tested informally` (12.28 T9-T12) |
 | Won duel = join chance: 25 % + 20 % per earlier win, seeded roll, 24-72 h / 24-120 h win cooldown | `not verified`, deployed, awaiting play-test (12.29) |
 | Cheat: the duel is offered to any 80+ non-animal, and a win always recruits | `not verified`, deployed, awaiting play-test (12.29 J7-J8) |
+| Free animals of level 40+ (`duelAnimalsFromLevel`) can be challenged in both presets; same join chance (Balanced) / sure join (Cheat); narrator lines, no head notice (animal-duel-submission D1/D2) | `needs in-game QA` (12.34 A1-A8) |
 | Duel head notices are informational (25 s) | `play-tested informally` (12.31 F2) |
 
 ### 10. Head notices (3)
@@ -147,6 +150,7 @@ Nothing has a formal QA pass mark.
 ### In-game QA owed
 `QA.md` has no pass/fail markers. In priority order:
 1. **12.29 and 12.25 T12-T14**: duel join chance and the daily notice (deployed, awaiting play-test).
+1b. **12.34** (branch `feat/animal-duel-submission`, not merged or deployed): animal duel, the animal 2/2 in Balanced, Cheat heal/defeat.
 2. **12.6 I4/I5**: stable character id across a reload and a relaunch. Highest risk: the `Character` hooks are unverified.
 3. **12.4 money (P1-P9)** and **12.18 haggle (H1-H12)**; balance re-check after the level change (see risks).
 4. **12.23-12.31** formally: head notices (N8, N14-N17), ally tiers, temporary members, helper, card hidden in dialogue, duel bridge, native packages, play-test fixes. Several were play-tested informally.
@@ -156,7 +160,7 @@ Nothing has a formal QA pass mark.
 ### Risks and known limitations
 - **Balance.** The NPC level is now TotalSparring's overall skill level, so prices, tiers, chance, haggle, helper lead and animal taming all moved. Needs a re-check in play.
 - **Native helper.** `packageData` (0x68) and `missionEmployer` (0x48) are read at header offsets, because `AI/AIPackage.h` and `AI/Blackboard.h` cannot be included together. A helper taken out of a squad stays in its own platoon. Fallback B leaves the aggressive combat stance on the NPC.
-- **Duel.** A winner more than 80 m away is not recruited. The FCS dialogue accept path offers no duel.
+- **Duel.** A winner more than 80 m away is not recruited. The FCS dialogue accept path offers no duel. Against an animal, TotalSparring's bet slider assumes the rival carries cats: it falls back to 1000 as the animal's wealth (`duel_popup.cpp:1416-1418`) and the payout fails (`economy.cpp:100-115`); keep the bet at 0. A TotalSparring-side fix needs the user's permission.
 - **Temporary members.** The FCS accept path recruits a temporary ally permanently. Warnings, cooldowns and the daily notice can repeat once after a load. The leaver's walk-back fallback is session-only.
 - **State not saved.** Talk attempts live in memory. A prisoner re-caged outside the 900-unit sweep keeps its clock. (Resolved: the hold clock start now rides in the character save, `total_recruit.hold_start_hour`, v1-presets-close P3; `needs in-game QA` 12.33 H1-H4.)
 - **Cage orders.** Whether `checkPlayerOrderForProblems` reads the right way round is unproven (the 1.5 s order watch decides the fallback).

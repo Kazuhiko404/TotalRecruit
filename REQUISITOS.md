@@ -76,6 +76,22 @@ comida es el otro camino. La jaula + 1 minuto sigue igual para todos. Un animal
 con dueño solo entra por la jaula, como antes; las exclusiones del config
 (`exclude.animals`) siguen mandando y `cheatNeedsCage: false` no cambia.
 
+*Estado (2026-10-04, animal-duel-submission D4):* **comida, cura, derrota o
+duelo.** Pedido del usuario: "para Cheat que sea 100%, lo mismo con curar y dar de
+comer ... en Cheat también si lo vence mi NPC debería dejarme hablar para que se
+una". Un animal sin dueño se une al hablarle, con o sin jaula y sin espera, si
+(en este orden de motivo) comió de tu mano ("Comió de tu mano: te sigue"), uno de
+tus personajes **lo curó** ("Lo curaste: te sigue") o tu escuadra **lo noqueó**
+al menos una vez ("Lo venciste: te sigue"). La cura es un dato del motor, no una
+suposición: los ganchos de `MedicalSystem::applyFirstAid` / `applyDoctoring`
+(los del rescate) reciben a quien cura; si es un personaje tuyo y el paciente un
+animal que no es tuyo, queda marcado una vez y se guarda con el animal
+(`total_recruit.healed_by_player`, `healing_ledger`). La derrota es el mismo
+conteo del save (`total_recruit.player_defeats`, R3.3): una pelea o un duelo
+cuentan; Golpear / Noquear en tu jaula son estrés, no derrota (R3.2). Un duelo
+ganado contra un animal también lo une siempre (R4b.7). Un animal con dueño sigue
+entrando solo por la jaula; las personas no cambian.
+
 **R1.4 — Umbral de amistad configurable, por defecto 20.** *(P1)*
 La ruta amistosa deja de usar un 25 fijo. Se configura, y arranca en 20.
 
@@ -293,6 +309,21 @@ prisionero de otra facción y el que está harto de tu insistencia no son tuyos
 para hablarles, vencidos o no. La lealtad militar o de la ley no cierra la ruta
 (una paliza es el único argumento que escuchan) pero pesa en la tirada:
 `submissionFieldYieldLoyaltyPenalty`, 25 por defecto, 0..100.
+
+*Animales (2026-10-04, animal-duel-submission D3):* "para Balanced ... el mismo
+2/2 que ya tenemos con NPC, aplicar la misma lógica". Un animal **sin dueño**
+vencido `submissionDefeatsToBreak` (2) veces fuera de tu jaula toma la misma ruta
+`field-yield`, con los mismos interruptores: `JoinChance` con temperamento Normal
+(un animal no tiene temperamento en esta regla), `submissionFieldYieldBonus` y
+**sin** penalización de lealtad (no sirve a ninguna organización), con la misma
+semilla diaria. Si la tirada falla, la doma sigue abierta: un animal alimentado
+sobre la barra se une igual y uno sin alimentar conserva **Dar comida** y la barra
+de barriga ("Todavía no se somete: vencelo otra vez, o dale de comer"). La tarjeta
+muestra **DERROTAS n/2** de un animal libre fuera de la jaula. El evento de
+sometido (camina hasta ti y pide unirse, R3.7) **no** aplica a animales: pide
+hablando; un animal se ofrece por Hablar -> ACEPTAR. Un animal con dueño o en tu
+jaula no toma esta ruta. Un duelo perdido o una tirada fallida nunca lo vuelven
+hostil (el mod no cambia relaciones).
 
 **R3.6 — Quién puede comprar su vida.** *(P1, decidido; implementado en T2, `mercy_rules`)*
 
@@ -525,6 +556,21 @@ plugins".
   interrumpido) o con otro: no cuenta; sin decidir deja el reto pendiente hasta
   `duelChallengeExpiryHours` (6). Si murió en un duelo a muerte, se dice y nadie
   se une.
+- **Animales** (2026-10-04, animal-duel-submission D1/D2). "Retar a duelo puede
+  dar el chance de que se una". Un animal **sin dueño** (el mismo `BelongsToSomeone`
+  de la doma, fuera de tu jaula) de nivel `duelAnimalsFromLevel` (40, `SafeNpcLevel`)
+  o más, con `duelAnimalsEnabled`, también recibe RETAR A DUELO, en Balanced y en
+  Cheat: sin tramo de aliado ni corte 80+. `exclude.animals` manda, y en Balanced
+  también `animalsEnabled`. Ganar es la misma chance que con una persona en
+  Balanced (25 + 20 por victoria, semilla estable, mismos enfriamientos) y una
+  unión segura en Cheat. El animal no habla: líneas de narrador
+  (`duel.animal.challenged/joined/stays/lost`, "agacha la cabeza y te sigue") y
+  ningún cartel sobre su cabeza. Perder no lo vuelve hostil. Limitación conocida
+  de TotalSparring (solo lectura desde este mod): la apuesta de la ventana Dueling
+  supone que el rival tiene cats; un animal no tiene, así que TotalSparring usa 1000
+  como riqueza de reserva (`duel_popup.cpp:1416-1418`) y el pago falla
+  (`economy.cpp:100-115`, `TransferCats`). Dejar la apuesta en 0 con animales;
+  arreglarlo del lado de TotalSparring necesita permiso del usuario.
 - **Sin TotalSparring** el botón no aparece y los tramos funcionan como antes.
 
 ---

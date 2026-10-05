@@ -52,7 +52,10 @@ Fearful people come cheaper. The brave and the cruel cost more.
 proves nothing: an animal joins only once you have fed it at least once (the
 meals are saved with the character) and it is full enough. Caged or loose, the
 same rule; time in the cage, intimidation and having saved its life do not tame
-it.
+it. In Balanced a free animal you beat twice in the open also gets the field-yield
+roll a person gets ("DERROTAS 2/2" on its card; temperament counts as Normal, no
+loyalty penalty); if the roll fails, food still tames it. An owned animal is only
+taken through the cage.
 
 **Golpear and Noquear.** Right-click a prisoner awake in your cage and two
 buttons stand under Hablar. They are Kenshi's own orders (beat the cage
@@ -131,7 +134,10 @@ reload. A 15% chance per ally per day, `helper*` keys; `helperDebugKey` (a
 Windows key code, 119 = F8) makes the selected NPC offer at once for testing.
 
 With TotalSparring installed, an ally of level 80 or more (in Cheat, anyone of
-level 80 or more who is not an animal) can also be challenged to a duel. Their popup keeps its usual answer and adds
+level 80 or more), or a free animal of level 40 or more in either preset
+(`duelAnimalsEnabled`, `duelAnimalsFromLevel`), can also be challenged to a duel.
+An animal's outcome is told by a narrator line, never in its voice; keep the bet
+at 0 against an animal (it carries no cats). Their popup keeps its usual answer and adds
 **RETAR A DUELO**, with your selected fighter's head-to-head record against
 them ("DUELOS 2-1", also on their card as "Duelos: 2-1"). The button opens
 TotalSparring's own Dueling window with the character you have selected;
@@ -145,7 +151,7 @@ join ("Me ganaste. Me uno a ti"), or say "Buena pelea. Retame otra vez" and wait
 recruits. Lose or draw and they tell you to come back stronger, and you cannot
 challenge them again for a day. A spar never counts, and a duel that was cancelled or interrupted leaves
 the challenge open for six in-game hours. Without TotalSparring nothing
-changes. `duelChallenge*`, `duelJoin*` and `duelWinCooldown*` keys in
+changes. `duelChallenge*`, `duelJoin*`, `duelWinCooldown*` and `duelAnimals*` keys in
 `config.json` and in Mod Hub.
 
 ### Refusal, with a reason
@@ -160,8 +166,10 @@ itself.
 - **Cheat** — the cage and a one-minute wait, nothing else: the character must be
   in your cage and held for `cheatHoursCaged` (0.02 game hours); no cats, food,
   submission, level or standing. An animal that belongs to nobody also joins the
-  moment it has eaten from your hand, caged or not (the popup offers food to an
-  unfed one). `cheatNeedsCage` turns the cage requirement off.
+  moment it has eaten from your hand, been healed by one of your characters, or
+  been knocked out by your squad, caged or not (the popup offers food to an unfed
+  one); beating it in a duel recruits it too. `cheatNeedsCage` turns the cage
+  requirement off.
 - **Balanced** — the prices above, and allies by level. *(default)*
 
 v1 ships these two. Vanilla+ (faction relation shifting the price) was retired:
