@@ -272,6 +272,23 @@ void CheatAnyCageHoldClockRule()
     CHECK(!HoldClockCountsAnyCage(config));
 }
 
+void TheHoldClockCountsThisCage()
+{
+    const char* name = "hold clock: the player's cage always counts, any cage only where the clock runs there";
+    Config config;
+    config.preset = Preset_Balanced;
+    CHECK(HoldClockCounts(true, true, config));
+    CHECK(HoldClockCounts(true, false, config));
+    CHECK(!HoldClockCounts(false, true, config));
+    CHECK(!HoldClockCounts(false, false, config));
+    config.preset = Preset_Cheat;
+    CHECK(HoldClockCounts(false, true, config));
+    CHECK(!HoldClockCounts(false, false, config));
+    config.cheatAnyCage = false;
+    CHECK(!HoldClockCounts(false, true, config));
+    CHECK(HoldClockCounts(true, false, config));
+}
+
 // An animal that ate from the player's hand (the same PlayerMeals fact Balanced's
 // animal route reads) joins in Cheat at once: no cage, no wait, no bar.
 CheatFacts FedAnimal(bool inCage)
@@ -1900,6 +1917,7 @@ void RunRouteDecisionsTests()
     CheatAnyCageStillNeedsACage();
     CheatCageCountsRule();
     CheatAnyCageHoldClockRule();
+    TheHoldClockCountsThisCage();
     CheatAFedAnimalJoinsWithoutTheCage();
     CheatAFedAnimalInTheCageDoesNotWait();
     CheatAnUnfedAnimalOutsideStillNeedsTheCage();

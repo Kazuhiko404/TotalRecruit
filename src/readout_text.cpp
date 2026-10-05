@@ -73,6 +73,7 @@ ReadoutTexts BuildReadoutTexts(const ReadoutView& view, const std::string& name,
 
     t.primary = Line(view.primary, who);
     t.secondary = Line(view.secondary, who);
+    t.held = Line(view.held, who);
     return t;
 }
 } // namespace totalrecruit

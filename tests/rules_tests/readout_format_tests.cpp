@@ -52,6 +52,18 @@ void PlaceholdersAreFilled()
     CHECK(FillLine("sin {nada} aqui", a) == "sin {nada} aqui");
     CHECK(FillLine("", a) == "");
 }
+
+void TimeHeldFillsFromTheHours()
+{
+    const char* name = "fill: {time} is the hours written as a hold duration (hold_duration_rules)";
+    LineArgs a;
+    a.hours = 2.25f;
+    CHECK(FillLine("Encerrado: {time}", a) == "Encerrado: 2 h 15 min");
+    a.hours = 0.5f;
+    CHECK(FillLine("Encerrado: {time}", a) == "Encerrado: 30 min");
+    a.hours = 27.0f;
+    CHECK(FillLine("Encerrado: {time}", a) == "Encerrado: 1 d 3 h");
+}
 } // namespace
 
 void RunReadoutFormatTests()
@@ -59,4 +71,5 @@ void RunReadoutFormatTests()
     CatsGetDotsBetweenThousands();
     HoursLeftRoundUp();
     PlaceholdersAreFilled();
+    TimeHeldFillsFromTheHours();
 }

@@ -21,7 +21,7 @@ bool IsHidden(int id)
 void EveryReasonHasARowPlusTheCardsOwnLines()
 {
     const char* name = "catalog: one row per ReasonKey plus the open roll, beat-again and the ally prices";
-    CHECK(ReadoutLineCount() == (int)Reason_Count + 12);
+    CHECK(ReadoutLineCount() == (int)Reason_Count + 13);
     CHECK(kLineRollOpen == (int)Reason_Count);
     CHECK(kLineFieldYieldBeatAgain == (int)Reason_Count + 1);
     CHECK(kLineAllyPaidJoin == (int)Reason_Count + 2);
@@ -34,6 +34,14 @@ void EveryReasonHasARowPlusTheCardsOwnLines()
     CHECK(kLineDuelRecordDrawsChance == (int)Reason_Count + 9);
     CHECK(kLineDuelRecordSure == (int)Reason_Count + 10);
     CHECK(kLineDuelRecordDrawsSure == (int)Reason_Count + 11);
+    CHECK(kLineHoldElapsed == (int)Reason_Count + 12);
+}
+
+void TheHoldLineCarriesTheTime()
+{
+    const char* name = "catalog: the hold line says how long the prisoner has been held in {time}";
+    CHECK(std::string(ReadoutLineDefaultText(kLineHoldElapsed)) == "Encerrado: {time}");
+    CHECK(std::string(ReadoutLineMessageKey(kLineHoldElapsed)) == "readout.line.hold.elapsed");
 }
 
 void TheDuelChanceLinesCarryTheChance()
@@ -190,6 +198,7 @@ void RunReadoutCatalogTests()
     TheAllyTierLinesNameTheFriendship();
     TheTempMemberLineCountsTheDays();
     TheHelperLineCountsTheDays();
+    TheHoldLineCarriesTheTime();
     EveryRouteHasALabel();
     VisibleReasonsHaveShortAsciiText();
     KeysAreUniqueAndNamespaced();

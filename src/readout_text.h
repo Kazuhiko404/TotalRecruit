@@ -32,6 +32,8 @@ struct ReadoutTexts
     std::string foodValue;
     std::string primary;
     std::string secondary;
+    // "Encerrado: 2 h 15 min" under the header; empty when no hold clock is known.
+    std::string held;
 };
 
 // `who` only picks which message variant is used, as everywhere else.

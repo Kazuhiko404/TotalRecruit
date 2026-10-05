@@ -7,7 +7,7 @@ namespace
 // One row per id, in ReasonKey order and then the card's own lines: the open roll, the field-yield beat-again, a Balanced ally's discounted price
 // (join / short), a temporary member's days left, a helper's days left, the duel
 // record without and with draws, and the same record carrying the next win's join
-// chance or "se une" (the test checks the count). Text is plain ASCII like the rest of messages.json, and short: the card
+// chance or "se une", and the time a prisoner has been held (the test checks the count). Text is plain ASCII like the rest of messages.json, and short: the card
 // does not wrap. A row with empty text is a verdict the card is hidden for.
 struct Row
 {
@@ -83,6 +83,7 @@ const Row kRows[] = {
     { "readout.line.duel.recordDrawsChance", "Duelos: {food}-{need}-{purse}, si ganas {chance}%" },  // kLineDuelRecordDrawsChance
     { "readout.line.duel.recordSure",        "Duelos: {food}-{need}, si ganas se une" },             // kLineDuelRecordSure
     { "readout.line.duel.recordDrawsSure",   "Duelos: {food}-{need}-{chance}, si ganas se une" },    // kLineDuelRecordDrawsSure
+    { "readout.line.hold.elapsed",           "Encerrado: {time}" },                      // kLineHoldElapsed
 };
 
 // One label per ReadoutRoute, in enum order.

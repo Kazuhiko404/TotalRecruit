@@ -1,4 +1,5 @@
 #include "readout_format.h"
+#include "hold_duration_rules.h"
 
 #include <cmath>
 #include <cstdio>
@@ -74,6 +75,7 @@ std::string FillLine(const std::string& text, const LineArgs& args)
     ReplaceAll(&out, "{cats}", FormatCats(args.cats));
     ReplaceAll(&out, "{purse}", FormatCats(args.purse));
     ReplaceAll(&out, "{hours}", FormatHoursLeft(args.hours));
+    ReplaceAll(&out, "{time}", FormatHoldDuration(args.hours));
     ReplaceAll(&out, "{food}", Number(args.food));
     ReplaceAll(&out, "{need}", Number(args.need));
     ReplaceAll(&out, "{chance}", Number(args.chance));

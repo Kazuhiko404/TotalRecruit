@@ -18,6 +18,7 @@
 #include "rules.h"
 #include "temp_member.h"
 #include "helper.h"
+#include "hold_tracking.h"
 #include "cage_commands.h"
 #include "duel_record_cache_rules.h"
 #include "ts_bridge.h"
@@ -141,16 +142,17 @@ void HideCard()
 void LogReadout(Character* character, const ReadoutView& view, const ReadoutTexts& texts,
                 const char* source)
 {
-    char buf[320] = { 0 };
+    char buf[384] = { 0 };
     _snprintf_s(buf, sizeof(buf), _TRUNCATE,
                 " route=%s chance=%s stress=%s (hunger %d wounds %d tired %d beaten %d) "
-                "defeats=%s food=%s line=\"%s\"%s%s [%s]",
+                "defeats=%s food=%s held=%s line=\"%s\"%s%s [%s]",
                 RouteWord(view.route),
                 view.showChance ? texts.chanceValue.c_str() : "-",
                 view.showStress ? texts.stressValue.c_str() : "-",
                 view.hungerPts, view.woundsPts, view.tiredPts, view.beatenPts,
                 view.showDefeats ? texts.defeatsValue.c_str() : "-",
                 view.showFood ? texts.foodValue.c_str() : "-",
+                texts.held.empty() ? "-" : texts.held.c_str(),
                 texts.primary.c_str(),
                 texts.secondary.empty() ? "" : " + ",
                 texts.secondary.c_str(), source);
@@ -248,6 +250,14 @@ bool WorkOut(Character* character, const char* source)
         // (readout_model.h IsLostRoll).
         input.rollKeyed = false;
         AddDuelRecord(character, &input);
+        // How long they have been held (prisoner-hold-time): only peeked, never a
+        // clock started, and only for a cage the clock counts.
+        float hoursHeld = 0.0f;
+        if (PeekCountedHoursHeld(character, &hoursHeld))
+        {
+            input.holdKnown = true;
+            input.hoursHeld = hoursHeld;
+        }
     }
 
     const ReadoutView view = BuildReadout(input, config);

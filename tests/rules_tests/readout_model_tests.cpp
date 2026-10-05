@@ -409,6 +409,42 @@ void ATemporaryMemberShowsTheDaysLeft()
     CHECK(!v.showFood);
 }
 
+void AHeldPrisonerShowsTheTimeHeld()
+{
+    const char* name = "hold line: the hours held ride their own line, only when a clock is known";
+    ReadoutInput in = Input(Route_Cage, Reason_CatsAsk);
+    const ReadoutView none = BuildReadout(in, kConfig);
+    CHECK(!none.held.Present());
+
+    in.holdKnown = true;
+    in.hoursHeld = 2.25f;
+    const ReadoutView v = BuildReadout(in, kConfig);
+    CHECK(v.visible);
+    CHECK(v.held.id == kLineHoldElapsed);
+    CHECK(v.held.hours == 2.25f);
+    // It is its own line: the reason and the second line are untouched.
+    CHECK(v.primary.id == (int)Reason_CatsAsk);
+    CHECK(!v.secondary.Present());
+
+    // Cheat answers without the core facts: the clock still shows.
+    ReadoutInput cheat = Input(Route_Cage, Reason_CheatWaiting);
+    cheat.haveCore = false;
+    cheat.holdKnown = true;
+    cheat.hoursHeld = 0.01f;
+    CHECK(BuildReadout(cheat, kConfig).held.id == kLineHoldElapsed);
+
+    // A hidden card shows nothing, the clock included.
+    ReadoutInput hidden = Input(Route_Cage, Reason_Dead);
+    hidden.holdKnown = true;
+    CHECK(!BuildReadout(hidden, kConfig).held.Present());
+
+    // A member's or a helper's card only counts their days.
+    ReadoutInput member = Input(Route_FreeWorld, Reason_None);
+    member.tempMember = true;
+    member.holdKnown = true;
+    CHECK(!BuildReadout(member, kConfig).held.Present());
+}
+
 void AHelperShowsTheDaysLeft()
 {
     const char* name = "helper: one good line with the days left, nothing else on the card";
@@ -566,6 +602,7 @@ void RunReadoutModelTests()
     TheDuelRecordNeverRidesAMembersCard();
     TheDuelRecordCarriesTheNextWinsChance();
     AHelperShowsTheDaysLeft();
+    AHeldPrisonerShowsTheTimeHeld();
     QuestionsThatAreNotAboutAPersonHideTheCard();
     EachEntryRouteHasItsName();
     ARollThePeekCouldNotMakeShowsTheOdds();

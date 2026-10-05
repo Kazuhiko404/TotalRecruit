@@ -94,6 +94,7 @@
     <ClCompile Include="insistence_rules_tests.cpp" />
     <ClCompile Include="healing_ledger_tests.cpp" />
     <ClCompile Include="duel_narration_rules_tests.cpp" />
+    <ClCompile Include="hold_duration_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="..\..\src\insistence_rules.cpp" />
     <ClCompile Include="..\..\src\healing_ledger.cpp" />
     <ClCompile Include="..\..\src\duel_narration_rules.cpp" />
+    <ClCompile Include="..\..\src\hold_duration_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

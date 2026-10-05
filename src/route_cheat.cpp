@@ -42,6 +42,11 @@ bool HoldClockCountsAnyCage(const Config& config)
     return config.preset == Preset_Cheat && config.cheatNeedsCage && config.cheatAnyCage;
 }
 
+bool HoldClockCounts(bool inMyCage, bool inAnyCage, const Config& config)
+{
+    return inMyCage || (inAnyCage && HoldClockCountsAnyCage(config));
+}
+
 // R1.1 / R1.2 -- Cheat keeps the gesture and drops the price.
 //
 // It used to return here for anyone, anywhere, which left nothing of the ritual:

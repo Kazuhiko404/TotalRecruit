@@ -104,13 +104,20 @@ struct ReadoutInput
     bool duelJoinKnown;
     bool duelJoinSure;
     int duelJoinChance;
+    // How long they have been held, in game hours, set by the caller only when a hold
+    // clock is running for them and they are in a cage the clock counts
+    // (route_decisions.h HoldClockCounts). It rides its own line under the header
+    // ("Encerrado: 2 h 15 min"), in every preset.
+    bool holdKnown;
+    float hoursHeld;
 
     ReadoutInput()
         : route(Route_FreeWorld), haveCore(true), core(), verdict(),
           mercyPending(false), rollKeyed(false),
           tempMember(false), tempDaysLeft(0), helper(false), helperDaysLeft(0),
           duelRecordKnown(false), duelWins(0), duelLosses(0), duelDraws(0),
-          duelJoinKnown(false), duelJoinSure(false), duelJoinChance(0)
+          duelJoinKnown(false), duelJoinSure(false), duelJoinChance(0),
+          holdKnown(false), hoursHeld(0.0f)
     {
     }
 };
@@ -148,13 +155,16 @@ struct ReadoutView
     ReadoutLineView primary;
     // The easy wait, while it is still running next to some other way in.
     ReadoutLineView secondary;
+    // How long the prisoner has been held (kLineHoldElapsed), right under the header;
+    // absent when no hold clock is known for them.
+    ReadoutLineView held;
 
     ReadoutView()
         : visible(false), route(ReadoutRoute_Free), showStress(false), stressPct(0),
           hungerPts(0), woundsPts(0), tiredPts(0), beatenPts(0), showChance(false),
           chancePct(0), caredForPct(0),
           showDefeats(false), defeats(0), defeatsNeeded(0), showFood(false),
-          foodPct(0), foodNeededPct(0), primary(), secondary()
+          foodPct(0), foodNeededPct(0), primary(), secondary(), held()
     {
     }
 };

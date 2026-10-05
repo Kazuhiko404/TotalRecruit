@@ -46,10 +46,14 @@ const int kLineDuelRecordChance = Reason_Count + 8;
 const int kLineDuelRecordDrawsChance = Reason_Count + 9;
 const int kLineDuelRecordSure = Reason_Count + 10;
 const int kLineDuelRecordDrawsSure = Reason_Count + 11;
+// The id of "Encerrado: {time}": how long a prisoner has been held in a cage the hold
+// clock counts (prisoner-hold-time). The hours travel in the line's `hours`, written
+// by hold_duration_rules.h.
+const int kLineHoldElapsed = Reason_Count + 12;
 
 int ReadoutLineCount();
 // messages.json path ("readout.line.cats.ask") and the built-in text used when the
-// file has no entry. Placeholders: {cats} {purse} {hours} {food} {need} {chance}. Empty text
+// file has no entry. Placeholders: {cats} {purse} {hours} {time} {food} {need} {chance}. Empty text
 // means the card is not shown for that reason at all.
 const char* ReadoutLineMessageKey(int id);
 const char* ReadoutLineDefaultText(int id);

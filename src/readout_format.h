@@ -31,7 +31,8 @@ std::string FormatCats(int cats);
 // (rounded up, never "60min"), "0min" for nothing left.
 std::string FormatHoursLeft(float hours);
 
-// Replaces {cats} {purse} {hours} {food} {need} {chance} in a template; anything else is
-// left as written.
+// Replaces {cats} {purse} {hours} {food} {need} {chance} in a template, and {time}: the
+// same `hours` written as time already held (hold_duration_rules.h, rounded down,
+// "2 h 15 min"). Anything else is left as written.
 std::string FillLine(const std::string& text, const LineArgs& args);
 } // namespace totalrecruit

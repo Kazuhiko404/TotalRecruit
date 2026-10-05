@@ -38,6 +38,13 @@ float HoursHeld(Character* character);
 // rather than "0 hours".
 bool PeekHoursHeld(Character* character, float* out);
 
+// The readout card's look (prisoner-hold-time): PeekHoursHeld, but only while they
+// sit in a cage the clock counts right now (route_decisions.h HoldClockCounts: the
+// player's cage, or in Cheat with cheatAnyCage any cage, shackles or kidnap). A clock
+// the sweep has not dropped yet for someone already out reads as false. Never starts
+// a clock, never mints an id.
+bool PeekCountedHoursHeld(Character* character, float* out);
+
 // The save row (saved_ints.h): the hold start of the character carrying
 // `persistedId`, in tenths of a game hour, 0 when not held; and putting it back
 // from a loading save state. Thread-safe (the serialise hook).

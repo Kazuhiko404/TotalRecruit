@@ -68,6 +68,19 @@ bool PeekHoursHeld(Character* character, float* out)
     return true;
 }
 
+bool PeekCountedHoursHeld(Character* character, float* out)
+{
+    const Config& config = GetConfig();
+    const bool mine = IsInPlayerCage(character);
+    bool any = false;
+    if (!mine && HoldClockCountsAnyCage(config))
+    {
+        bool inPrison = false;
+        any = SafeInPrison(character, &inPrison) && inPrison;
+    }
+    return HoldClockCounts(mine, any, config) && PeekHoursHeld(character, out);
+}
+
 bool NoteCageState(Character* character)
 {
     const bool caged = IsInPlayerCage(character);

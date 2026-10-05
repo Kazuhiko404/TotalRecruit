@@ -66,3 +66,4 @@ void RunCaredForRulesTests();
 void RunInsistenceRulesTests();
 void RunHealingLedgerTests();
 void RunDuelNarrationRulesTests();
+void RunHoldDurationRulesTests();

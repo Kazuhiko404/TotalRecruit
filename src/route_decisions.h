@@ -51,6 +51,11 @@ bool CheatCageSatisfied(bool inMyCage, bool inAnyCage, const Config& config);
 // any cage, not only the player's: Cheat, with the cage required and cheatAnyCage on.
 bool HoldClockCountsAnyCage(const Config& config);
 
+// route_cheat (prisoner-hold-time): whether this cage is one the hold clock counts:
+// the player's own in every preset, or any cage, shackles or kidnap where
+// HoldClockCountsAnyCage. The readout card only shows the time held for such a cage.
+bool HoldClockCounts(bool inMyCage, bool inAnyCage, const Config& config);
+
 // route_rescue
 Verdict DecideUnconscious(const CoreFacts& core, const Config& config);
 Verdict DecideDying(const CoreFacts& core);

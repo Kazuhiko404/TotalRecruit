@@ -206,6 +206,14 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
     v.visible = true;
     v.route = NameRoute(in);
 
+    // How long they have been held (prisoner-hold-time): read by the caller from the
+    // hold clock, only for a cage the clock counts.
+    if (in.holdKnown)
+    {
+        v.held.id = kLineHoldElapsed;
+        v.held.hours = in.hoursHeld;
+    }
+
     const bool person = in.haveCore && !in.core.animal;
     const bool stressRoute = in.route == Route_Cage || in.route == Route_FieldYield;
 

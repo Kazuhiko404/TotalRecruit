@@ -91,6 +91,7 @@ struct Card
     MyGUI::TextBox* defeatsValue;
     MyGUI::TextBox* primary;
     MyGUI::TextBox* secondary;
+    MyGUI::TextBox* held;
 };
 
 Card g_card = { 0 };
@@ -174,6 +175,7 @@ bool BuildUnguarded()
     c.defeatsValue = MakeLabel(c.root, kBodyFont, kText);
     c.primary = MakeLabel(c.root, kBodyFont, kText);
     c.secondary = MakeLabel(c.root, kSmallFont, kMuted);
+    c.held = MakeLabel(c.root, kSmallFont, kMuted);
 
     // The right-aligned values.
     MyGUI::TextBox* rights[5] = { c.stressValue, c.chanceValue, c.foodValue, c.defeatsValue,
@@ -204,7 +206,8 @@ void HideAll()
     for (int i = 0; i < kMaxPips; ++i) Hide(c.pip[i]);
     MyGUI::TextBox* texts[] = {
         c.name, c.tag, c.stressLabel, c.stressValue, c.chanceLabel, c.chanceValue,
-        c.caredLabel, c.caredValue, c.foodLabel, c.foodValue, c.defeatsLabel, c.defeatsValue, c.primary, c.secondary
+        c.caredLabel, c.caredValue, c.foodLabel, c.foodValue, c.defeatsLabel, c.defeatsValue, c.primary, c.secondary,
+        c.held
     };
     for (size_t i = 0; i < sizeof(texts) / sizeof(texts[0]); ++i) Hide(texts[i]);
 }
@@ -257,6 +260,15 @@ void LayoutUnguarded(const ReadoutView& view, const ReadoutTexts& texts, bool co
     y += kHeadH + 2;
     Place(c.headLine, x, y, inner, 1);
     y += 1 + gap;
+
+    // How long the prisoner has been held (prisoner-hold-time), right under the
+    // header, compact too (ui-mockup/js/readout.js .held).
+    if (!texts.held.empty())
+    {
+        SetText(c.held, texts.held);
+        Place(c.held, x, y, inner, kAltH);
+        y += kAltH + gap;
+    }
 
     int bx = 0, bw = 0, by = 0;
 
@@ -532,7 +544,7 @@ std::string LayoutKey(const ReadoutView& v, const ReadoutTexts& t, bool compact)
         &t.woundsLegend, &t.tiredLegend, &t.beatenLegend, &t.chanceLabel, &t.chanceValue,
         &t.caredForLabel, &t.caredForValue,
         &t.defeatsLabel, &t.defeatsValue, &t.foodLabel, &t.foodValue,
-        &t.primary, &t.secondary
+        &t.primary, &t.secondary, &t.held
     };
     for (size_t i = 0; i < sizeof(parts) / sizeof(parts[0]); ++i)
     {

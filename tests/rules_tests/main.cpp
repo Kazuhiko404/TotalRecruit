@@ -93,6 +93,7 @@ const Suite kSuites[] = {
     { "insistence_rules", RunInsistenceRulesTests },
     { "healing_ledger", RunHealingLedgerTests },
     { "duel_narration_rules", RunDuelNarrationRulesTests },
+    { "hold_duration_rules", RunHoldDurationRulesTests },
 };
 } // namespace
 

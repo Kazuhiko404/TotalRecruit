@@ -149,6 +149,7 @@
     <ClCompile Include="src\healing_ledger.cpp" />
     <ClCompile Include="src\animal_healing.cpp" />
     <ClCompile Include="src\duel_narration_rules.cpp" />
+    <ClCompile Include="src\hold_duration_rules.cpp" />
     <ClCompile Include="src\feeding_ledger.cpp" />
     <ClCompile Include="src\saved_ints.cpp" />
     <ClCompile Include="src\approach_rules.cpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="src\healing_ledger.h" />
     <ClInclude Include="src\animal_healing.h" />
     <ClInclude Include="src\duel_narration_rules.h" />
+    <ClInclude Include="src\hold_duration_rules.h" />
     <ClInclude Include="src\menu_button_release.h" />
     <ClInclude Include="src\menu_obstacles.h" />
     <ClInclude Include="src\button_style.h" />
