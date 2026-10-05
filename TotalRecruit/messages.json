@@ -629,6 +629,18 @@
         "esta malherido: ninguna comida arregla eso",
         "curalo: un animal herido no confia en nadie"
       ]
+    },
+    "yield": {
+      "joins": [
+        "lo venciste demasiadas veces: agacha la cabeza y te sigue",
+        "ya no quiere pelear contigo: baja las orejas y camina a tu lado",
+        "perdio contra ti las veces suficientes: ahora te sigue"
+      ],
+      "notYet": [
+        "todavia no se somete: vencelo otra vez, o dale de comer",
+        "aun le queda pelea: derrotalo de nuevo o domalo con comida",
+        "te grune todavia: otra derrota, o comida de tu mano"
+      ]
     }
   },
   "_unicos": [
@@ -1199,6 +1211,10 @@
           "ready": "Comio de tu mano: te sigue",
           "hungry": "Hambre {food}% / necesita {need}%",
           "notFed": "No comio de tu mano: dale comida"
+        },
+        "yield": {
+          "joins": "Se somete y te sigue",
+          "notYet": "Aun no se somete: vencelo o dale comida"
         }
       },
       "rejectCooldown": "No quiere saber nada de ti",

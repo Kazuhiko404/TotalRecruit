@@ -54,6 +54,16 @@ Verdict DecideGrudgeRefusal(const CoreFacts& core);
 Verdict DecideFieldYield(const CoreFacts& core, const YieldExtra& extra, const Config& config);
 Verdict DecideSurrendered(const CoreFacts& core);
 
+// route_animal_yield (animal-duel-submission D3): a free animal beaten defeatsToBreak
+// times in the open. The same field-yield roll a person gets, with temperament Normal
+// (an animal has none here) and no loyalty penalty (it serves no organisation), on
+// the same daily seed. A failed roll is not a closed door: the taming route still
+// answers (`animal`), so a fed animal past the bar joins and an unfed one keeps the
+// feed button and the stomach bar. Another faction's prisoner is refused first; the
+// insistence lockout never applies to an animal.
+Verdict DecideAnimalFieldYield(const CoreFacts& core, const YieldExtra& yield,
+                               const AnimalExtra& animal, const Config& config);
+
 // route_animal: an animal is tamed, not negotiated with -- loose or caged
 // (DecideCage hands a caged one straight here). It joins only when the player has
 // fed it (`extra.fedByPlayer`) and its stomach reached the bar. `core.inMyCage`

@@ -119,6 +119,7 @@
     <ClCompile Include="src\route_cats.cpp" />
     <ClCompile Include="src\route_animal.cpp" />
     <ClCompile Include="src\route_yield.cpp" />
+    <ClCompile Include="src\route_animal_yield.cpp" />
     <ClCompile Include="src\route_rescue.cpp" />
     <ClCompile Include="src\route_cheat.cpp" />
     <ClCompile Include="src\route_gate.cpp" />

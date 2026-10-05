@@ -62,6 +62,10 @@ struct CoreFacts
     // The composed "beaten and yielding" reading (surrender.cpp), already false
     // when the route is switched off or they are an animal.
     bool surrendered;
+    // An animal that is someone else's (IsOwnedAnimal: outside the player's cage and
+    // belonging to a real faction). Always false for a person. A free animal can be
+    // beaten into yielding (animal-duel-submission D3); an owned one only caged.
+    bool animalOwned;
 
     CoreFacts()
         : traitsReadable(true), animal(false), unique(false),
@@ -71,7 +75,7 @@ struct CoreFacts
           wounded(false), hunger(3.0f), health(1.0f), bloodFraction(1.0f),
           worstDamage(0.0f), restedState(1.0f), beatingStress(0.0f), grudge(false),
           rememberedAsSaviour(false), defeats(0), inMyCage(false),
-          surrendered(false)
+          surrendered(false), animalOwned(false)
     {
     }
 };
@@ -197,6 +201,14 @@ struct YieldExtra
 {
     AccessFact access;
     RollFact roll;
+};
+
+// A free animal on the field-yield route (animal-duel-submission D3): the yield's own
+// access and roll, and the taming facts the route falls back to when the roll fails.
+struct AnimalYieldExtra
+{
+    YieldExtra yield;
+    AnimalExtra animal;
 };
 
 struct FreeExtra

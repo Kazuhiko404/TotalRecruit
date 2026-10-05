@@ -111,6 +111,12 @@ enum ReasonKey
     Reason_AllyCruel,
     Reason_AllyGreedy,
 
+    // A free animal beaten defeatsToBreak times in the open (animal-duel-submission
+    // D3, route_animal_yield.cpp): the field-yield roll passed, or it did not and food
+    // is still the other way in.
+    Reason_AnimalYieldJoins,
+    Reason_AnimalYieldNotYet,
+
     // Not a reason: the number of them, for tables indexed by one.
     Reason_Count
 };

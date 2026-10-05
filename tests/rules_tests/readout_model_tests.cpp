@@ -259,6 +259,40 @@ void DefeatsAreShownWhereTheyMatter()
     CHECK(!BuildReadout(beast, kConfig).showDefeats);
 }
 
+// animal-duel-submission D3: a free animal in the open can be beaten into yielding,
+// so its card counts the defeats too; an owned or caged one never.
+void AFreeAnimalShowsItsDefeatsInTheOpen()
+{
+    const char* name = "defeats: a free animal in the open, beaten or on the field-yield route";
+    ReadoutInput beast = Input(Route_FreeWorld, Reason_TameHungry);
+    beast.core.animal = true;
+    CHECK(!BuildReadout(beast, kConfig).showDefeats);   // never beaten: nothing to count
+    beast.core.defeats = 1;
+    ReadoutView v = BuildReadout(beast, kConfig);
+    CHECK(v.showDefeats);
+    CHECK(v.defeats == 1);
+    CHECK(v.defeatsNeeded == 2);
+    CHECK(!v.showStress);                                 // the animal card keeps stress hidden
+
+    ReadoutInput yielding = Unrolled(Route_FieldYield, Reason_AnimalYieldNotYet, 38);
+    yielding.core.animal = true;
+    yielding.core.defeats = 2;
+    v = BuildReadout(yielding, kConfig);
+    CHECK(v.showDefeats);
+    CHECK(v.primary.id == kLineRollOpen);                 // the peek states the odds
+    CHECK(v.primary.chance == 38);
+
+    ReadoutInput owned = beast;
+    owned.core.animalOwned = true;
+    CHECK(!BuildReadout(owned, kConfig).showDefeats);
+    ReadoutInput caged = beast;
+    caged.core.inMyCage = true;
+    CHECK(!BuildReadout(caged, kConfig).showDefeats);
+    Config off;
+    off.surrenderEnabled = false;
+    CHECK(!BuildReadout(beast, off).showDefeats);
+}
+
 void AnAnimalShowsItsStomach()
 {
     const char* name = "animal: the stomach bar and the line carry fullness and need, in percent";
@@ -527,6 +561,7 @@ void StressTermsMakeStressFromState()
 
 void RunReadoutModelTests()
 {
+    AFreeAnimalShowsItsDefeatsInTheOpen();
     AChallengeableAllyShowsTheDuelRecord();
     TheDuelRecordNeverRidesAMembersCard();
     TheDuelRecordCarriesTheNextWinsChance();

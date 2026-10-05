@@ -105,7 +105,18 @@ ReadoutLineView LineFor(int id, const ReadoutInput& in)
 // say yes. Other rolled routes fall through to a real way in (a price) instead.
 bool IsLostRoll(ReasonKey key)
 {
-    return key == Reason_FieldYieldNotYet || key == Reason_AllyMaybe;
+    return key == Reason_FieldYieldNotYet || key == Reason_AllyMaybe ||
+           key == Reason_AnimalYieldNotYet;
+}
+
+// A free animal in the open can be beaten into yielding (animal-duel-submission D3),
+// so its defeats count like a person's there; someone else's animal, or one in the
+// player's cage, never yields in the field and shows none.
+bool AnimalDefeatsMatter(const ReadoutInput& in, const Config& config)
+{
+    return in.haveCore && in.core.animal && !in.core.animalOwned && !in.core.inMyCage &&
+           in.route != Route_Cage && config.surrenderEnabled &&
+           (in.route == Route_FieldYield || in.core.defeats > 0);
 }
 
 // The main line, told truthfully for what the card could and could not know.
@@ -221,8 +232,8 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
         v.caredForPct = in.verdict.chanceInputs.caredFor > 0 ? in.verdict.chanceInputs.caredFor : 0;
     }
 
-    if (person && config.submission.countDefeats &&
-        (stressRoute || in.core.defeats > 0))
+    const bool personDefeats = person && (stressRoute || in.core.defeats > 0);
+    if (config.submission.countDefeats && (personDefeats || AnimalDefeatsMatter(in, config)))
     {
         v.showDefeats = true;
         v.defeats = in.core.defeats;

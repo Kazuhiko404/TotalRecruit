@@ -72,6 +72,8 @@ const Row kRows[] = {
     { Reason_AllyLeaderTooWeak,   "reason.ally.leaderTooWeak",         "eres demasiado d\xc3\xa9" "bil para que te acompa\xc3\xb1" "e", RefusalTone_TooWeak },
     { Reason_AllyCruel,           "reason.ally.cruel",                 "no camina al lado de nadie: su crueldad no se pone a tus \xc3\xb3rdenes", RefusalTone_Default },
     { Reason_AllyGreedy,          "reason.ally.greedy",                "vale m\xc3\xa1s de lo que podr\xc3\xad" "as pagarle nunca", RefusalTone_Default },
+    { Reason_AnimalYieldJoins,    "animal.yield.joins",                "lo venciste demasiadas veces: agacha la cabeza y te sigue", RefusalTone_Default },
+    { Reason_AnimalYieldNotYet,   "animal.yield.notYet",               "todav\xc3\xad" "a no se somete: vencelo otra vez, o dale de comer", RefusalTone_Default },
 };
 
 const int kRowCount = (int)(sizeof(kRows) / sizeof(kRows[0]));

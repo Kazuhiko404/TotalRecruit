@@ -35,6 +35,9 @@ enum Route
 struct RouteFacts
 {
     bool animal;
+    // Someone else's animal (CoreFacts::animalOwned): the cage is its only way in, so
+    // it never yields in the field. A free animal does (animal-duel-submission D3).
+    bool animalOwned;
     bool surrenderEnabled;
     bool countDefeats;
     int defeats;
@@ -54,7 +57,7 @@ struct RouteFacts
     bool surrendered;
 
     RouteFacts()
-        : animal(false), surrenderEnabled(true), countDefeats(true),
+        : animal(false), animalOwned(false), surrenderEnabled(true), countDefeats(true),
           defeats(0), defeatsToBreak(2), unconscious(false), dying(false),
           grudge(false), grudgeUnforgivable(false), inMyCage(false),
           rescueEnabled(true), remembersSaviour(false),

@@ -168,6 +168,13 @@ Verdict Run(Character* character, GatherMode mode, EvaluationDetail* detail)
     switch (route)
     {
     case Route_FieldYield:
+        if (core.animal)
+        {
+            // A free animal beaten into yielding (animal-duel-submission D3).
+            const AnimalYieldExtra extra = GatherAnimalYieldExtra(character, core, mode);
+            return Finish(DecideAnimalFieldYield(core, extra.yield, extra.animal, config),
+                          character, NULL, mode);
+        }
         return Finish(DecideFieldYield(core, GatherYieldExtra(character, mode), config),
                       character, NULL, mode);
 

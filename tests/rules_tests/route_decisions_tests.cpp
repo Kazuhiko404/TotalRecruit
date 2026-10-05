@@ -1629,8 +1629,98 @@ void RouteFactsAreBuiltFromTheCoreAndTheConfig()
 }
 } // namespace
 
+// ------------------------------------------------- animal field yield (D3)
+
+// A free animal beaten twice: Honorable and Military on paper, both ignored.
+CoreFacts BeatenAnimal()
+{
+    CoreFacts core = Core();
+    core.animal = true;
+    core.defeats = 2;
+    core.temperament = Temperament_Honorable;
+    core.archetype = Archetype_Military;
+    return core;
+}
+
+void AnAnimalYieldsAtAPlainBeatingChance()
+{
+    const char* name = "animal yield: the field-yield chance of a Normal, no loyalty penalty";
+    // The same 79 a Normal bandit gets: 45 + 24 + 0 + 10.
+    YieldExtra yield;
+    yield.roll = KeyRolling(true, 79);
+    const Verdict v = DecideAnimalFieldYield(BeatenAnimal(), yield, Unfed(), kConfig);
+    CHECK(v.rolled);
+    CHECK(v.chancePercent == 79);
+    CHECK(v.chanceInputs.personality == Temperament_Normal);
+    CHECK(v.chanceInputs.situation == kConfig.submission.fieldYieldBonus);
+    CHECK(v.willJoin);
+    CHECK(v.isAnimal);
+    CHECK(v.currency == Currency_Submission);
+    CHECK(v.reasonKey == Reason_AnimalYieldJoins);
+}
+
+void AnAnimalThatDoesNotYieldCanStillBeFed()
+{
+    const char* name = "animal yield: a failed roll keeps food as the other way in";
+    CoreFacts core = BeatenAnimal();
+    core.hunger = 1.5f;               // half a stomach: more stress, a higher chance
+    const int chance = DecideAnimalFieldYield(core, YieldExtra(), Unfed(), kConfig).chancePercent;
+    CHECK(chance > 79 && chance < 100);
+    YieldExtra yield;
+    yield.roll = KeyRolling(false, chance);
+    const Verdict v = DecideAnimalFieldYield(core, yield, Unfed(), kConfig);
+    CHECK(v.rolled);
+    CHECK(v.chancePercent == chance);
+    CHECK(!v.willJoin);
+    CHECK(v.isAnimal);
+    CHECK(v.reasonKey == Reason_AnimalYieldNotYet);
+    // The feed button needs care with an appetite; the stomach bar rides along.
+    CHECK(v.currency == Currency_Care);
+    CHECK(v.wantsFood);
+    CHECK(v.tameNeeded > 0.0f);
+    CHECK(v.tameFullness > 0.499f && v.tameFullness < 0.501f);
+}
+
+void ATamedAnimalJoinsEvenWhenTheRollFails()
+{
+    const char* name = "animal yield: fed past the bar it follows you whatever the roll said";
+    YieldExtra yield;
+    yield.roll = KeyRolling(false, 79);
+    const Verdict v = DecideAnimalFieldYield(BeatenAnimal(), yield, Beast(), kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.reasonKey == Reason_TameReady);
+}
+
+void AnAnimalInAnotherCageIsNotYoursToBeat()
+{
+    const char* name = "animal yield: another faction's prisoner is not asked, beaten or not";
+    YieldExtra yield;
+    yield.roll = KeyRolling(true, 79);
+    yield.access.inAnyCage = true;
+    const Verdict v = DecideAnimalFieldYield(BeatenAnimal(), yield, Beast(), kConfig);
+    CHECK(!v.willJoin);
+    CHECK(!v.rolled);
+    CHECK(v.reasonKey == Reason_InOthersCage);
+}
+
+void AnAnimalNeverHearsTheInsistenceLockout()
+{
+    const char* name = "animal yield: a stale pestering lockout never stops an animal";
+    YieldExtra yield;
+    yield.roll = KeyRolling(true, 79);
+    yield.access.ignoringPlayer = true;
+    const Verdict v = DecideAnimalFieldYield(BeatenAnimal(), yield, Unfed(), kConfig);
+    CHECK(v.rolled);
+    CHECK(v.reasonKey == Reason_AnimalYieldJoins);
+}
+
 void RunRouteDecisionsTests()
 {
+    AnAnimalYieldsAtAPlainBeatingChance();
+    AnAnimalThatDoesNotYieldCanStillBeFed();
+    ATamedAnimalJoinsEvenWhenTheRollFails();
+    AnAnimalInAnotherCageIsNotYoursToBeat();
+    AnAnimalNeverHearsTheInsistenceLockout();
     TheTamingBarTravelsOnTheVerdict();
     AnimalsSwitchedOffStopsAnAnimal();
     UnreadableTraitsFallBackToAPlainRecruit();

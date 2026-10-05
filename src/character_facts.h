@@ -58,6 +58,10 @@ enum GatherMode
 CheatFacts GatherCheatFacts(Character* character, GatherMode mode = Gather_Decide);
 RescueExtra GatherRescueExtra(Character* character, GatherMode mode = Gather_Decide);
 YieldExtra GatherYieldExtra(Character* character, GatherMode mode = Gather_Decide);
+// A free animal on the field-yield route (D3): the yield's access (no insistence for an
+// animal) and roll, plus the taming facts (GatherAnimal) for the fallback.
+AnimalYieldExtra GatherAnimalYieldExtra(Character* character, const CoreFacts& core,
+                                        GatherMode mode = Gather_Decide);
 FreeExtra GatherFreeExtra(Character* character, const CoreFacts& core,
                           GatherMode mode = Gather_Decide);
 CageExtra GatherCageExtra(Character* character, const CoreFacts& core,

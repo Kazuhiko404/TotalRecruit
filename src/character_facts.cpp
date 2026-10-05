@@ -561,6 +561,9 @@ void GatherCoreFacts(Character* character, CoreFacts* out)
     f.defeats = DefeatCount(character);
     f.inMyCage = IsInPlayerCage(character);
     f.surrendered = config.surrenderEnabled && !animal && IsSurrendered(character);
+    // Only an animal has an owner to ask about, and only outside the player's cage
+    // (IsOwnedAnimal): it decides whether a beating can make it yield (D3).
+    f.animalOwned = animal && !f.inMyCage && BelongsToSomeone(character);
 
     *out = f;
 }
@@ -632,13 +635,33 @@ static AccessFact GatherAccess(Character* character, bool animal)
 YieldExtra GatherYieldExtra(Character* character, GatherMode mode)
 {
     YieldExtra extra;
-    // Animals never reach field-yield (route_rules.cpp).
+    // A person: an animal takes GatherAnimalYieldExtra instead.
     extra.access = GatherAccess(character, false);
     // No roll to seed when the access question already answered.
     if (mode == Gather_Decide && !extra.access.inAnyCage && !extra.access.ignoringPlayer)
     {
         extra.roll = MintRollKey(character);
     }
+    return extra;
+}
+
+AnimalYieldExtra GatherAnimalYieldExtra(Character* character, const CoreFacts& core,
+                                        GatherMode mode)
+{
+    AnimalYieldExtra extra;
+    // An animal has no insistence (insistence_rules.h): only another cage is read.
+    extra.yield.access = GatherAccess(character, true);
+    if (extra.yield.access.inAnyCage)
+    {
+        return extra;
+    }
+    // The same mint-on-click, no-key-on-peek rule as a person's field yield: the card
+    // shows the odds, the click draws the day's roll.
+    if (mode == Gather_Decide)
+    {
+        extra.yield.roll = MintRollKey(character);
+    }
+    extra.animal = GatherAnimal(character, core);
     return extra;
 }
 

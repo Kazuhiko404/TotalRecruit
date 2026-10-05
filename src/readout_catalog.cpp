@@ -67,6 +67,8 @@ const Row kRows[] = {
     { "readout.line.ally.leaderTooWeak",     "Aliado: eres muy debil para el" },
     { "readout.line.ally.cruel",             "Cruel: no camina a tu lado" },
     { "readout.line.ally.greedy",            "Ambicioso: no hay precio para el" },
+    { "readout.line.animal.yield.joins",     "Se somete y te sigue" },
+    { "readout.line.animal.yield.notYet",    "Aun no se somete: vencelo o dale comida" },
     { "readout.line.rollOpen",               "{chance}%: puede unirse si le hablas" },    // kLineRollOpen
     { "readout.line.fieldYield.beatAgain",   "Aun no cede: vencelo otra vez" },          // kLineFieldYieldBeatAgain
     { "readout.line.ally.paidJoin",          "Aliado: {cats} cats con descuento" },      // kLineAllyPaidJoin

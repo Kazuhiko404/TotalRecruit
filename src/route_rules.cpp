@@ -8,6 +8,7 @@ RouteFacts MakeRouteFacts(const CoreFacts& core, const Config& config)
 {
     RouteFacts f;
     f.animal             = core.animal;
+    f.animalOwned        = core.animal && core.animalOwned;
     f.surrenderEnabled   = config.surrenderEnabled;
     f.countDefeats       = config.submission.countDefeats;
     f.defeats            = core.defeats;
@@ -37,8 +38,11 @@ Route ChooseEntryRoute(const RouteFacts& f)
     // Field-yield is the route for a beating in the open, so it applies outside
     // the cage only. Inside, the defeats still count -- they feed the chance --
     // but a caged NPC keeps every cage route (easy wait, healthy, care, cats);
-    // taking this one first returned before any of them could run.
-    if (!f.inMyCage && !f.animal && f.surrenderEnabled && f.countDefeats &&
+    // taking this one first returned before any of them could run. A free animal
+    // takes it too, the same 2/2 (animal-duel-submission D3); someone else's
+    // animal never does: the cage is its only way in.
+    const bool mayYield = !f.animal || !f.animalOwned;
+    if (!f.inMyCage && mayYield && f.surrenderEnabled && f.countDefeats &&
         f.defeats >= f.defeatsToBreak)
     {
         return Route_FieldYield;

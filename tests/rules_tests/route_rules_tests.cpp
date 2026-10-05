@@ -84,12 +84,53 @@ void SurrenderedBeatsTheTail()
 
 void AnimalsNeverSurrender()
 {
-    const char* name = "route: animals neither yield in the field nor surrender";
+    const char* name = "route: animals never surrender";
     RouteFacts f;
     f.animal = true;
-    f.defeats = 5;
     f.surrendered = true;
     CHECK(ChooseEntryRoute(f) == Route_FreeWorld);
+}
+
+// animal-duel-submission D3: the same 2/2 a person gets, for a free animal in the
+// open. An owned one keeps the cage as its only way in; caged, the cage route.
+void AFreeAnimalYieldsInTheFieldAfterTheBreak()
+{
+    const char* name = "route: a free animal beaten defeatsToBreak times in the open yields in the field";
+    RouteFacts f;
+    f.animal = true;
+    f.defeats = 2;
+    CHECK(ChooseEntryRoute(f) == Route_FieldYield);
+    f.surrendered = true;
+    CHECK(ChooseEntryRoute(f) == Route_FieldYield);
+    f.defeats = 1;
+    CHECK(ChooseEntryRoute(f) == Route_FreeWorld);
+
+    RouteFacts owned;
+    owned.animal = true;
+    owned.animalOwned = true;
+    owned.defeats = 5;
+    CHECK(ChooseEntryRoute(owned) == Route_FreeWorld);
+
+    RouteFacts caged;
+    caged.animal = true;
+    caged.defeats = 5;
+    caged.inMyCage = true;
+    CHECK(ChooseEntryRoute(caged) == Route_Cage);
+
+    RouteFacts off;
+    off.animal = true;
+    off.defeats = 5;
+    off.surrenderEnabled = false;
+    CHECK(ChooseEntryRoute(off) == Route_FreeWorld);
+    off.surrenderEnabled = true;
+    off.countDefeats = false;
+    CHECK(ChooseEntryRoute(off) == Route_FreeWorld);
+
+    // Ownership is an animal fact: a person is never held back by it.
+    RouteFacts person;
+    person.defeats = 2;
+    person.animalOwned = true;
+    CHECK(ChooseEntryRoute(person) == Route_FieldYield);
 }
 
 // cage-animals-submission T2: an animal is tamed with the player's food and
@@ -301,6 +342,7 @@ void RunRouteRulesTests()
     ACaredForPrisonerTakesTheCageRoute();
     SurrenderedBeatsTheTail();
     AnimalsNeverSurrender();
+    AFreeAnimalYieldsInTheFieldAfterTheBreak();
     AnimalsSkipRescue();
     GrudgeRefusesOutsideTheCageOnly();
     ForgivingGrudgeIsNotARefusal();
