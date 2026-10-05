@@ -25,7 +25,7 @@ La insistencia existe para que preguntar lo mismo a quien ya dijo que no tenga u
 
 ## Checklist
 - [x] A1 insistencia solo por rechazos reales; animales sin insistencia: `insistence_rules` (`ReasonCountsAsInsistence`, `CountsAsInsistence`, tabla en el header: 12 razones cuentan, el resto no, una razon nueva no cuenta); `AttemptRecruit` registra despues de `Evaluate` y solo si cuenta; `DecideAccessRefusal` ignora el bloqueo de un animal; `GatherAccess(character, animal)` no lo lee para animales. Ruta: escritor delegado. Evidencia: RED = C1083 `insistence_rules.h`, luego 1 check (animal con bloqueo guardado); GREEN = 51/51, 0/72539; DLL compila. Commit `7767860`.
-- [x] A2 Cheat: un animal alimentado se une al momento: `CheatFacts::animal/belongsToSomeone/fedByPlayer` (`GatherCheatFacts`, mismo `PlayerMeals` que `GatherAnimal`); `DecideCheat` une al animal sin dueno alimentado con `Reason_TameReady` (con o sin jaula, sin espera); sin comer y fuera de la jaula: `Reason_CheatNeedsCage` + `Currency_Care` + `wantsFood` (boton Dar comida). Sin claves nuevas en messages.json (reusa `animal.tame.ready` / `readout.line.animal.tame.ready`); sin maqueta (no cambia ningun elemento visible: la linea y el boton ya existen). Ruta: escritor delegado. Evidencia: RED = C2039 `CheatFacts::animal`, luego 9 checks; GREEN = 51/51, 0/72566; DLL compila. Commit en el registro de abajo.
+- [x] A2 Cheat: un animal alimentado se une al momento: `CheatFacts::animal/belongsToSomeone/fedByPlayer` (`GatherCheatFacts`, mismo `PlayerMeals` que `GatherAnimal`); `DecideCheat` une al animal sin dueno alimentado con `Reason_TameReady` (con o sin jaula, sin espera); sin comer y fuera de la jaula: `Reason_CheatNeedsCage` + `Currency_Care` + `wantsFood` (boton Dar comida). Sin claves nuevas en messages.json (reusa `animal.tame.ready` / `readout.line.animal.tame.ready`); sin maqueta (no cambia ningun elemento visible: la linea y el boton ya existen). Ruta: escritor delegado. Evidencia: RED = C2039 `CheatFacts::animal`, luego 9 checks; GREEN = 51/51, 0/72566; DLL compila. Commit `c15675c`.
 
 ## Criterios de aceptacion
 - Herido, inconsciente, muriendose, hambriento, esperando, en jaula ajena, sin alimentar, enfriamiento de rechazo, la propia insistencia y los si no suman intentos; un rechazo real (tirada fallida, honor, lealtad, rencor, tier) si.
@@ -40,7 +40,7 @@ La insistencia existe para que preguntar lo mismo a quien ya dijo que no tenga u
 
 ## Progreso
 - Documento creado antes de tocar el codigo.
-- A1 `7767860`, A2 hechos en `fix/animal-insistence-cheat-feed`. Sin deploy, sin push.
+- A1 `7767860`, A2 `c15675c` hechos en `fix/animal-insistence-cheat-feed`. Sin deploy, sin push.
 
 Decisiones:
 - A1: `CatsAsk` no cuenta (un precio sobre la mesa es "trae los cats", no un no). `Defiant` y `UniqueZealot` cuentan (rechazo real), aunque la jaula nunca consulta el castigo (12.7 N1). Un si nunca cuenta.
