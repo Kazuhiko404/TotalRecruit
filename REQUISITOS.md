@@ -349,6 +349,18 @@ Aceptar, Ignorar, Rechazar. **Ignorar** —no "Perdonar"— porque con R3.6 el
 jugador renuncia a algo concreto: pierde el pago que le estaban ofreciendo. El
 NPC pierde el agro y se va. **Rechazar** mantiene el agro y la pelea sigue.
 
+**R3.7b — Oferta proactiva.** *(implementado en proactive-offer; QA 12.37)*
+Despues de un gesto del jugador (duelo ganado, cura de alguien de tu grupo,
+derrotas) el NPC o el animal camina hasta vos y abre la ventana sin que tengas
+que Hablar: ACEPTAR se une, **IGNORAR** (la etiqueta de R3.7; antes PERDONAR) lo
+calma `submissionForgiveSeconds` y se aleja 80 m, **RECHAZAR** no hace nada (se
+cierra la ventana y vuelve a lo que hacia; sin borrar derrotas, sin
+enfriamiento, hostil solo si lo era antes). La tirada es la de siempre
+(`Evaluate`; el duelo usa su propia tirada de duelo). Tirada mala: un hostil deja
+de atacar `offerFailCalmSeconds` (20 s) donde esta, sin huir. Una oferta por
+gesto. Interruptores `offerOnDuelWin` / `offerOnHeal`. Los animales entran al
+evento con lineas de narrador (nunca hablan ni llevan cartel).
+
 **R3.8 — Pedir dinero y perdonarte.** *(P3)*
 Variante de la nota: en lugar de unirse o pagar, un NPC de cierto temperamento
 podría pagar **para que lo dejes ir**, y eso mejorar la relación con su facción.

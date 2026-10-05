@@ -93,14 +93,24 @@ they yield. No cage needed — the fight itself was the argument.
 **They come to you.** A beaten NPC that yields (beaten enough times, or
 running from you) walks up on its own, calm — a hostile one stops attacking for
 the walk (`submissionApproachSeconds`, 60 s) — kneels, and asks to join:
-**Aceptar** (they join), **Perdonar** (they run off and stay calm for
+**Aceptar** (they join), **Ignorar** (they run off and stay calm for
 `submissionForgiveSeconds`, 5 minutes, so you can still talk to them; then back
-to what they were) or **Rechazar** (your defeats over them are wiped, no route
-recruits them for `submissionRejectCooldownHours`, 72 game hours, saved with
-them, and they are hostile again). Closing the window with the X is no answer:
+to what they were) or **Rechazar** (nothing: the window closes and they go back
+to what they were doing, hostile again only if they were before; no defeats
+wiped, no cooldown). Closing the window with the X is no answer:
 they stay calm where they are for the same 5 minutes. One NPC at a time, once
 per beating. Calm is per character: no faction relation is changed. Turn it off
 with `submissionEventEnabled`.
+
+**They also come after a duel or a heal (proactive offer).** Win a duel
+(`offerOnDuelWin`) or have one of your characters treat someone who is not yours
+(`offerOnHeal`), and the same walk-up and window follow without pressing Hablar,
+animals included (a narrator tells it: animals never speak). The usual decision
+rolls: a good roll walks up and offers (Cheat: a duel win always does), a bad one
+makes a hostile rival stop attacking for `offerFailCalmSeconds` (20 s) where it
+stands. A Cheat animal beaten once, or a Balanced one beaten twice, walks up too.
+One offer per gesture: after Rechazar it does not come back until a new duel or
+heal. A rival out of reach (120 m) when the duel ends keeps the old behaviour.
 
 ### Allies, by level (Balanced)
 

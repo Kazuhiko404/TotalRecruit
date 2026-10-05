@@ -82,14 +82,16 @@ Nothing has a formal QA pass mark.
 | Beating stress (cage-beating-stress): each blow and each Noquear knockout adds `clamp(base x levels / resolve, 0.02, 0.25)`, saved with the character, fading over 24 game hours; the fourth stress term (card "Golpes"); cage-command knockouts are no longer defeats | `not verified` (12.32) |
 | Golpear never raises health: a part already at or below the floor gets no blow and is not touched | `not verified` (12.19 C3h) |
 | A blow's knockout credit lasts 5 s around the hit (only for a blow that landed); Noquear keeps 2 min | `not verified` (12.19 C5, C5b) |
-| Caged popup offers GOLPEAR / NOQUEAR, never IGNORAR / PERDONAR | `not verified` (12.22) |
+| Caged popup offers GOLPEAR / NOQUEAR, never IGNORAR (the submission's let-go answer is IGNORAR since proactive-offer) | `not verified` (12.22) |
 
 ### 6. Defeats, mercy and the submission event (4)
 | Feature | Status |
 |---|---|
 | Plea for life at low blood; dead and unconscious NPCs never plead | `verified in game` (R3.1, §3.3) |
 | Mercy window: ACEPTAR joins free, IGNORAR (tribute for those who can buy their life), RECHAZAR | `not verified` (12.2, 12.1 F7-F8) |
-| Submission event: a beaten NPC walks up, kneels and asks (Aceptar / Perdonar / Rechazar, saved reject cooldown) | `not verified` (12.21) |
+| Submission event: a beaten NPC walks up, kneels and asks (Aceptar / Ignorar / Rechazar; since proactive-offer Rechazar does nothing: no defeats wiped, no reject cooldown) | `not verified` (12.21, 12.37 O7-O9) |
+| Proactive offer: a won duel or a heal by the squad asks the event for an offer; the NPC or animal walks up and opens the window by itself (good roll; Cheat duel win always), a bad roll calms a hostile one in place for `offerFailCalmSeconds` (20 s); one offer per gesture; `offerOnDuelWin` / `offerOnHeal` (branch `feat/proactive-offer`, not deployed) | `needs in-game QA` (12.37) |
+| Animals in the submission event: a Cheat animal beaten once or a Balanced one beaten twice walks up; narrator lines, no head notice, Animal window | `needs in-game QA` (12.37 O6, O16) |
 | Personality decides how much a fighter takes before yielding (R3.5) | `not verified` (§3.4) |
 
 ### 7. Animals (3)
@@ -117,7 +119,7 @@ Nothing has a formal QA pass mark.
 | RETAR A DUELO for 80+ allies (Balanced) through TotalSparring's API; DUELOS head-to-head row | `play-tested informally` (12.28) |
 | Loss or draw: 24 h saved cooldown; spars and undecided bouts never count | `play-tested informally` (12.28 T9-T12) |
 | Won duel = join chance: 25 % + 20 % per earlier win, seeded roll, 24-72 h / 24-120 h win cooldown | `not verified`, deployed, awaiting play-test (12.29) |
-| Cheat: the duel is offered to any 80+ non-animal, and a win always recruits | `not verified`, deployed, awaiting play-test (12.29 J7-J8) |
+| Cheat: the duel is offered to any 80+ non-animal, and a win always recruits (since proactive-offer through the walk-up and the window; out of 120 m, at once as before) | `not verified`, deployed, awaiting play-test (12.29 J7-J8, 12.37 O1) |
 | Free animals of level 40+ (`duelAnimalsFromLevel`) can be challenged in both presets; same join chance (Balanced) / sure join (Cheat); narrator lines, no head notice (animal-duel-submission D1/D2) | `needs in-game QA` (12.34 A1-A8) |
 | Duel head notices are informational (25 s) | `play-tested informally` (12.31 F2) |
 

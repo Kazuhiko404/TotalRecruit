@@ -28,6 +28,17 @@ Despues de un gesto del jugador (duelo ganado, cura, derrota), si la tirada es b
 - RECHAZAR = no hace nada: cierra el popup, termina el evento y limpia sus marcas; sin borrar derrotas, sin enfriamiento de rechazo y sin volverlo hostil. Si era hostil antes del evento, vuelve a serlo (lo que estaba haciendo). La oferta pedida se consume: no vuelve a ofrecerse hasta un gesto nuevo.
 - Cheat y Balanced comparten el evento; Cheat no tiene esperas extra.
 
+### Decisiones tomadas al implementar (escritor, 2026-10-05)
+- D1 Etiqueta IGNORAR: la ventana del sometido usa `popup.button.ignore` (la clave que ya usa la piedad). No se cambia ningun valor de plantilla; `popup.button.forgive` queda sin uso y el campo `OfferTexts::forgive` se borro.
+- D2 RECHAZAR cambia para TODO el evento (tambien el de derrotas): se restaura como un abort (`PlanFor`: sin borrar derrotas, sin enfriamiento, hostil solo si lo era). El enfriamiento de rechazo guardado sigue leyendose (rutas), pero el evento ya no lo pone; la fila Mod Hub "Sometido: horas sin reclutar al rechazar" ahora lo dice.
+- D3 La calma por tirada mala solo se aplica si el NPC es hostil al escuadron (`PlanRequestedOffer(..., hostile)` -> `RequestedPlan_Nothing`): curar a un vecino amistoso que no se une no imprime nada. Pedido literal: "unos segundos de neutralidad" en vez de que "me ataca".
+- D4 Una tirada de rendicion fallida en el barrido de derrotas tambien calma a un hostil (objetivo: "derrota" es un gesto).
+- D5 Las ofertas pedidas saltan el enfriamiento de rechazo, ya preguntado, tirada del dia y no vencido; `Evaluate` decide. Solo un si gratis y duradero camina (`JoinsForFree`: sin cats, no temporal), porque la ventana es gratis y ACEPTAR es `Recruit`; un si con precio se calma/ignora y se registra "talk to it".
+- D6 Cura de un NPC por la ruta de rescate (`viaRescue`): la peticion se consume, porque la ruta de rescate ya ofrece al despertar (evita dos ventanas). Hablar a mano (`AttemptRecruit`) tambien consume la peticion.
+- D7 Un gesto = una peticion: cada duelo ganado es un gesto nuevo; una cura que sigue (el gancho llama cada cuadro) es el mismo gesto mientras no pasen 30 s sin curar. Una peticion no servida expira a los 300 s reales (congelados en pausa). Duelo ganado fuera de 120 m del lider: comportamiento viejo.
+- D8 Interruptores apagados (`offerOnDuelWin` / `offerOnHeal`): el duelo vuelve al comportamiento viejo; la cura solo marca el ledger. Las ofertas pedidas no dependen de `submissionEventEnabled` (ese interruptor sigue gobernando el barrido de derrotas).
+- D9 `submissionForgiveSeconds` sigue en 300 (plantilla y config del usuario); el pedido dice "unos 30 s". No se cambia un valor desplegado sin `--set-if`; queda anotado en QA 12.37.
+
 ## Restricciones
 - Toolset v100: sin C++11. Lecturas del motor detras de `TR_TRY/TR_CATCH` en marcos POD.
 - Modulos aislados (SOLID), sin parche sobre parche; reglas puras con RED -> GREEN en `tests/rules_tests`.
@@ -35,11 +46,11 @@ Despues de un gesto del jugador (duelo ganado, cura, derrota), si la tirada es b
 - Maqueta antes del codigo. Sin deploy, sin push, sin merge.
 
 ## Checklist
-- [ ] P0 Maqueta: popup del evento con ACEPTAR / IGNORAR / RECHAZAR (persona y animal), lineas de narrador del animal, aviso de calma tras tirada mala; filas Mod Hub nuevas. Estados al final de las listas.
-- [ ] P1 Reglas puras: cola de ofertas pedidas (pedir, consumir, una por gesto), cribado (animal admitido; una oferta pedida salta `NotBeaten`), planes de salida (IGNORAR = perdonar con huida; RECHAZAR nuevo; tirada mala = calma sin huida). RED -> GREEN.
-- [ ] P2 Disparadores en el motor: `OnDuelWon` pide la oferta en vez de unir (Balanced con tirada mala: calma); ganchos de cura piden la oferta; Cheat animal con 1 derrota entra por el cribado. Animales en la caminata con narrador.
-- [ ] P3 Config y textos: `offer.failCalmSeconds`, interruptores del evento por disparador, Mod Hub, plantillas (solo claves nuevas), etiqueta IGNORAR.
-- [ ] P4 Docs: REQUISITOS, QA (casos con lineas de log), README, DEVELOPING, `odd/system-status.md`.
+- [x] P0 Maqueta: popup del evento con ACEPTAR / IGNORAR / RECHAZAR (persona y animal), lineas de narrador del animal, aviso de calma tras tirada mala; filas Mod Hub nuevas. Estados al final de las listas.
+- [x] P1 Reglas puras: cola de ofertas pedidas (pedir, consumir, una por gesto), cribado (animal admitido; una oferta pedida salta `NotBeaten`), planes de salida (IGNORAR = perdonar con huida; RECHAZAR nuevo; tirada mala = calma sin huida). RED -> GREEN.
+- [x] P2 Disparadores en el motor: `OnDuelWon` pide la oferta en vez de unir (Balanced con tirada mala: calma); ganchos de cura piden la oferta; Cheat animal con 1 derrota entra por el cribado. Animales en la caminata con narrador.
+- [x] P3 Config y textos: `offer.failCalmSeconds`, interruptores del evento por disparador, Mod Hub, plantillas (solo claves nuevas), etiqueta IGNORAR.
+- [x] P4 Docs: REQUISITOS, QA (casos con lineas de log), README, DEVELOPING, `odd/system-status.md`.
 
 ## Criterios de aceptacion
 - Duelo ganado con tirada buena (Cheat siempre): el rival camina hasta el jugador y abre el popup; ACEPTAR lo une.
@@ -59,3 +70,10 @@ Despues de un gesto del jugador (duelo ganado, cura, derrota), si la tirada es b
 
 ## Progreso
 - Documento creado antes de tocar el codigo.
+- P0 `61acb97` docs(mockup): estado `submission` con IGNORAR y RECHAZAR nuevo; ventanas nuevas al final ("Duel rival walks up...", "Animal walks up..."); `OFFER_EVENT` (lineas de narrador, calma); escena "Proactive offer" al final de la barra; 3 filas HUB al final. `node --check` data.js / popup_data.js: OK.
+- P1 `a3dba00` feat(offer): `offer_request_rules` (cola, gesto, plan, `JoinsForFree`, `RequestSkipConsumes`), `offer_narration_rules`, `submission_rules` (`requested`, animales candidatos, `SubmissionBeaten`, `JudgePeek` de animales, `Outcome_RollFailed`, RECHAZAR nuevo, `ForgivenWindowSec` de 3 args), `BuildAnimalSubmissionOfferView` e IGNORAR. RED: el build de rules_tests fallo (C1083 headers nuevos, C2039 `requested` / `bodyAnimalSubmitted`, C2065 `Outcome_RollFailed`, C2660 `ForgivenWindowSec`, C3861 `SubmissionBeaten` / `BuildAnimalSubmissionOfferView`). GREEN: 56/56 suites, 0/72922. (La DLL de este commit no compila sola: el director se adapta en P2.)
+- P3 `4c48457` feat(config): `ProactiveOffer` (`offerOnDuelWin`, `offerOnHeal`, `offerFailCalmSeconds` 20, clamp 0..600), 3 filas Mod Hub, textos de las filas del sometido (Ignorar; enfriamiento viejo), plantillas solo con claves nuevas (`popup.body.animalSubmitted`, `submissionEvent.calmNotice` / `ignoredNotice` / `animal.*`).
+- P2 `5e93243` feat(offer): `offer_requests` (motor de la cola), director (barrido de pedidas, `ServeRequest`, `StartCalm`, animales con narrador, log `[offer]`), `approach_driver` `BeginWalkerInPlace`, `OnDuelWon` -> `RequestDuelOffer`, ganchos de cura -> `NoteHealForOffer`, `AttemptRecruit` consume. RED: `PlanRequestedOffer` de 3 args y `RequestedPlan_Nothing` (C2660 x8, C2065 x3). GREEN: 56/56 suites, 0/72927; DLL Release x64 compila (solo los C4482 de KenshiLib de siempre).
+- P4 docs: QA 12.37 (O1-O23 con lineas de log), REQUISITOS R3.7b, README (Surrender), DEVELOPING (3 modulos nuevos, filas del sometido / ventana / rescate), `odd/system-status.md`.
+- Checks finales: rules_tests 56/56, 0/72927; DLL compila; `deploy.sh --dry-run`: config +offerOnDuelWin +offerOnHeal +offerFailCalmSeconds (y +cheatAnyCage de main), messages +submissionEvent.calmNotice +ignoredNotice +animal +popup.body.animalSubmitted (y +readout.line.hold de main), 0 valores cambiados.
+- Siguiente: QA en juego (12.37); despues deploy y fast-forward de `main` por el usuario.
