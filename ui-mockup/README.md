@@ -245,6 +245,16 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     (level 80-99, 1-3 days) or .. `MaxHours` (100+, 1-5 days). Cheat (state "Cheat: an 80+ NPC ...") gates the
     duel on the level alone (`SafeNpcLevel` >= `allyTierEliteFromLevel`, a person, not an animal).
 
+27. **A free animal can be challenged, beaten into yielding, and in Cheat healed into joining**
+    (animal-duel-submission, user request 2026-10-04). A free animal (no owner: `BelongsToSomeone` outside the
+    player's cage; `exclude.animals` still wins) of `duelAnimalsFromLevel` (40) or above gets RETAR A DUELO in both
+    presets (`duelAnimalsEnabled`), with the same record line and SI LE GANAS row as a person (states "Wild animal
+    40+ ..."). A won duel is the same chance in Balanced and a sure join in Cheat; the outcome is a narrator line
+    (`duel.animal.*`) with no head notice, because an animal never speaks. In Balanced two defeats in the open open
+    the field-yield roll (temperament Normal, no loyalty penalty) and the card shows DERROTAS n/2 next to the
+    stomach bar (states "Wild animal beaten ..."); a failed roll keeps food as the other way in. In Cheat a meal, a
+    cure or one knockout by the squad is the gesture ("Comio de tu mano / Lo curaste / Lo venciste: te sigue").
+
 ### Native windows (sections 2 and 5: the card and the head notices)
 
 24. **The card and the notices step aside for Kenshi's own dialogue** (user report 2026-10-03: "if I talk to the

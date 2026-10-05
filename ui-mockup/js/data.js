@@ -97,7 +97,7 @@ var STATES = [
   {
     id: 'allyDuel',
     title: 'Ally 80+ you can challenge (TotalSparring)',
-    note: 'An 80+ ally the popup offers RETAR A DUELO for (<code>duel_challenge_rules.h</code> <code>CanOfferDuel</code>: TotalSparring present, no lost-duel cooldown). The second line is TotalSparring\'s head-to-head record of the selected squad member against them (<code>readout.line.duel.record</code>, wins-losses; <code>recordDraws</code> adds the draws). Read only when the NPC or the selected squad member changes or TotalSparring reported a bout, never on the 2 s refresh. The same line carries what the next win does (<code>duel_join_rules.h</code> <code>DuelNextWinOdds</code>): "Duelos: 2-1, si ganas 65% se une" in Balanced (<code>readout.line.duel.recordChance</code>, with draws <code>recordDrawsChance</code> "Duelos: 0-3-1, si ganas 25%"), "Duelos: 1-2, si ganas se une" in Cheat (<code>recordSure</code> / <code>recordDrawsSure</code>).',
+    note: 'An 80+ ally the popup offers RETAR A DUELO for (<code>duel_challenge_rules.h</code> <code>CanOfferDuel</code>: TotalSparring present, no lost-duel cooldown). The second line is TotalSparring\'s head-to-head record of the selected squad member against them (<code>readout.line.duel.record</code>, wins-losses; <code>recordDraws</code> adds the draws). Read only when the NPC or the selected squad member changes or TotalSparring reported a bout, never on the 2 s refresh. The same line carries what the next win does (<code>duel_join_rules.h</code> <code>DuelNextWinOdds</code>): "Duelos: 2-1, si ganas 65% se une" in Balanced (<code>readout.line.duel.recordChance</code>, with draws <code>recordDrawsChance</code> "Duelos: 0-3-1, si ganas 25%"), "Duelos: 1-2, si ganas se une" in Cheat (<code>recordSure</code> / <code>recordDrawsSure</code>). A free animal of 40+ gets the same line (state "Wild animal 40+ ...").',
     // facts: Route FreeWorld, Balanced, level 85 Honorable, Reason_AllyTemporary; duel offered, record 2-1-0; base 25, per win 20
     vm: {
       name: 'Beep el Sabio', route: 'libre', routeLabel: 'Libre',
@@ -121,6 +121,67 @@ var STATES = [
       showDefeats: false, defeats: 0, defeatsNeeded: 0,
       showFood: false,
       why:  { text: 'Te debe la vida: se une', tone: 'ok' },
+      alt:  null
+    }
+  },
+  {
+    id: 'animalDuel',
+    title: 'Wild animal 40+ you can challenge (TotalSparring)',
+    note: 'animal-duel-submission D1. A free animal (no owner: the taming route\'s <code>BelongsToSomeone</code>, read outside your cage) of level <code>duelAnimalsFromLevel</code> (40) or above, with <code>duelAnimalsEnabled</code> on, TotalSparring present and no cooldown, is offered RETAR A DUELO in Balanced and in Cheat (<code>CanOfferDuel</code>, animal branch: no ally tier, no 80+ cut). The second line is the same head-to-head record line a person gets; the next win is the same Balanced curve (25, 45, 65...) or "se une" in Cheat. An owned animal, one under 40, or <code>exclude.animals</code> gets no line and no button.',
+    // facts: Route FreeWorld animal, Balanced, level 52 (SafeNpcLevel), not owned, never fed -> Reason_TameNotFed;
+    // duel offered (animal branch), record 0-0, base 25
+    vm: {
+      name: 'Perro hueso alfa', route: 'animal', routeLabel: 'Animal',
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
+      showChance: false, chancePct: 0, ready: false,
+      showDefeats: false, defeats: 0, defeatsNeeded: 0,
+      showFood: true, foodPct: 100, foodNeededPct: 80,
+      why:  { text: 'No comio de tu mano: dale comida', tone: '' },
+      alt:  { text: 'Duelos: 0-0, si ganas 25% se une' }
+    }
+  },
+  {
+    id: 'animalBeaten',
+    title: 'Wild animal beaten once (Balanced)',
+    note: 'animal-duel-submission D3. A free animal the player\'s squad knocked out once in the open: DERROTAS 1/2 shows next to the stomach bar, because two defeats open the same field-yield roll a person gets. Still the taming line until then. No stress bar: the animal card keeps it hidden. An owned animal shows no defeats row (the cage is its only way in).',
+    // facts: Route FreeWorld animal, Balanced, defeats 1/2, not owned, hunger raw 1.5/3 -> 50%, needed .75, fed once
+    vm: {
+      name: 'Perro hueso alfa', route: 'animal', routeLabel: 'Animal',
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
+      showChance: false, chancePct: 0, ready: false,
+      showDefeats: true, defeats: 1, defeatsNeeded: 2,
+      showFood: true, foodPct: 50, foodNeededPct: 75,
+      why:  { text: 'Hambre 50% / necesita 75%', tone: '' },
+      alt:  null
+    }
+  },
+  {
+    id: 'animalYield',
+    title: 'Wild animal beaten twice: the field-yield roll (Balanced)',
+    note: 'animal-duel-submission D3. Two defeats in the open (<code>submissionDefeatsToBreak</code>) send a free animal down the field-yield route like a person: JoinChance with temperament Normal, <code>submissionFieldYieldBonus</code>, no loyalty penalty, the daily seed. The card peeks with no roll key, so it states the odds; the stomach bar stays, because a failed roll falls back to food (a fed animal past the bar still joins). With the key and a failed roll the line is "Aun no se somete: vencelo o dale comida". Owned animals never get here.',
+    // facts: Route FieldYield animal, Balanced, defeats 2/2, chance 38, peek (no roll key), hunger 50% / needed 75%
+    vm: {
+      name: 'Perro hueso alfa', route: 'animal', routeLabel: 'Animal',
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
+      showChance: true, chancePct: 38, ready: false,
+      showDefeats: true, defeats: 2, defeatsNeeded: 2,
+      showFood: true, foodPct: 50, foodNeededPct: 75,
+      why:  { text: '38%: puede unirse si le hablas', tone: '' },
+      alt:  null
+    }
+  },
+  {
+    id: 'cheatAnimalDefeated',
+    title: 'Cheat: a wild animal your squad beat joins',
+    note: 'animal-duel-submission D4. In Cheat one knockout by the player\'s squad (the defeat ledger: a fight or a duel; Golpear and Noquear in your cage are beating stress, not defeats) is the gesture: talk to it and it joins (<code>Reason_CheatAnimalDefeated</code>, "Lo venciste: te sigue"). Healing it (first aid or doctoring by one of your characters, <code>healing_ledger</code>) reads "Lo curaste: te sigue"; a meal still reads "Comio de tu mano: te sigue". An owned animal keeps the cage. Cheat reads no core facts, so no bars.',
+    // facts: Preset_Cheat, cheatNeedsCage, animal, not owned, not fed, not healed, defeats 1 -> willJoin
+    vm: {
+      name: 'Garra', route: 'animal', routeLabel: 'Animal',
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
+      showChance: false, chancePct: 0, ready: true,
+      showDefeats: false, defeats: 0, defeatsNeeded: 0,
+      showFood: false,
+      why:  { text: 'Lo venciste: te sigue', tone: 'ok' },
       alt:  null
     }
   }
@@ -218,6 +279,10 @@ var HUB = [
    'Si le ganas y no se une, horas maximas de espera para un NPC de nivel 80 a 99'],
   ['Duelo: horas maximas tras ganar (100+)', 'duelWinCooldownMaxHours', '120',
    'Si le ganas y no se une, horas maximas de espera para un NPC de nivel 100 o mas'],
+  ['Duelo: retar animales', 'duelAnimalsEnabled', 'ON',
+   'Con TotalSparring instalado, un animal sin dueno de nivel suficiente tambien ofrece RETAR A DUELO (Balanced: la misma chance que una persona; Cheat: se une)'],
+  ['Duelo: nivel minimo de animales', 'duelAnimalsFromLevel', '40',
+   'Nivel desde el que un animal sin dueno puede ser retado a duelo'],
   ['Sumision: bonus por cuidarlo min', 'submissionCaredForBonusMin', '5',
    'Lo menos que suma a la chance un preso de tu jaula sano, comido y sin heridas (sorteo del dia)'],
   ['Sumision: bonus por cuidarlo max', 'submissionCaredForBonusMax', '20',

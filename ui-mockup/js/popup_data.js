@@ -347,7 +347,7 @@ var POPUP_STATES = [
   {
     id: 'cheatDuel',
     title: 'Cheat: an 80+ NPC can be challenged too, and a win always recruits',
-    note: 'The Cheat preset has no ally tiers, so the duel is gated on the level alone: any person (not an animal) at <code>allyTierEliteFromLevel</code> (80) or above, read with <code>SafeNpcLevel</code> like TotalSparring\'s card, with TotalSparring present and no cooldown (<code>CanOfferDuel</code>, <code>cheatPreset</code>). The Cheat answer stays as it is (here: not in a cage yet) and RETAR A DUELO joins the row. SI LE GANAS reads "se une": in Cheat a win always recruits, there is no roll and no win cooldown.',
+    note: 'The Cheat preset has no ally tiers, so the duel is gated on the level alone: any person at <code>allyTierEliteFromLevel</code> (80) or above (a free animal has its own gate, state "Wild animal 40+ ..."), read with <code>SafeNpcLevel</code> like TotalSparring\'s card, with TotalSparring present and no cooldown (<code>CanOfferDuel</code>, <code>cheatPreset</code>). The Cheat answer stays as it is (here: not in a cage yet) and RETAR A DUELO joins the row. SI LE GANAS reads "se une": in Cheat a win always recruits, there is no roll and no win cooldown.',
     // facts: Preset_Cheat, cheatNeedsCage, not in my cage -> Reason_CheatNeedsCage; level 84 (SafeNpcLevel); duel offered, record 1-2
     vm: {
       title: 'Reclutamiento', name: 'Garo', route: 'libre', routeTag: 'Libre',
@@ -402,6 +402,38 @@ var POPUP_STATES = [
       showPrice: true, priceText: 'Gratis', priceFree: true,
       showPurse: false, purseText: '', affordable: true,
       showChance: true, chanceText: '41%',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: '', cancel: 'CANCELAR'
+    }
+  },
+  {
+    id: 'animalDuel',
+    title: 'Wild animal 40+ can be challenged to a duel',
+    note: 'animal-duel-submission D1/D2. A free animal of <code>duelAnimalsFromLevel</code> (40) or above with TotalSparring present (<code>CanOfferDuel</code>, animal branch): the taming answer stays (here: never fed, so DARLE COMIDA) and RETAR A DUELO joins the row, the same plate a person gets. SI LE GANAS is the same Balanced curve (25% on the first win); Cheat reads "se une". The outcome is told by a narrator line, never in the animal\'s voice, and with no head notice over it: "Perro hueso alfa agacha la cabeza y te sigue" (<code>duel.animal.joined</code>), "... se sacude y se aleja; podras retarlo otra vez en {hours} h" (<code>duel.animal.stays</code>), "... gana el duelo y se aleja ..." (<code>duel.animal.lost</code>). A lost duel never makes it hostile. Keep the bet slider at 0: an animal carries no cats (TotalSparring limitation).',
+    // facts: Balanced, animal, not owned, level 52, Reason_TameNotFed (wantsFood); duel offered, record 0-0, base 25
+    vm: {
+      title: 'Reclutamiento', name: 'Perro hueso alfa', route: 'animal', routeTag: 'Animal',
+      body: 'Perro hueso alfa no se une todavia.',
+      showPrice: false, priceText: '', priceFree: false,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      showDuelRecord: true, duelRecordText: '0-0',
+      showDuelJoin: true, duelJoinText: '25% de que se una',
+      reason: 'Todavia no ha comido de tu mano', reasonRed: true,
+      accept: '', extra: 'DARLE COMIDA', duel: 'RETAR A DUELO', cancel: 'CERRAR'
+    }
+  },
+  {
+    id: 'animalYield',
+    title: 'Wild animal beaten twice yields (Balanced)',
+    note: 'animal-duel-submission D3. Two defeats in the open and the field-yield roll passed (<code>Reason_AnimalYieldJoins</code>): Sumision currency, free, the odds that were rolled. The animal does not walk up and ask (the submission event stays for people: it speaks); Hablar is the way in. A failed roll reads "Todavia no se somete: vencelo otra vez, o dale de comer" and keeps the food button.',
+    // facts: verdict willJoin, Currency_Submission, isAnimal, rolled 38%
+    vm: {
+      title: 'Reclutamiento', name: 'Perro hueso alfa', route: 'animal', routeTag: 'Animal',
+      body: 'Perro hueso alfa ya no tiene voluntad de pelear y desea unirse a tu grupo.',
+      showPrice: true, priceText: 'Gratis', priceFree: true,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: true, chanceText: '38%',
       reason: '', reasonRed: false,
       accept: 'ACEPTAR', extra: '', cancel: 'CANCELAR'
     }
