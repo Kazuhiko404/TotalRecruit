@@ -115,6 +115,22 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     Noquear shows the game's own odds ("Noquear 72%", `getPlayerTaskProbability`), plain "Noquear" when there are none.
     Labels are title case like Hablar (`cage.button.*` in `messages.json`). Each button arms its own press-and-release
     gesture.
+    **Golpear walks first and says it landed** (beat-feedback; callout in tab "Menu on your prisoner"). The click
+    does not hit from where the character stands: the selected character walks to the prisoner (`beat_walk.h`,
+    `NpcMotion::MoveTo`, given once) and the blow lands only within `submissionBeatReachMeters` (4 m, Mod Hub
+    "Golpear: distancia para pegar"); already within reach, it lands at once. On landing the character stops and faces
+    the prisoner, the prisoner says one of "¡Ugh!" / "¡Agh!" / "¡Ay!" / "¡Basta!" over his head (`cage.beatOuch`,
+    always the same one for the same prisoner; an animal or someone the blow knocked out says nothing), the roller says
+    "Kazu golpea a Bandido" with the notification sound (`cage.beatLanded`), and a hit sound plays on the prisoner
+    (`submissionBeatHitSoundEnabled`, Mod Hub "Golpear: sonido del golpe"; event `submissionBeatHitSound` = "Heavy_Hit",
+    then Loot-Scoot-Execute's list; not verified in game yet, `QA.md` 12.39 G3). No extra line while walking: the walk
+    is the feedback. A walk that ends without a blow starts no rest and the roller says why, as a problem line: "Kazu no
+    llegó a la jaula a tiempo: no hubo golpe" (`submissionBeatWalkSeconds`, 30 real seconds, Mod Hub "Golpear: segundos
+    para llegar"), "Kazu dejó de acercarse a la jaula: no hubo golpe" (no closer for 4 s: stuck, or the player ordered
+    the character elsewhere), "Kazu ya no puede golpearlo: no hubo golpe" (the character went down), "Ya no puedes
+    hacerle eso" (the prisoner left the cage or went down) or "Podrás volver a golpearlo en 1 h" (another character's
+    blow landed first). A second Golpear by the same character replaces the walk silently; a load drops it silently.
+    The popup's GOLPEAR (item 18) goes through the same walk and the same lines.
     **Golpear and Noquear rest** (tab "Menu on your prisoner, Golpear and Noquear resting"; R2.3,
     prisoner-module-fixes F6, cage-beating-stress S1). After each blow on a prisoner, Golpear rests for
     `submissionBeatingCooldownHours` game hours (Mod Hub "Sumision: horas entre golpizas"); after a knockout order

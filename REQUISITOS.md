@@ -168,6 +168,17 @@ pelea que sacaba al preso de la jaula. **Noquear** sigue siendo la orden del
 propio juego (`STEALTH_KNOCKOUT`): si sale lo decide el motor. Se confirma en
 juego (`QA.md` 12.19).
 
+*Estado (2026-10-06, beat-feedback):* **Golpear camina primero y avisa.** El
+personaje seleccionado camina hasta el preso y el golpe entra recién a
+`submissionBeatReachMeters` (4 m) de él; si la caminata no llega
+(`submissionBeatWalkSeconds`, 30 s reales sin contar la pausa; trabado u otra
+orden tuya; tu personaje cae; el preso deja de ser válido; una carga) no hay
+golpe ni descanso y el roller dice por qué. Al pegar, el preso se queja en voz
+alta (solo personas que pueden hablar), el roller dice "<tuyo> golpea a <preso>"
+con el sonido de notificación y suena un golpe sobre el preso
+(`submissionBeatHitSoundEnabled`, evento `submissionBeatHitSound`). Se confirma
+en juego (`QA.md` 12.39).
+
 *Estado (2026-10-04, prisoner-module-fixes F1):* **Noquear actúa una vez.** La
 orden deja en el actor una meta persistente (`addGoal`) que nadie quitaba: la IA
 la seguía persiguiendo, volvía a entrar en sigilo y noqueaba al preso cada vez

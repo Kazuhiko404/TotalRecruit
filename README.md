@@ -58,10 +58,14 @@ loyalty penalty); if the roll fails, food still tames it. An owned animal is onl
 taken through the cage.
 
 **Golpear and Noquear.** Right-click a prisoner awake in your cage and two
-buttons stand under Hablar. They are Kenshi's own orders (beat the cage
-occupant, stealth knockout) given to the character you have selected, so the
-wounds, the stress and whether the knockout lands are the game's; Noquear shows
-the game's own odds. A knockout ordered this way counts as your defeat.
+buttons stand under Hablar, done by the character you have selected. Golpear
+walks that character to the cage and lands one capped blow when it gets there
+(within `submissionBeatReachMeters`, 4 m): the prisoner complains aloud, you hear
+the hit, and the message line says who hit whom. If the walk never gets there
+(`submissionBeatWalkSeconds`, stuck, or you order the character elsewhere) there
+is no blow and no rest, and the message line says why. Noquear is Kenshi's own
+stealth knockout order and shows the game's own odds. Neither knockout counts as
+a defeat: each blow and knockout adds beating stress instead.
 
 **No shortcuts in the Balanced cage.** Time alone no longer breaks anyone (the
 old 6-hour easy wait is gone), and a healthy, fed prisoner no longer joins on the

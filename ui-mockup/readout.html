@@ -246,8 +246,8 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
            (resting ? 'Noquear (1 h)' : 'Noquear 72%') + '</div>';
       h += '<div class="ctxbtn" style="left:' + (cx + 122 + gx) + 'px;top:' + cy + 'px">Sparring</div>';
       h += '<div class="callout" style="left:16px;top:16px;max-width:300px">Right-click on a prisoner awake in your cage. ' +
-           'Golpear is one direct blow from the character you have selected (its own attack damage as blunt, capped so ' +
-           'the prisoner is never killed and stays caged); Noquear is Kenshi\'s own order (STEALTH_KNOCKOUT), given once: ' +
+           'Golpear walks the character you have selected to the cage, then lands one direct blow (its own attack damage ' +
+           'as blunt, capped so the prisoner is never killed and stays caged); Noquear is Kenshi\'s own order (STEALTH_KNOCKOUT), given once: ' +
            'when he is down the character is let go. Nobody selected says "Selecciona a alguien de tu grupo para ' +
            'hacerlo". The 72% is the game\'s.' +
            (resting ? ' Golpear rests for beatingCooldownHours (Mod Hub "Sumision: horas entre golpizas", 1 by ' +
@@ -257,6 +257,22 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
                       '1 h" / "Podrás volver a noquearlo en 1 h". Neither knockout counts as a defeat: each blow and ' +
                       'each knockout adds beating stress (the card\'s Golpes).' : '') +
            '</div>';
+      if (!resting) {
+        // beat-feedback: what a Golpear click looks like once the character gets there (beat_walk.h,
+        // beat_walk_feedback.h). The selected character at 760 walks to the cage at 390 (dashed path);
+        // within submissionBeatReachMeters it stops, faces the prisoner and the blow lands.
+        h += '<div style="position:absolute;left:486px;top:' + (VIEW.h - 118) + 'px;width:264px;border-top:2px dashed ' +
+             'var(--golddim);pointer-events:none"></div>';
+        h += '<div class="at" style="left:420px;top:' + (VIEW.h - 150) + 'px;color:#222;background:#e9dfc9;' +
+             'border-radius:6px;padding:2px 6px;font:700 12px sans-serif">¡Ugh!</div>';
+        h += '<div class="callout" style="left:860px;top:120px;max-width:400px">After Golpear: the ' +
+             'selected character walks to the cage (dashed) and the blow lands within 4 m (submissionBeatReachMeters; ' +
+             'at once when already there). The prisoner says "¡Ugh!" (one of four, cage.beatOuch; an animal or ' +
+             'someone knocked out says nothing), a hit sound plays on him (Heavy_Hit, submissionBeatHitSound) and the ' +
+             'roller reads "Kazu golpea a Bandido" with the notification sound. A walk that never arrives (30 s, ' +
+             'stuck, or another order) lands nothing, starts no rest and says why: "Kazu no llegó a la jaula a ' +
+             'tiempo: no hubo golpe".</div>';
+      }
       h += '<div class="callout" style="left:860px;top:16px;max-width:400px">Anyone else -- not caged, already down, ' +
            'or beating switched off -- gets the block of one, [Hablar], as in "Right-click menu open". The popup\'s ' +
            'GOLPEAR and NOQUEAR (section 5) give the same commands (the same blow, the same native knockout order) and close the window.</div>';
