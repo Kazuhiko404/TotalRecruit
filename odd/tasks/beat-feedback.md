@@ -36,7 +36,7 @@ Decision del usuario:
 - [x] T2 Queja en voz alta del preso: `beat_walk_feedback` (`TellBeatOutcome`) dice `cage.beatOuch` (lista de 4, estable por preso) con `SpeakAloud`; un animal no habla (`BeatComplaintSpoken`, como `DuelRaisesHeadNotice`), un inconsciente calla solo (`canSpeakNormally`). Ruta: escritor delegado. Commit `320983c`.
 - [x] T3 Mensaje en pantalla + sonido de notificacion: `TellPlayer(cage.beatLanded "{actor} golpea a {name}")`; los abortos avisan como problema (`cage.beatAbort.timeout/stalled/actor`, y `cage.notAllowed` / `cage.beatResting` / `cage.failed` reusados); reemplazo y carga callan. Sin linea al empezar a caminar. Menu y GOLPEAR de la ventana pasan el mismo `TellBeatOutcome`. Ruta: escritor delegado. Commit `320983c`.
 - [x] T5 Sonido de golpe: `beat_walk_sound` (`PlayBeatHitSound`): `audioEvent` en marco POD con `TR_TRY`, devuelve bool, asi que prueba `BeatHitSoundCandidates` (el configurado primero, despues la lista de LSE, sin repetir) sobre el preso y despues sobre el actor, y loguea cual acepto. Config `submissionBeatHitSoundEnabled` (true, Mod Hub "Golpear: sonido del golpe") y `submissionBeatHitSound` ("Heavy_Hit"). Evidencia: RED = C3861 `BeatHitSoundCandidates`; GREEN = 57/57 suites, 0/73152 checks fallidos. Sin verificar en juego. Ruta: escritor delegado. Commit `320983c`.
-- [ ] T4 Animacion: notas y logs de TotalTraining (explorador, solo lectura).
+- [x] T4 Animacion: notas y logs de TotalTraining (explorador, solo lectura). Sin logs de TotalTraining (no instalado). Vanilla no tiene accion de golpe; los golpes sin arma son COMBAT_TECHNIQUE de rebirth.mod (`ma badpunch` clip `badpunch`). Vias: tecnica de combate renovada por frame, registro ANIMATION propio con `is action` (un `playAction`), o `runSlaveAnim("badpunch")` por frame + `endSlaveAnim`. Ninguna probada con un golpe. Engram `odd/beat-feedback/t4-animation`. Ruta: explorador.
 
 ## Criterios de aceptacion
 - Click en Golpear lejos de la jaula: el personaje camina, y el golpe, la queja y el mensaje llegan al llegar.
@@ -51,7 +51,7 @@ Decision del usuario:
 
 ## Progreso
 - Documento creado. Siguiente: T1-T3 con un escritor; T4 en paralelo con un explorador.
-- T1, T2, T3 y T5 hechos en `fix/beat-feedback`: codigo + tests en `320983c` (`feat(cage): Golpear walks to the cage before the blow lands`); docs (QA 12.39 G1-G17, REQUISITOS R2.3 estado beat-feedback, README, `ui-mockup/README.md` item 17, `readout.html` callout de la caminata) en el commit `docs` siguiente. TotalRecruit.dll Release|x64 compila sin advertencias nuevas. Sin deploy, sin push.
+- T1, T2, T3 y T5 hechos en `fix/beat-feedback`: codigo + tests en `320983c` (`feat(cage): Golpear walks to the cage before the blow lands`); docs (QA 12.39 G1-G17, REQUISITOS R2.3 estado beat-feedback, README, `ui-mockup/README.md` item 17, `readout.html` callout de la caminata) en `fd23727`. TotalRecruit.dll Release|x64 compila sin advertencias nuevas. Sin deploy, sin push.
 - Decisiones: "otra orden" se detecta por falta de avance (4 s sin acercarse 0,5 m), no por la tarea del actor (no esta probado que `MOVE_CUS_ORDERED` se lea como tarea actual en un personaje del jugador). En un aborto no se toca ninguna orden (no pisar lo que el jugador mando). Una carga no avisa (el mundo de la caminata ya no existe). `DEVELOPING.md` no estaba en las superficies permitidas: falta su fila para `beat_walk*`.
 
 ## Siguiente paso
