@@ -282,7 +282,7 @@ var HUB = [
   ['Ayudante: contrato nativo', 'helperNativeBodyguard', 'ON',
    'Te escolta con el contrato de guardaespaldas del juego, como un mercenario. Apagado (o si falla), lo guia el mod: te sigue corriendo y ataca a quien ataca a tu lider'],
   ['Duelo: retar NPC 80+', 'duelChallengeEnabled', 'ON',
-   'Con TotalSparring instalado, la ventana de un NPC de nivel 80+ ofrece RETAR A DUELO (Balanced: aliados con niveles; Cheat: cualquier persona). Ganar da una chance de que se una (Cheat: se une)'],
+   'Con TotalSparring instalado, la ventana de un NPC ofrece RETAR A DUELO (Balanced: aliados con niveles desde el nivel 80; Cheat: cualquier persona desde el nivel minimo de personas). Ganar da una chance de que se una (Cheat: se une)'],
   ['Duelo: horas tras perder', 'duelChallengeCooldownHours', '24',
    'Horas de juego sin poder retarlo otra vez despues de perder o empatar'],
   ['Duelo: horas que espera el reto', 'duelChallengeExpiryHours', '6',
@@ -326,7 +326,11 @@ var HUB = [
   ['Oferta: al curarlo', 'offerOnHeal', 'ON',
    'Si alguien de tu grupo cura a un NPC o animal que no es tuyo, al levantarse viene a ofrecerse si la tirada sale bien'],
   ['Oferta: segundos en calma si no se une', 'offerFailCalmSeconds', '20',
-   'Tras un duelo ganado, una cura o una derrota con mala tirada, deja de atacarte estos segundos donde esta']
+   'Tras un duelo ganado, una cura o una derrota con mala tirada, deja de atacarte estos segundos donde esta'],
+  ['Duelo Cheat: nivel minimo de personas', 'duelCheatPeopleFromLevel', '1',
+   'En Cheat, nivel desde el que cualquier persona ofrece RETAR A DUELO (Balanced sigue pidiendo un aliado de nivel temporal, 80)'],
+  ['Duelo: contar duelos de TotalSparring', 'duelCountExternalBouts', 'ON',
+   'Un duelo abierto desde TotalSparring contra alguien que no es de tu grupo cuenta como un reto de TotalRecruit si ese NPC podria ser retado: ganarlo da la chance de que se una, perderlo pone la espera']
 ];
 
 // The proactive offer (src/offer_requests.h, src/submission_director.cpp): after a gesture of

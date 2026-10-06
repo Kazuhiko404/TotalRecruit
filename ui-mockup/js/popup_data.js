@@ -346,9 +346,9 @@ var POPUP_STATES = [
   },
   {
     id: 'cheatDuel',
-    title: 'Cheat: an 80+ NPC can be challenged too, and a win always recruits',
-    note: 'The Cheat preset has no ally tiers, so the duel is gated on the level alone: any person at <code>allyTierEliteFromLevel</code> (80) or above (a free animal has its own gate, state "Wild animal 40+ ..."), read with <code>SafeNpcLevel</code> like TotalSparring\'s card, with TotalSparring present and no cooldown (<code>CanOfferDuel</code>, <code>cheatPreset</code>). The Cheat answer stays as it is (here: not in a cage yet) and RETAR A DUELO joins the row. SI LE GANAS reads "se une": in Cheat a win always recruits, there is no roll and no win cooldown.',
-    // facts: Preset_Cheat, cheatNeedsCage, not in my cage -> Reason_CheatNeedsCage; level 84 (SafeNpcLevel); duel offered, record 1-2
+    title: 'Cheat: any person can be challenged, at any level, and a win always recruits',
+    note: 'The Cheat preset has no ally tiers, so the duel is gated on the level alone: any person at <code>duelCheatPeopleFromLevel</code> (1, so every level; duel-any-source U1) or above, not Balanced\'s <code>allyTierEliteFromLevel</code> (80) (a free animal has its own gate, state "Wild animal 40+ ..."), read with <code>SafeNpcLevel</code> like TotalSparring\'s card, with TotalSparring present and no cooldown (<code>CanOfferDuel</code>, <code>cheatPreset</code>). The Cheat answer stays as it is (here: not in a cage yet) and RETAR A DUELO joins the row. SI LE GANAS reads "se une": in Cheat a win always recruits, there is no roll and no win cooldown.',
+    // facts: Preset_Cheat, cheatNeedsCage, not in my cage -> Reason_CheatNeedsCage; level 33 (SafeNpcLevel) >= duelCheatPeopleFromLevel 1; duel offered, record 1-2
     vm: {
       title: 'Reclutamiento', name: 'Garo', route: 'libre', routeTag: 'Libre',
       body: 'Garo no se une todavia.',

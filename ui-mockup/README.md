@@ -262,6 +262,15 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     text "metelo en una de tus jaulas" stays true (your cage still works) and the cage commands (Golpear / Noquear)
     stay on the player's own cages. Balanced is unchanged.
 
+29. **Cheat offers the duel to a person of any level, and a TotalSparring duel counts too** (duel-any-source, user
+    report 2026-10-05: "a los honorables no me deja ... retarlos a un duelo"). In Cheat a person gets RETAR A DUELO
+    from `duelCheatPeopleFromLevel` (Mod Hub "Duelo Cheat: nivel minimo de personas", 1) instead of Balanced's 80
+    (state "Cheat: any person can be challenged ..." now shows a level 33 NPC). With `duelCountExternalBouts` on
+    (Mod Hub "Duelo: contar duelos de TotalSparring") a duel the player opens from TotalSparring's own window
+    against someone outside the squad who could be challenged counts like RETAR A DUELO: a win runs the duel join
+    (and the proactive offer), a loss the cooldown. No new card or popup state: the mockup gains the two `HUB`
+    rows (appended at the end) and the updated "Duelo: retar NPC 80+" description.
+
 ### Native windows (sections 2 and 5: the card and the head notices)
 
 24. **The card and the notices step aside for Kenshi's own dialogue** (user report 2026-10-03: "if I talk to the
