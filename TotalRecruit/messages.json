@@ -959,7 +959,7 @@
     ]
   },
   "duel": {
-    "_comment": "Reto a duelo a un NPC 80+ (necesita TotalSparring). notice.* va sobre su cabeza: una linea corta y sin acentos. {name} = su nombre, {hours} = horas hasta poder retarlo otra vez, {chance} = el % de que se uniera al ganarle (Balanced).",
+    "_comment": "Reto a duelo a un NPC 80+ (necesita TotalSparring). notice.* va sobre su cabeza: una linea corta y sin acentos. {name} = su nombre, {hours} = horas hasta poder retarlo otra vez, {chance} = el % de que se uniera al ganarle (Balanced), {wins} = victorias que faltan (duelMinWinsCheat / duelMinWinsBalanced).",
     "notice": {
       "joined": [
         "Me ganaste. Me uno a ti"
@@ -969,6 +969,9 @@
       ],
       "stays": [
         "Buena pelea. Retame otra vez"
+      ],
+      "needMoreWins": [
+        "Buena pelea. Ganame otra vez"
       ]
     },
     "challenged": [
@@ -1015,8 +1018,14 @@
       ],
       "lost": [
         "{name} gana el duelo y se aleja sin volverse. Podras retarlo otra vez en {hours} h."
+      ],
+      "needMoreWins": [
+        "{name} se sacude y se aleja sin seguirte. Victorias que faltan: {wins}."
       ]
-    }
+    },
+    "needMoreWins": [
+      "{name} perdio el duelo, pero aun no se une. Victorias que faltan: {wins}."
+    ]
   },
   "_razones": [
     "Los motivos que el jugador lee cuando un NPC no se une todavia, o por que si.",
@@ -1210,7 +1219,9 @@
         "recordChance": "Duelos: {food}-{need}, si ganas {chance}% se une",
         "recordDrawsChance": "Duelos: {food}-{need}-{purse}, si ganas {chance}%",
         "recordSure": "Duelos: {food}-{need}, si ganas se une",
-        "recordDrawsSure": "Duelos: {food}-{need}-{chance}, si ganas se une"
+        "recordDrawsSure": "Duelos: {food}-{need}-{chance}, si ganas se une",
+        "recordNeedWins": "Duelos: {food}-{need}, faltan {chance} victorias",
+        "recordDrawsNeedWins": "Duelos: {food}-{need}-{purse}, faltan {chance}"
       },
       "hold": {
         "elapsed": "Encerrado: {time}"

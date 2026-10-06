@@ -271,6 +271,14 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     (and the proactive offer), a loss the cooldown. No new card or popup state: the mockup gains the two `HUB`
     rows (appended at the end) and the updated "Duelo: retar NPC 80+" description.
 
+30. **A duel can require several wins before it recruits** (duel-any-source U4). `duelMinWinsCheat` /
+    `duelMinWinsBalanced` (Mod Hub "Duelo Cheat / Balanced: victorias minimas", 1 by default = today) hold off the
+    join until that many head-to-head wins: an earlier win rolls nothing and starts no cooldown, and the card's
+    record line counts the wins still missing (state "Ally you can challenge, under the minimum duel wins":
+    "Duelos: 1-0, faltan 3 victorias"). From the minimum on, Cheat joins and Balanced rolls the usual curve,
+    counted from the first win. Decision: the popup SI LE GANAS row reads "0% de que se una" while wins are
+    missing (no new popup text key).
+
 ### Native windows (sections 2 and 5: the card and the head notices)
 
 24. **The card and the notices step aside for Kenshi's own dialogue** (user report 2026-10-03: "if I talk to the

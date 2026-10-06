@@ -13,6 +13,7 @@ const DuelNarration kPerson[DuelNarration_Count] = {
     { "duel.stays",      "{name} perdio el duelo, pero no se une ({chance}% de que se uniera). "
                          "Podras retarlo otra vez en {hours} h." },
     { "duel.lost",       "{name} gano el duelo. Vuelve cuando seas mas fuerte (podras retarlo en {hours} h)." },
+    { "duel.needMoreWins", "{name} perdio el duelo, pero aun no se une. Victorias que faltan: {wins}." },
 };
 
 const DuelNarration kAnimal[DuelNarration_Count] = {
@@ -21,6 +22,7 @@ const DuelNarration kAnimal[DuelNarration_Count] = {
     { "duel.animal.stays",      "{name} se sacude y se aleja sin seguirte ({chance}% de que se uniera). "
                                 "Podras retarlo otra vez en {hours} h." },
     { "duel.animal.lost",       "{name} gana el duelo y se aleja sin volverse. Podras retarlo otra vez en {hours} h." },
+    { "duel.animal.needMoreWins", "{name} se sacude y se aleja sin seguirte. Victorias que faltan: {wins}." },
 };
 } // namespace
 

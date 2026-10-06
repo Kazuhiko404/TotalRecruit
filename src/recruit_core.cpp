@@ -366,7 +366,7 @@ OfferDuelInput DuelInputFor(Character* character, const Verdict& verdict)
                                           &duel.draws);
     }
     const DuelJoinOdds odds = DuelNextWinOddsNow(duel.recordKnown ? duel.wins : 0);
-    duel.joinKnown = odds.sure || duel.recordKnown;
+    duel.joinKnown = odds.sure || odds.winsNeeded > 0 || duel.recordKnown;
     duel.joinSure = odds.sure;
     duel.joinChance = odds.chance;
     return duel;
@@ -993,11 +993,10 @@ std::string DuelLine(DuelNarrationId id, Character* npc, bool animal)
     return Say(line.key, line.fallback, npc);
 }
 
-std::string WithChance(const std::string& text, int chance)
+std::string WithNumber(const std::string& text, const std::string& key, int number)
 {
     std::string out = text;
-    const std::string key = "{chance}";
-    const std::string value = IntToString(chance);
+    const std::string value = IntToString(number);
     std::string::size_type at = 0;
     while ((at = out.find(key, at)) != std::string::npos)
     {
@@ -1005,6 +1004,35 @@ std::string WithChance(const std::string& text, int chance)
         at += value.size();
     }
     return out;
+}
+
+std::string WithChance(const std::string& text, int chance)
+{
+    return WithNumber(text, "{chance}", chance);
+}
+
+// duel-any-source U4: a win under the minimum wins (duel_join_rules.h) joins nobody and
+// starts no cooldown; the rival says it was a good fight and the line counts the wins
+// still missing. With the proactive offer on and the rival in reach, the offer event
+// calms it like a win that stays.
+void OnDuelWonNeedsMoreWins(Character* npc, const std::string& name, const DuelResolveResult& result,
+                            const DuelWinDecision& decision, const std::string& head)
+{
+    LogInfo(head + "needs " + IntToString(decision.winsStillNeeded) + " more win(s) vs " + name +
+            " [key " + result.npc.ToString() + "]");
+    const bool animal = DuelNpcIsAnimal(npc);
+    if (DuelRaisesHeadNotice(animal))
+    {
+        RaiseHeadNotice(npc, Say("duel.notice.needMoreWins", "Buena pelea. Ganame otra vez", npc),
+                        HeadNoticeKind_Info);
+    }
+    TellPlayer(WithNumber(Fill(DuelLine(DuelNarration_NeedMoreWins, npc, animal), name, 0, 0), "{wins}",
+                          decision.winsStillNeeded),
+               false);
+    if (GetConfig().offer.onDuelWin && WithinOfferReach(npc))
+    {
+        RequestOffer(npc, OfferTrigger_DuelWin, OfferVerdict_Calm);
+    }
 }
 
 // A won duel that did not roll the join (Balanced): a good fight, come back later.
@@ -1092,6 +1120,11 @@ void OnDuelWon(const DuelResolveResult& result, double nowHours)
     const std::string head = "[duel] " + winnerName + " won (wins " + IntToString(facts.wins) +
                              "): join chance " + IntToString(decision.chance) + "%, roll " +
                              IntToString(decision.roll) + " -> ";
+    if (decision.winsStillNeeded > 0)
+    {
+        OnDuelWonNeedsMoreWins(npc, name, result, decision, head);
+        return;
+    }
     if (RequestDuelOffer(npc, name, result, decision, nowHours, head))
     {
         return;

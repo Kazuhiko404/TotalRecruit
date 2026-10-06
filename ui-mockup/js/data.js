@@ -112,6 +112,21 @@ var STATES = [
     }
   },
   {
+    id: 'allyDuelNeedWins',
+    title: 'Ally you can challenge, under the minimum duel wins',
+    note: 'duel-any-source U4. With <code>duelMinWinsBalanced</code> (or <code>duelMinWinsCheat</code>) above 1, a win under the minimum never recruits: no roll, no win cooldown. While the next win is still short of it, the record line says how many wins are missing, the next one included (<code>DuelNextWinOdds</code> <code>winsNeeded</code>): "Duelos: 1-0, faltan 3 victorias" (<code>readout.line.duel.recordNeedWins</code>; with draws <code>recordDrawsNeedWins</code> "Duelos: 1-0-1, faltan 3"). One missing win means the next one decides, so the line goes back to the odds ("si ganas 45% se une"; the curve counts from the first win). The popup row SI LE GANAS reads "0% de que se una" meanwhile. After such a win the rival says "Buena pelea. Ganame otra vez" (<code>duel.notice.needMoreWins</code>) and the roller "... aun no se une. Victorias que faltan: 2." (<code>duel.needMoreWins</code>).',
+    // facts: Route FreeWorld, Balanced, level 85, Reason_AllyTemporary; duelMinWinsBalanced 4, record 1-0-0 -> winsNeeded 3
+    vm: {
+      name: 'Beep el Sabio', route: 'libre', routeLabel: 'Libre',
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
+      showChance: false, chancePct: 0, ready: true,
+      showDefeats: false, defeats: 0, defeatsNeeded: 0,
+      showFood: false,
+      why:  { text: 'Aliado: te acompana unos dias', tone: 'ok' },
+      alt:  { text: 'Duelos: 1-0, faltan 3 victorias' }
+    }
+  },
+  {
     id: 'rescue',
     title: 'Saved life (will join)',
     note: 'Rescate with a certain outcome (no roll left): the chance row is replaced by the result. Same card, the line goes green.',
@@ -330,7 +345,11 @@ var HUB = [
   ['Duelo Cheat: nivel minimo de personas', 'duelCheatPeopleFromLevel', '1',
    'En Cheat, nivel desde el que cualquier persona ofrece RETAR A DUELO (Balanced sigue pidiendo un aliado de nivel temporal, 80)'],
   ['Duelo: contar duelos de TotalSparring', 'duelCountExternalBouts', 'ON',
-   'Un duelo abierto desde TotalSparring contra alguien que no es de tu grupo cuenta como un reto de TotalRecruit si ese NPC podria ser retado: ganarlo da la chance de que se una, perderlo pone la espera']
+   'Un duelo abierto desde TotalSparring contra alguien que no es de tu grupo cuenta como un reto de TotalRecruit si ese NPC podria ser retado: ganarlo da la chance de que se una, perderlo pone la espera'],
+  ['Duelo Cheat: victorias minimas', 'duelMinWinsCheat', '1',
+   'En Cheat, cuantas veces hay que ganarle a duelo antes de que una victoria lo reclute (1 = la primera)'],
+  ['Duelo Balanced: victorias minimas', 'duelMinWinsBalanced', '1',
+   'En Balanced, cuantas veces hay que ganarle a duelo antes de tirar la chance de que se una (1 = desde la primera; la chance sigue contando desde la primera victoria)']
 ];
 
 // The proactive offer (src/offer_requests.h, src/submission_director.cpp): after a gesture of

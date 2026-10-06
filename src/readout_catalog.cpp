@@ -84,6 +84,8 @@ const Row kRows[] = {
     { "readout.line.duel.recordSure",        "Duelos: {food}-{need}, si ganas se une" },             // kLineDuelRecordSure
     { "readout.line.duel.recordDrawsSure",   "Duelos: {food}-{need}-{chance}, si ganas se une" },    // kLineDuelRecordDrawsSure
     { "readout.line.hold.elapsed",           "Encerrado: {time}" },                      // kLineHoldElapsed
+    { "readout.line.duel.recordNeedWins",      "Duelos: {food}-{need}, faltan {chance} victorias" },          // kLineDuelRecordNeedWins
+    { "readout.line.duel.recordDrawsNeedWins", "Duelos: {food}-{need}-{purse}, faltan {chance}" },  // kLineDuelRecordDrawsNeedWins (40 glyphs)
 };
 
 // One label per ReadoutRoute, in enum order.

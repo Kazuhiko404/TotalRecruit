@@ -19,6 +19,12 @@
 //              hour goes into the duel cooldown book (duel_challenge_rules.h), the same
 //              saved row a lost duel uses.
 //
+//   minimum  = duelMinWinsCheat / duelMinWinsBalanced (duel-any-source U4, 1 by default):
+//              a win with fewer head-to-head wins never joins, rolls nothing and starts
+//              no win cooldown (Cheat too); it says how many wins are still missing.
+//              From the minimum on, Cheat joins and Balanced rolls the curve above,
+//              still counted from the first win (minimum 3: the third win rolls 65%).
+//
 // tests/rules_tests/duel_join_rules_tests.cpp.
 
 #include "char_key.h"
@@ -37,14 +43,20 @@ const int kDuelWinCooldownWideFromLevel = 100;
 // win reads as the first.
 int DuelJoinChance(int wins, const DuelChallenges& config);
 
+// The head-to-head wins this preset needs before a win can recruit; at least 1.
+int DuelMinWins(bool cheat, const DuelChallenges& config);
+
 // What the next win would do, for the popup row and the card line: Cheat is sure,
-// Balanced is DuelJoinChance(winsSoFar + 1).
+// Balanced is DuelJoinChance(winsSoFar + 1). When the next win is still under the
+// minimum, neither: chance 0 and `winsNeeded` the wins still missing, the next one
+// included (minimum 3 with none so far: 3).
 struct DuelJoinOdds
 {
     bool sure;
     int chance;
+    int winsNeeded;
 
-    DuelJoinOdds() : sure(false), chance(0) {}
+    DuelJoinOdds() : sure(false), chance(0), winsNeeded(0) {}
 };
 DuelJoinOdds DuelNextWinOdds(bool cheat, int winsSoFar, const DuelChallenges& config);
 
@@ -80,8 +92,14 @@ struct DuelWinDecision
     // Stays: the drawn cooldown and the game hour it ends (DuelCooldownUntilHour).
     float cooldownHours;
     int cooldownUntilHour;
+    // Under the minimum wins: how many more wins it still needs (0 otherwise). Such a
+    // win has no roll and no cooldown.
+    int winsStillNeeded;
 
-    DuelWinDecision() : joins(false), chance(0), roll(0), cooldownHours(0.0f), cooldownUntilHour(0) {}
+    DuelWinDecision()
+        : joins(false), chance(0), roll(0), cooldownHours(0.0f), cooldownUntilHour(0), winsStillNeeded(0)
+    {
+    }
 };
 
 DuelWinDecision DecideDuelWin(const DuelWinFacts& facts, const DuelChallenges& config);

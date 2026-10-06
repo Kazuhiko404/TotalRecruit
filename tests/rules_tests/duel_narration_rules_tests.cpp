@@ -71,6 +71,15 @@ void AnAnimalNeverSpeaksOverItsHead()
     }
 }
 
+void AWinUnderTheMinimumSaysTheWinsLeft()
+{
+    const char* name = "narration: a win under the minimum wins reads duel(.animal).needMoreWins with {wins}";
+    CHECK(std::string(DuelNarrationFor(DuelNarration_NeedMoreWins, false).key) == "duel.needMoreWins");
+    CHECK(std::string(DuelNarrationFor(DuelNarration_NeedMoreWins, true).key) == "duel.animal.needMoreWins");
+    CHECK(Contains(DuelNarrationFor(DuelNarration_NeedMoreWins, false).fallback, "{wins}"));
+    CHECK(Contains(DuelNarrationFor(DuelNarration_NeedMoreWins, true).fallback, "{wins}"));
+}
+
 void AnUnknownIdReadsAsTheChallenge()
 {
     const char* name = "narration: an out-of-range id falls back to the challenge line";
@@ -85,5 +94,6 @@ void RunDuelNarrationRulesTests()
     AnAnimalGetsItsOwnNarratorLines();
     EveryLineHasAFallbackNamingTheNpc();
     AnAnimalNeverSpeaksOverItsHead();
+    AWinUnderTheMinimumSaysTheWinsLeft();
     AnUnknownIdReadsAsTheChallenge();
 }

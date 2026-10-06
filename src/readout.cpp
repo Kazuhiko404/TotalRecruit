@@ -202,6 +202,7 @@ void AddDuelRecord(Character* character, ReadoutInput* input)
     input->duelJoinKnown = c.known;
     input->duelJoinSure = odds.sure;
     input->duelJoinChance = odds.chance;
+    input->duelJoinWinsNeeded = odds.winsNeeded;
 }
 
 // Works the card out for this character: the one full evaluation. False when there

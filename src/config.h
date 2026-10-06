@@ -609,6 +609,12 @@ struct DuelChallenges
     // challenge pending, counts like RETAR A DUELO when the rival is an outsider who
     // would be offered the button (duel-any-source U2). Off: such duels are ignored.
     bool countExternalBouts;
+    // Head-to-head wins a duel needs before a win can recruit (duel-any-source U4),
+    // per preset, 1..20. A win under it never joins and rolls nothing (Cheat too); from
+    // it on, Cheat joins and Balanced rolls the curve above, still counted from the
+    // first win. 1: every win decides, as before.
+    int minWinsCheat;
+    int minWinsBalanced;
 
     DuelChallenges()
         : enabled(true),
@@ -622,7 +628,9 @@ struct DuelChallenges
           animalsEnabled(true),
           animalsFromLevel(40),
           cheatPeopleFromLevel(1),
-          countExternalBouts(true)
+          countExternalBouts(true),
+          minWinsCheat(1),
+          minWinsBalanced(1)
     {
     }
 };

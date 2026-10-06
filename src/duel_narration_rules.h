@@ -13,6 +13,7 @@
 //   Joined       duel.joined       duel.animal.joined
 //   Stays        duel.stays        duel.animal.stays   ({hours}, {chance})
 //   Lost         duel.lost         duel.animal.lost    ({hours})
+//   NeedMoreWins duel.needMoreWins duel.animal.needMoreWins ({wins})
 //   head notice  yes               never
 //
 // Each line carries its messages.json key and the built-in text used when the file has
@@ -28,6 +29,8 @@ enum DuelNarrationId
     DuelNarration_Joined,
     DuelNarration_Stays,
     DuelNarration_Lost,
+    // A win under the minimum wins (duel_join_rules.h, duel-any-source U4): {wins} left.
+    DuelNarration_NeedMoreWins,
     // Not a line: how many there are.
     DuelNarration_Count
 };

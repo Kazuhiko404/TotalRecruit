@@ -140,6 +140,85 @@ void CheatAlwaysJoins()
     CHECK(d.cooldownUntilHour == 0);
 }
 
+void TheMinimumWinsDefaultToOne()
+{
+    const char* name = "min wins: both presets default to 1 (today's behaviour); fewer reads as 1";
+    CHECK(kConfig.minWinsCheat == 1);
+    CHECK(kConfig.minWinsBalanced == 1);
+    CHECK(DuelMinWins(true, kConfig) == 1);
+    CHECK(DuelMinWins(false, kConfig) == 1);
+    DuelChallenges c;
+    c.minWinsCheat = 3;
+    c.minWinsBalanced = 0;
+    CHECK(DuelMinWins(true, c) == 3);
+    CHECK(DuelMinWins(false, c) == 1);
+    // Default: the first win decides as before.
+    CHECK(DecideDuelWin(Win("id:x", 1, 85), kConfig).winsStillNeeded == 0);
+    CHECK(DuelNextWinOdds(false, 0, kConfig).winsNeeded == 0);
+}
+
+void AWinUnderTheMinimumNeverJoins()
+{
+    const char* name = "min wins: a win under the minimum stays with no roll and no cooldown, Cheat too";
+    DuelChallenges c;
+    c.minWinsCheat = 3;
+    c.minWinsBalanced = 2;
+    c.joinBaseChance = 100;
+
+    DuelWinFacts cheat = Win("id:cheat", 1, 85);
+    cheat.cheat = true;
+    DuelWinDecision d = DecideDuelWin(cheat, c);
+    CHECK(!d.joins);
+    CHECK(d.chance == 0);
+    CHECK(d.roll == 0);
+    CHECK(d.winsStillNeeded == 2);
+    CHECK(d.cooldownUntilHour == 0);
+    cheat.wins = 2;
+    CHECK(DecideDuelWin(cheat, c).winsStillNeeded == 1);
+    cheat.wins = 3;
+    d = DecideDuelWin(cheat, c);
+    CHECK(d.joins);
+    CHECK(d.winsStillNeeded == 0);
+
+    DuelWinFacts balanced = Win("id:bal", 1, 85);
+    d = DecideDuelWin(balanced, c);
+    CHECK(!d.joins);
+    CHECK(d.winsStillNeeded == 1);
+    CHECK(d.cooldownUntilHour == 0);
+    balanced.wins = 2;
+    d = DecideDuelWin(balanced, c);
+    CHECK(d.winsStillNeeded == 0);
+    CHECK(d.chance == 100);            // the curve still counts from the first win
+    CHECK(d.joins);
+
+    DuelChallenges curve;
+    curve.minWinsBalanced = 3;
+    CHECK(DecideDuelWin(Win("id:c", 3, 85), curve).chance == 65);
+}
+
+void TheNextWinOddsSayHowManyWinsAreMissing()
+{
+    const char* name = "min wins: the card odds count the wins still missing, the next one included";
+    DuelChallenges c;
+    c.minWinsCheat = 3;
+    c.minWinsBalanced = 4;
+    DuelJoinOdds o = DuelNextWinOdds(true, 0, c);
+    CHECK(!o.sure);
+    CHECK(o.chance == 0);
+    CHECK(o.winsNeeded == 3);
+    o = DuelNextWinOdds(true, 1, c);
+    CHECK(o.winsNeeded == 2);
+    o = DuelNextWinOdds(true, 2, c);      // the next win is the third: sure
+    CHECK(o.sure);
+    CHECK(o.winsNeeded == 0);
+    o = DuelNextWinOdds(false, 1, c);
+    CHECK(o.winsNeeded == 3);
+    CHECK(o.chance == 0);
+    o = DuelNextWinOdds(false, 3, c);     // the fourth win rolls the curve's fourth step
+    CHECK(o.winsNeeded == 0);
+    CHECK(o.chance == 85);
+}
+
 void BalancedRollsTheSeededChance()
 {
     const char* name = "decide: Balanced joins exactly when the seeded roll is under the chance";
@@ -225,6 +304,9 @@ void RunDuelJoinRulesTests()
     ABandBelowItsMinReadsAsTheMin();
     ThePickStaysInTheBandAndCoversIt();
     CheatAlwaysJoins();
+    TheMinimumWinsDefaultToOne();
+    AWinUnderTheMinimumNeverJoins();
+    TheNextWinOddsSayHowManyWinsAreMissing();
     BalancedRollsTheSeededChance();
     TheSameWinNeverRerolls();
     AWinThatStaysStartsTheWinCooldown();

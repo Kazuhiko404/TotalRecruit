@@ -175,6 +175,14 @@ ReadoutLineView DuelRecordLine(const ReadoutInput& in)
         line.id = draws > 0 ? kLineDuelRecordWithDraws : kLineDuelRecord;
         return line;
     }
+    // Under the minimum wins (duel-any-source U4): the wins still missing, not odds.
+    if (in.duelJoinWinsNeeded > 0)
+    {
+        line.purse = draws;
+        line.chance = in.duelJoinWinsNeeded;
+        line.id = draws > 0 ? kLineDuelRecordDrawsNeedWins : kLineDuelRecordNeedWins;
+        return line;
+    }
     if (in.duelJoinSure)
     {
         line.id = draws > 0 ? kLineDuelRecordDrawsSure : kLineDuelRecordSure;

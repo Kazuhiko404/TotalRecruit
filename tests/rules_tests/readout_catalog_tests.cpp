@@ -21,7 +21,7 @@ bool IsHidden(int id)
 void EveryReasonHasARowPlusTheCardsOwnLines()
 {
     const char* name = "catalog: one row per ReasonKey plus the open roll, beat-again and the ally prices";
-    CHECK(ReadoutLineCount() == (int)Reason_Count + 13);
+    CHECK(ReadoutLineCount() == (int)Reason_Count + 15);
     CHECK(kLineRollOpen == (int)Reason_Count);
     CHECK(kLineFieldYieldBeatAgain == (int)Reason_Count + 1);
     CHECK(kLineAllyPaidJoin == (int)Reason_Count + 2);
@@ -35,6 +35,17 @@ void EveryReasonHasARowPlusTheCardsOwnLines()
     CHECK(kLineDuelRecordSure == (int)Reason_Count + 10);
     CHECK(kLineDuelRecordDrawsSure == (int)Reason_Count + 11);
     CHECK(kLineHoldElapsed == (int)Reason_Count + 12);
+    CHECK(kLineDuelRecordNeedWins == (int)Reason_Count + 13);
+    CHECK(kLineDuelRecordDrawsNeedWins == (int)Reason_Count + 14);
+}
+
+void TheDuelNeedWinsLinesCarryTheCount()
+{
+    const char* name = "catalog: the record + missing wins lines (count in {chance}; draws in {purse})";
+    CHECK(std::string(ReadoutLineDefaultText(kLineDuelRecordNeedWins)) == "Duelos: {food}-{need}, faltan {chance} victorias");
+    CHECK(std::string(ReadoutLineDefaultText(kLineDuelRecordDrawsNeedWins)) == "Duelos: {food}-{need}-{purse}, faltan {chance}");
+    CHECK(std::string(ReadoutLineMessageKey(kLineDuelRecordNeedWins)) == "readout.line.duel.recordNeedWins");
+    CHECK(std::string(ReadoutLineMessageKey(kLineDuelRecordDrawsNeedWins)) == "readout.line.duel.recordDrawsNeedWins");
 }
 
 void TheHoldLineCarriesTheTime()
@@ -194,6 +205,7 @@ void RunReadoutCatalogTests()
     EveryReasonHasARowPlusTheCardsOwnLines();
     TheDuelRecordLinesCarryTheCounts();
     TheDuelChanceLinesCarryTheChance();
+    TheDuelNeedWinsLinesCarryTheCount();
     TheCardsOwnLinesSayWhatTheyMean();
     TheAllyTierLinesNameTheFriendship();
     TheTempMemberLineCountsTheDays();

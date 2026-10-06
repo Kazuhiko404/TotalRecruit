@@ -50,6 +50,12 @@ const int kLineDuelRecordDrawsSure = Reason_Count + 11;
 // clock counts (prisoner-hold-time). The hours travel in the line's `hours`, written
 // by hold_duration_rules.h.
 const int kLineHoldElapsed = Reason_Count + 12;
+// The record while the next win is still under the minimum wins (duel_join_rules.h,
+// duel-any-source U4): "Duelos: {food}-{need}, faltan {chance} victorias" (the count in
+// `chance`, always 2 or more: one missing win means the next one decides), and with
+// the draws in `purse` ("..., faltan {chance}": "victorias" does not fit 40 glyphs).
+const int kLineDuelRecordNeedWins = Reason_Count + 13;
+const int kLineDuelRecordDrawsNeedWins = Reason_Count + 14;
 
 int ReadoutLineCount();
 // messages.json path ("readout.line.cats.ask") and the built-in text used when the

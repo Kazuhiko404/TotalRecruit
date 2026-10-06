@@ -104,6 +104,9 @@ struct ReadoutInput
     bool duelJoinKnown;
     bool duelJoinSure;
     int duelJoinChance;
+    // Wins still missing before a win can recruit (DuelJoinOdds::winsNeeded): above 0
+    // the line says "faltan N victorias" instead of the odds.
+    int duelJoinWinsNeeded;
     // How long they have been held, in game hours, set by the caller only when a hold
     // clock is running for them and they are in a cage the clock counts
     // (route_decisions.h HoldClockCounts). It rides its own line under the header
@@ -116,7 +119,7 @@ struct ReadoutInput
           mercyPending(false), rollKeyed(false),
           tempMember(false), tempDaysLeft(0), helper(false), helperDaysLeft(0),
           duelRecordKnown(false), duelWins(0), duelLosses(0), duelDraws(0),
-          duelJoinKnown(false), duelJoinSure(false), duelJoinChance(0),
+          duelJoinKnown(false), duelJoinSure(false), duelJoinChance(0), duelJoinWinsNeeded(0),
           holdKnown(false), hoursHeld(0.0f)
     {
     }

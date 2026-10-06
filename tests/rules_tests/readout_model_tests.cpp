@@ -526,6 +526,36 @@ void TheDuelRecordCarriesTheNextWinsChance()
     CHECK(v.secondary.id == kLineDuelRecord);
 }
 
+void TheDuelRecordSaysHowManyWinsAreMissing()
+{
+    const char* name = "duel: under the minimum wins the record line says how many wins are missing";
+    ReadoutInput in = Input(Route_FreeWorld, Reason_AllyTemporary);
+    in.verdict.allyTiered = true;
+    in.verdict.allyLevel = 85;
+    in.verdict.willJoin = true;
+    in.duelRecordKnown = true;
+    in.duelWins = 1;
+    in.duelLosses = 2;
+    in.duelDraws = 0;
+    in.duelJoinKnown = true;
+    in.duelJoinSure = false;
+    in.duelJoinChance = 0;
+    in.duelJoinWinsNeeded = 3;
+    ReadoutView v = BuildReadout(in, kConfig);
+    CHECK(v.secondary.id == kLineDuelRecordNeedWins);
+    CHECK(v.secondary.food == 1 && v.secondary.need == 2 && v.secondary.chance == 3);
+
+    in.duelDraws = 4;
+    v = BuildReadout(in, kConfig);
+    CHECK(v.secondary.id == kLineDuelRecordDrawsNeedWins);
+    CHECK(v.secondary.purse == 4 && v.secondary.chance == 3);
+
+    // Even a "sure" flag yields to the missing wins.
+    in.duelJoinSure = true;
+    v = BuildReadout(in, kConfig);
+    CHECK(v.secondary.id == kLineDuelRecordDrawsNeedWins);
+}
+
 void TheDuelRecordNeverRidesAMembersCard()
 {
     const char* name = "duel: a temporary member's or helper's card stays one line";
@@ -601,6 +631,7 @@ void RunReadoutModelTests()
     AChallengeableAllyShowsTheDuelRecord();
     TheDuelRecordNeverRidesAMembersCard();
     TheDuelRecordCarriesTheNextWinsChance();
+    TheDuelRecordSaysHowManyWinsAreMissing();
     AHelperShowsTheDaysLeft();
     AHeldPrisonerShowsTheTimeHeld();
     QuestionsThatAreNotAboutAPersonHideTheCard();

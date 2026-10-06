@@ -29,17 +29,29 @@ int DuelJoinChance(int wins, const DuelChallenges& config)
     return chance >= 100 ? 100 : (int)chance;
 }
 
+int DuelMinWins(bool cheat, const DuelChallenges& config)
+{
+    const int configured = cheat ? config.minWinsCheat : config.minWinsBalanced;
+    return configured < 1 ? 1 : configured;
+}
+
 DuelJoinOdds DuelNextWinOdds(bool cheat, int winsSoFar, const DuelChallenges& config)
 {
     DuelJoinOdds odds;
+    const int sofarWins = winsSoFar > 0 ? winsSoFar : 0;
+    const int minWins = DuelMinWins(cheat, config);
+    if (sofarWins + 1 < minWins)
+    {
+        odds.winsNeeded = minWins - sofarWins;
+        return odds;
+    }
     if (cheat)
     {
         odds.sure = true;
         odds.chance = 100;
         return odds;
     }
-    const int sofar = winsSoFar > 0 ? winsSoFar : 0;
-    odds.chance = DuelJoinChance(sofar + 1, config);
+    odds.chance = DuelJoinChance(sofarWins + 1, config);
     return odds;
 }
 
@@ -81,13 +93,20 @@ float DuelWinCooldownHoursFromSeed(unsigned int seed, int npcLevel, const DuelCh
 DuelWinDecision DecideDuelWin(const DuelWinFacts& facts, const DuelChallenges& config)
 {
     DuelWinDecision d;
+    const int wins = facts.wins < 1 ? 1 : facts.wins;
+    const int minWins = DuelMinWins(facts.cheat, config);
+    if (wins < minWins)
+    {
+        // Not yet: no roll and no cooldown, only the count of wins still missing.
+        d.winsStillNeeded = minWins - wins;
+        return d;
+    }
     if (facts.cheat)
     {
         d.joins = true;
         d.chance = 100;
         return d;
     }
-    const int wins = facts.wins < 1 ? 1 : facts.wins;
     d.chance = DuelJoinChance(wins, config);
     d.roll = DuelJoinRollFromSeed(DailySeed(facts.npc, wins, kDuelJoinRollSalt));
     d.joins = d.roll < d.chance;
