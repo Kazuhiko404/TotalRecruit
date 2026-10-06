@@ -93,8 +93,11 @@ struct DuelOfferFacts
     bool cheatPreset;
     bool isAnimal;
     int npcLevel;
-    // allyTiers.eliteFromLevel: the 80+ cut.
+    // allyTiers.eliteFromLevel: the 80+ cut (Balanced people).
     int eliteFromLevel;
+    // duelChallenges.cheatPeopleFromLevel: the Cheat cut for people (duel-any-source
+    // U1, 1: every level).
+    int cheatPeopleFromLevel;
     // A lost duel's cooldown still runs for this NPC.
     bool onCooldown;
     // The animal branch (animal-duel-submission D1), read only when `isAnimal`:
@@ -108,14 +111,15 @@ struct DuelOfferFacts
 
     DuelOfferFacts()
         : enabled(false), tsAvailable(false), allyTiered(false), cheatPreset(false), isAnimal(false),
-          npcLevel(0), eliteFromLevel(80), onCooldown(false), animalAllowed(false),
+          npcLevel(0), eliteFromLevel(80), cheatPeopleFromLevel(1), onCooldown(false), animalAllowed(false),
           animalOwned(false), animalFromLevel(40)
     {
     }
 };
 
 // The one predicate: enabled, TotalSparring available and no cooldown running; then
-//   a person:  a Balanced tiered ally or the Cheat preset, at the elite cut level or above;
+//   a person:  a Balanced tiered ally at the elite cut level or above, or, in the Cheat
+//              preset, anyone at cheatPeopleFromLevel or above;
 //   an animal: allowed, owned by nobody, at animalFromLevel or above (both presets: an
 //              animal has no ally tier and no 80+ cut).
 bool CanOfferDuel(const DuelOfferFacts& facts);

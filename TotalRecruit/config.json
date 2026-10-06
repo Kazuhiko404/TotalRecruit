@@ -83,6 +83,7 @@
   "duelWinCooldownMaxHours": 120.0,
   "duelAnimalsEnabled": true,
   "duelAnimalsFromLevel": 40,
+  "duelCheatPeopleFromLevel": 1,
 
   "offerOnDuelWin": true,
   "offerOnHeal": true,

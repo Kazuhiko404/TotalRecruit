@@ -114,9 +114,10 @@ void CheatOffersTheDuelOnTheLevelAlone()
     DuelOfferFacts f = Offerable();
     f.allyTiered = false;
     f.cheatPreset = true;
+    f.cheatPeopleFromLevel = 80;
     CHECK(CanOfferDuel(f));
     f.npcLevel = 79;
-    CHECK(!CanOfferDuel(f));
+    CHECK(!CanOfferDuel(f));         // Cheat's own cut, here raised to 80
     f.npcLevel = 84;
     f.isAnimal = true;
     CHECK(!CanOfferDuel(f));
@@ -126,6 +127,32 @@ void CheatOffersTheDuelOnTheLevelAlone()
     f.onCooldown = false;
     f.tsAvailable = false;
     CHECK(!CanOfferDuel(f));
+}
+
+void CheatOffersTheDuelToAPersonOfAnyLevel()
+{
+    const char* name = "offer: Cheat reads duelCheatPeopleFromLevel (1), Balanced keeps the elite cut";
+    DuelOfferFacts f = Offerable();
+    f.allyTiered = false;
+    f.cheatPreset = true;
+    f.npcLevel = 33;
+    CHECK(f.cheatPeopleFromLevel == 1);   // the default: every level
+    CHECK(CanOfferDuel(f));
+    f.npcLevel = 1;
+    CHECK(CanOfferDuel(f));
+    f.cheatPeopleFromLevel = 40;
+    f.npcLevel = 39;
+    CHECK(!CanOfferDuel(f));
+    f.npcLevel = 40;
+    CHECK(CanOfferDuel(f));
+
+    // Balanced: a tiered ally at 33 still gets nothing; the Cheat cut never applies.
+    DuelOfferFacts b = Offerable();
+    b.npcLevel = 33;
+    b.cheatPeopleFromLevel = 1;
+    CHECK(!CanOfferDuel(b));
+    b.npcLevel = 80;
+    CHECK(CanOfferDuel(b));
 }
 
 void AWonDuelThatStaysUsesTheSameCooldownBook()
@@ -402,6 +429,7 @@ void RunDuelChallengeRulesTests()
     AWonDuelRecruits();
     AnotherSquadMemberMayFightIt();
     CheatOffersTheDuelOnTheLevelAlone();
+    CheatOffersTheDuelToAPersonOfAnyLevel();
     AWonDuelThatStaysUsesTheSameCooldownBook();
     ALostOrDrawnDuelStartsTheCooldown();
     ASparNeverCounts();

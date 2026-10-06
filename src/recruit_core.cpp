@@ -1203,6 +1203,7 @@ bool DuelOfferedFor(Character* npc, const Verdict& verdict)
     facts.npcLevel = verdict.allyLevel;
     SafeNpcLevel(npc, &facts.npcLevel);
     facts.eliteFromLevel = config.allyTiers.eliteFromLevel;
+    facts.cheatPeopleFromLevel = config.duelChallenges.cheatPeopleFromLevel;
     CharKey key;
     double now = 0.0;
     facts.onCooldown = SafeFindCharKey(npc, &key) && SafeGameHours(&now) && DuelOnCooldown(key, now);

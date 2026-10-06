@@ -269,7 +269,7 @@ static bool DoRegisterModHub()
     regInt(api, mod, "helper_debug_key", "Ayudante: tecla de prueba", "Codigo de tecla de Windows (119 = F8). Con un NPC seleccionado, se ofrece al instante. 0 = apagado", 0, 255, 1, &c.helpers.debugKey);
     regBool(api, mod, "helper_native_bodyguard", "Ayudante: contrato nativo", "Te escolta con el contrato de guardaespaldas del juego, como un mercenario. Apagado (o si falla), lo guia el mod: te sigue corriendo y ataca a quien ataca a tu lider", &c.helpers.nativeBodyguard);
     // Reto a duelo: un NPC 80+ puede unirse si le ganas un duelo de TotalSparring.
-    regBool(api, mod, "duel_enabled", "Duelo: retar NPC 80+", "Con TotalSparring instalado, la ventana de un NPC de nivel 80+ ofrece RETAR A DUELO (Balanced: aliados con niveles; Cheat: cualquier persona). Ganar da una chance de que se una (Cheat: se une)", &c.duelChallenges.enabled);
+    regBool(api, mod, "duel_enabled", "Duelo: retar NPC 80+", "Con TotalSparring instalado, la ventana de un NPC ofrece RETAR A DUELO (Balanced: aliados con niveles desde el nivel 80; Cheat: cualquier persona desde el nivel minimo de personas). Ganar da una chance de que se una (Cheat: se une)", &c.duelChallenges.enabled);
     regFloat(api, mod, "duel_cooldown_hours", "Duelo: horas tras perder", "Horas de juego sin poder retarlo otra vez despues de perder o empatar", 0.0f, 720.0f, 1.0f, 0, &c.duelChallenges.cooldownHours);
     regFloat(api, mod, "duel_expiry_hours", "Duelo: horas que espera el reto", "Si el duelo no termina en estas horas de juego, el reto se olvida", 0.5f, 168.0f, 0.5f, 1, &c.duelChallenges.expiryHours);
     regInt(api, mod, "duel_join_base_chance", "Duelo: chance base al ganar", "Porcentaje de que se una tras tu primera victoria contra el (solo Balanced)", 0, 100, 5, &c.duelChallenges.joinBaseChance);
@@ -280,6 +280,8 @@ static bool DoRegisterModHub()
     // Reto a duelo a animales sin dueno (ambos presets).
     regBool(api, mod, "duel_animals_enabled", "Duelo: retar animales", "Con TotalSparring instalado, un animal sin dueno de nivel suficiente tambien ofrece RETAR A DUELO (Balanced: la misma chance que una persona; Cheat: se une)", &c.duelChallenges.animalsEnabled);
     regInt(api, mod, "duel_animals_from_level", "Duelo: nivel minimo de animales", "Nivel desde el que un animal sin dueno puede ser retado a duelo", 1, 500, 5, &c.duelChallenges.animalsFromLevel);
+    // duel-any-source U1: Cheat offers the duel to a person of any level.
+    regInt(api, mod, "duel_cheat_people_from_level", "Duelo Cheat: nivel minimo de personas", "En Cheat, nivel desde el que cualquier persona ofrece RETAR A DUELO (Balanced sigue pidiendo un aliado de nivel temporal, 80)", 1, 500, 1, &c.duelChallenges.cheatPeopleFromLevel);
     // proactive-offer: the NPC or animal walks up and offers itself after a gesture.
     regBool(api, mod, "offer_on_duel_win", "Oferta: al ganar un duelo", "Al ganarle un duelo, si la tirada sale bien camina hasta ti y te ofrece unirse (Aceptar, Ignorar, Rechazar). Apagado: se une al instante como antes", &c.offer.onDuelWin);
     regBool(api, mod, "offer_on_heal", "Oferta: al curarlo", "Si alguien de tu grupo cura a un NPC o animal que no es tuyo, al levantarse viene a ofrecerse si la tirada sale bien", &c.offer.onHeal);

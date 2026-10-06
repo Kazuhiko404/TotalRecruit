@@ -602,6 +602,9 @@ struct DuelChallenges
     // up (animal-duel-submission D1): no ally tier and no 80+ cut. Off, only people.
     bool animalsEnabled;
     int animalsFromLevel;
+    // Cheat: the level a person needs for RETAR A DUELO (duel-any-source U1). Balanced
+    // keeps allyTiers.eliteFromLevel with a tiered ally. 1: every level.
+    int cheatPeopleFromLevel;
 
     DuelChallenges()
         : enabled(true),
@@ -613,7 +616,8 @@ struct DuelChallenges
           winCooldownMaxHoursUnder100(72.0f),
           winCooldownMaxHours(120.0f),
           animalsEnabled(true),
-          animalsFromLevel(40)
+          animalsFromLevel(40),
+          cheatPeopleFromLevel(1)
     {
     }
 };

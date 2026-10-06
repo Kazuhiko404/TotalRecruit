@@ -16,10 +16,15 @@ bool AnimalMayDuel(const DuelOfferFacts& facts)
     return facts.animalAllowed && !facts.animalOwned && facts.npcLevel >= facts.animalFromLevel;
 }
 
-// A person: a Balanced tiered ally or the Cheat preset, at the elite cut level.
+// A person: in Cheat, anyone at Cheat's own cut (duel-any-source U1: 1, every level);
+// otherwise a Balanced tiered ally at the elite cut level.
 bool PersonMayDuel(const DuelOfferFacts& facts)
 {
-    return (facts.allyTiered || facts.cheatPreset) && facts.npcLevel >= facts.eliteFromLevel;
+    if (facts.cheatPreset)
+    {
+        return facts.npcLevel >= facts.cheatPeopleFromLevel;
+    }
+    return facts.allyTiered && facts.npcLevel >= facts.eliteFromLevel;
 }
 } // namespace
 
