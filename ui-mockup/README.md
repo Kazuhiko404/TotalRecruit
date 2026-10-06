@@ -258,9 +258,11 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 28. **In Cheat any cage counts** (cheat-any-cage, user request 2026-10-05: "for cheat mode drop the limit of only
     recruiting from your cell"). With `cheatAnyCage` on (Mod Hub "Cheat: cualquier jaula", last `HUB` row) a
     prisoner in another faction's cage, shackles or carried off (`SafeInPrison`) gets the same one-minute wait and
-    joins, on the cage route. No card or popup state changes, so the mockup only gains the Mod Hub row: the refusal
-    text "metelo en una de tus jaulas" stays true (your cage still works) and the cage commands (Golpear / Noquear)
-    stay on the player's own cages. Balanced is unchanged.
+    joins, on the cage route. The cage commands (Golpear / Noquear) stay on the player's own cages. Balanced is
+    unchanged. Update (duel-any-source U5, user report): "metelo en una de tus jaulas" read wrong with any cage, so
+    with `cheatAnyCage` on the refusal is `Reason_CheatNeedsAnyCage` (`cheat.needsAnyCage`: "metelo en una jaula y
+    hablara enseguida", ...; state "Cheat: any person can be challenged ..." shows it); off, `cheat.needsCage` as
+    before. The card line stays "Metelo en una jaula".
 
 29. **Cheat offers the duel to a person of any level, and a TotalSparring duel counts too** (duel-any-source, user
     report 2026-10-05: "a los honorables no me deja ... retarlos a un duelo"). In Cheat a person gets RETAR A DUELO

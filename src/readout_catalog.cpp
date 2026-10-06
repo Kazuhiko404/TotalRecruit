@@ -71,6 +71,7 @@ const Row kRows[] = {
     { "readout.line.animal.yield.notYet",    "Aun no se somete: vencelo o dale comida" },
     { "readout.line.cheat.animal.healed",    "Lo curaste: te sigue" },
     { "readout.line.cheat.animal.defeated",  "Lo venciste: te sigue" },
+    { "readout.line.cheat.needsAnyCage",     "Metelo en una jaula" },
     { "readout.line.rollOpen",               "{chance}%: puede unirse si le hablas" },    // kLineRollOpen
     { "readout.line.fieldYield.beatAgain",   "Aun no cede: vencelo otra vez" },          // kLineFieldYieldBeatAgain
     { "readout.line.ally.paidJoin",          "Aliado: {cats} cats con descuento" },      // kLineAllyPaidJoin

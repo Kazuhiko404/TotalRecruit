@@ -76,6 +76,7 @@ const Row kRows[] = {
     { Reason_AnimalYieldNotYet,   "animal.yield.notYet",               "todav\xc3\xad" "a no se somete: vencelo otra vez, o dale de comer", RefusalTone_Default },
     { Reason_CheatAnimalHealed,   "cheat.animal.healed",               "lo curaste: conf\xc3\xad" "a en ti y te sigue", RefusalTone_Default },
     { Reason_CheatAnimalDefeated, "cheat.animal.defeated",             "lo venciste: te reconoce como el m\xc3\xa1s fuerte y te sigue", RefusalTone_Default },
+    { Reason_CheatNeedsAnyCage,   "cheat.needsAnyCage",                "metelo en una jaula y hablara enseguida", RefusalTone_Default },
 };
 
 const int kRowCount = (int)(sizeof(kRows) / sizeof(kRows[0]));

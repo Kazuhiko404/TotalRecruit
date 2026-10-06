@@ -726,6 +726,13 @@
       "no aqui, no asi: llevalo a una de tus jaulas",
       "una jaula tuya y un instante, nada mas"
     ],
+    "needsAnyCage": [
+      "metelo en una jaula y hablara enseguida",
+      "primero encierralo: cualquier jaula sirve",
+      "en una jaula estara listo en un momento",
+      "no aqui, no asi: llevalo a una jaula",
+      "una jaula y un instante, nada mas"
+    ],
     "waiting": [
       "esta dentro: dale un momento y te llamara",
       "todavia se esta haciendo a la idea: espera un poco",
@@ -1169,6 +1176,7 @@
       "cheat": {
         "joinsFreely": "Se une",
         "needsCage": "Metelo en una jaula",
+        "needsAnyCage": "Metelo en una jaula",
         "waiting": "Espera un momento en la jaula",
         "joins": "Quiere hablar: se une",
         "animal": {

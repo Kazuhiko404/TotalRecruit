@@ -118,6 +118,17 @@ void ExistingKeysKeepTheirPaths()
     CHECK(ReasonMessageKey(Reason_TameHungry, "") == "animal.tame.hungry");
 }
 
+void TheAnyCageAnswerHasItsOwnNeutralLines()
+{
+    const char* name = "catalog: cheat.needsAnyCage never says 'your cage'; cheat.needsCage is unchanged";
+    CHECK(ReasonMessageKey(Reason_CheatNeedsAnyCage, "") == "cheat.needsAnyCage");
+    CHECK(ReasonDefaultText(Reason_CheatNeedsAnyCage) == std::string("metelo en una jaula y hablara enseguida"));
+    CHECK(!Has(ReasonDefaultText(Reason_CheatNeedsAnyCage), "tus jaulas"));
+    CHECK(!Has(ReasonDefaultText(Reason_CheatNeedsAnyCage), "tuya"));
+    CHECK(ReasonDefaultText(Reason_CheatNeedsCage) == std::string("metelo en una de tus jaulas y hablara enseguida"));
+    CHECK(RefusalToneFor(Reason_CheatNeedsAnyCage) == RefusalToneFor(Reason_CheatNeedsCage));
+}
+
 void PricesAndStomachCarryTheirPlaceholders()
 {
     const char* name = "catalog: the price and stomach texts keep {cats} and {purse}";
@@ -194,6 +205,7 @@ void RunReasonCatalogTests()
     KeysAreUniqueExceptTheSharedCheatJoin();
     TheBandIsFilledIntoFactionKeys();
     ExistingKeysKeepTheirPaths();
+    TheAnyCageAnswerHasItsOwnNeutralLines();
     PricesAndStomachCarryTheirPlaceholders();
     ToneMatchesWhatTheOldSearchDecided();
     EachToneHasItsReasons();

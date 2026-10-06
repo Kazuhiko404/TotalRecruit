@@ -95,7 +95,8 @@ Verdict DecideCheat(const CheatFacts& facts, const Config& config)
     if (!CheatCageSatisfied(facts.inMyCage, facts.inAnyCage, config))
     {
         v.currency = Currency_Refused;
-        v.reasonKey = Reason_CheatNeedsCage;
+        // With cheatAnyCage any cage answers, so the line must not say "yours".
+        v.reasonKey = config.cheatAnyCage ? Reason_CheatNeedsAnyCage : Reason_CheatNeedsCage;
         if (FreeAnimal(facts))
         {
             // Still "put it in a cage", but food is the other way in: care with an

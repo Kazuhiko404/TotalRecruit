@@ -173,7 +173,7 @@ void CheatAsksForTheCage()
     const Verdict v = DecideCheat(facts, kConfig);
     CHECK(!v.willJoin);
     CHECK(v.currency == Currency_Refused);
-    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+    CHECK(v.reasonKey == Reason_CheatNeedsAnyCage);
 }
 
 void CheatWaitsAMinuteThenJoins()
@@ -231,6 +231,32 @@ void CheatAnyCageOffKeepsYourCageOnly()
     CHECK(v.reasonKey == Reason_CheatNeedsCage);
 }
 
+void CheatAnyCageAsksForAnyCage()
+{
+    const char* name = "cheat any cage: the cage answer names any cage on, your cage off";
+    Config config;
+    CheatFacts facts;
+    facts.inMyCage = false;
+    facts.inAnyCage = false;
+    config.cheatAnyCage = true;
+    Verdict v = DecideCheat(facts, config);
+    CHECK(v.reasonKey == Reason_CheatNeedsAnyCage);
+    CHECK(v.currency == Currency_Refused);
+    config.cheatAnyCage = false;
+    v = DecideCheat(facts, config);
+    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+    CHECK(v.currency == Currency_Refused);
+    // A free animal keeps food as the other way in, with either text.
+    CheatFacts animal;
+    animal.animal = true;
+    animal.fedByPlayer = false;
+    animal.inMyCage = false;
+    config.cheatAnyCage = true;
+    v = DecideCheat(animal, config);
+    CHECK(v.reasonKey == Reason_CheatNeedsAnyCage);
+    CHECK(v.wantsFood);
+}
+
 void CheatAnyCageStillNeedsACage()
 {
     const char* name = "cheat any cage: free in the open is still the cage answer";
@@ -241,7 +267,7 @@ void CheatAnyCageStillNeedsACage()
     facts.hoursHeld = 99.0f;
     const Verdict v = DecideCheat(facts, config);
     CHECK(!v.willJoin);
-    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+    CHECK(v.reasonKey == Reason_CheatNeedsAnyCage);
 }
 
 void CheatCageCountsRule()
@@ -329,7 +355,7 @@ void CheatAnUnfedAnimalOutsideStillNeedsTheCage()
     const Verdict v = DecideCheat(facts, kConfig);
     CHECK(!v.willJoin);
     CHECK(v.isAnimal);
-    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+    CHECK(v.reasonKey == Reason_CheatNeedsAnyCage);
     // The feed button (RemedyFor) needs care and an appetite: food is the other way in.
     CHECK(v.currency == Currency_Care);
     CHECK(v.wantsFood);
@@ -359,7 +385,7 @@ void CheatAnOwnedAnimalOutsideNeedsTheCageFedOrNot()
     CHECK(!v.willJoin);
     CHECK(v.currency == Currency_Refused);
     CHECK(!v.wantsFood);
-    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+    CHECK(v.reasonKey == Reason_CheatNeedsAnyCage);
 }
 
 void CheatFoodMeansNothingToAPerson()
@@ -372,7 +398,7 @@ void CheatFoodMeansNothingToAPerson()
     CHECK(!v.isAnimal);
     CHECK(v.currency == Currency_Refused);
     CHECK(!v.wantsFood);
-    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+    CHECK(v.reasonKey == Reason_CheatNeedsAnyCage);
 }
 
 void CheatWithoutACageIsUnchangedForAnimals()
@@ -449,7 +475,7 @@ void CheatAnOwnedAnimalIsStillCageOnly()
     const Verdict v = DecideCheat(facts, kConfig);
     CHECK(!v.willJoin);
     CHECK(v.currency == Currency_Refused);
-    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+    CHECK(v.reasonKey == Reason_CheatNeedsAnyCage);
 }
 
 void CheatAPersonIsNotMovedByACureOrABeating()
@@ -461,7 +487,7 @@ void CheatAPersonIsNotMovedByACureOrABeating()
     Verdict v = DecideCheat(facts, kConfig);
     CHECK(!v.willJoin);
     CHECK(!v.isAnimal);
-    CHECK(v.reasonKey == Reason_CheatNeedsCage);
+    CHECK(v.reasonKey == Reason_CheatNeedsAnyCage);
     facts.inMyCage = true;
     facts.hoursHeld = 0.0f;
     v = DecideCheat(facts, kConfig);
@@ -1915,6 +1941,7 @@ void RunRouteDecisionsTests()
     CheatAnyCageWaitsAMinuteThenJoins();
     CheatAnyCageOffKeepsYourCageOnly();
     CheatAnyCageStillNeedsACage();
+    CheatAnyCageAsksForAnyCage();
     CheatCageCountsRule();
     CheatAnyCageHoldClockRule();
     TheHoldClockCountsThisCage();

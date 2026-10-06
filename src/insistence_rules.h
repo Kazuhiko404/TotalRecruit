@@ -28,7 +28,7 @@
 //
 //   no       None, Nobody, AnimalsDisabled, UnreadableTraits, Pretending, Dead
 //                                 gates: the question could not be asked
-//   no       CheatJoinsFreely, CheatNeedsCage, CheatWaiting, CheatJoins
+//   no       CheatJoinsFreely, CheatNeedsCage, CheatNeedsAnyCage, CheatWaiting, CheatJoins
 //                                 Cheat: a cage and a minute, never a no
 //   no       UnconsciousOwesYou, UnconsciousDying, UnconsciousWait, Dying
 //                                 out cold or dying: a state, not a decision

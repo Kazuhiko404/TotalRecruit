@@ -122,6 +122,10 @@ enum ReasonKey
     Reason_CheatAnimalHealed,
     Reason_CheatAnimalDefeated,
 
+    // Cheat with cheatAnyCage on: Reason_CheatNeedsCage's answer, worded for any cage
+    // instead of "one of your cages" (route_cheat.cpp). Last, so no index shifts.
+    Reason_CheatNeedsAnyCage,
+
     // Not a reason: the number of them, for tables indexed by one.
     Reason_Count
 };
