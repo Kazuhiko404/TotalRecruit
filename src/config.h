@@ -605,6 +605,10 @@ struct DuelChallenges
     // Cheat: the level a person needs for RETAR A DUELO (duel-any-source U1). Balanced
     // keeps allyTiers.eliteFromLevel with a tiered ally. 1: every level.
     int cheatPeopleFromLevel;
+    // A duel the player opens from TotalSparring's own window, with no TotalRecruit
+    // challenge pending, counts like RETAR A DUELO when the rival is an outsider who
+    // would be offered the button (duel-any-source U2). Off: such duels are ignored.
+    bool countExternalBouts;
 
     DuelChallenges()
         : enabled(true),
@@ -617,7 +621,8 @@ struct DuelChallenges
           winCooldownMaxHours(120.0f),
           animalsEnabled(true),
           animalsFromLevel(40),
-          cheatPeopleFromLevel(1)
+          cheatPeopleFromLevel(1),
+          countExternalBouts(true)
     {
     }
 };

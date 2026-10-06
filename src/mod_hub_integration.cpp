@@ -282,6 +282,8 @@ static bool DoRegisterModHub()
     regInt(api, mod, "duel_animals_from_level", "Duelo: nivel minimo de animales", "Nivel desde el que un animal sin dueno puede ser retado a duelo", 1, 500, 5, &c.duelChallenges.animalsFromLevel);
     // duel-any-source U1: Cheat offers the duel to a person of any level.
     regInt(api, mod, "duel_cheat_people_from_level", "Duelo Cheat: nivel minimo de personas", "En Cheat, nivel desde el que cualquier persona ofrece RETAR A DUELO (Balanced sigue pidiendo un aliado de nivel temporal, 80)", 1, 500, 1, &c.duelChallenges.cheatPeopleFromLevel);
+    // duel-any-source U2: a duel opened from TotalSparring's own window counts too.
+    regBool(api, mod, "duel_count_external_bouts", "Duelo: contar duelos de TotalSparring", "Un duelo abierto desde TotalSparring contra alguien que no es de tu grupo cuenta como un reto de TotalRecruit si ese NPC podria ser retado: ganarlo da la chance de que se una, perderlo pone la espera", &c.duelChallenges.countExternalBouts);
     // proactive-offer: the NPC or animal walks up and offers itself after a gesture.
     regBool(api, mod, "offer_on_duel_win", "Oferta: al ganar un duelo", "Al ganarle un duelo, si la tirada sale bien camina hasta ti y te ofrece unirse (Aceptar, Ignorar, Rechazar). Apagado: se une al instante como antes", &c.offer.onDuelWin);
     regBool(api, mod, "offer_on_heal", "Oferta: al curarlo", "Si alguien de tu grupo cura a un NPC o animal que no es tuyo, al levantarse viene a ofrecerse si la tirada sale bien", &c.offer.onHeal);

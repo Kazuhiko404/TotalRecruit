@@ -85,6 +85,14 @@ HaggleTerms ReadHaggleTerms(Character* npc);
 // (animal-duel-submission D1); false for a person is not a promise of anything.
 bool IsOwnedAnimal(Character* character);
 
+// Whether the Balanced ally tiers would answer for this person (DecideBalancedAllyTier
+// over the core facts and the faction relation), whatever route the moment picks: a
+// rival just knocked out in a TotalSparring duel takes the unconscious route, yet it
+// is the same tiered ally the button was offered to (duel-any-source U2). Read only;
+// it mints no id and starts no clock. False for an animal, outside Balanced, with the
+// tiers off or with unreadable traits.
+bool IsTieredAllyAtRest(Character* character);
+
 // The submission event's reject cooldown (submission_tracker.h): true while it
 // runs for this character, with the hours left in `outHoursLeft` (may be NULL).
 // Read without minting an id: a character never rejected has none to find.

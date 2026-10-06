@@ -238,6 +238,99 @@ void AnUnrelatedPairIsIgnored()
     CHECK(book.Pending(Key("npc"), NULL));
 }
 
+// The facts of a TotalSparring duel nobody challenged through TotalRecruit: the switch
+// on, no pending challenge, the offer rule already checked and passed.
+ExternalBoutFacts ExternalOk()
+{
+    ExternalBoutFacts f;
+    f.countExternal = true;
+    f.hasPending = false;
+    f.offerChecked = true;
+    f.offered = true;
+    return f;
+}
+
+void AnExternalDuelCountsOnlyWhenEveryFactHolds()
+{
+    const char* name = "external: a squad member's decided duel against an offerable outsider counts";
+    const DuelBoutRecord won = Duel("me", "npc", DuelBout_AWon);
+    CHECK(JudgeExternalBout(won, ExternalOk()) == ExternalBout_Counts);
+    CHECK(JudgeExternalBout(Duel("me", "npc", DuelBout_BWon), ExternalOk()) == ExternalBout_Counts);
+    CHECK(JudgeExternalBout(Duel("me", "npc", DuelBout_Draw), ExternalOk()) == ExternalBout_Counts);
+
+    // The shape passes but the offer rule was not read yet: the engine must read it.
+    ExternalBoutFacts unchecked = ExternalOk();
+    unchecked.offerChecked = false;
+    unchecked.offered = false;
+    CHECK(JudgeExternalBout(won, unchecked) == ExternalBout_CheckOffer);
+
+    ExternalBoutFacts f = ExternalOk();
+    f.offered = false;
+    CHECK(JudgeExternalBout(won, f) == ExternalBout_NotOffered);
+    f = ExternalOk();
+    f.countExternal = false;
+    CHECK(JudgeExternalBout(won, f) == ExternalBout_SwitchOff);
+    f = ExternalOk();
+    f.hasPending = true;
+    CHECK(JudgeExternalBout(won, f) == ExternalBout_Pending);
+
+    DuelBoutRecord spar = won;
+    spar.isDuel = false;
+    CHECK(JudgeExternalBout(spar, ExternalOk()) == ExternalBout_NotDuel);
+    CHECK(JudgeExternalBout(Duel("me", "npc", DuelBout_Undecided), ExternalOk()) ==
+          ExternalBout_Undecided);
+    DuelBoutRecord squadPair = won;
+    squadPair.bIsSquadMember = true;
+    CHECK(JudgeExternalBout(squadPair, ExternalOk()) == ExternalBout_SquadPair);
+    CHECK(JudgeExternalBout(squadPair, unchecked) == ExternalBout_SquadPair);  // no engine read
+    DuelBoutRecord noB = won;
+    noB.bKnown = false;
+    CHECK(JudgeExternalBout(noB, ExternalOk()) == ExternalBout_SideUnknown);
+    DuelBoutRecord noA = won;
+    noA.aKnown = false;
+    CHECK(JudgeExternalBout(noA, ExternalOk()) == ExternalBout_SideUnknown);
+    DuelBoutRecord notMine = won;
+    notMine.aIsSquadMember = false;
+    CHECK(JudgeExternalBout(notMine, ExternalOk()) == ExternalBout_SideUnknown);
+    CHECK(std::string(ExternalBoutReasonWord(ExternalBout_SquadPair)) == "squad pair");
+}
+
+void AnExternalDuelResolvesLikeAChallenge()
+{
+    const char* name = "external: Resolve with no pending challenge -> Won / Lost with the same cooldown";
+    DuelChallengeBook book;
+    const DuelResolveResult won = book.Resolve(Duel("me", "npc", DuelBout_AWon), 100.0, kConfig, true);
+    CHECK(won.resolution == DuelResolution_Won);
+    CHECK(won.external);
+    CHECK(won.npc == Key("npc"));
+    CHECK(won.challenger == Key("me"));
+    CHECK(won.winner == Key("me"));
+    CHECK(!book.OnCooldown(Key("npc"), 100.0));
+
+    const DuelResolveResult lost = book.Resolve(Duel("me", "npc2", DuelBout_BWon), 100.4, kConfig, true);
+    CHECK(lost.resolution == DuelResolution_Lost);
+    CHECK(lost.external);
+    CHECK(lost.cooldownUntilHour == 125);
+    CHECK(book.OnCooldown(Key("npc2"), 124.0));
+
+    // Not eligible (the engine said no), or a squad pair: ignored as before.
+    CHECK(book.Resolve(Duel("me", "npc3", DuelBout_AWon), 100.0, kConfig, false).resolution ==
+          DuelResolution_Ignored);
+    DuelBoutRecord squadPair = Duel("me", "npc3", DuelBout_AWon);
+    squadPair.bIsSquadMember = true;
+    CHECK(book.Resolve(squadPair, 100.0, kConfig, true).resolution == DuelResolution_Ignored);
+    CHECK(book.Resolve(Duel("me", "npc3", DuelBout_Undecided), 100.0, kConfig, true).resolution ==
+          DuelResolution_Ignored);
+
+    // A pending challenge still answers first, and is not external.
+    book.Challenge(Key("npc4"), Key("friend"), 100.0);
+    const DuelResolveResult pending = book.Resolve(Duel("me", "npc4", DuelBout_AWon), 100.5, kConfig, true);
+    CHECK(pending.resolution == DuelResolution_Won);
+    CHECK(!pending.external);
+    CHECK(pending.challenger == Key("friend"));
+    CHECK(!book.Pending(Key("npc4"), NULL));
+}
+
 void AStaleChallengeExpires()
 {
     const char* name = "expiry: a challenge older than expiryHours is dropped, and its late result ignored";
@@ -435,6 +528,8 @@ void RunDuelChallengeRulesTests()
     ASparNeverCounts();
     AnUndecidedDuelKeepsTheChallenge();
     AnUnrelatedPairIsIgnored();
+    AnExternalDuelCountsOnlyWhenEveryFactHolds();
+    AnExternalDuelResolvesLikeAChallenge();
     AStaleChallengeExpires();
     ExpiryReadsTheClockSafely();
     ANewChallengeReplacesTheOld();

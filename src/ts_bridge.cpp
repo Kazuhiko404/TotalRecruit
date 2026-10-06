@@ -183,9 +183,14 @@ void CopyBoutUnguarded(const TS_BoutEvent* ev)
         bool mine = false;
         record.aIsSquadMember = SafeIsPlayerCharacter(ev->a, &mine) && mine;
     }
+    // Side B: an unreadable "is it mine" reads as mine, so a squad sparring pair can
+    // never pass for an outsider (duel-any-source U2).
+    record.bIsSquadMember = true;
     if (ev->b != NULL)
     {
         record.bKnown = SafeFindCharKey(ev->b, &record.b);
+        bool bMine = false;
+        record.bIsSquadMember = !SafeIsPlayerCharacter(ev->b, &bMine) || bMine;
     }
 
     QueueLock lock;

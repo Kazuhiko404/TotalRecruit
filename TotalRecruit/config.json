@@ -84,6 +84,7 @@
   "duelAnimalsEnabled": true,
   "duelAnimalsFromLevel": 40,
   "duelCheatPeopleFromLevel": 1,
+  "duelCountExternalBouts": true,
 
   "offerOnDuelWin": true,
   "offerOnHeal": true,

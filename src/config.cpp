@@ -369,6 +369,7 @@ std::vector<Field> ConfigFields(Config& c)
     AddBool(f, "duelAnimalsEnabled", &c.duelChallenges.animalsEnabled);
     AddInt(f, "duelAnimalsFromLevel", &c.duelChallenges.animalsFromLevel);
     AddInt(f, "duelCheatPeopleFromLevel", &c.duelChallenges.cheatPeopleFromLevel);
+    AddBool(f, "duelCountExternalBouts", &c.duelChallenges.countExternalBouts);
     AddBool(f, "offerOnDuelWin", &c.offer.onDuelWin);
     AddBool(f, "offerOnHeal", &c.offer.onHeal);
     AddFloat(f, "offerFailCalmSeconds", &c.offer.failCalmSeconds);

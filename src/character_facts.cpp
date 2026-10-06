@@ -441,6 +441,23 @@ bool IsOwnedAnimal(Character* character)
     return BelongsToSomeone(character);
 }
 
+// Declared in character_facts.h: the Balanced ally tier, read past the moment's route.
+bool IsTieredAllyAtRest(Character* character)
+{
+    if (character == NULL)
+    {
+        return false;
+    }
+    CoreFacts core;
+    GatherCoreFacts(character, &core);
+    if (!core.traitsReadable)
+    {
+        return false;
+    }
+    AllyTierDecision tier;
+    return DecideBalancedAllyTier(core, ReadRelation(character, PlayerFaction()), GetConfig(), &tier);
+}
+
 // Declared in character_facts.h: read by the haggle popup for the speaker.
 bool SafeSpeakerBestStat(Character* speaker, int* out)
 {

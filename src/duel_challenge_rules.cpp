@@ -71,6 +71,56 @@ std::string FormatDuelRecord(int wins, int losses, int draws)
     return std::string(buffer);
 }
 
+ExternalBoutReason JudgeExternalBout(const DuelBoutRecord& bout, const ExternalBoutFacts& facts)
+{
+    if (!bout.isDuel)
+    {
+        return ExternalBout_NotDuel;
+    }
+    if (facts.hasPending)
+    {
+        return ExternalBout_Pending;
+    }
+    if (!facts.countExternal)
+    {
+        return ExternalBout_SwitchOff;
+    }
+    if (bout.outcome == DuelBout_Undecided)
+    {
+        return ExternalBout_Undecided;
+    }
+    if (!bout.aKnown || !bout.aIsSquadMember || !bout.bKnown)
+    {
+        return ExternalBout_SideUnknown;
+    }
+    if (bout.bIsSquadMember)
+    {
+        return ExternalBout_SquadPair;
+    }
+    if (!facts.offerChecked)
+    {
+        return ExternalBout_CheckOffer;
+    }
+    return facts.offered ? ExternalBout_Counts : ExternalBout_NotOffered;
+}
+
+const char* ExternalBoutReasonWord(ExternalBoutReason reason)
+{
+    switch (reason)
+    {
+    case ExternalBout_Counts:      return "counts";
+    case ExternalBout_CheckOffer:  return "check offer";
+    case ExternalBout_NotDuel:     return "not a duel";
+    case ExternalBout_Pending:     return "pending challenge";
+    case ExternalBout_SwitchOff:   return "switch off";
+    case ExternalBout_Undecided:   return "undecided";
+    case ExternalBout_SideUnknown: return "side unknown";
+    case ExternalBout_SquadPair:   return "squad pair";
+    case ExternalBout_NotOffered:  return "not offered";
+    default:                       return "?";
+    }
+}
+
 // ------------------------------------------------------------ DuelChallengeBook
 void DuelChallengeBook::Challenge(const CharKey& npc, const CharKey& challenger, double nowHours)
 {
@@ -123,7 +173,7 @@ int DuelChallengeBook::ExpirePending(double nowHours, float expiryHours, std::ve
 }
 
 DuelResolveResult DuelChallengeBook::Resolve(const DuelBoutRecord& bout, double nowHours,
-                                             const DuelChallenges& config)
+                                             const DuelChallenges& config, bool externalEligible)
 {
     DuelResolveResult result;
     if (!bout.isDuel || !bout.bKnown)
@@ -133,7 +183,7 @@ DuelResolveResult DuelChallengeBook::Resolve(const DuelBoutRecord& bout, double 
     const std::map<CharKey, PendingDuel>::iterator it = pending_.find(bout.b);
     if (it == pending_.end())
     {
-        return result;
+        return externalEligible ? ResolveExternal(bout, nowHours, config) : result;
     }
     // A result that arrives after the challenge ran out is not an answer to it.
     if (DuelPendingExpired(it->second, nowHours, config.expiryHours))
@@ -151,6 +201,36 @@ DuelResolveResult DuelChallengeBook::Resolve(const DuelBoutRecord& bout, double 
     result.challenger = it->second.challenger;
     result.winner = bout.a;
     pending_.erase(it);
+    if (bout.outcome == DuelBout_AWon)
+    {
+        result.resolution = DuelResolution_Won;
+        return result;
+    }
+    result.resolution = DuelResolution_Lost;
+    result.cooldownUntilHour = DuelCooldownUntilHour(nowHours, config.cooldownHours);
+    SetCooldownUntil(bout.b, result.cooldownUntilHour);
+    return result;
+}
+
+// A TotalSparring duel nobody challenged through TotalRecruit that the engine found
+// eligible: the same Won / Lost as a challenge, side A as the challenger. The shape is
+// checked again, so an eligible flag never makes a squad pair or an undecided duel count.
+DuelResolveResult DuelChallengeBook::ResolveExternal(const DuelBoutRecord& bout, double nowHours,
+                                                     const DuelChallenges& config)
+{
+    DuelResolveResult result;
+    ExternalBoutFacts facts;
+    facts.countExternal = true;
+    facts.offerChecked = true;
+    facts.offered = true;
+    if (JudgeExternalBout(bout, facts) != ExternalBout_Counts)
+    {
+        return result;
+    }
+    result.external = true;
+    result.npc = bout.b;
+    result.challenger = bout.a;
+    result.winner = bout.a;
     if (bout.outcome == DuelBout_AWon)
     {
         result.resolution = DuelResolution_Won;
@@ -232,10 +312,16 @@ int ExpireDuelChallenges(double nowHours, float expiryHours)
 }
 
 DuelResolveResult ResolveDuelBout(const DuelBoutRecord& bout, double nowHours,
-                                  const DuelChallenges& config)
+                                  const DuelChallenges& config, bool externalEligible)
 {
     Lock lock;
-    return g_book.Resolve(bout, nowHours, config);
+    return g_book.Resolve(bout, nowHours, config, externalEligible);
+}
+
+bool DuelChallengePending(const CharKey& npc)
+{
+    Lock lock;
+    return g_book.Pending(npc, NULL);
 }
 
 bool DuelOnCooldown(const CharKey& npc, double nowHours)

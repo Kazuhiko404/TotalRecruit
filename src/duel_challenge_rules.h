@@ -23,6 +23,9 @@
 //       mas fuerte", and no new challenge for cooldownHours (saved with the NPC as
 //       total_recruit.duel_cooldown_until)
 //
+// A duel opened from TotalSparring's own window, with nothing pending, resolves the
+// same way when JudgeExternalBout says it counts (duel-any-source U2).
+//
 // A challenge nobody finished is forgotten after expiryHours. A win that does not join
 // (duel_join_rules.h) puts its own cooldown into the same book (SetDuelCooldownUntil),
 // so it is saved with the NPC the same way.
@@ -63,13 +66,60 @@ struct DuelBoutRecord
     // Side B, the NPC.
     bool bKnown;
     CharKey b;
+    // Side B is one of the player's characters too (a squad sparring pair). An
+    // unreadable B reads as one (ts_bridge.cpp), so it never counts as an outsider.
+    bool bIsSquadMember;
 
     DuelBoutRecord()
         : isDuel(false), outcome(DuelBout_Undecided), aKnown(false), a(),
-          aIsSquadMember(false), bKnown(false), b()
+          aIsSquadMember(false), bKnown(false), b(), bIsSquadMember(false)
     {
     }
 };
+
+// A TotalSparring duel with no TotalRecruit challenge pending (duel-any-source U2): the
+// player opened it from TotalSparring's own window. It counts as if RETAR A DUELO had
+// opened it when duelCountExternalBouts is on, it is a decided duel, side A is a squad
+// member and side B a known outsider, and B passes the same offer rule the button uses
+// (CanOfferDuel, read by the engine at bout time). Otherwise it is ignored, as before.
+enum ExternalBoutReason
+{
+    ExternalBout_Counts,
+    // The bout's shape passes; the engine still has to read the offer rule for B.
+    ExternalBout_CheckOffer,
+    ExternalBout_NotDuel,
+    // A TotalRecruit challenge is pending for B: Resolve answers it the usual way.
+    ExternalBout_Pending,
+    ExternalBout_SwitchOff,
+    ExternalBout_Undecided,
+    // Side A or B unreadable, or side A not a squad member.
+    ExternalBout_SideUnknown,
+    // Both sides are the player's: squad sparring never counts.
+    ExternalBout_SquadPair,
+    // B would not be offered RETAR A DUELO (level, tier, cooldown, animal rules...).
+    ExternalBout_NotOffered
+};
+
+struct ExternalBoutFacts
+{
+    // duelChallenges.countExternalBouts.
+    bool countExternal;
+    // A TotalRecruit challenge is pending for side B.
+    bool hasPending;
+    // Whether `offered` was read yet, and what it said (CanOfferDuel for B).
+    bool offerChecked;
+    bool offered;
+
+    ExternalBoutFacts() : countExternal(false), hasPending(false), offerChecked(false), offered(false) {}
+};
+
+// Checks in order: duel, pending, switch, decided, sides, squad pair, then the offer
+// (CheckOffer while it was not read, so the engine reads B only for a real candidate).
+ExternalBoutReason JudgeExternalBout(const DuelBoutRecord& bout, const ExternalBoutFacts& facts);
+
+// For the log: "counts", "not a duel", "pending challenge", "switch off", "undecided",
+// "side unknown", "squad pair", "not offered", "check offer".
+const char* ExternalBoutReasonWord(ExternalBoutReason reason);
 
 enum DuelResolution
 {
@@ -158,9 +208,13 @@ struct DuelResolveResult
     CharKey winner;
     // Lost: the game hour the cooldown ends.
     int cooldownUntilHour;
+    // Resolved as an external TotalSparring duel (no pending challenge; the
+    // challenger is side A).
+    bool external;
 
     DuelResolveResult()
-        : resolution(DuelResolution_Ignored), npc(), challenger(), winner(), cooldownUntilHour(0)
+        : resolution(DuelResolution_Ignored), npc(), challenger(), winner(), cooldownUntilHour(0),
+          external(false)
     {
     }
 };
@@ -178,9 +232,11 @@ public:
     int ExpirePending(double nowHours, float expiryHours, std::vector<CharKey>* expired);
 
     // What a finished bout means (see the table at the top). Won and Lost end the
-    // challenge; Lost also starts the cooldown.
+    // challenge; Lost also starts the cooldown. With no pending challenge for B,
+    // `externalEligible` (JudgeExternalBout said Counts) resolves a decided duel of a
+    // squad member against an outsider the same way, side A as the challenger.
     DuelResolveResult Resolve(const DuelBoutRecord& bout, double nowHours,
-                              const DuelChallenges& config);
+                              const DuelChallenges& config, bool externalEligible = false);
 
     bool OnCooldown(const CharKey& npc, double nowHours) const;
     // 0 when none.
@@ -192,6 +248,9 @@ public:
     void Clear();
 
 private:
+    DuelResolveResult ResolveExternal(const DuelBoutRecord& bout, double nowHours,
+                                      const DuelChallenges& config);
+
     std::map<CharKey, PendingDuel> pending_;
     std::map<CharKey, int> cooldownUntil_;
 };
@@ -201,7 +260,9 @@ void RecordDuelChallenge(const CharKey& npc, const CharKey& challenger, double n
 void WithdrawDuelChallenge(const CharKey& npc);
 int ExpireDuelChallenges(double nowHours, float expiryHours);
 DuelResolveResult ResolveDuelBout(const DuelBoutRecord& bout, double nowHours,
-                                  const DuelChallenges& config);
+                                  const DuelChallenges& config, bool externalEligible = false);
+// A challenge waits for `npc` (expired or not).
+bool DuelChallengePending(const CharKey& npc);
 bool DuelOnCooldown(const CharKey& npc, double nowHours);
 // A win that does not join (duel_join_rules.h): its cooldown end hour; 0 or less
 // forgets it.

@@ -1158,7 +1158,12 @@ void LogBout(const DuelBoutRecord& bout, DuelResolution resolution)
 }
 } // namespace
 
-bool DuelOfferedFor(Character* npc, const Verdict& verdict)
+namespace
+{
+// CanOfferDuel over the engine facts, given the two a verdict supplies: whether the
+// Balanced ally tiers answered, whether it is an animal (a hint: the Cheat verdict
+// never reads who they are), and the level to fall back on when SafeNpcLevel fails.
+bool DuelOfferedWith(Character* npc, bool allyTiered, bool animalHint, int levelFallback)
 {
     if (npc == NULL)
     {
@@ -1171,11 +1176,11 @@ bool DuelOfferedFor(Character* npc, const Verdict& verdict)
     {
         return false;
     }
-    facts.allyTiered = verdict.allyTiered;
+    facts.allyTiered = allyTiered;
     // Cheat has no ally tiers: the level alone decides, for any person.
     facts.cheatPreset = config.preset == Preset_Cheat;
     // The Cheat verdict never reads who they are, so it may not know an animal.
-    facts.isAnimal = verdict.isAnimal;
+    facts.isAnimal = animalHint;
     bool animal = false;
     if (!facts.isAnimal && SafeIsAnimal(npc, &animal))
     {
@@ -1200,7 +1205,7 @@ bool DuelOfferedFor(Character* npc, const Verdict& verdict)
     }
     facts.tsAvailable = TsAvailable();
     // The level TotalSparring shows (npc_level.h); the tier's own read otherwise.
-    facts.npcLevel = verdict.allyLevel;
+    facts.npcLevel = levelFallback;
     SafeNpcLevel(npc, &facts.npcLevel);
     facts.eliteFromLevel = config.allyTiers.eliteFromLevel;
     facts.cheatPeopleFromLevel = config.duelChallenges.cheatPeopleFromLevel;
@@ -1209,6 +1214,72 @@ bool DuelOfferedFor(Character* npc, const Verdict& verdict)
     facts.onCooldown = SafeFindCharKey(npc, &key) && SafeGameHours(&now) && DuelOnCooldown(key, now);
     return CanOfferDuel(facts);
 }
+} // namespace
+
+bool DuelOfferedFor(Character* npc, const Verdict& verdict)
+{
+    return DuelOfferedWith(npc, verdict.allyTiered, verdict.isAnimal, verdict.allyLevel);
+}
+
+namespace
+{
+// duel-any-source U2: the offer rule for side B of a TotalSparring duel nobody
+// challenged through TotalRecruit. The verdict of the moment cannot be used (a rival
+// just knocked out takes the unconscious route), so the ally tier is read past the
+// route (IsTieredAllyAtRest); the rest is the button's own rule.
+bool ExternalRivalOfferedUnguarded(Character* npc)
+{
+    return DuelOfferedWith(npc, IsTieredAllyAtRest(npc), false, 0);
+}
+
+// POD frame: the reads above are guarded one by one, this catches anything else.
+bool ExternalRivalOffered(Character* npc)
+{
+    TR_TRY
+    {
+        return ExternalRivalOfferedUnguarded(npc);
+    }
+    TR_CATCH
+    {
+        return false;
+    }
+}
+
+// Whether a bout with no pending challenge counts as one (JudgeExternalBout), with
+// the log line for a duel. Spars and duels a challenge answers say nothing here.
+bool ExternalBoutEligible(const DuelBoutRecord& bout, const DuelChallenges& config)
+{
+    ExternalBoutFacts facts;
+    facts.countExternal = config.countExternalBouts;
+    facts.hasPending = bout.bKnown && DuelChallengePending(bout.b);
+    ExternalBoutReason reason = JudgeExternalBout(bout, facts);
+    if (reason == ExternalBout_NotDuel || reason == ExternalBout_Pending)
+    {
+        return false;
+    }
+    Character* rival = NULL;
+    if (reason == ExternalBout_CheckOffer)
+    {
+        rival = FindNearSquad(bout.b);
+        facts.offerChecked = true;
+        facts.offered = rival != NULL && ExternalRivalOffered(rival);
+        reason = JudgeExternalBout(bout, facts);
+    }
+    const std::string name = rival != NULL ? CharacterName(rival)
+                                           : (bout.bKnown ? bout.b.ToString() : std::string("?"));
+    if (reason == ExternalBout_Counts)
+    {
+        LogInfo(std::string("[duel] external bout: ") + name + " counts (" +
+                (bout.outcome == DuelBout_AWon ? "won" : "lost") + ")");
+        return true;
+    }
+    LogInfo(std::string("[duel] external bout: ") + name + " ignored (" +
+            (reason == ExternalBout_NotOffered && rival == NULL ? "not near the squad"
+                                                                : ExternalBoutReasonWord(reason)) +
+            ")");
+    return false;
+}
+} // namespace
 
 DuelJoinOdds DuelNextWinOddsNow(int winsSoFar)
 {
@@ -1308,7 +1379,8 @@ void DuelChallengeTick()
 
     for (size_t i = 0; i < bouts.size(); ++i)
     {
-        const DuelResolveResult result = ResolveDuelBout(bouts[i], now, config);
+        const bool external = ExternalBoutEligible(bouts[i], config);
+        const DuelResolveResult result = ResolveDuelBout(bouts[i], now, config, external);
         LogBout(bouts[i], result.resolution);
         if (result.resolution == DuelResolution_Won)
         {
