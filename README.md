@@ -162,12 +162,15 @@ recruits. Lose or draw and they tell you to come back stronger, and you cannot
 challenge them again for a day. A spar never counts, and a duel that was cancelled or interrupted leaves
 the challenge open for six in-game hours. A duel you open from TotalSparring's
 own window counts the same way (`duelCountExternalBouts`) when the rival is not in
-your squad and would be offered RETAR A DUELO; a spar between your own people never
-counts. `duelMinWinsCheat` / `duelMinWinsBalanced` (1 by default) ask for that many
+your squad and would be offered RETAR A DUELO, or, in Balanced, is any person you
+could recruit from `duelExternalBalancedFromLevel` (1) up, ally or not; a spar
+between your own people never counts. `duelMinWinsCheat` / `duelMinWinsBalanced` (1 by default) ask for that many
 wins before a win can recruit: earlier wins roll nothing and the card says how many
-are missing ("Duelos: 1-0, faltan 3 victorias"). Without TotalSparring nothing
+are missing ("Duelos: 1-0, faltan 3 victorias"; the window says "Ganale 3 veces
+mas"). Without TotalSparring nothing
 changes. `duelChallenge*`, `duelJoin*`, `duelWinCooldown*`, `duelAnimals*`,
-`duelCheatPeopleFromLevel`, `duelCountExternalBouts` and `duelMinWins*` keys in
+`duelCheatPeopleFromLevel`, `duelCountExternalBouts`, `duelMinWins*` and
+`duelExternalBalancedFromLevel` keys in
 `config.json` and in Mod Hub.
 
 ### Refusal, with a reason

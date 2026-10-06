@@ -608,6 +608,15 @@ plugins".
   Ganado: lo mismo que un reto ganado (chance o unión, oferta proactiva); perdido
   o empate: el mismo enfriamiento. Log `[duel] external bout: <nombre> counts
   (won|lost)` o `... ignored (<motivo>)`.
+- **Duelos externos en Balanced con cualquier NPC reclutable** (2026-10-05,
+  duel-any-source U7). Para un duelo abierto desde TotalSparring, en Balanced
+  ya no hace falta un aliado con tramo: cuenta contra cualquier persona que las
+  exclusiones dejan reclutar (`IsRecruitable` sin `exclude.unconscious`, porque
+  el duelo deja al rival noqueado) desde `duelExternalBalancedFromLevel` (1..500,
+  1), con el resto de la regla del botón (interruptor, TotalSparring, sin
+  enfriamiento). Un aliado 80+ con tramo sigue contando como antes. El botón
+  RETAR A DUELO no cambia (Balanced: aliado 80+); Cheat y animales tampoco. Una
+  victoria contada sigue por `OnDuelWon` (curva, victorias mínimas, oferta).
 - **Victorias mínimas** (2026-10-05, duel-any-source U4). `duelMinWinsCheat` y
   `duelMinWinsBalanced` (1..20, 1 = como antes): una victoria con menos victorias
   cara a cara no recluta, no tira y no pone espera (también en Cheat); el rival
@@ -615,7 +624,8 @@ plugins".
   (`duel.needMoreWins`). Desde el mínimo, Cheat se une y Balanced tira la curva de
   siempre contada desde la primera victoria (mínimo 3: la tercera tira 65%). La
   tarjeta dice "Duelos: 1-0, faltan 3 victorias" (`readout.line.duel.recordNeedWins`)
-  y la fila SI LE GANAS "0% de que se una" mientras falten. Vale igual para los
+  y la fila SI LE GANAS "Ganale 3 veces mas" (`popup.info.duelJoinNeedWins`,
+  duel-any-source U6) mientras falten. Vale igual para los
   duelos abiertos desde TotalSparring.
 - **Sin TotalSparring** el botón no aparece y los tramos funcionan como antes.
 
