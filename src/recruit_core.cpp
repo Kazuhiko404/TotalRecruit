@@ -369,6 +369,7 @@ OfferDuelInput DuelInputFor(Character* character, const Verdict& verdict)
     duel.joinKnown = odds.sure || odds.winsNeeded > 0 || duel.recordKnown;
     duel.joinSure = odds.sure;
     duel.joinChance = odds.chance;
+    duel.joinWinsNeeded = odds.winsNeeded;
     return duel;
 }
 

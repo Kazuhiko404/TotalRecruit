@@ -1311,7 +1311,9 @@
       "duels": "DUELOS",
       "duelJoin": "SI LE GANAS",
       "duelJoinChance": "{chance}% de que se una",
-      "duelJoinSure": "se une"
+      "duelJoinSure": "se une",
+      "duelJoinNeedWins": "Ganale {wins} veces mas",
+      "duelJoinNeedWin": "Ganale una vez mas"
     },
     "shortPurse": "No te alcanzan los cats (te faltan {cats})",
     "body": {

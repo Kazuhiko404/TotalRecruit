@@ -467,6 +467,23 @@ var POPUP_STATES = [
       reason: '', reasonRed: false,
       accept: 'ACEPTAR', extra: 'IGNORAR', cancel: 'RECHAZAR'
     }
+  },
+  {
+    id: 'allyDuelNeedWins',
+    title: 'Duel: SI LE GANAS while wins are still missing (duelMinWins*)',
+    note: 'duel-any-source U6. With <code>duelMinWinsBalanced</code> (or <code>duelMinWinsCheat</code>) at 4 and one win so far, the next win is still short of the minimum (<code>DuelNextWinOdds</code> <code>winsNeeded</code> = 3, the next one included). SI LE GANAS says how many wins are missing instead of "0% de que se una": "Ganale 3 veces mas" (<code>popup.info.duelJoinNeedWins</code>, <code>{wins}</code>). The card line says the same count ("Duelos: 1-0, faltan 3 victorias"). When the next win reaches the minimum it decides, and the row goes back to the odds (Balanced) or "se une" (Cheat), so the count never reads 1; <code>popup.info.duelJoinNeedWin</code> ("Ganale una vez mas") is only the singular form should a count of 1 ever reach the row.',
+    // facts: verdict willJoin, Reason_AllyTemporary, allyTiered, allyLevel 85, temporaryDays 6; duel offered, record 1-0-0; Balanced, duelMinWinsBalanced 4
+    vm: {
+      title: 'Reclutamiento', name: 'Beep el Sabio', route: 'libre', routeTag: 'Libre',
+      body: 'Aliado (nivel 85): Beep el Sabio te acompanara 6 dias como miembro temporal.',
+      showPrice: true, priceText: 'Gratis', priceFree: true,
+      showPurse: false, purseText: '', affordable: true,
+      showChance: false, chanceText: '',
+      showDuelRecord: true, duelRecordText: '1-0',
+      showDuelJoin: true, duelJoinText: 'Ganale 3 veces mas',
+      reason: '', reasonRed: false,
+      accept: 'ACEPTAR', extra: '', duel: 'RETAR A DUELO', cancel: 'CANCELAR'
+    }
   }
 ];
 

@@ -278,8 +278,13 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     join until that many head-to-head wins: an earlier win rolls nothing and starts no cooldown, and the card's
     record line counts the wins still missing (state "Ally you can challenge, under the minimum duel wins":
     "Duelos: 1-0, faltan 3 victorias"). From the minimum on, Cheat joins and Balanced rolls the usual curve,
-    counted from the first win. Decision: the popup SI LE GANAS row reads "0% de que se una" while wins are
-    missing (no new popup text key).
+    counted from the first win. The popup SI LE GANAS row says how many wins are missing (item 31).
+
+31. **SI LE GANAS counts the missing wins** (duel-any-source U6). Under `duelMinWins*` the popup row says
+    "Ganale 3 veces mas" (`popup.info.duelJoinNeedWins`, `{wins}` = `DuelNextWinOdds` `winsNeeded`, the next win
+    included) instead of "0% de que se una" (state "Duel: SI LE GANAS while wins are still missing", appended at
+    the end of `POPUP_STATES`). The singular `popup.info.duelJoinNeedWin` ("Ganale una vez mas") is never reached
+    by the current rule: when one win is missing the next one decides and the row shows the odds.
 
 ### Native windows (sections 2 and 5: the card and the head notices)
 

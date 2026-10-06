@@ -223,6 +223,8 @@ OfferTexts OfferWording()
     Word(&t.duelJoinLabel, "popup.info.duelJoin");
     Word(&t.duelJoinChance, "popup.info.duelJoinChance");
     Word(&t.duelJoinSure, "popup.info.duelJoinSure");
+    Word(&t.duelJoinNeedWins, "popup.info.duelJoinNeedWins");
+    Word(&t.duelJoinNeedWin, "popup.info.duelJoinNeedWin");
 
     Word(&t.haggleLabel, "popup.haggle.label");
     Word(&t.haggleOdds, "popup.haggle.odds");

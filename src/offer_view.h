@@ -128,6 +128,8 @@ struct OfferTexts
     std::string duelJoinLabel;    // "SI LE GANAS", what the next win does
     std::string duelJoinChance;   // "{chance}% de que se una" (Balanced)
     std::string duelJoinSure;     // "se une" (Cheat)
+    std::string duelJoinNeedWins; // "Ganale {wins} veces mas" (under duelMinWins*)
+    std::string duelJoinNeedWin;  // "Ganale una vez mas" (one win missing)
 
     // The haggle section (popup.haggle.*).
     std::string haggleLabel;    // "OFERTA"
@@ -188,10 +190,13 @@ struct OfferDuelInput
     bool joinKnown;
     bool joinSure;
     int joinChance;
+    // Wins still missing before a win can recruit (DuelJoinOdds::winsNeeded, the next
+    // one included): above 0 the row says "Ganale N veces mas" instead of the odds.
+    int joinWinsNeeded;
 
     OfferDuelInput()
         : offered(false), recordKnown(false), wins(0), losses(0), draws(0), joinKnown(false),
-          joinSure(false), joinChance(0)
+          joinSure(false), joinChance(0), joinWinsNeeded(0)
     {
     }
 };

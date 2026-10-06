@@ -232,6 +232,23 @@ std::string ReplacedChance(const std::string& text, int chance)
     return out;
 }
 
+// SI LE GANAS: the wins still missing under duelMinWins* (duel-any-source U6), else
+// "se une" (Cheat) or the next win's join chance (Balanced).
+std::string DuelJoinText(const OfferDuelInput& duel, const OfferTexts& t)
+{
+    if (duel.joinWinsNeeded == 1)
+    {
+        return t.duelJoinNeedWin;
+    }
+    if (duel.joinWinsNeeded > 1)
+    {
+        std::string out = t.duelJoinNeedWins;
+        ReplaceAll(&out, "{wins}", PercentNumber(duel.joinWinsNeeded));
+        return out;
+    }
+    return duel.joinSure ? t.duelJoinSure : ReplacedChance(t.duelJoinChance, duel.joinChance);
+}
+
 void ApplyDuelChallenge(const OfferInput& in, const OfferTexts& t, OfferView* view)
 {
     if (!in.duel.offered)
@@ -250,8 +267,7 @@ void ApplyDuelChallenge(const OfferInput& in, const OfferTexts& t, OfferView* vi
     {
         view->showDuelJoin = true;
         view->duelJoinLabel = t.duelJoinLabel;
-        view->duelJoinText = in.duel.joinSure ? t.duelJoinSure
-                                              : ReplacedChance(t.duelJoinChance, in.duel.joinChance);
+        view->duelJoinText = DuelJoinText(in.duel, t);
     }
 }
 
@@ -336,6 +352,8 @@ OfferTexts DefaultOfferTexts()
     t.duelJoinLabel = "SI LE GANAS";
     t.duelJoinChance = "{chance}% de que se una";
     t.duelJoinSure = "se une";
+    t.duelJoinNeedWins = "Ganale {wins} veces mas";
+    t.duelJoinNeedWin = "Ganale una vez mas";
 
     t.haggleLabel = "OFERTA";
     t.haggleOdds = "Probabilidad de aceptar: {pct}%";

@@ -979,6 +979,38 @@ void TheNextWinsChanceIsAnInfoRow()
     CHECK(!v.showDuelJoin);
 }
 
+void SiLeGanasSaysHowManyWinsAreMissing()
+{
+    const char* name = "duel: SI LE GANAS says how many wins are missing under duelMinWins* (U6)";
+    const OfferTexts t = Texts();
+    OfferInput in = DuelableTemporaryAlly();
+    in.duel.joinKnown = true;
+    in.duel.joinSure = false;
+    in.duel.joinChance = 0;
+    in.duel.joinWinsNeeded = 3;
+    OfferView v = BuildOfferView(in, t);
+    CHECK(v.showDuelJoin);
+    CHECK(v.duelJoinLabel == "SI LE GANAS");
+    CHECK(v.duelJoinText == "Ganale 3 veces mas");
+
+    in.duel.joinWinsNeeded = 1;
+    v = BuildOfferView(in, t);
+    CHECK(v.duelJoinText == t.duelJoinNeedWin);
+    CHECK(v.duelJoinText == "Ganale una vez mas");
+
+    // From the minimum on the row goes back to the odds.
+    in.duel.joinWinsNeeded = 0;
+    in.duel.joinChance = 25;
+    v = BuildOfferView(in, t);
+    CHECK(v.duelJoinText == "25% de que se una");
+
+    // A missing win outranks a stale "sure" (Cheat under its minimum).
+    in.duel.joinWinsNeeded = 2;
+    in.duel.joinSure = true;
+    v = BuildOfferView(in, t);
+    CHECK(v.duelJoinText == "Ganale 2 veces mas");
+}
+
 void NoDuelWithoutTheCallersYes()
 {
     const char* name = "duel: not offered -> no button and no record, whatever the record says";
@@ -1071,6 +1103,7 @@ void RunOfferViewTests()
     ADuelableAllyKeepsItsTierAndAddsTheDuel();
     NoDuelWithoutTheCallersYes();
     TheNextWinsChanceIsAnInfoRow();
+    SiLeGanasSaysHowManyWinsAreMissing();
     AnUnreadRecordStillOffersTheDuel();
     ARefusingEliteAllyCanStillBeChallenged();
     TheDuelRidesBesideTheSlider();
