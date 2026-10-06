@@ -32,7 +32,7 @@ Nothing has a formal QA pass mark.
 | Field yield ("Sometido"): beaten in the field; respects other cages, lockout and loyalty | `not verified` (12.14) |
 | Player defeats saved in the character save, one per knockout (`total_recruit.player_defeats`); the hook's twin call inside 5 s is the same knockout | `not verified` (12.13 K4b) |
 | Cheat preset: cage plus a one-minute hold, nothing else (`cheatNeedsCage`) | `verified in game` (§8, R1.3) |
-| Cheat: any cage counts (`cheatAnyCage`, default on): another faction's cage, shackles or a kidnap (`SafeInPrison`) gets the same minute and joins; the hold clock runs for them in Cheat (`HoldClockCountsAnyCage`, log `seen in a cage`); cage commands stay on the player's cages (cheat-any-cage) | `needs in-game QA` (12.35 X1-X9) |
+| Cheat: any cage counts (`cheatAnyCage`, default on): another faction's cage, shackles or a kidnap (`SafeInPrison`) gets the same minute and joins; the hold clock runs for them in Cheat (`HoldClockCountsAnyCage`, log `seen in a cage`); cage commands stay on the player's cages (cheat-any-cage). Outside a cage the answer no longer says "your cages": `Reason_CheatNeedsAnyCage` (`cheat.needsAnyCage`; off: `cheat.needsCage`, duel-any-source U5) | `needs in-game QA` (12.35 X1-X9, 12.38 D14-D15) |
 | Cheat: an animal that belongs to nobody joins as soon as it has eaten from the player's hand, caged or not, no wait (`DecideCheat`, `CheatFacts::fedByPlayer`); unfed outside the cage it asks for the cage and the popup offers food (animal-insistence-cheat-feed A2) | `needs in-game QA` (§8 H11-H14) |
 | Cheat: a free animal also joins when one of the player's characters healed it (first-aid / doctoring hooks name the healer, `healing_ledger`, saved as `total_recruit.healed_by_player`) or the player's squad knocked it out once (defeat ledger) (animal-duel-submission D4) | `needs in-game QA` (12.34 A15-A20) |
 | Cheat: every wait is one game minute (`cheat_waits`: cage wait, hail first and repeat, Golpear/Noquear rests, reject and lost-duel cooldowns; the last two end at the next whole game hour) | `needs in-game QA` (§8 H7-H10, 12.33 W1-W2) |
@@ -113,13 +113,15 @@ Nothing has a formal QA pass mark.
 | Free helper offer: allied, stronger, good or neutral, 15 % per day, walk-up, popup, F8 debug key | `play-tested informally` (12.26 H1-H3) |
 | Helper escort: native Bodyguard contract (`5090`) toward the leader; code-driven fallback B | `play-tested informally` (12.30 N1-N5) |
 
-### 9. Duel challenge through TotalSparring (5)
+### 9. Duel challenge through TotalSparring (7)
 | Feature | Status |
 |---|---|
 | RETAR A DUELO for 80+ allies (Balanced) through TotalSparring's API; DUELOS head-to-head row | `play-tested informally` (12.28) |
 | Loss or draw: 24 h saved cooldown; spars and undecided bouts never count | `play-tested informally` (12.28 T9-T12) |
 | Won duel = join chance: 25 % + 20 % per earlier win, seeded roll, 24-72 h / 24-120 h win cooldown | `not verified`, deployed, awaiting play-test (12.29) |
-| Cheat: the duel is offered to any 80+ non-animal, and a win always recruits (since proactive-offer through the walk-up and the window; out of 120 m, at once as before) | `not verified`, deployed, awaiting play-test (12.29 J7-J8, 12.37 O1) |
+| Cheat: the duel is offered to any non-animal from `duelCheatPeopleFromLevel` (1, every level; was 80, duel-any-source U1), and a win always recruits (since proactive-offer through the walk-up and the window; out of 120 m, at once as before) | `needs in-game QA` (12.29 J7-J8, 12.37 O1, 12.38 D1-D3) |
+| A duel opened from TotalSparring's own window, with no TotalRecruit challenge pending, counts like RETAR A DUELO when the rival is an outsider who passes the button's rule (`duelCountExternalBouts`, `JudgeExternalBout`; ally tier read at rest after the KO); squad sparring never counts (duel-any-source U2) | `needs in-game QA` (12.38 D4-D10) |
+| Minimum duel wins before a win can recruit (`duelMinWinsCheat` / `duelMinWinsBalanced`, 1 = as before): earlier wins roll nothing and start no cooldown; card "Duelos: 1-0, faltan N victorias", popup "0% de que se una" (duel-any-source U4) | `needs in-game QA` (12.38 D11-D13, D16) |
 | Free animals of level 40+ (`duelAnimalsFromLevel`) can be challenged in both presets; same join chance (Balanced) / sure join (Cheat); narrator lines, no head notice (animal-duel-submission D1/D2) | `needs in-game QA` (12.34 A1-A8) |
 | Duel head notices are informational (25 s) | `play-tested informally` (12.31 F2) |
 
@@ -153,6 +155,7 @@ Nothing has a formal QA pass mark.
 ### In-game QA owed
 `QA.md` has no pass/fail markers. In priority order:
 1. **12.29 and 12.25 T12-T14**: duel join chance and the daily notice (deployed, awaiting play-test).
+1a. **12.38** (duel-any-source, on `main`, not deployed): Cheat duel at any level, counted TotalSparring duels, minimum duel wins, any-cage wording.
 1b. **12.34** (branch `feat/animal-duel-submission`, not merged or deployed): animal duel, the animal 2/2 in Balanced, Cheat heal/defeat.
 2. **12.6 I4/I5**: stable character id across a reload and a relaunch. Highest risk: the `Character` hooks are unverified.
 3. **12.4 money (P1-P9)** and **12.18 haggle (H1-H12)**; balance re-check after the level change (see risks).

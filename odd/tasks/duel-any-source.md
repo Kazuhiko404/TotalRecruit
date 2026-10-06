@@ -28,7 +28,7 @@ El usuario aprobo: (1) Cheat ofrece el duelo a personas desde cualquier nivel; (
 - [x] U4 (commit `15c10e9`; RED: C2065 `kLineDuelRecordNeedWins`, C2039 `duelJoinWinsNeeded`; GREEN: 56/56, 0/73030 tras acortar la linea con empates a "faltan {chance}" por el limite de 40 glifos; DLL compila; maqueta: estado `allyDuelNeedWins`, filas HUB, README 30) Victorias minimas de duelo: `duelMinWinsCheat` / `duelMinWinsBalanced` (1..20, 1). Una victoria por debajo no recluta, no tira y no pone espera (Cheat tambien); desde el minimo Cheat se une y Balanced tira la curva contada desde la primera victoria. La tarjeta dice "Duelos: 1-0, faltan 3 victorias"; la fila SI LE GANAS del popup dice "0% de que se una". Linea `duel.needMoreWins` / `duel.animal.needMoreWins` y cartel `duel.notice.needMoreWins`. Aplica igual a duelos externos (mismo `OnDuelWon`). RED -> GREEN.
 - [x] U5 Texto de jaula en Cheat con `cheatAnyCage`: nueva razon `Reason_CheatNeedsAnyCage` (al final del enum) con `cheat.needsAnyCage` (5 lineas neutras) y fila de tarjeta `readout.line.cheat.needsAnyCage` ("Metelo en una jaula"); `DecideCheat` la elige con `cheatAnyCage`; `cheat.needsCage` intacto con `cheatAnyCage=false`; insistencia: no cuenta (default). 7 checks de `route_decisions_tests` pasan a la nueva razon (usan el Config por defecto, `cheatAnyCage` true). RED: C2065 `Reason_CheatNeedsAnyCage`. GREEN: 56/56, 0/73052. DLL compila. Maqueta: estado `cheatDuel` y README 28.
 - [x] Extra: `fix(config)` `7797965`: 70 claves de `src/config.cpp` que faltaban en la plantilla, con el default de `config.h` (incluye `submissionDefeatsToBreak: 2`).
-- [ ] U3 Docs: REQUISITOS, QA (casos con lineas de log), README, DEVELOPING, `odd/system-status.md`.
+- [x] U3 Docs: REQUISITOS, QA 12.38 D1-D16 (con lineas de log; QA 12.35 X5 corregido), README, DEVELOPING (6 filas), `odd/system-status.md`. Cubre U1, U2, U4, U5. Evidencia: `deploy.sh --dry-run` = config 74 claves nuevas (4 de duelo + 70 de la plantilla), 0 cambiadas; messages 7 nuevas, 0 cambiadas.
 
 ## Criterios de aceptacion
 - Cheat: "Recluta Samurai" (nivel ~33) muestra RETAR A DUELO; Balanced no (sigue 80 + aliado).
@@ -38,3 +38,6 @@ El usuario aprobo: (1) Cheat ofrece el duelo a personas desde cualquier nivel; (
 
 ## Progreso
 - Documento creado antes de tocar el codigo.
+- Commits en `main`: U0 `c2d5ff8`, U1 `b6a3133`, U2 `56f8ff8`, U4 `15c10e9`, config `7797965`, U5 `aac3413`, U3 (este commit de docs). Sin deploy ni push.
+- Decisiones: un duelo externo lee el tramo de aliado "en reposo" (`IsTieredAllyAtRest`) porque tras el KO la ruta es inconsciente; la comprobacion de acceso del mundo libre (jaula ajena, insistencia) no se aplica a ese duelo. Una victoria bajo el minimo no pone espera en ningun preset. La fila SI LE GANAS del popup dice "0% de que se una" mientras falten victorias (una clave nueva del popup necesitaba `npc_speech.cpp`, fuera de la superficie permitida).
+- Siguiente: deploy y QA 12.38 en juego (decision del usuario).

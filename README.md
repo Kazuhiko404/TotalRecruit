@@ -143,8 +143,8 @@ leave at once. Their card counts the days left, and they pick up again after a
 reload. A 15% chance per ally per day, `helper*` keys; `helperDebugKey` (a
 Windows key code, 119 = F8) makes the selected NPC offer at once for testing.
 
-With TotalSparring installed, an ally of level 80 or more (in Cheat, anyone of
-level 80 or more), or a free animal of level 40 or more in either preset
+With TotalSparring installed, an ally of level 80 or more (in Cheat, any person
+from `duelCheatPeopleFromLevel`, 1 by default), or a free animal of level 40 or more in either preset
 (`duelAnimalsEnabled`, `duelAnimalsFromLevel`), can also be challenged to a duel.
 An animal's outcome is told by a narrator line, never in its voice; keep the bet
 at 0 against an animal (it carries no cats). Their popup keeps its usual answer and adds
@@ -160,8 +160,14 @@ join ("Me ganaste. Me uno a ti"), or say "Buena pelea. Retame otra vez" and wait
 1-3 days (level 100+: 1-5) before the next challenge. In Cheat a win always
 recruits. Lose or draw and they tell you to come back stronger, and you cannot
 challenge them again for a day. A spar never counts, and a duel that was cancelled or interrupted leaves
-the challenge open for six in-game hours. Without TotalSparring nothing
-changes. `duelChallenge*`, `duelJoin*`, `duelWinCooldown*` and `duelAnimals*` keys in
+the challenge open for six in-game hours. A duel you open from TotalSparring's
+own window counts the same way (`duelCountExternalBouts`) when the rival is not in
+your squad and would be offered RETAR A DUELO; a spar between your own people never
+counts. `duelMinWinsCheat` / `duelMinWinsBalanced` (1 by default) ask for that many
+wins before a win can recruit: earlier wins roll nothing and the card says how many
+are missing ("Duelos: 1-0, faltan 3 victorias"). Without TotalSparring nothing
+changes. `duelChallenge*`, `duelJoin*`, `duelWinCooldown*`, `duelAnimals*`,
+`duelCheatPeopleFromLevel`, `duelCountExternalBouts` and `duelMinWins*` keys in
 `config.json` and in Mod Hub.
 
 ### Refusal, with a reason

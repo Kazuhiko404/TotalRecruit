@@ -1000,7 +1000,7 @@ Con `"probeOnClick": true`, Cheat (`"preset": 0`) y los valores por defecto (`ch
 | X2 | Hablarle enseguida (antes del minuto) | "esta dentro: dale un momento y te llamara"; la tarjeta muestra la ruta de captividad | `Refused <nombre> (...): esta dentro: dale un momento y te llamara` |
 | X3 | Esperar un minuto de juego y hablarle | Se une sin condiciones (sigue encerrado: hay que abrir la jaula, y los guardias pueden reaccionar como a una fuga) | sin `Refused`; `Recruited <nombre>.` |
 | X4 | Mod Hub "Cheat: cualquier jaula" OFF y repetir X2/X3 con otro preso ajeno | Pide tu jaula como antes ("metelo en una de tus jaulas") y el reloj no arranca por la jaula ajena | `Refused <nombre> (rechazo): metelo en una de tus jaulas ...`; sin `seen in a cage` |
-| X5 | Cheat ON: un NPC libre en la calle | Sin cambios: pide la jaula (H1) | `Refused <nombre> (rechazo): metelo en una de tus jaulas ...` |
+| X5 | Cheat ON: un NPC libre en la calle | Pide una jaula, sin decir "tus jaulas" (duel-any-source U5, 12.38 D14) | `Refused <nombre> (rechazo): metelo en una jaula ...` (o otra linea de `cheat.needsAnyCage`) |
 | X6 | Liberar al preso de X1 antes de hablarle (o que salga de la jaula) | El reloj se pierde; al volver a una jaula empieza de cero | `<nombre> [hold] clock dropped: no longer in a cage` |
 | X7 | Tu propia jaula en Cheat | Igual que H2/H3; el log dice tu jaula | `<nombre> [hold] clock started: seen in your cage` |
 | X8 | Abrir el menu de un preso en jaula ajena | Sin GOLPEAR / NOQUEAR: los comandos de jaula siguen siendo solo para tus jaulas | -- |
@@ -1051,3 +1051,26 @@ Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`
 | O21 | Una peticion que nunca se puede servir (el paciente no se levanta en 5 min, o queda lejos) | Se descarta sola | `[offer] 1 request(s) expired unserved after 300 s (never up or never in reach)` |
 | O22 | Hablar a mano con cualquiera, sin gesto previo | Igual que antes | sin `[offer]` salvo `consume` si habia una peticion |
 | O23 | Guardar y cargar con un evento o una peticion en curso | El NPC recupera su ritmo; la peticion se olvida (hay que repetir el gesto) | `[submission] ...: unloaded (...)` |
+
+### 12.38 Duelos: Cheat a cualquier nivel, duelos de TotalSparring que cuentan, victorias minimas y texto de cualquier jaula (duel-any-source)
+
+Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`duelCheatPeopleFromLevel` 1, `duelCountExternalBouts` on, `duelMinWinsCheat` 1, `duelMinWinsBalanced` 1, `cheatAnyCage` on; Mod Hub "Duelo Cheat: nivel minimo de personas", "Duelo: contar duelos de TotalSparring", "Duelo Cheat: victorias minimas", "Duelo Balanced: victorias minimas"). "Duelo externo" = abierto con el boton propio de TotalSparring, sin RETAR A DUELO. Mockup: filas finales de la tabla Mod Hub, estado de tarjeta "Ally you can challenge, under the minimum duel wins" y estado de ventana "Cheat: any person can be challenged ...".
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| D1 | Cheat (`"preset": 0`): abrir la ventana de una persona de nivel ~33 (p. ej. "Recluta Samurai") | RETAR A DUELO aparece junto a la respuesta de Cheat | -- |
+| D2 | Mod Hub "Duelo Cheat: nivel minimo de personas" = 40 y repetir D1 | Sin RETAR A DUELO para el nivel 33 | -- |
+| D3 | Balanced (`"preset": 1`): un aliado de nivel 33 | Sin RETAR A DUELO (sigue pidiendo aliado con niveles y 80+) | -- |
+| D4 | Cheat: abrir un duelo desde la ventana de TotalSparring (sin RETAR A DUELO) contra un NPC ajeno y ganarlo | Igual que un reto de TotalRecruit ganado: camina a ofrecerse (o se une al instante si esta fuera de 120 m) | `[duel] external bout: <nombre> counts (won)`, `[duel] bout duel outcome=1 a=... (squad) b=... -> won`, `[duel] <tuyo> won (wins N): join chance 100%, roll 0 -> the offer event brings <nombre> over [key ...]` |
+| D5 | Como D4 pero perderlo (o empatar) | "Vuelve cuando seas mas fuerte" y el enfriamiento de siempre (en Cheat, un minuto) | `[duel] external bout: <nombre> counts (lost)`, `-> lost`, `[duel] <nombre> won the duel: no challenge until hour H [key ...]` |
+| D6 | Sparring o duelo desde TotalSparring entre dos miembros de tu grupo | No cuenta: nadie se une ni se enfria | `[duel] external bout: <id> ignored (squad pair)` (solo duelo; un sparring no escribe esta linea) |
+| D7 | Balanced: duelo externo ganado contra alguien que no tendria el boton (aliado de nivel 33, o un neutral no aliado) | Ignorado, como antes | `[duel] external bout: <nombre> ignored (not offered)` y `-> ignored` |
+| D8 | Balanced: duelo externo ganado contra un aliado 80+ que queda noqueado | Cuenta (el tramo de aliado se lee en reposo, no por la ruta inconsciente): tirada de la chance de siempre | `[duel] external bout: <nombre> counts (won)`, `join chance 25%, roll R -> ...` |
+| D9 | Mod Hub "Duelo: contar duelos de TotalSparring" OFF y repetir D4 | Ignorado, como antes del cambio | `[duel] external bout: <nombre> ignored (switch off)`, `-> ignored` |
+| D10 | RETAR A DUELO desde TotalRecruit y ganarlo | Sin cambios (el reto pendiente responde primero; ninguna linea `external bout`) | `-> won` sin `external bout` |
+| D11 | Mod Hub "Duelo Balanced: victorias minimas" = 3; ganarle a un aliado 80+ por primera vez | No se une ni tira; cartel "Buena pelea. Ganame otra vez"; roller "<nombre> perdio el duelo, pero aun no se une. Victorias que faltan: 2."; sin espera: el boton sigue (D12) | `[duel] <tuyo> won (wins 1): join chance 0%, roll 0 -> needs 2 more win(s) vs <nombre> [key ...]` |
+| D12 | Abrir la ventana y la tarjeta del NPC de D11 (1 victoria, minimo 3) | Tarjeta "Duelos: 1-0, faltan 2 victorias"; fila SI LE GANAS "0% de que se una" | -- |
+| D13 | Ganarle la segunda vez (D11) | Tarjeta "Duelos: 2-0, si ganas 65% se une" (la proxima decide; la curva cuenta desde la primera victoria) y "Victorias que faltan: 1." en el roller | `... needs 1 more win(s) vs <nombre>` |
+| D14 | Cheat, `cheatAnyCage` ON: hablar a una persona libre en la calle | "metelo en una jaula y hablara enseguida" (u otra linea neutra de `cheat.needsAnyCage`), nunca "tus jaulas"; tarjeta "Metelo en una jaula" | `Refused <nombre> (rechazo): metelo en una jaula ...` |
+| D15 | Mod Hub "Cheat: cualquier jaula" OFF y repetir D14 | La linea de siempre: "metelo en una de tus jaulas ..." | `Refused <nombre> (rechazo): metelo en una de tus jaulas ...` |
+| D16 | Cheat con "Duelo Cheat: victorias minimas" = 2: ganarle un duelo a una persona | No se une todavia: "Victorias que faltan: 1."; la segunda victoria recluta (o trae la oferta) | `join chance 0%, roll 0 -> needs 1 more win(s)` y luego `join chance 100%, roll 0 -> ...` |

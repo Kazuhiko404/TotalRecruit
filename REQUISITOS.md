@@ -55,7 +55,10 @@ mismo minuto de espera (`CheatCageSatisfied`, `src/route_cheat.cpp`; el reloj de
 encierro corre para esos presos en Cheat, `HoldClockCountsAnyCage`). Sigue
 encerrado en la jaula ajena: hay que abrirla, y los guardias pueden reaccionar
 como a una fuga. Golpear / Noquear siguen siendo solo para tus jaulas. Con
-`cheatAnyCage: false`, solo tus jaulas. Balanced no cambia.
+`cheatAnyCage: false`, solo tus jaulas. Balanced no cambia. Fuera de una jaula,
+con `cheatAnyCage` la respuesta no dice "tus jaulas": `Reason_CheatNeedsAnyCage`
+(`cheat.needsAnyCage`, "metelo en una jaula y hablara enseguida"); apagado, la de
+siempre (`cheat.needsCage`) (duel-any-source U5).
 
 **R1.2 — Un minuto de juego, y avisa.** *(P1)*
 Metido en la jaula, pasa un tiempo corto —del orden de un minuto de juego— y el
@@ -569,8 +572,10 @@ plugins".
   `duelWinCooldownMaxHoursUnder100` (72) para nivel 80-99 o
   `duelWinCooldownMaxHours` (120) para 100+, guardado en la misma fila. La
   ventana (fila **SI LE GANAS**) y la tarjeta muestran la chance de la próxima
-  victoria. En Cheat el duelo se ofrece a cualquier persona de nivel 80+ (no
-  animal) y ganar siempre recluta. Perdido o empate:
+  victoria. En Cheat el duelo se ofrece a cualquier persona (no animal) desde
+  `duelCheatPeopleFromLevel` (1: cualquier nivel; duel-any-source U1, 2026-10-05:
+  "a los honorables no me deja ... retarlos a un duelo") y ganar siempre recluta.
+  Perdido o empate:
   cartel "Vuelve cuando seas más fuerte" y `duelChallengeCooldownHours` (24)
   horas sin el botón, guardadas con el personaje
   (`total_recruit.duel_cooldown_until`). Sparring, sin decidir (cancelado,
@@ -592,6 +597,26 @@ plugins".
   como riqueza de reserva (`duel_popup.cpp:1416-1418`) y el pago falla
   (`economy.cpp:100-115`, `TransferCats`). Dejar la apuesta en 0 con animales;
   arreglarlo del lado de TotalSparring necesita permiso del usuario.
+- **Duelos abiertos desde TotalSparring** (2026-10-05, duel-any-source U2). Un
+  duelo que el jugador abre con el botón propio de TotalSparring, sin reto
+  pendiente de TotalRecruit, cuenta como si lo hubiera abierto RETAR A DUELO
+  cuando `duelCountExternalBouts` (true) está encendido, el duelo se decidió, el
+  lado A es de tu grupo, el lado B se conoce y **no** es de tu grupo (un sparring
+  entre miembros nunca cuenta; un B ilegible cuenta como del grupo) y B pasa la
+  misma regla del botón (`CanOfferDuel`; el tramo de aliado se lee "en reposo",
+  `IsTieredAllyAtRest`, porque tras el KO la ruta del momento es inconsciente).
+  Ganado: lo mismo que un reto ganado (chance o unión, oferta proactiva); perdido
+  o empate: el mismo enfriamiento. Log `[duel] external bout: <nombre> counts
+  (won|lost)` o `... ignored (<motivo>)`.
+- **Victorias mínimas** (2026-10-05, duel-any-source U4). `duelMinWinsCheat` y
+  `duelMinWinsBalanced` (1..20, 1 = como antes): una victoria con menos victorias
+  cara a cara no recluta, no tira y no pone espera (también en Cheat); el rival
+  dice "Buena pelea. Ganame otra vez" y el roller cuenta las que faltan
+  (`duel.needMoreWins`). Desde el mínimo, Cheat se une y Balanced tira la curva de
+  siempre contada desde la primera victoria (mínimo 3: la tercera tira 65%). La
+  tarjeta dice "Duelos: 1-0, faltan 3 victorias" (`readout.line.duel.recordNeedWins`)
+  y la fila SI LE GANAS "0% de que se una" mientras falten. Vale igual para los
+  duelos abiertos desde TotalSparring.
 - **Sin TotalSparring** el botón no aparece y los tramos funcionan como antes.
 
 ---
