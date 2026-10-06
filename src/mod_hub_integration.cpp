@@ -287,6 +287,8 @@ static bool DoRegisterModHub()
     // duel-any-source U4: wins a duel needs before a win can recruit.
     regInt(api, mod, "duel_min_wins_cheat", "Duelo Cheat: victorias minimas", "En Cheat, cuantas veces hay que ganarle a duelo antes de que una victoria lo reclute (1 = la primera)", 1, 20, 1, &c.duelChallenges.minWinsCheat);
     regInt(api, mod, "duel_min_wins_balanced", "Duelo Balanced: victorias minimas", "En Balanced, cuantas veces hay que ganarle a duelo antes de tirar la chance de que se una (1 = desde la primera; la chance sigue contando desde la primera victoria)", 1, 20, 1, &c.duelChallenges.minWinsBalanced);
+    // duel-any-source U7: in Balanced an external duel counts for any recruitable person.
+    regInt(api, mod, "duel_external_balanced_from_level", "Duelo externo Balanced: nivel minimo", "En Balanced, un duelo abierto desde TotalSparring cuenta contra cualquier NPC reclutable desde este nivel, sin pedir aliado (el boton RETAR A DUELO sigue pidiendo aliado de nivel 80)", 1, 500, 1, &c.duelChallenges.externalBalancedFromLevel);
     // proactive-offer: the NPC or animal walks up and offers itself after a gesture.
     regBool(api, mod, "offer_on_duel_win", "Oferta: al ganar un duelo", "Al ganarle un duelo, si la tirada sale bien camina hasta ti y te ofrece unirse (Aceptar, Ignorar, Rechazar). Apagado: se une al instante como antes", &c.offer.onDuelWin);
     regBool(api, mod, "offer_on_heal", "Oferta: al curarlo", "Si alguien de tu grupo cura a un NPC o animal que no es tuyo, al levantarse viene a ofrecerse si la tirada sale bien", &c.offer.onHeal);

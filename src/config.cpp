@@ -170,6 +170,7 @@ void ClampDuelChallenges(DuelChallenges* d)
     ClampInt(&d->cheatPeopleFromLevel, 1, 500);
     ClampInt(&d->minWinsCheat, 1, 20);
     ClampInt(&d->minWinsBalanced, 1, 20);
+    ClampInt(&d->externalBalancedFromLevel, 1, 500);
 }
 
 void ReadFloat(const std::string& text, const std::string& key, float* target)
@@ -374,6 +375,7 @@ std::vector<Field> ConfigFields(Config& c)
     AddBool(f, "duelCountExternalBouts", &c.duelChallenges.countExternalBouts);
     AddInt(f, "duelMinWinsCheat", &c.duelChallenges.minWinsCheat);
     AddInt(f, "duelMinWinsBalanced", &c.duelChallenges.minWinsBalanced);
+    AddInt(f, "duelExternalBalancedFromLevel", &c.duelChallenges.externalBalancedFromLevel);
     AddBool(f, "offerOnDuelWin", &c.offer.onDuelWin);
     AddBool(f, "offerOnHeal", &c.offer.onHeal);
     AddFloat(f, "offerFailCalmSeconds", &c.offer.failCalmSeconds);

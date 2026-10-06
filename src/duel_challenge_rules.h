@@ -158,18 +158,28 @@ struct DuelOfferFacts
     bool animalAllowed;
     bool animalOwned;
     int animalFromLevel;
+    // duel-any-source U7: the question is about a TotalSparring duel nobody challenged
+    // through TotalRecruit (JudgeExternalBout), not about the popup button. Then a
+    // Balanced person also counts without an ally tier when `recruitable` (the
+    // exclusions pass) at duelChallenges.externalBalancedFromLevel (1) or above.
+    bool externalBout;
+    bool recruitable;
+    int externalBalancedFromLevel;
 
     DuelOfferFacts()
         : enabled(false), tsAvailable(false), allyTiered(false), cheatPreset(false), isAnimal(false),
           npcLevel(0), eliteFromLevel(80), cheatPeopleFromLevel(1), onCooldown(false), animalAllowed(false),
-          animalOwned(false), animalFromLevel(40)
+          animalOwned(false), animalFromLevel(40), externalBout(false), recruitable(false),
+          externalBalancedFromLevel(1)
     {
     }
 };
 
 // The one predicate: enabled, TotalSparring available and no cooldown running; then
 //   a person:  a Balanced tiered ally at the elite cut level or above, or, in the Cheat
-//              preset, anyone at cheatPeopleFromLevel or above;
+//              preset, anyone at cheatPeopleFromLevel or above; for an external bout
+//              (U7) a Balanced person also counts when recruitable at
+//              externalBalancedFromLevel or above, tier or not;
 //   an animal: allowed, owned by nobody, at animalFromLevel or above (both presets: an
 //              animal has no ally tier and no 80+ cut).
 bool CanOfferDuel(const DuelOfferFacts& facts);

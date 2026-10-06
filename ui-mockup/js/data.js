@@ -349,7 +349,9 @@ var HUB = [
   ['Duelo Cheat: victorias minimas', 'duelMinWinsCheat', '1',
    'En Cheat, cuantas veces hay que ganarle a duelo antes de que una victoria lo reclute (1 = la primera)'],
   ['Duelo Balanced: victorias minimas', 'duelMinWinsBalanced', '1',
-   'En Balanced, cuantas veces hay que ganarle a duelo antes de tirar la chance de que se una (1 = desde la primera; la chance sigue contando desde la primera victoria)']
+   'En Balanced, cuantas veces hay que ganarle a duelo antes de tirar la chance de que se una (1 = desde la primera; la chance sigue contando desde la primera victoria)'],
+  ['Duelo externo Balanced: nivel minimo', 'duelExternalBalancedFromLevel', '1',
+   'En Balanced, un duelo abierto desde TotalSparring cuenta contra cualquier NPC reclutable desde este nivel, sin pedir aliado (el boton RETAR A DUELO sigue pidiendo aliado de nivel 80)']
 ];
 
 // The proactive offer (src/offer_requests.h, src/submission_director.cpp): after a gesture of

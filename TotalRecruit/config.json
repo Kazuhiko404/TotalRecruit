@@ -87,6 +87,7 @@
   "duelCountExternalBouts": true,
   "duelMinWinsCheat": 1,
   "duelMinWinsBalanced": 1,
+  "duelExternalBalancedFromLevel": 1,
 
   "offerOnDuelWin": true,
   "offerOnHeal": true,

@@ -607,7 +607,8 @@ struct DuelChallenges
     int cheatPeopleFromLevel;
     // A duel the player opens from TotalSparring's own window, with no TotalRecruit
     // challenge pending, counts like RETAR A DUELO when the rival is an outsider who
-    // would be offered the button (duel-any-source U2). Off: such duels are ignored.
+    // would be offered the button (duel-any-source U2), or, in Balanced, any recruitable
+    // person at externalBalancedFromLevel (U7). Off: such duels are ignored.
     bool countExternalBouts;
     // Head-to-head wins a duel needs before a win can recruit (duel-any-source U4),
     // per preset, 1..20. A win under it never joins and rolls nothing (Cheat too); from
@@ -615,6 +616,10 @@ struct DuelChallenges
     // first win. 1: every win decides, as before.
     int minWinsCheat;
     int minWinsBalanced;
+    // Balanced: the level a person needs for an external TotalSparring duel to count
+    // without an ally tier, as long as the exclusions let them be recruited
+    // (duel-any-source U7), 1..500. The popup button keeps its 80+ tiered gate.
+    int externalBalancedFromLevel;
 
     DuelChallenges()
         : enabled(true),
@@ -630,7 +635,8 @@ struct DuelChallenges
           cheatPeopleFromLevel(1),
           countExternalBouts(true),
           minWinsCheat(1),
-          minWinsBalanced(1)
+          minWinsBalanced(1),
+          externalBalancedFromLevel(1)
     {
     }
 };

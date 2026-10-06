@@ -512,8 +512,79 @@ void ThePersonBranchIgnoresTheAnimalFacts()
     CHECK(!CanOfferDuel(f));              // a person in Balanced still needs the tier
 }
 
+// duel-any-source U7: an external TotalSparring bout in Balanced counts for any
+// recruitable person at duelExternalBalancedFromLevel, no ally tier needed.
+DuelOfferFacts ExternalBalancedPerson()
+{
+    DuelOfferFacts f = Offerable();
+    f.allyTiered = false;
+    f.npcLevel = 12;
+    f.externalBout = true;
+    f.recruitable = true;
+    f.externalBalancedFromLevel = 1;
+    return f;
+}
+
+void BalancedExternalBoutsCountForAnyRecruitablePerson()
+{
+    const char* name = "offer: Balanced external bout counts for a recruitable person at the external level (U7)";
+    DuelOfferFacts f = ExternalBalancedPerson();
+    CHECK(CanOfferDuel(f));               // level 12, no tier: counts
+    f.externalBout = false;
+    CHECK(!CanOfferDuel(f));              // the button keeps its 80+ tiered gate
+
+    f = ExternalBalancedPerson();
+    f.externalBalancedFromLevel = 13;
+    CHECK(!CanOfferDuel(f));              // under the external level
+    f.npcLevel = 13;
+    CHECK(CanOfferDuel(f));               // the level itself counts
+
+    f = ExternalBalancedPerson();
+    f.recruitable = false;
+    CHECK(!CanOfferDuel(f));              // excluded (name, faction...) never counts
+    f = ExternalBalancedPerson();
+    f.onCooldown = true;
+    CHECK(!CanOfferDuel(f));
+    f = ExternalBalancedPerson();
+    f.tsAvailable = false;
+    CHECK(!CanOfferDuel(f));
+    f = ExternalBalancedPerson();
+    f.enabled = false;
+    CHECK(!CanOfferDuel(f));
+
+    // A tiered 80+ ally still counts the old way, whatever the external level says.
+    f = Offerable();
+    f.externalBout = true;
+    f.recruitable = false;
+    f.externalBalancedFromLevel = 200;
+    CHECK(CanOfferDuel(f));
+}
+
+void CheatAndAnimalsIgnoreTheExternalBalancedRule()
+{
+    const char* name = "offer: Cheat and animals keep their own gates on an external bout (U7)";
+    DuelOfferFacts f = ExternalBalancedPerson();
+    f.cheatPreset = true;
+    f.cheatPeopleFromLevel = 20;
+    CHECK(!CanOfferDuel(f));              // Cheat's own cut, not the Balanced external one
+    f.npcLevel = 20;
+    CHECK(CanOfferDuel(f));
+
+    f = ExternalBalancedPerson();
+    f.isAnimal = true;
+    f.animalAllowed = true;
+    f.animalFromLevel = 40;
+    CHECK(!CanOfferDuel(f));              // a level-12 animal is under the animal level
+    f.npcLevel = 40;
+    CHECK(CanOfferDuel(f));
+    f.animalOwned = true;
+    CHECK(!CanOfferDuel(f));
+}
+
 void RunDuelChallengeRulesTests()
 {
+    BalancedExternalBoutsCountForAnyRecruitablePerson();
+    CheatAndAnimalsIgnoreTheExternalBalancedRule();
     AFreeAnimalIsOfferedTheDuelInBothPresets();
     AnOwnedDisallowedOrCoolingAnimalGetsNoDuel();
     ThePersonBranchIgnoresTheAnimalFacts();

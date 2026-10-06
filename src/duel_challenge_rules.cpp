@@ -17,14 +17,20 @@ bool AnimalMayDuel(const DuelOfferFacts& facts)
 }
 
 // A person: in Cheat, anyone at Cheat's own cut (duel-any-source U1: 1, every level);
-// otherwise a Balanced tiered ally at the elite cut level.
+// otherwise a Balanced tiered ally at the elite cut level, or, for an external bout
+// (duel-any-source U7), any recruitable person at the external level.
 bool PersonMayDuel(const DuelOfferFacts& facts)
 {
     if (facts.cheatPreset)
     {
         return facts.npcLevel >= facts.cheatPeopleFromLevel;
     }
-    return facts.allyTiered && facts.npcLevel >= facts.eliteFromLevel;
+    if (facts.allyTiered && facts.npcLevel >= facts.eliteFromLevel)
+    {
+        return true;
+    }
+    return facts.externalBout && facts.recruitable &&
+           facts.npcLevel >= facts.externalBalancedFromLevel;
 }
 } // namespace
 

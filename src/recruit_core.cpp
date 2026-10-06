@@ -468,7 +468,21 @@ Character* CharacterFromTarget(RootObject* target)
     return NULL;
 }
 
+namespace
+{
+// The exclusion list; `checkUnconscious` false skips exclude.unconscious (an external
+// duel's rival is knocked out by the bout itself, duel-any-source U7).
+bool RecruitableUnder(Character* character, std::string* outReason, bool checkUnconscious);
+} // namespace
+
 bool IsRecruitable(Character* character, std::string* outReason)
+{
+    return RecruitableUnder(character, outReason, true);
+}
+
+namespace
+{
+bool RecruitableUnder(Character* character, std::string* outReason, bool checkUnconscious)
 {
     if (character == NULL)
     {
@@ -490,7 +504,7 @@ bool IsRecruitable(Character* character, std::string* outReason)
         if (outReason) *outReason = "excluded: dead";
         return false;
     }
-    if (exclude.unconscious && SafeIsDown(character, &flag) && flag)
+    if (checkUnconscious && exclude.unconscious && SafeIsDown(character, &flag) && flag)
     {
         if (outReason) *outReason = "excluded: unconscious";
         return false;
@@ -524,6 +538,7 @@ bool IsRecruitable(Character* character, std::string* outReason)
 
     return true;
 }
+} // namespace
 
 bool Recruit(Character* character, std::string* outMessage)
 {
@@ -1194,10 +1209,22 @@ void LogBout(const DuelBoutRecord& bout, DuelResolution resolution)
 
 namespace
 {
+// duel-any-source U7: whether the exclusion list lets this duel rival be recruited
+// (IsRecruitable). exclude.unconscious is left out: a TotalSparring duel ends with the
+// loser knocked out, which is the bout's outcome, not a reason to skip it.
+bool RecruitableAfterBout(Character* npc)
+{
+    return RecruitableUnder(npc, NULL, false);
+}
+
 // CanOfferDuel over the engine facts, given the two a verdict supplies: whether the
 // Balanced ally tiers answered, whether it is an animal (a hint: the Cheat verdict
 // never reads who they are), and the level to fall back on when SafeNpcLevel fails.
-bool DuelOfferedWith(Character* npc, bool allyTiered, bool animalHint, int levelFallback)
+// `externalBout`: the question is about a TotalSparring duel nobody challenged through
+// TotalRecruit (duel-any-source U7): a Balanced person then needs no ally tier, only to
+// be recruitable at duelExternalBalancedFromLevel.
+bool DuelOfferedWith(Character* npc, bool allyTiered, bool animalHint, int levelFallback,
+                     bool externalBout)
 {
     if (npc == NULL)
     {
@@ -1233,6 +1260,12 @@ bool DuelOfferedWith(Character* npc, bool allyTiered, bool animalHint, int level
         facts.animalOwned = IsOwnedAnimal(npc);
         facts.animalFromLevel = config.duelChallenges.animalsFromLevel;
     }
+    else if (externalBout && !facts.cheatPreset)
+    {
+        facts.externalBout = true;
+        facts.recruitable = RecruitableAfterBout(npc);
+        facts.externalBalancedFromLevel = config.duelChallenges.externalBalancedFromLevel;
+    }
     else if (!(facts.allyTiered || facts.cheatPreset))
     {
         return false;
@@ -1252,7 +1285,7 @@ bool DuelOfferedWith(Character* npc, bool allyTiered, bool animalHint, int level
 
 bool DuelOfferedFor(Character* npc, const Verdict& verdict)
 {
-    return DuelOfferedWith(npc, verdict.allyTiered, verdict.isAnimal, verdict.allyLevel);
+    return DuelOfferedWith(npc, verdict.allyTiered, verdict.isAnimal, verdict.allyLevel, false);
 }
 
 namespace
@@ -1260,10 +1293,11 @@ namespace
 // duel-any-source U2: the offer rule for side B of a TotalSparring duel nobody
 // challenged through TotalRecruit. The verdict of the moment cannot be used (a rival
 // just knocked out takes the unconscious route), so the ally tier is read past the
-// route (IsTieredAllyAtRest); the rest is the button's own rule.
+// route (IsTieredAllyAtRest); the rest is the button's own rule, plus U7: in Balanced
+// any recruitable person at duelExternalBalancedFromLevel counts too.
 bool ExternalRivalOfferedUnguarded(Character* npc)
 {
-    return DuelOfferedWith(npc, IsTieredAllyAtRest(npc), false, 0);
+    return DuelOfferedWith(npc, IsTieredAllyAtRest(npc), false, 0, true);
 }
 
 // POD frame: the reads above are guarded one by one, this catches anything else.

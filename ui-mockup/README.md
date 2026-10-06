@@ -286,6 +286,12 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     the end of `POPUP_STATES`). The singular `popup.info.duelJoinNeedWin` ("Ganale una vez mas") is never reached
     by the current rule: when one win is missing the next one decides and the row shows the odds.
 
+32. **Balanced counts an external duel with any recruitable NPC** (duel-any-source U7). A duel opened from
+    TotalSparring's own window (with `duelCountExternalBouts` on) now counts in Balanced against any person the
+    exclusion list lets you recruit, from `duelExternalBalancedFromLevel` (Mod Hub "Duelo externo Balanced: nivel
+    minimo", 1), no ally tier needed. The RETAR A DUELO button keeps its 80+ tiered-ally gate; Cheat and animals
+    keep their own gates. No new card or popup state: the mockup gains one `HUB` row, appended at the end.
+
 ### Native windows (sections 2 and 5: the card and the head notices)
 
 24. **The card and the notices step aside for Kenshi's own dialogue** (user report 2026-10-03: "if I talk to the
