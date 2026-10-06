@@ -772,7 +772,20 @@
     "failed": "No se pudo dar la orden",
     "notAllowed": "Ya no puedes hacerle eso",
     "beatResting": "Podrás volver a golpearlo en {hours} h",
-    "knockoutResting": "Podrás volver a noquearlo en {hours} h"
+    "knockoutResting": "Podrás volver a noquearlo en {hours} h",
+    "_beatComment": "Golpear camina primero: tu personaje va hasta la jaula y el golpe entra al llegar. beatLanded es el aviso con sonido ({actor} = quien golpea, {name} = el preso); beatOuch, la queja del preso (una por preso, siempre la misma; un animal o alguien inconsciente no dice nada); beatAbort, por que no hubo golpe.",
+    "beatLanded": "{actor} golpea a {name}",
+    "beatOuch": [
+      "¡Ugh!",
+      "¡Agh!",
+      "¡Ay!",
+      "¡Basta!"
+    ],
+    "beatAbort": {
+      "timeout": "{actor} no llegó a la jaula a tiempo: no hubo golpe",
+      "stalled": "{actor} dejó de acercarse a la jaula: no hubo golpe",
+      "actor": "{actor} ya no puede golpearlo: no hubo golpe"
+    }
   },
   "grudge": {
     "never": [

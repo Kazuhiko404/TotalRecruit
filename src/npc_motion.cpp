@@ -92,6 +92,14 @@ bool StandGuarded(Character* npc, Character* who)
     return true;
 }
 
+// StandGuarded's facing alone (C2712: the Vector3 lives in this plain helper).
+bool FaceGuarded(Character* npc, Character* who)
+{
+    const Ogre::Vector3 target = who->getPosition();
+    npc->lookatPosition(target, true);
+    return true;
+}
+
 bool ResumeGuarded(Character* npc)
 {
     OrdersReceiver* orders = npc->getOrdersReciever();
@@ -278,6 +286,14 @@ bool Stand(Character* npc, Character* who)
     if (npc == NULL || who == NULL)
         return false;
     TR_TRY { return StandGuarded(npc, who); }
+    TR_CATCH { return false; }
+}
+
+bool Face(Character* npc, Character* who)
+{
+    if (npc == NULL || who == NULL)
+        return false;
+    TR_TRY { return FaceGuarded(npc, who); }
     TR_CATCH { return false; }
 }
 

@@ -3,6 +3,7 @@
 #include "cage_command_rules.h"
 #include "cheat_waits.h"
 #include "beating_stress.h"
+#include "beat_walk.h"
 #include "char_key_reader.h"
 #include "config.h"
 #include "engine_reads.h"
@@ -596,6 +597,12 @@ bool IssueKnockout(Character* actor, Character* target)
 
 namespace
 {
+// What the walk asks every frame (beat_walk.h): Golpear's own click verdict.
+CageClickVerdict JudgeBeatTarget(Character* target)
+{
+    return JudgeCageClick(ReadCageCommandFacts(target), true);
+}
+
 // The facts the button was shown for, read again at the click.
 CageCommandResult CheckClick(Character* target, bool beat)
 {
@@ -609,7 +616,7 @@ CageCommandResult CheckClick(Character* target, bool beat)
 }
 } // namespace
 
-CageCommandResult OrderSelectedToBeat(Character* target)
+CageCommandResult OrderSelectedToBeat(Character* target, BeatOutcomeSink report)
 {
     const CageCommandResult check = CheckClick(target, true);
     if (check != CageCommand_Issued)
@@ -621,7 +628,14 @@ CageCommandResult OrderSelectedToBeat(Character* target)
     {
         return CageCommand_NoActor;
     }
-    return LandBeatHit(actor, target) ? CageCommand_Issued : CageCommand_Failed;
+    // The walk lands the blow on arrival (beat_walk.h); this module keeps the blow,
+    // the rest and the facts, and hands it those.
+    BeatWalkHandlers handlers;
+    handlers.judge = &JudgeBeatTarget;
+    handlers.land = &LandBeatHit;
+    handlers.report = report;
+    return StartBeatWalk(actor, target, handlers) == BeatWalkStart_Failed ? CageCommand_Failed
+                                                                          : CageCommand_Issued;
 }
 
 CageCommandResult OrderSelectedToKnockout(Character* target)
@@ -677,6 +691,9 @@ std::string KnockoutButtonLabel(Character* target)
 void TickCageCommands()
 {
     // Heals actors stuck with a knockout goal no watch owns (rate-limited inside).
+    // Golpear's pending strikes: the walks to the cage (beat_walk.h).
+    TickBeatWalks();
+
     Character* actor = g_watch.active ? StillSameCharacter(g_watch.actor, g_watch.actorKey) : NULL;
     SweepStrayKnockoutGoals(actor);
 
@@ -774,6 +791,8 @@ void ForgetCageCommands()
     // Load begin: the characters are still alive, so the watched actor is let go
     // before its pointer is dropped (the goal would otherwise be saved with it).
     EndWatch("at load");
+    // Pending Golpear walks end with no blow and no rest.
+    ForgetBeatWalks();
     g_credit.Clear();
     g_beatCooldown.Clear();
     g_knockoutCooldown.Clear();

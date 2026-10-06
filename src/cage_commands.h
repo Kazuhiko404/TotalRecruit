@@ -12,6 +12,12 @@
 //            cage. The native BEAT_CAGE_OCCUPANT order was never taken from the
 //            plugin, and its attack fallback started a real fight that pulled
 //            the prisoner out of the cage, so neither is used.
+//            From the buttons it walks first (beat-feedback, beat_walk.h): the
+//            selected character walks to the prisoner and the blow lands only
+//            within submissionBeatReachMeters (at once when already there); a walk
+//            that fails lands nothing and starts no rest. This module only hands
+//            the walk the blow (LandBeatHit) and the click's verdict; the caller
+//            hands it who reports the outcome (beat_walk_feedback.h).
 //   Noquear  addOrder(STEALTH_KNOCKOUT) + addGoal, so whether the knockout lands
 //            is the engine's. Fallback, when the actor has not changed task
 //            within kOrderWatchTimeoutMs (watch time: WatchFrameMs stops it while
@@ -73,6 +79,7 @@
 
 #include <string>
 
+#include "beat_walk.h"
 #include "cage_command_rules.h"
 
 class Character;
@@ -119,7 +126,10 @@ bool IssueKnockout(Character* actor, Character* target);
 
 // The same with the selected character as the actor (SelectedSquadActor), after
 // re-reading the facts at the click (NotAllowed / *Resting: nothing is done).
-CageCommandResult OrderSelectedToBeat(Character* target);
+// OrderSelectedToBeat starts Golpear's walk (StartBeatWalk): Issued means the blow
+// landed in reach or the actor is on its way, and `report` (TellBeatOutcome) hears
+// how it ends; Failed means nothing could be started.
+CageCommandResult OrderSelectedToBeat(Character* target, BeatOutcomeSink report);
 CageCommandResult OrderSelectedToKnockout(Character* target);
 
 // The line the caller tells the player for a result that is not Issued
@@ -137,7 +147,7 @@ std::string CageCommandProblem(CageCommandResult result, Character* target);
 std::string BeatButtonLabel(Character* target);
 std::string KnockoutButtonLabel(Character* target);
 
-// The frame tick: watches the last knockout order (fallback when the actor never
+// The frame tick: steps Golpear's pending walks (TickBeatWalks), watches the last knockout order (fallback when the actor never
 // took it, cleanup once the target is down or the window passes) and, every
 // kStrayGoalSweepMs, heals actors stuck with a stray knockout goal.
 void TickCageCommands();
@@ -159,7 +169,7 @@ struct CageKnockout
 CageKnockout ResolveCageKnockout(Character* victim);
 
 // Load boundary: lets the watched actor go (CleanUpKnockoutOrder, while the
-// characters still exist and still resolve to their keys), drops the watch and the
-// pending credits.
+// characters still exist and still resolve to their keys), drops the watch, the
+// pending Golpear walks (ForgetBeatWalks) and the pending credits.
 void ForgetCageCommands();
 } // namespace totalrecruit

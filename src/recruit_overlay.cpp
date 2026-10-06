@@ -11,6 +11,7 @@
 #include "readout.h"
 #include "button_block.h"
 #include "menu_button_release.h"
+#include "beat_walk_feedback.h"
 #include "cage_commands.h"
 #include "cage_command_rules.h"
 #include "menu_anchor.h"
@@ -178,7 +179,9 @@ void OnButtonEvent(ContextButtonKind kind, MyGUI::MouseButton button)
     switch (kind)
     {
     case ContextButton_Beat:
-        ReportCageCommand(OrderSelectedToBeat(target), target);
+        // The walk and the blow report themselves (beat_walk_feedback.h); only a
+        // click that could not start anything is reported here.
+        ReportCageCommand(OrderSelectedToBeat(target, &TellBeatOutcome), target);
         return;
 
     case ContextButton_Knockout:

@@ -3,6 +3,7 @@
 #include "log.h"
 #include "json_merge.h"
 #include "atomic_file.h"
+#include "beat_walk_rules.h"
 #include "head_notice_rules.h"
 #include "preset_rules.h"
 
@@ -435,6 +436,10 @@ std::vector<Field> ConfigFields(Config& c)
     AddBool(f, "submissionAllowBeating", &c.submission.allowBeating);
     AddFloat(f, "submissionBeatingCooldownHours", &c.submission.beatingCooldownHours);
     AddFloat(f, "submissionKnockoutCooldownHours", &c.submission.knockoutCooldownHours);
+    AddFloat(f, "submissionBeatReachMeters", &c.submission.beatReachMeters);
+    AddFloat(f, "submissionBeatWalkSeconds", &c.submission.beatWalkSeconds);
+    AddBool(f, "submissionBeatHitSoundEnabled", &c.submission.beatHitSoundEnabled);
+    AddString(f, "submissionBeatHitSound", &c.submission.beatHitSound);
     AddFloat(f, "submissionBeatStressBase", &c.submission.beatStressBase);
     AddFloat(f, "submissionKnockoutStressBase", &c.submission.knockoutStressBase);
     AddFloat(f, "submissionBeatingStressMin", &c.submission.beatingStressMin);
@@ -580,6 +585,10 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.submission.approachSeconds, 10.0f, 600.0f);
     ClampFloat(&g_config.submission.forgiveSeconds, 0.0f, 1800.0f);
     ClampFloat(&g_config.submission.rejectCooldownHours, 0.0f, 720.0f);
+    // Golpear's walk to the cage (beat_walk_rules.h): within arm's reach of the
+    // bars at the least, and never a walk across the map.
+    ClampFloat(&g_config.submission.beatReachMeters, kBeatReachMinMeters, kBeatReachMaxMeters);
+    ClampFloat(&g_config.submission.beatWalkSeconds, kBeatWalkMinSeconds, kBeatWalkMaxSeconds);
     // The proactive offer's calm after a failed roll: a few seconds to ten minutes.
     ClampFloat(&g_config.offer.failCalmSeconds, 0.0f, 600.0f);
     ClampInt(&g_config.submission.caredForBonusMin, 0, 50);

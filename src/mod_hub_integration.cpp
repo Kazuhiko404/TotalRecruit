@@ -1,5 +1,6 @@
 #include "mod_hub_integration.h"
 #include "config.h"
+#include "beat_walk_rules.h"
 #include "log.h"
 #include <windows.h>
 #include <tlhelp32.h>
@@ -339,6 +340,9 @@ static bool DoRegisterModHub()
     regBool(api, mod, "sub_allow_beating", "Sumision: permitir golpear", "Deja castigar al prisionero en tu jaula", &c.submission.allowBeating);
     regFloat(api, mod, "sub_beating_cooldown", "Sumision: horas entre golpizas", "Horas de juego antes de poder volver a golpearlo", 0.5f, 48.0f, 0.5f, 1, &c.submission.beatingCooldownHours);
     regFloat(api, mod, "sub_knockout_cooldown", "Sumision: horas entre noqueos", "Horas de juego antes de poder volver a noquearlo (cuenta desde que cayo)", 0.5f, 48.0f, 0.5f, 1, &c.submission.knockoutCooldownHours);
+    regFloat(api, mod, "sub_beat_reach", "Golpear: distancia para pegar", "Metros del preso a los que tu personaje tiene que llegar caminando para que el golpe entre", kBeatReachMinMeters, kBeatReachMaxMeters, 0.5f, 1, &c.submission.beatReachMeters);
+    regFloat(api, mod, "sub_beat_walk", "Golpear: segundos para llegar", "Cuanto puede tardar en llegar a la jaula; si no llega, no hay golpe ni descanso", kBeatWalkMinSeconds, kBeatWalkMaxSeconds, 5.0f, 0, &c.submission.beatWalkSeconds);
+    regBool(api, mod, "sub_beat_hit_sound", "Golpear: sonido del golpe", "Suena un golpe sobre el preso cuando el golpe entra", &c.submission.beatHitSoundEnabled);
     regFloat(api, mod, "sub_beat_stress_base", "Estres: base por golpe", "Cuanto estres suma un golpe de Golpear antes de niveles y personalidad", 0.0f, 1.0f, 0.01f, 2, &c.submission.beatStressBase);
     regFloat(api, mod, "sub_knockout_stress_base", "Estres: base por noqueo", "Cuanto estres suma un noqueo de Noquear antes de niveles y personalidad", 0.0f, 1.0f, 0.01f, 2, &c.submission.knockoutStressBase);
     regFloat(api, mod, "sub_beating_stress_min", "Estres: minimo por golpe", "Lo menos que suma un golpe o un noqueo", 0.0f, 1.0f, 0.01f, 2, &c.submission.beatingStressMin);

@@ -62,6 +62,11 @@ bool BeginStand(Character* npc, Character* who);
 // Re-pins `npc` to the recorded spot and turns its whole body to `who`.
 bool Stand(Character* npc, Character* who);
 
+// Turns `npc`'s whole body to where `who` stands now (lookatPosition fullbody, as
+// Stand does) without pinning a spot: stateless, so it never touches the single
+// pinned slot of the walk-up. Golpear faces the prisoner with it on landing.
+bool Face(Character* npc, Character* who);
+
 // Clears the NPC's orders and asks its AI to re-think: back to its routine.
 bool ResumeRoutine(Character* npc);
 

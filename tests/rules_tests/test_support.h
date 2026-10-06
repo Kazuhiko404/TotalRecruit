@@ -69,3 +69,4 @@ void RunDuelNarrationRulesTests();
 void RunHoldDurationRulesTests();
 void RunOfferRequestRulesTests();
 void RunOfferNarrationRulesTests();
+void RunBeatWalkRulesTests();

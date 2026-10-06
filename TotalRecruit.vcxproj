@@ -139,6 +139,10 @@
     <ClCompile Include="src\beating_stress_rules.cpp" />
     <ClCompile Include="src\beating_stress.cpp" />
     <ClCompile Include="src\cage_commands.cpp" />
+    <ClCompile Include="src\beat_walk_rules.cpp" />
+    <ClCompile Include="src\beat_walk.cpp" />
+    <ClCompile Include="src\beat_walk_sound.cpp" />
+    <ClCompile Include="src\beat_walk_feedback.cpp" />
     <ClCompile Include="src\knockout_watch_rules.cpp" />
     <ClCompile Include="src\knockout_order_cleanup.cpp" />
     <ClCompile Include="src\menu_anchor.cpp" />
@@ -223,6 +227,10 @@
     <ClInclude Include="src\talk_hint_cache.h" />
     <ClInclude Include="src\menu_slot.h" />
     <ClInclude Include="src\knockout_watch_rules.h" />
+    <ClInclude Include="src\beat_walk_rules.h" />
+    <ClInclude Include="src\beat_walk.h" />
+    <ClInclude Include="src\beat_walk_sound.h" />
+    <ClInclude Include="src\beat_walk_feedback.h" />
     <ClInclude Include="src\knockout_order_cleanup.h" />
     <ClInclude Include="src\menu_anchor.h" />
     <ClInclude Include="src\preset_rules.h" />

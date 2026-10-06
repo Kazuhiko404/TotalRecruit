@@ -7,6 +7,7 @@
 #include "feeding.h"
 #include "log.h"
 #include "mercy.h"
+#include "beat_walk_feedback.h"
 #include "cage_commands.h"
 #include "submission_director.h"
 #include "helper.h"
@@ -962,11 +963,13 @@ void AnswerHelper(Character* npc, OfferAnswer answer)
 // is already closed: the order is the answer. The facts are re-read at the click
 // (OrderSelectedTo*): a window left open while the prisoner was freed or knocked
 // out, or while GOLPEAR rests, does nothing but say why. Nobody selected says so.
+// GOLPEAR walks first, like the menu's Golpear, and reports through the same
+// TellBeatOutcome (beat_walk_feedback.h).
 void OrderCageCommand(Character* npc, OfferAnswer answer)
 {
     const CageCommandResult result = (answer == Answer_Knockout)
                                          ? OrderSelectedToKnockout(npc)
-                                         : OrderSelectedToBeat(npc);
+                                         : OrderSelectedToBeat(npc, &TellBeatOutcome);
     if (result != CageCommand_Issued)
     {
         TellPlayer(CageCommandProblem(result, npc), true);

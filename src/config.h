@@ -289,6 +289,18 @@ struct Submission
     bool allowBeating;
     float beatingCooldownHours;
     float knockoutCooldownHours;
+    // Golpear walks first (beat-feedback, beat_walk.h): the selected character
+    // walks to the prisoner and the blow lands once within beatReachMeters of
+    // them; a walk that takes longer than beatWalkSeconds (real seconds that stop
+    // while paused) ends with no blow and no rest. Clamped to 1..15 m and
+    // 5..300 s (beat_walk_rules.h). When it lands the prisoner gets a hit sound
+    // (beatHitSoundEnabled): the engine sound event beatHitSound
+    // (Character::audioEvent), then Loot-Scoot-Execute's list if the engine does
+    // not accept that name.
+    float beatReachMeters;
+    float beatWalkSeconds;
+    bool beatHitSoundEnabled;
+    std::string beatHitSound;
     // The beating stress (beating_stress_rules.h): the stress Golpear and Noquear
     // leave on a prisoner in the player's cage, where their knockouts no longer
     // count as defeats. One blow adds beatStressBase, one knockout that landed
@@ -337,6 +349,10 @@ struct Submission
           allowBeating(true),
           beatingCooldownHours(1.0f),
           knockoutCooldownHours(1.0f),
+          beatReachMeters(4.0f),
+          beatWalkSeconds(30.0f),
+          beatHitSoundEnabled(true),
+          beatHitSound("Heavy_Hit"),
           beatStressBase(0.08f),
           knockoutStressBase(0.15f),
           beatingStressMin(0.02f),
