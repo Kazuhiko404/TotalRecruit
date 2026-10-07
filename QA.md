@@ -1116,3 +1116,10 @@ Las correcciones de la prueba en juego de 12.39 y la lista "Prioridad 1". Con `p
 | S3 | Golpear a un preso inconsciente | El punetazo; el quejido puede sonar (es la voz de golpe del juego, no la burbuja de texto, que sigue callada) | las mismas dos lineas |
 | S4 | `config.json` desplegado con el viejo `"submissionBeatHitSound": "Heavy_Hit"` | Suena el golpe pesado del juego (es un valor real del switch `Impacts`): no hace falta migrarlo, pero "HtH_Impacts" es el punetazo | `Impact (Impacts=Heavy_Hit) played id N` |
 | S5 | Si alguna linea dice `failed: PostEvent returned 0` | Anotarlo con el nombre: el evento no esta cargado en ese momento | `beat hit sound <evento> failed: PostEvent returned 0` |
+
+**A Duelo ganado lejos.** El rival de un duelo terminado se busca en todo el alcance de la oferta (120 m del lider, `kOfferReachMeters`); antes solo a 80 m de tu grupo, y un duelo ganado con el rival entre 80 y 120 m no hacia nada.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| A1 | Ganar un duelo (Cheat o Balanced, `offerOnDuelWin` on) y, antes de que termine, alejar al lider a ~100 m del rival (o que el rival quede a 90-110 m al caer) | Igual que a corta distancia: camina a ofrecerse (o se calma si la tirada fallo) | `[offer] request: <nombre> (duel win ...)`; nunca `[duel] won against ..., who is not near the squad.` ni "tu rival ya no esta cerca" |
+| A2 | Lo mismo con el rival a mas de 120 m del lider | Comportamiento viejo (12.37 O18) | `is out of the event's reach` (o no se encuentra si esta a mas de 120 m de todos los tuyos) |

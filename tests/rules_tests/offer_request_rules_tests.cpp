@@ -157,6 +157,26 @@ void EveryNameIsReadable()
     CHECK(OfferVerdictName(OfferVerdict_Roll)[0] != '\0');
     CHECK(OfferRequestResultName(OfferRequest_SameGesture)[0] != '\0');
 }
+
+void TheOfferReachIsInclusiveAndAnUnreadDistanceIsOut()
+{
+    const char* name = "offer reach: up to kOfferReachMeters from the leader, inclusive; unread is out";
+    CHECK(kOfferReachMeters == kSubmissionAbortMeters);
+    CHECK(InOfferReach(0.0f));
+    CHECK(InOfferReach(100.0f));
+    CHECK(InOfferReach(kOfferReachMeters));
+    CHECK(!InOfferReach(kOfferReachMeters + 0.5f));
+    CHECK(!InOfferReach(-1.0f));
+}
+
+void AWonDuelFindsEveryRivalTheOfferCanReach()
+{
+    const char* name = "duel search: the rival is looked for as far as the offer reaches (a duel won at 100 m recruits)";
+    CHECK(DuelRivalSearchMeters() >= kOfferReachMeters);
+    // The play-test gap: 80 m of search vs 120 m of reach.
+    CHECK(DuelRivalSearchMeters() >= 100.0f);
+    CHECK(InOfferReach(100.0f));
+}
 } // namespace
 
 void RunOfferRequestRulesTests()
@@ -171,4 +191,6 @@ void RunOfferRequestRulesTests()
     OnlyAFreeLastingYesIsOfferedForNothing();
     ALastingSkipUsesTheRequestUp();
     EveryNameIsReadable();
+    TheOfferReachIsInclusiveAndAnUnreadDistanceIsOut();
+    AWonDuelFindsEveryRivalTheOfferCanReach();
 }

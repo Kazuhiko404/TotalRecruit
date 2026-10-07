@@ -42,7 +42,8 @@ bool FindRequestedOffer(Character* npc, OfferRequest* out);
 void ConsumeRequestedOffer(Character* npc, const char* why);
 
 // Whether `npc` stands within the event's reach of the squad leader
-// (kSubmissionAbortMeters): out of it, a won duel keeps the old behaviour.
+// (offer_request_rules.h InOfferReach, kOfferReachMeters): out of it, a won duel
+// keeps the old behaviour.
 bool WithinOfferReach(Character* npc);
 
 // Every frame (from SubmissionTick): the clock, and requests nobody served expire.

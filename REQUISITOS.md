@@ -383,6 +383,13 @@ de atacar `offerFailCalmSeconds` (20 s) donde esta, sin huir. Una oferta por
 gesto. Interruptores `offerOnDuelWin` / `offerOnHeal`. Los animales entran al
 evento con lineas de narrador (nunca hablan ni llevan cartel).
 
+*Estado (2026-10-06, priority-one A):* **El duelo ganado lejos tambien cuenta.**
+Al terminar un duelo, el rival se buscaba solo a 80 m de tu grupo mientras la
+oferta llega a 120 m del lider: un duelo ganado con el rival entre 80 y 120 m no
+reclutaba nada. Ahora hay un solo alcance (`kOfferReachMeters`, 120 m, el del
+evento) y la busqueda del rival lo cubre entero (`DuelRivalSearchMeters`,
+`offer_request_rules`). QA 12.40 A1-A2.
+
 **R3.8 — Pedir dinero y perdonarte.** *(P3)*
 Variante de la nota: en lugar de unirse o pagar, un NPC de cierto temperamento
 podría pagar **para que lo dejes ir**, y eso mejorar la relación con su facción.

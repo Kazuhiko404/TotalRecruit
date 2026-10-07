@@ -196,4 +196,14 @@ bool RequestSkipConsumes(CandidateSkip skip)
         return false;
     }
 }
+
+bool InOfferReach(float metersToLeader)
+{
+    return metersToLeader >= 0.0f && metersToLeader <= kOfferReachMeters;
+}
+
+float DuelRivalSearchMeters()
+{
+    return kOfferReachMeters;
+}
 } // namespace totalrecruit

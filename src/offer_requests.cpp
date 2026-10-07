@@ -106,8 +106,7 @@ bool WithinOfferReach(Character* npc)
     Character* leader = NULL;
     float meters = -1.0f;
     return npc != NULL && SafePlayerLeader(&leader) && leader != NULL &&
-           NpcMotion::DistanceMeters(npc, leader, &meters) && meters >= 0.0f &&
-           meters <= kSubmissionAbortMeters;
+           NpcMotion::DistanceMeters(npc, leader, &meters) && InOfferReach(meters);
 }
 
 void OfferRequestsTick()

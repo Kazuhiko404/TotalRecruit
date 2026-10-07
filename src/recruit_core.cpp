@@ -886,8 +886,8 @@ void RefundPrice(Character* character, int cats, const std::string& name)
 namespace
 {
 // How far from any squad member the challenged NPC is looked for once the duel is
-// over (the bout's own pointers died with TotalSparring's callback).
-const float kDuelSearchMeters = 80.0f;
+// over (the bout's own pointers died with TotalSparring's callback):
+// offer_request_rules.h DuelRivalSearchMeters, the whole offer reach.
 const int kDuelSearchMembers = 64;
 // How often stale challenges are swept out.
 const DWORD kDuelExpirySweepMs = 5000;
@@ -905,7 +905,7 @@ Character* FindNearSquad(const CharKey& key)
         float z = 0.0f;
         std::vector<Character*> nearby;
         if (members[m] == NULL || !NpcMotion::Position(members[m], &x, &y, &z) ||
-            !CharactersNear(Ogre::Vector3(x, y, z), MetersToWorldUnits(kDuelSearchMeters), &nearby))
+            !CharactersNear(Ogre::Vector3(x, y, z), MetersToWorldUnits(DuelRivalSearchMeters()), &nearby))
         {
             continue;
         }

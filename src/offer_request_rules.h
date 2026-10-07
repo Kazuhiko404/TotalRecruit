@@ -124,4 +124,20 @@ bool JoinsForFree(bool willJoin, Currency currency, int cats, bool temporary);
 // PURE: whether a screening skip means the request can never be served (it is used
 // up), rather than "not now" (busy, down: it waits).
 bool RequestSkipConsumes(CandidateSkip skip);
+
+// How far from the squad leader a gesture still asks for an offer: the event's own
+// reach (kSubmissionAbortMeters, where the walk-up asks and gives up). The one
+// source of truth for the offer's reach (offer_requests.cpp WithinOfferReach) and
+// for how far a won duel's rival is looked for (priority-one A).
+const float kOfferReachMeters = kSubmissionAbortMeters;
+
+// PURE: within the offer's reach: a distance that was read (>= 0), at most
+// kOfferReachMeters.
+bool InOfferReach(float metersToLeader);
+
+// PURE: how far from any squad member the rival of a finished duel is looked for
+// (recruit_core.cpp FindNearSquad). It covers the whole offer reach: a search that
+// stopped at 80 m left a duel won with the rival 80-120 m away recruiting nothing,
+// while the offer would have reached them.
+float DuelRivalSearchMeters();
 } // namespace totalrecruit
