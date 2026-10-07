@@ -59,9 +59,11 @@ taken through the cage.
 
 **Golpear and Noquear.** Right-click a prisoner awake in your cage and two
 buttons stand under Hablar, done by the character you have selected. Golpear
-walks that character to the cage and lands one capped blow when it gets there
-(within `submissionBeatReachMeters`, 4 m): the prisoner complains aloud, you hear
-the hit, and the message line says who hit whom. If the walk never gets there
+walks that character to the cage and, when it gets there (within
+`submissionBeatReachMeters`, 4 m), throws a punch (the vanilla `badpunch` clip;
+Mod Hub "Golpear: animacion del golpe") that lands one capped blow at the end of
+the wind-up: the prisoner complains aloud, you hear the hit, and the message line
+says who hit whom. If the walk never gets there
 (`submissionBeatWalkSeconds`, stuck, or you order the character elsewhere) there
 is no blow and no rest, and the message line says why. Noquear is Kenshi's own
 stealth knockout order and shows the game's own odds. Neither knockout counts as

@@ -75,3 +75,4 @@ void RunCooldownMinutesTests();
 void RunWaitFormatTests();
 void RunOpeningLineRulesTests();
 void RunAnimalBeatingRulesTests();
+void RunBeatStrikeRulesTests();

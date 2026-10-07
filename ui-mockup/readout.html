@@ -269,8 +269,9 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
         h += '<div class="at" style="left:420px;top:' + (VIEW.h - 150) + 'px;color:#222;background:#e9dfc9;' +
              'border-radius:6px;padding:2px 6px;font:700 12px sans-serif">¡Ugh!</div>';
         h += '<div class="callout" style="left:860px;top:120px;max-width:400px">After Golpear: the ' +
-             'selected character walks to the cage (dashed) and the blow lands within 4 m (submissionBeatReachMeters; ' +
-             'at once when already there). The prisoner says "¡Ugh!" (one of four, cage.beatOuch; an animal or ' +
+             'selected character walks to the cage (dashed); within 4 m (submissionBeatReachMeters; at once when ' +
+             'already there) it throws a punch (clip badpunch, 0.9 s) and the blow lands at the end of the wind-up ' +
+             '(0.35 s; no clip found = at once). The prisoner says "¡Ugh!" (one of four, cage.beatOuch; an animal or ' +
              'someone knocked out says nothing), a punch (Impact, Impacts=HtH_Impacts, submissionBeatHitSound) and his hurt voice play on him, and the ' +
              'roller reads "Kazu golpea a Bandido" with the notification sound. A walk that never arrives (30 s, ' +
              'stuck, or another order) lands nothing, starts no rest and says why: "Kazu no llegó a la jaula a ' +

@@ -374,7 +374,13 @@ var HUB = [
   ['Animal: resistencia base a golpes', 'animalCageBeatingResolveBase', '1.0',
    'Resistencia de un animal de nivel 0 (mas resistencia, menos efecto de los golpes)'],
   ['Animal: resistencia por nivel', 'animalCageBeatingResolvePerLevel', '0.02',
-   'Cuanta resistencia a golpes suma cada nivel del animal']
+   'Cuanta resistencia a golpes suma cada nivel del animal'],
+  ['Golpear: animacion del golpe', 'submissionBeatAnimEnabled', 'ON',
+   'Tu personaje lanza un punetazo (clip submissionBeatAnimClip) y el golpe entra al final del amago'],
+  ['Golpear: duracion de la animacion', 'submissionBeatAnimSeconds', '0.90',
+   'Segundos que dura el punetazo'],
+  ['Golpear: amago antes del golpe', 'submissionBeatWindupSeconds', '0.35',
+   'Segundos desde que empieza el punetazo hasta que el golpe entra (no mas que la duracion)']
 ];
 
 // The proactive offer (src/offer_requests.h, src/submission_director.cpp): after a gesture of

@@ -8,7 +8,9 @@
 //
 // The walk reuses npc_motion.h: MoveTo (the move order of TotalSparring's
 // challenge walk-up, into the prisoner's building), DistanceMeters and IsUp; on
-// arrival StopWalking(arrived) halts the actor and Face turns it to the prisoner.
+// arrival StopWalking(arrived) halts the actor and Face turns it to the prisoner,
+// and the strike is handed to beat_strike.h (the punch clip, then the blow after
+// the wind-up: priority-one C).
 // The order is given once -- a caged prisoner does not move -- and never
 // re-issued, so a player who sends the actor somewhere else is never overridden.
 // The clock is approach_driver.h's EventClock: real seconds that stop while the
@@ -89,12 +91,13 @@ struct BeatWalkHandlers
 
 enum BeatWalkStart
 {
-    BeatWalkStart_Landed,   // in reach at the click: landed and reported
+    BeatWalkStart_Landed,   // in reach at the click: the strike started (beat_strike.h:
+                            // it lands and reports, at once or after the wind-up; a
+                            // blow that cannot land is reported as BeatAbort_Failed)
     BeatWalkStart_Walking,  // the actor is on its way
     BeatWalkStart_Ended,    // aborted at the click (reported), nothing landed
-    BeatWalkStart_Failed    // nothing could be done (no key, no move order, no slot,
-                            // or the blow in reach failed): not reported -- the
-                            // caller says cage.failed
+    BeatWalkStart_Failed    // nothing could be done (no key, no move order, no slot):
+                            // not reported -- the caller says cage.failed
 };
 
 // Starts Golpear for `actor` on `target`: lands at once in reach, else gives the
@@ -102,9 +105,11 @@ enum BeatWalkStart
 // check first (OrderSelectedToBeat); `handlers.judge` and `.land` are required.
 BeatWalkStart StartBeatWalk(Character* actor, Character* target, const BeatWalkHandlers& handlers);
 
-// The frame tick (from TickCageCommands): one step of every pending strike.
+// The frame tick (from TickCageCommands): one step of every pending walk, and of
+// every strike at the cage (beat_strike.h TickBeatStrikes).
 void TickBeatWalks();
 
-// Load boundary: drops every pending strike, with no message and no order touched.
+// Load boundary: drops every pending walk, with no message and no order touched,
+// and every strike (its clip ended, beat_strike.h ForgetBeatStrikes).
 void ForgetBeatWalks();
 } // namespace totalrecruit

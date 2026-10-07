@@ -2,6 +2,7 @@
 #include "config.h"
 #include "beat_walk_rules.h"
 #include "animal_beating_rules.h"
+#include "beat_strike_rules.h"
 #include "log.h"
 #include <windows.h>
 #include <tlhelp32.h>
@@ -343,6 +344,9 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "sub_knockout_cooldown", "Sumision: horas entre noqueos", "Horas de juego antes de poder volver a noquearlo (cuenta desde que cayo)", 0.5f, 48.0f, 0.5f, 1, &c.submission.knockoutCooldownHours);
     regFloat(api, mod, "sub_beat_reach", "Golpear: distancia para pegar", "Metros del preso a los que tu personaje tiene que llegar caminando para que el golpe entre", kBeatReachMinMeters, kBeatReachMaxMeters, 0.5f, 1, &c.submission.beatReachMeters);
     regFloat(api, mod, "sub_beat_walk", "Golpear: segundos para llegar", "Cuanto puede tardar en llegar a la jaula; si no llega, no hay golpe ni descanso", kBeatWalkMinSeconds, kBeatWalkMaxSeconds, 5.0f, 0, &c.submission.beatWalkSeconds);
+    regBool(api, mod, "sub_beat_anim", "Golpear: animacion del golpe", "Tu personaje lanza un punetazo (clip submissionBeatAnimClip) y el golpe entra al final del amago", &c.submission.beatAnimEnabled);
+    regFloat(api, mod, "sub_beat_anim_seconds", "Golpear: duracion de la animacion", "Segundos que dura el punetazo", kBeatAnimMinSeconds, kBeatAnimMaxSeconds, 0.05f, 2, &c.submission.beatAnimSeconds);
+    regFloat(api, mod, "sub_beat_windup_seconds", "Golpear: amago antes del golpe", "Segundos desde que empieza el punetazo hasta que el golpe entra (no mas que la duracion)", kBeatWindupMinSeconds, kBeatWindupMaxSeconds, 0.05f, 2, &c.submission.beatWindupSeconds);
     regBool(api, mod, "sub_beat_hit_sound", "Golpear: sonido del golpe", "Suena el golpe y la queja del preso (o del animal) cuando el golpe entra", &c.submission.beatHitSoundEnabled);
     regFloat(api, mod, "sub_beat_stress_base", "Estres: base por golpe", "Cuanto estres suma un golpe de Golpear antes de niveles y personalidad", 0.0f, 1.0f, 0.01f, 2, &c.submission.beatStressBase);
     regFloat(api, mod, "sub_knockout_stress_base", "Estres: base por noqueo", "Cuanto estres suma un noqueo de Noquear antes de niveles y personalidad", 0.0f, 1.0f, 0.01f, 2, &c.submission.knockoutStressBase);

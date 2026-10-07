@@ -302,6 +302,15 @@ struct Submission
     float beatWalkSeconds;
     bool beatHitSoundEnabled;
     std::string beatHitSound;
+    // The strike at the cage (priority-one C, beat_strike_rules.h): the clip
+    // beatAnimClip ("badpunch", vanilla's "ma badpunch" technique) plays on the
+    // actor for beatAnimSeconds (0.2..3) and the blow lands after
+    // beatWindupSeconds (0..beatAnimSeconds). Off, or a clip the engine does not
+    // report playing: the blow lands at once.
+    bool beatAnimEnabled;
+    std::string beatAnimClip;
+    float beatAnimSeconds;
+    float beatWindupSeconds;
     // The beating stress (beating_stress_rules.h): the stress Golpear and Noquear
     // leave on a prisoner in the player's cage, where their knockouts no longer
     // count as defeats. One blow adds beatStressBase, one knockout that landed
@@ -354,6 +363,10 @@ struct Submission
           beatWalkSeconds(30.0f),
           beatHitSoundEnabled(true),
           beatHitSound("HtH_Impacts"),
+          beatAnimEnabled(true),
+          beatAnimClip("badpunch"),
+          beatAnimSeconds(0.9f),
+          beatWindupSeconds(0.35f),
           beatStressBase(0.08f),
           knockoutStressBase(0.15f),
           beatingStressMin(0.02f),

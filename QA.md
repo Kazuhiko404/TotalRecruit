@@ -1155,3 +1155,15 @@ Las correcciones de la prueba en juego de 12.39 y la lista "Prioridad 1". Con `p
 | D3 | Lo mismo con un animal que nunca comio de tu mano | No se une: sigue pidiendo la primera comida | - |
 | D4 | Mod Hub "Animal: los golpes en la jaula cuentan" OFF y repetir D1 | La marca no se mueve con los golpes | - |
 | D5 | Cheat: animal en la jaula | Igual que antes: se une al minuto; los golpes no cambian nada | - |
+
+**C Animacion de Golpear.** Al llegar a la jaula tu personaje lanza un punetazo: el clip `submissionBeatAnimClip` ("badpunch", la tecnica vanilla `ma badpunch`) pedido cada cuadro (`runSlaveAnim`) durante `submissionBeatAnimSeconds` (0,9 s) y terminado con `endSlaveAnim` en el personaje y su `AnimationClass`. El golpe, la queja, el sonido y el mensaje entran al final del amago (`submissionBeatWindupSeconds`, 0,35 s). Mod Hub: "Golpear: animacion del golpe", "Golpear: duracion de la animacion", "Golpear: amago antes del golpe". Con `probeOnClick`.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| C1 | Golpear a un preso (12.39 G1 o G2) | Al llegar, tu personaje lanza un punetazo; el golpe, el "¡Ugh!", el sonido y el mensaje llegan a mitad del gesto; despues vuelve a su pose normal (no queda congelado) | una vez por sesion `[cage] beat anim: clip 'badpunch' found playing`; `beat strike started (clip 'badpunch')`, `beat strike clip playing`, `beat strike landed`, `beat strike ended` |
+| C2 | Si el log dice `NOT found playing` | El golpe entra en el acto (como antes); anotar si igual se vio el gesto | `beat anim: clip 'badpunch' NOT found playing (the blow lands at once)` |
+| C3 | Mod Hub "Golpear: animacion del golpe" OFF y repetir C1 | Golpe en el acto, sin gesto | `beat strike landed` sin `started (clip ...)` |
+| C4 | `config.json` desplegado con `"submissionBeatAnimClip": "NoExiste"` y repetir C1 | Golpe en el acto; nada raro en el personaje | `NOT found playing` (si es el primero de la sesion), `beat strike landed` |
+| C5 | Golpear y cargar una partida durante el gesto (o usar `submissionBeatAnimSeconds` 3 para tener tiempo) | Sin golpe, sin cuelgue; tras cargar nadie queda congelado | `beat strike aborted (at load)` |
+| C6 | Durante el amago (subir `submissionBeatWindupSeconds` a 2-3 s), que el preso salga de la jaula o noquear a tu personaje | Sin golpe ni descanso; el roller dice por que (`cage.notAllowed` / `cage.beatAbort.actor`); el gesto termina | `beat strike aborted (not allowed)` / `(actor down)` |
+| C7 | Golpear dos veces seguidas con el mismo personaje (Cheat: descanso de 1 min) | El segundo clic camina/golpea de nuevo cuando el descanso termina; un golpe en curso reemplazado no pega dos veces | `beat strike aborted (replaced by a new Golpear)` si el segundo llega durante el gesto |

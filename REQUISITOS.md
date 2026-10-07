@@ -209,6 +209,18 @@ existen en los bancos: `Impact` con el switch `Impacts` =
 juego (`PostEvent` dice si sonó; si no se puede, `audioEvent`). Se confirma en
 juego (`QA.md` 12.40 S1-S5).
 
+*Estado (2026-10-06, priority-one C):* **Golpear tiene animación.** Al llegar
+a la jaula, tu personaje lanza un puñetazo: el clip `badpunch` (la técnica
+vanilla `ma badpunch`), pedido cada cuadro con `runSlaveAnim` y terminado con
+`endSlaveAnim` en el personaje y su `AnimationClass`. El golpe (daño, estrés,
+queja, sonido, mensaje) entra al final del amago (`submissionBeatWindupSeconds`,
+0,35 s) y el clip dura `submissionBeatAnimSeconds` (0,9 s). Si el motor no
+reporta el clip, o la animación está apagada (Mod Hub "Golpear: animacion del
+golpe"), el golpe entra en el acto como antes. Cargar, que tu personaje caiga o
+que el preso deje de ser válido durante el amago terminan el clip sin golpe
+(`beat_strike_rules`, `beat_strike`). Se confirma en juego (`QA.md` 12.40
+C1-C7).
+
 *Estado (2026-10-04, prisoner-module-fixes F1):* **Noquear actúa una vez.** La
 orden deja en el actor una meta persistente (`addGoal`) que nadie quitaba: la IA
 la seguía persiguiendo, volvía a entrar en sigilo y noqueaba al preso cada vez

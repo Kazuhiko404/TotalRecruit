@@ -4,6 +4,7 @@
 #include "json_merge.h"
 #include "atomic_file.h"
 #include "beat_walk_rules.h"
+#include "beat_strike_rules.h"
 #include "animal_beating_rules.h"
 #include "head_notice_rules.h"
 #include "preset_rules.h"
@@ -441,6 +442,10 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "submissionBeatWalkSeconds", &c.submission.beatWalkSeconds);
     AddBool(f, "submissionBeatHitSoundEnabled", &c.submission.beatHitSoundEnabled);
     AddString(f, "submissionBeatHitSound", &c.submission.beatHitSound);
+    AddBool(f, "submissionBeatAnimEnabled", &c.submission.beatAnimEnabled);
+    AddString(f, "submissionBeatAnimClip", &c.submission.beatAnimClip);
+    AddFloat(f, "submissionBeatAnimSeconds", &c.submission.beatAnimSeconds);
+    AddFloat(f, "submissionBeatWindupSeconds", &c.submission.beatWindupSeconds);
     AddFloat(f, "submissionBeatStressBase", &c.submission.beatStressBase);
     AddFloat(f, "submissionKnockoutStressBase", &c.submission.knockoutStressBase);
     AddFloat(f, "submissionBeatingStressMin", &c.submission.beatingStressMin);
@@ -594,6 +599,11 @@ void LoadConfig(const std::string& modDirectory)
     // bars at the least, and never a walk across the map.
     ClampFloat(&g_config.submission.beatReachMeters, kBeatReachMinMeters, kBeatReachMaxMeters);
     ClampFloat(&g_config.submission.beatWalkSeconds, kBeatWalkMinSeconds, kBeatWalkMaxSeconds);
+    // The strike's clip (beat_strike_rules.h): a fraction of a second to a few, and
+    // the wind-up never after the clip ends.
+    ClampFloat(&g_config.submission.beatAnimSeconds, kBeatAnimMinSeconds, kBeatAnimMaxSeconds);
+    ClampFloat(&g_config.submission.beatWindupSeconds, kBeatWindupMinSeconds,
+               g_config.submission.beatAnimSeconds);
     // The proactive offer's calm after a failed roll: a few seconds to ten minutes.
     ClampFloat(&g_config.offer.failCalmSeconds, 0.0f, 600.0f);
     ClampInt(&g_config.submission.caredForBonusMin, 0, 50);

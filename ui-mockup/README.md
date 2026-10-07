@@ -124,8 +124,11 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     "Kazu golpea a Bandido" with the notification sound (`cage.beatLanded`), and a hit sound plays on the prisoner
     (`submissionBeatHitSoundEnabled`, Mod Hub "Golpear: sonido del golpe"; since priority-one S1 the Wwise event `Impact`
     with the `Impacts` switch = `submissionBeatHitSound`, "HtH_Impacts", plus the voice `VO_Get_Hit`, or
-    `VO_Creature_Take_Damage` on an animal; `QA.md` 12.40 S1). No extra line while walking: the walk
-    is the feedback. A walk that ends without a blow starts no rest and the roller says why, as a problem line: "Kazu no
+    `VO_Creature_Take_Damage` on an animal; `QA.md` 12.40 S1). Since priority-one C the character throws a punch on
+    arrival: the vanilla clip `badpunch` (`submissionBeatAnimClip`, Mod Hub "Golpear: animacion del golpe") plays for
+    `submissionBeatAnimSeconds` (0.9 s) and the blow, the complaint, the sound and the roller line come at the end of
+    the wind-up (`submissionBeatWindupSeconds`, 0.35 s); a clip the engine does not report playing lands at once, as
+    before (`beat_strike_rules`). No extra line while walking: the walk is the feedback. A walk that ends without a blow starts no rest and the roller says why, as a problem line: "Kazu no
     llegó a la jaula a tiempo: no hubo golpe" (`submissionBeatWalkSeconds`, 30 real seconds, Mod Hub "Golpear: segundos
     para llegar"), "Kazu dejó de acercarse a la jaula: no hubo golpe" (no closer for 4 s: stuck, or the player ordered
     the character elsewhere), "Kazu ya no puede golpearlo: no hubo golpe" (the character went down), "Ya no puedes

@@ -102,6 +102,7 @@ const Suite kSuites[] = {
     { "wait_format", RunWaitFormatTests },
     { "opening_line_rules", RunOpeningLineRulesTests },
     { "animal_beating_rules", RunAnimalBeatingRulesTests },
+    { "beat_strike_rules", RunBeatStrikeRulesTests },
 };
 } // namespace
 

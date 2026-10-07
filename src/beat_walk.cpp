@@ -1,7 +1,7 @@
 #include "common.h"
 #include "beat_walk.h"
 #include "approach_driver.h"
-#include "beat_walk_sound.h"
+#include "beat_strike.h"
 #include "char_key_reader.h"
 #include "config.h"
 #include "engine_reads.h"
@@ -79,35 +79,17 @@ BeatWalkFacts ReadFacts(const PendingBeat& beat, Character* actor, Character* ta
 void Report(const PendingBeat& beat, BeatOutcomeKind kind, BeatWalkAbort reason,
             Character* actor, Character* target)
 {
-    if (beat.handlers.report == NULL)
-    {
-        return;
-    }
-    BeatOutcome outcome;
-    outcome.kind = kind;
-    outcome.reason = reason;
-    outcome.actor = actor;
-    outcome.target = target;
-    outcome.actorName = beat.actorName;
-    outcome.targetName = beat.targetName;
-    beat.handlers.report(outcome);
+    ReportBeat(beat.handlers, kind, reason, actor, target, beat.actorName, beat.targetName);
 }
 
-// In reach: stop, face the prisoner, land. False when the blow could not land.
-bool Land(const PendingBeat& beat, Character* actor, Character* target, float distance)
+// In reach: stop, face the prisoner, and hand the strike over (beat_strike.h: the
+// punch clip, the blow after the wind-up, the sound and the report).
+void Arrive(const PendingBeat& beat, Character* actor, Character* target, float distance)
 {
     NpcMotion::StopWalking(actor, true);
     NpcMotion::Face(actor, target);
     LogWalk(beat, "arrived (" + Metres(distance) + ")");
-    if (!beat.handlers.land(actor, target))
-    {
-        return false;
-    }
-    if (GetConfig().submission.beatHitSoundEnabled)
-    {
-        PlayBeatHitSound(target, GetConfig().submission.beatHitSound);
-    }
-    return true;
+    StartBeatStrike(actor, target, beat.actorName, beat.targetName, beat.handlers);
 }
 
 int FindSlot(const CharKey& actorKey)
@@ -163,15 +145,7 @@ void StepOne(PendingBeat* slot, float now, const BeatWalkLimits& limits)
     *slot = PendingBeat();
     if (step.kind == BeatStep_Land)
     {
-        if (Land(beat, actor, target, facts.distanceMeters))
-        {
-            Report(beat, BeatOutcome_Landed, BeatAbort_None, actor, target);
-        }
-        else
-        {
-            LogWalk(beat, std::string("aborted (") + BeatAbortText(BeatAbort_Failed) + ")");
-            Report(beat, BeatOutcome_Aborted, BeatAbort_Failed, actor, target);
-        }
+        Arrive(beat, actor, target, facts.distanceMeters);
         return;
     }
     LogWalk(beat, std::string("aborted (") + BeatAbortText(step.reason) + ")");
@@ -228,11 +202,7 @@ BeatWalkStart StartBeatWalk(Character* actor, Character* target, const BeatWalkH
     const BeatWalkStep step = NextBeatWalkStep(facts, limits);
     if (step.kind == BeatStep_Land)
     {
-        if (!Land(beat, actor, target, facts.distanceMeters))
-        {
-            return BeatWalkStart_Failed;
-        }
-        Report(beat, BeatOutcome_Landed, BeatAbort_None, actor, target);
+        Arrive(beat, actor, target, facts.distanceMeters);
         return BeatWalkStart_Landed;
     }
     if (step.kind == BeatStep_Abort)
@@ -255,6 +225,7 @@ BeatWalkStart StartBeatWalk(Character* actor, Character* target, const BeatWalkH
 
 void TickBeatWalks()
 {
+    TickBeatStrikes();
     if (!AnyPending())
     {
         return;
@@ -282,5 +253,6 @@ void ForgetBeatWalks()
         g_pending[i] = PendingBeat();
     }
     g_clock.Reset();
+    ForgetBeatStrikes();
 }
 } // namespace totalrecruit
