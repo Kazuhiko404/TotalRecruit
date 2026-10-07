@@ -122,8 +122,9 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     the prisoner, the prisoner says one of "¡Ugh!" / "¡Agh!" / "¡Ay!" / "¡Basta!" over his head (`cage.beatOuch`,
     always the same one for the same prisoner; an animal or someone the blow knocked out says nothing), the roller says
     "Kazu golpea a Bandido" with the notification sound (`cage.beatLanded`), and a hit sound plays on the prisoner
-    (`submissionBeatHitSoundEnabled`, Mod Hub "Golpear: sonido del golpe"; event `submissionBeatHitSound` = "Heavy_Hit",
-    then Loot-Scoot-Execute's list; not verified in game yet, `QA.md` 12.39 G3). No extra line while walking: the walk
+    (`submissionBeatHitSoundEnabled`, Mod Hub "Golpear: sonido del golpe"; since priority-one S1 the Wwise event `Impact`
+    with the `Impacts` switch = `submissionBeatHitSound`, "HtH_Impacts", plus the voice `VO_Get_Hit`, or
+    `VO_Creature_Take_Damage` on an animal; `QA.md` 12.40 S1). No extra line while walking: the walk
     is the feedback. A walk that ends without a blow starts no rest and the roller says why, as a problem line: "Kazu no
     llegó a la jaula a tiempo: no hubo golpe" (`submissionBeatWalkSeconds`, 30 real seconds, Mod Hub "Golpear: segundos
     para llegar"), "Kazu dejó de acercarse a la jaula: no hubo golpe" (no closer for 4 s: stuck, or the player ordered

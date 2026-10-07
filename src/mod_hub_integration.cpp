@@ -342,7 +342,7 @@ static bool DoRegisterModHub()
     regFloat(api, mod, "sub_knockout_cooldown", "Sumision: horas entre noqueos", "Horas de juego antes de poder volver a noquearlo (cuenta desde que cayo)", 0.5f, 48.0f, 0.5f, 1, &c.submission.knockoutCooldownHours);
     regFloat(api, mod, "sub_beat_reach", "Golpear: distancia para pegar", "Metros del preso a los que tu personaje tiene que llegar caminando para que el golpe entre", kBeatReachMinMeters, kBeatReachMaxMeters, 0.5f, 1, &c.submission.beatReachMeters);
     regFloat(api, mod, "sub_beat_walk", "Golpear: segundos para llegar", "Cuanto puede tardar en llegar a la jaula; si no llega, no hay golpe ni descanso", kBeatWalkMinSeconds, kBeatWalkMaxSeconds, 5.0f, 0, &c.submission.beatWalkSeconds);
-    regBool(api, mod, "sub_beat_hit_sound", "Golpear: sonido del golpe", "Suena un golpe sobre el preso cuando el golpe entra", &c.submission.beatHitSoundEnabled);
+    regBool(api, mod, "sub_beat_hit_sound", "Golpear: sonido del golpe", "Suena el golpe y la queja del preso (o del animal) cuando el golpe entra", &c.submission.beatHitSoundEnabled);
     regFloat(api, mod, "sub_beat_stress_base", "Estres: base por golpe", "Cuanto estres suma un golpe de Golpear antes de niveles y personalidad", 0.0f, 1.0f, 0.01f, 2, &c.submission.beatStressBase);
     regFloat(api, mod, "sub_knockout_stress_base", "Estres: base por noqueo", "Cuanto estres suma un noqueo de Noquear antes de niveles y personalidad", 0.0f, 1.0f, 0.01f, 2, &c.submission.knockoutStressBase);
     regFloat(api, mod, "sub_beating_stress_min", "Estres: minimo por golpe", "Lo menos que suma un golpe o un noqueo", 0.0f, 1.0f, 0.01f, 2, &c.submission.beatingStressMin);

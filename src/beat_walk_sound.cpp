@@ -1,17 +1,20 @@
 #include "common.h"
 #include "beat_walk_sound.h"
-#include "beat_walk_rules.h"
+#include "beat_hit_sound_rules.h"
 #include "config.h"
+#include "engine_reads.h"
 #include "log.h"
+#include "wwise_bridge.h"
 
+#include <cstdio>
 #include <vector>
 
 namespace totalrecruit
 {
 namespace
 {
-// Loot-Scoot-Execute.cpp TryPlayCharacterAudioEvent: a POD-only frame, the name
-// as a plain pointer (C2712).
+// Loot-Scoot-Execute.cpp TryPlayCharacterAudioEvent: a POD-only frame, the names
+// as plain pointers (C2712). The fallback path: the engine's own wrappers.
 bool SafeAudioEvent(Character* character, const char* eventName)
 {
     if (character == NULL || eventName == NULL || eventName[0] == '\0')
@@ -22,44 +25,98 @@ bool SafeAudioEvent(Character* character, const char* eventName)
     TR_CATCH { return false; }
 }
 
-// The first accepted name on `character`, or NULL.
-const char* PlayFirst(Character* character, const std::vector<std::string>& names)
+bool SafeAudioSwitch(Character* character, const char* group, const char* value)
 {
-    for (size_t i = 0; i < names.size(); ++i)
+    if (character == NULL || group == NULL || value == NULL)
     {
-        if (SafeAudioEvent(character, names[i].c_str()))
-        {
-            return names[i].c_str();
-        }
+        return false;
     }
-    return NULL;
+    TR_TRY
+    {
+        character->audioValue(group, value);
+        return true;
+    }
+    TR_CATCH { return false; }
 }
 
-void LogPlayed(const char* name, const char* emitter)
+std::string Describe(const BeatSoundCue& cue)
+{
+    if (cue.switchGroup.empty())
+    {
+        return cue.eventName;
+    }
+    return cue.eventName + " (" + cue.switchGroup + "=" + cue.switchValue + ")";
+}
+
+void LogPlayed(const std::string& what)
 {
     if (GetConfig().probeOnClick)
     {
-        LogInfo(std::string("[cage] beat hit sound ") + name + " on " + emitter);
+        LogInfo("[cage] beat hit sound " + what);
     }
+}
+
+// Through the game's Wwise: true when PostEvent returned a playing id.
+bool PlayDirect(const BeatSoundCue& cue, Character* prisoner, unsigned __int64 gameObject)
+{
+    if (!cue.switchGroup.empty() && !WwiseSetSwitchAvailable())
+    {
+        SafeAudioSwitch(prisoner, cue.switchGroup.c_str(), cue.switchValue.c_str());
+    }
+    else if (!cue.switchGroup.empty() &&
+             !WwiseSetSwitch(cue.switchGroup.c_str(), cue.switchValue.c_str(), gameObject))
+    {
+        LogError("[cage] beat hit sound: SetSwitch " + cue.switchGroup + "=" + cue.switchValue +
+                 " failed (the impact plays with the switch it had)");
+    }
+    const unsigned long playing = WwisePostEvent(cue.eventName.c_str(), gameObject);
+    if (playing == 0)
+    {
+        LogError("[cage] beat hit sound " + Describe(cue) + " failed: PostEvent returned 0");
+        return false;
+    }
+    char id[32];
+    _snprintf_s(id, sizeof(id), _TRUNCATE, "%lu", playing);
+    LogPlayed(Describe(cue) + " played id " + id);
+    return true;
+}
+
+// Through Character::audioValue / audioEvent: unconfirmed, audioEvent says true
+// for unknown events too.
+bool PlayFallback(const BeatSoundCue& cue, Character* prisoner)
+{
+    if (!cue.switchGroup.empty())
+    {
+        SafeAudioSwitch(prisoner, cue.switchGroup.c_str(), cue.switchValue.c_str());
+    }
+    if (!SafeAudioEvent(prisoner, cue.eventName.c_str()))
+    {
+        LogError("[cage] beat hit sound " + Describe(cue) + " failed: audioEvent refused it");
+        return false;
+    }
+    LogPlayed(Describe(cue) + " via audioEvent (unconfirmed)");
+    return true;
 }
 } // namespace
 
-bool PlayBeatHitSound(Character* prisoner, Character* actor, const std::string& configured)
+bool PlayBeatHitSound(Character* prisoner, const std::string& impactKind)
 {
-    const std::vector<std::string> names = BeatHitSoundCandidates(configured);
-    const char* played = PlayFirst(prisoner, names);
-    if (played != NULL)
+    if (prisoner == NULL)
     {
-        LogPlayed(played, "prisoner");
-        return true;
+        return false;
     }
-    played = PlayFirst(actor, names);
-    if (played != NULL)
+    bool animal = false;
+    SafeIsAnimal(prisoner, &animal);
+    const std::vector<BeatSoundCue> cues = BeatHitSoundCues(impactKind, animal);
+
+    unsigned __int64 gameObject = 0;
+    const bool direct = WwisePostEventAvailable() && SafeAudioObject(prisoner, &gameObject);
+    bool any = false;
+    for (size_t i = 0; i < cues.size(); ++i)
     {
-        LogPlayed(played, "actor");
-        return true;
+        const bool played = direct ? PlayDirect(cues[i], prisoner, gameObject) : PlayFallback(cues[i], prisoner);
+        any = any || played;
     }
-    LogError("[cage] beat hit sound: no event accepted (submissionBeatHitSound \"" + configured + "\")");
-    return false;
+    return any;
 }
 } // namespace totalrecruit

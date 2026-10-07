@@ -70,3 +70,4 @@ void RunHoldDurationRulesTests();
 void RunOfferRequestRulesTests();
 void RunOfferNarrationRulesTests();
 void RunBeatWalkRulesTests();
+void RunBeatHitSoundRulesTests();

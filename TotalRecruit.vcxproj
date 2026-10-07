@@ -142,6 +142,8 @@
     <ClCompile Include="src\beat_walk_rules.cpp" />
     <ClCompile Include="src\beat_walk.cpp" />
     <ClCompile Include="src\beat_walk_sound.cpp" />
+    <ClCompile Include="src\beat_hit_sound_rules.cpp" />
+    <ClCompile Include="src\wwise_bridge.cpp" />
     <ClCompile Include="src\beat_walk_feedback.cpp" />
     <ClCompile Include="src\knockout_watch_rules.cpp" />
     <ClCompile Include="src\knockout_order_cleanup.cpp" />
@@ -230,6 +232,8 @@
     <ClInclude Include="src\beat_walk_rules.h" />
     <ClInclude Include="src\beat_walk.h" />
     <ClInclude Include="src\beat_walk_sound.h" />
+    <ClInclude Include="src\beat_hit_sound_rules.h" />
+    <ClInclude Include="src\wwise_bridge.h" />
     <ClInclude Include="src\beat_walk_feedback.h" />
     <ClInclude Include="src\knockout_order_cleanup.h" />
     <ClInclude Include="src\menu_anchor.h" />

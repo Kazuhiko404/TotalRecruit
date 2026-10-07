@@ -249,30 +249,6 @@ void TheWalkAbortsHaveTheirOwnLines()
     CHECK(BeatAbortText(BeatAbort_Timeout)[0] != '\0');
     CHECK(BeatAbortText(BeatAbort_Load)[0] != '\0');
 }
-void TheHitSoundTriesTheConfiguredNameFirst()
-{
-    const char* name = "beat hit sound: the configured event first, then Loot-Scoot-Execute's list, no repeats";
-    const std::vector<std::string> plain = BeatHitSoundCandidates("Heavy_Hit");
-    CHECK(!plain.empty());
-    CHECK(plain[0] == "Heavy_Hit");
-    int heavy = 0;
-    for (size_t i = 0; i < plain.size(); ++i)
-    {
-        if (plain[i] == "Heavy_Hit") ++heavy;
-    }
-    CHECK(heavy == 1);
-    CHECK(plain.size() == kBeatHitSoundFallbackCount);
-
-    const std::vector<std::string> custom = BeatHitSoundCandidates("My_Punch");
-    CHECK(custom.size() == kBeatHitSoundFallbackCount + 1);
-    CHECK(custom[0] == "My_Punch");
-    CHECK(custom[1] == "Heavy_Hit");
-
-    // An empty name is no candidate: the list alone.
-    const std::vector<std::string> none = BeatHitSoundCandidates("");
-    CHECK(none.size() == kBeatHitSoundFallbackCount);
-    CHECK(none[0] == "Heavy_Hit");
-}
 } // namespace
 
 void RunBeatWalkRulesTests()
@@ -292,5 +268,4 @@ void RunBeatWalkRulesTests()
     OnlyAPersonComplains();
     WhatThePlayerIsToldOnAnAbort();
     TheWalkAbortsHaveTheirOwnLines();
-    TheHitSoundTriesTheConfiguredNameFirst();
 }

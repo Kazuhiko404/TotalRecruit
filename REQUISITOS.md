@@ -179,6 +179,14 @@ con el sonido de notificación y suena un golpe sobre el preso
 (`submissionBeatHitSoundEnabled`, evento `submissionBeatHitSound`). Se confirma
 en juego (`QA.md` 12.39).
 
+*Estado (2026-10-06, priority-one S1):* **El golpe se oye.** Los nombres de
+antes no eran eventos de Wwise. Al pegar se postean sobre el preso eventos que
+existen en los bancos: `Impact` con el switch `Impacts` =
+`submissionBeatHitSound` (por defecto "HtH_Impacts", el golpe sin arma) y la voz
+`VO_Get_Hit` (persona) o `VO_Creature_Take_Damage` (animal), por el Wwise del
+juego (`PostEvent` dice si sonó; si no se puede, `audioEvent`). Se confirma en
+juego (`QA.md` 12.40 S1-S5).
+
 *Estado (2026-10-04, prisoner-module-fixes F1):* **Noquear actúa una vez.** La
 orden deja en el actor una meta persistente (`addGoal`) que nadie quitaba: la IA
 la seguía persiguiendo, volvía a entrar en sigilo y noqueaba al preso cada vez

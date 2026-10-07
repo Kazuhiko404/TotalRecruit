@@ -98,6 +98,7 @@
     <ClCompile Include="offer_request_rules_tests.cpp" />
     <ClCompile Include="offer_narration_rules_tests.cpp" />
     <ClCompile Include="beat_walk_rules_tests.cpp" />
+    <ClCompile Include="beat_hit_sound_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -162,6 +163,7 @@
     <ClCompile Include="..\..\src\offer_request_rules.cpp" />
     <ClCompile Include="..\..\src\offer_narration_rules.cpp" />
     <ClCompile Include="..\..\src\beat_walk_rules.cpp" />
+    <ClCompile Include="..\..\src\beat_hit_sound_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />

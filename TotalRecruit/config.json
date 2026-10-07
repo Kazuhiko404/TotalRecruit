@@ -98,7 +98,7 @@
   "submissionBeatReachMeters": 4.0,
   "submissionBeatWalkSeconds": 30.0,
   "submissionBeatHitSoundEnabled": true,
-  "submissionBeatHitSound": "Heavy_Hit",
+  "submissionBeatHitSound": "HtH_Impacts",
   "submissionCaredForBonusMin": 5,
   "submissionCaredForBonusMax": 20,
   "submissionBeatStressBase": 0.08,

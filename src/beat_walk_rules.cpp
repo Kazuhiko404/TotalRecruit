@@ -160,27 +160,4 @@ const char* BeatAbortText(BeatWalkAbort reason)
     default:                   return "none";
     }
 }
-
-std::vector<std::string> BeatHitSoundCandidates(const std::string& configured)
-{
-    // Loot-Scoot-Execute.cpp kExecuteKillSoundEventCandidates, in its order.
-    static const char* const kFallbacks[kBeatHitSoundFallbackCount] = {
-        "Heavy_Hit", "Play_Heavy_Hit", "Light_Hit", "Play_Light_Hit", "VO_Get_Hit",
-        "Play_VO_Get_Hit", "VO_Creature_Die", "Play_VO_Creature_Die", "VO_Creature_Victory",
-        "Play_VO_Creature_Victory"
-    };
-    std::vector<std::string> names;
-    if (!configured.empty())
-    {
-        names.push_back(configured);
-    }
-    for (size_t i = 0; i < kBeatHitSoundFallbackCount; ++i)
-    {
-        if (configured != kFallbacks[i])
-        {
-            names.push_back(kFallbacks[i]);
-        }
-    }
-    return names;
-}
 } // namespace totalrecruit

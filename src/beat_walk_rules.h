@@ -150,13 +150,4 @@ const char* BeatAbortFallback(BeatWalkAbort reason);
 
 // The abort's short English name, for the "[cage]" log.
 const char* BeatAbortText(BeatWalkAbort reason);
-
-// T5: the hit sound on the prisoner when the blow lands
-// (Character::audioEvent(name, SOUNDRANGE_ALWAYS), as Loot-Scoot-Execute plays its
-// execute sound, Loot-Scoot-Execute.cpp kExecuteKillSoundEventCandidates). The
-// event names to try, in order: the configured one (submissionBeatHitSound; ""
-// is none), then that list, without repeats. audioEvent returns whether the
-// event played, so the first one accepted is the sound and the rest are skipped.
-const size_t kBeatHitSoundFallbackCount = 10;
-std::vector<std::string> BeatHitSoundCandidates(const std::string& configured);
 } // namespace totalrecruit

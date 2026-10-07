@@ -105,7 +105,7 @@ bool Land(const PendingBeat& beat, Character* actor, Character* target, float di
     }
     if (GetConfig().submission.beatHitSoundEnabled)
     {
-        PlayBeatHitSound(target, actor, GetConfig().submission.beatHitSound);
+        PlayBeatHitSound(target, GetConfig().submission.beatHitSound);
     }
     return true;
 }

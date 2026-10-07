@@ -294,9 +294,10 @@ struct Submission
     // them; a walk that takes longer than beatWalkSeconds (real seconds that stop
     // while paused) ends with no blow and no rest. Clamped to 1..15 m and
     // 5..300 s (beat_walk_rules.h). When it lands the prisoner gets a hit sound
-    // (beatHitSoundEnabled): the engine sound event beatHitSound
-    // (Character::audioEvent), then Loot-Scoot-Execute's list if the engine does
-    // not accept that name.
+    // (beatHitSoundEnabled): the Wwise event "Impact" with the "Impacts" switch
+    // set to beatHitSound (the impact kind: "HtH_Impacts" unarmed, "Heavy_Hit",
+    // "Light_Hit", ...; "" leaves the switch as it is), then the prisoner's
+    // voice (beat_hit_sound_rules.h).
     float beatReachMeters;
     float beatWalkSeconds;
     bool beatHitSoundEnabled;
@@ -352,7 +353,7 @@ struct Submission
           beatReachMeters(4.0f),
           beatWalkSeconds(30.0f),
           beatHitSoundEnabled(true),
-          beatHitSound("Heavy_Hit"),
+          beatHitSound("HtH_Impacts"),
           beatStressBase(0.08f),
           knockoutStressBase(0.15f),
           beatingStressMin(0.02f),
