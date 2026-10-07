@@ -1,4 +1,5 @@
 #include "duel_challenge_rules.h"
+#include "cooldown_minutes.h"
 
 #include <cmath>
 #include <cstdio>
@@ -43,15 +44,14 @@ bool CanOfferDuel(const DuelOfferFacts& facts)
     return facts.isAnimal ? AnimalMayDuel(facts) : PersonMayDuel(facts);
 }
 
-int DuelCooldownUntilHour(double nowHours, float cooldownHours)
+int DuelCooldownUntilMinute(double nowHours, float cooldownHours)
 {
-    const double hours = cooldownHours > 0.0f ? (double)cooldownHours : 0.0;
-    return (int)std::ceil(nowHours + hours);
+    return CooldownUntilMinute(nowHours, cooldownHours);
 }
 
-bool DuelCooldownActive(int untilHour, double nowHours)
+bool DuelCooldownActive(int untilMinute, double nowHours)
 {
-    return untilHour > 0 && nowHours < (double)untilHour;
+    return CooldownActiveAt(untilMinute, nowHours, NULL);
 }
 
 bool DuelPendingExpired(const PendingDuel& pending, double nowHours, float expiryHours)
@@ -213,8 +213,8 @@ DuelResolveResult DuelChallengeBook::Resolve(const DuelBoutRecord& bout, double 
         return result;
     }
     result.resolution = DuelResolution_Lost;
-    result.cooldownUntilHour = DuelCooldownUntilHour(nowHours, config.cooldownHours);
-    SetCooldownUntil(bout.b, result.cooldownUntilHour);
+    result.cooldownUntilMinute = DuelCooldownUntilMinute(nowHours, config.cooldownHours);
+    SetCooldownUntil(bout.b, result.cooldownUntilMinute);
     return result;
 }
 
@@ -243,8 +243,8 @@ DuelResolveResult DuelChallengeBook::ResolveExternal(const DuelBoutRecord& bout,
         return result;
     }
     result.resolution = DuelResolution_Lost;
-    result.cooldownUntilHour = DuelCooldownUntilHour(nowHours, config.cooldownHours);
-    SetCooldownUntil(bout.b, result.cooldownUntilHour);
+    result.cooldownUntilMinute = DuelCooldownUntilMinute(nowHours, config.cooldownHours);
+    SetCooldownUntil(bout.b, result.cooldownUntilMinute);
     return result;
 }
 
@@ -259,14 +259,14 @@ int DuelChallengeBook::CooldownUntil(const CharKey& npc) const
     return it == cooldownUntil_.end() ? 0 : it->second;
 }
 
-void DuelChallengeBook::SetCooldownUntil(const CharKey& npc, int untilHour)
+void DuelChallengeBook::SetCooldownUntil(const CharKey& npc, int untilMinute)
 {
-    if (untilHour <= 0)
+    if (untilMinute <= 0)
     {
         cooldownUntil_.erase(npc);
         return;
     }
-    cooldownUntil_[npc] = untilHour;
+    cooldownUntil_[npc] = untilMinute;
 }
 
 void DuelChallengeBook::Clear()
@@ -336,10 +336,10 @@ bool DuelOnCooldown(const CharKey& npc, double nowHours)
     return g_book.OnCooldown(npc, nowHours);
 }
 
-void SetDuelCooldownUntil(const CharKey& npc, int untilHour)
+void SetDuelCooldownUntil(const CharKey& npc, int untilMinute)
 {
     Lock lock;
-    g_book.SetCooldownUntil(npc, untilHour);
+    g_book.SetCooldownUntil(npc, untilMinute);
 }
 
 int SavedDuelCooldownUntil(const std::string& persistedId)
@@ -352,14 +352,24 @@ int SavedDuelCooldownUntil(const std::string& persistedId)
     return g_book.CooldownUntil(CharKey::FromId(persistedId));
 }
 
-void RestoreSavedDuelCooldownUntil(const std::string& persistedId, int untilHour)
+void RestoreSavedDuelCooldownUntil(const std::string& persistedId, int untilMinute)
 {
     if (persistedId.empty())
     {
         return;
     }
     Lock lock;
-    g_book.SetCooldownUntil(CharKey::FromId(persistedId), untilHour);
+    g_book.SetCooldownUntil(CharKey::FromId(persistedId), untilMinute);
+}
+
+int SavedDuelCooldownLegacyHour(const std::string& persistedId)
+{
+    return SavedHourFromUntilMinute(SavedDuelCooldownUntil(persistedId));
+}
+
+void RestoreSavedDuelCooldownLegacyHour(const std::string& persistedId, int untilHour)
+{
+    RestoreSavedDuelCooldownUntil(persistedId, UntilMinuteFromSavedHour(untilHour));
 }
 
 void ForgetAllDuelChallenges()

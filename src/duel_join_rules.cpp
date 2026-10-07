@@ -116,7 +116,7 @@ DuelWinDecision DecideDuelWin(const DuelWinFacts& facts, const DuelChallenges& c
     }
     d.cooldownHours = DuelWinCooldownHoursFromSeed(DailySeed(facts.npc, wins, kDuelWinCooldownSalt),
                                                    facts.npcLevel, config);
-    d.cooldownUntilHour = DuelCooldownUntilHour(facts.nowHours, d.cooldownHours);
+    d.cooldownUntilMinute = DuelCooldownUntilMinute(facts.nowHours, d.cooldownHours);
     return d;
 }
 } // namespace totalrecruit

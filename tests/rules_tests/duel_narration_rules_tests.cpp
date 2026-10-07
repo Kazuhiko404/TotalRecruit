@@ -86,6 +86,27 @@ void AnUnknownIdReadsAsTheChallenge()
     CHECK(std::string(DuelNarrationFor((DuelNarrationId)99, true).key) == "duel.animal.challenged");
     CHECK(std::string(DuelNarrationFor((DuelNarrationId)-1, false).key) == "duel.challenged");
 }
+
+void AWaitUnderAnHourHasAMinuteLine()
+{
+    const char* name = "narration: the lines that carry a wait have a minute fallback ({minutes}, no {hours})";
+    const DuelNarrationId waits[2] = { DuelNarration_Stays, DuelNarration_Lost };
+    for (int i = 0; i < 2; ++i)
+    {
+        for (int a = 0; a < 2; ++a)
+        {
+            const char* text = DuelMinutesFallback(waits[i], a == 1);
+            CHECK(text != NULL);
+            if (text == NULL) continue;
+            CHECK(Contains(text, "{minutes}"));
+            CHECK(!Contains(text, "{hours}"));
+            CHECK(Contains(text, "{name}"));
+        }
+    }
+    CHECK(Contains(DuelMinutesFallback(DuelNarration_Stays, false), "{chance}"));
+    CHECK(DuelMinutesFallback(DuelNarration_Joined, false) == NULL);
+    CHECK(DuelMinutesFallback(DuelNarration_Challenged, true) == NULL);
+}
 } // namespace
 
 void RunDuelNarrationRulesTests()
@@ -96,4 +117,5 @@ void RunDuelNarrationRulesTests()
     AnAnimalNeverSpeaksOverItsHead();
     AWinUnderTheMinimumSaysTheWinsLeft();
     AnUnknownIdReadsAsTheChallenge();
+    AWaitUnderAnHourHasAMinuteLine();
 }

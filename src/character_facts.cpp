@@ -18,6 +18,7 @@
 #include "feeding_ledger.h"
 #include "healing_ledger.h"
 #include "submission_rules.h"
+#include "cooldown_minutes.h"
 #include "submission_tracker.h"
 #include "npc_level.h"
 #include "beating_stress.h"
@@ -806,7 +807,7 @@ bool ReadRejectCooldown(Character* character, double* outHoursLeft)
     {
         return false;
     }
-    return RejectCooldownActive(until, now, outHoursLeft);
+    return CooldownActiveAt(until, now, outHoursLeft);
 }
 
 // Why a character was judged down or dead, in the log.

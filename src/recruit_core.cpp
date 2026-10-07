@@ -33,6 +33,8 @@
 #include "npc_motion.h"
 #include "approach_rules.h"
 #include "offer_requests.h"
+#include "cooldown_minutes.h"
+#include "wait_text.h"
 
 #include <algorithm>
 
@@ -1009,6 +1011,21 @@ std::string DuelLine(DuelNarrationId id, Character* npc, bool animal)
     return Say(line.key, line.fallback, npc);
 }
 
+// A duel line that shows the cooldown left until `untilMinute` (Stays, Lost), filled:
+// in minutes under an hour (the "<key>Minutes" line, priority-one B), else in hours.
+std::string DuelWaitLine(DuelNarrationId id, Character* npc, bool animal, const std::string& name,
+                         int untilMinute, double nowHours)
+{
+    double left = 0.0;
+    CooldownActiveAt(untilMinute, nowHours, &left);
+    const DuelNarration line = DuelNarrationFor(id, animal);
+    const char* minutes = DuelMinutesFallback(id, animal);
+    int hours = 0;
+    const std::string text = SayWait(line.key, line.fallback, minutes != NULL ? minutes : line.fallback,
+                                     npc, (float)left, &hours);
+    return Fill(text, name, 0, hours);
+}
+
 std::string WithNumber(const std::string& text, const std::string& key, int number)
 {
     std::string out = text;
@@ -1057,16 +1074,15 @@ void OnDuelWonNeedsMoreWins(Character* npc, const std::string& name, const DuelR
 void OnDuelWonStays(Character* npc, const std::string& name, const DuelResolveResult& result,
                     const DuelWinDecision& decision, double nowHours)
 {
-    SetDuelCooldownUntil(result.npc, decision.cooldownUntilHour);
-    const double left = (double)decision.cooldownUntilHour - nowHours;
-    const int hours = left > 0.0 ? (int)(left + 0.999) : 0;
+    SetDuelCooldownUntil(result.npc, decision.cooldownUntilMinute);
     const bool animal = DuelNpcIsAnimal(npc);
     if (DuelRaisesHeadNotice(animal))
     {
         RaiseHeadNotice(npc, Say("duel.notice.stays", "Buena pelea. Retame otra vez", npc),
                         HeadNoticeKind_Info);
     }
-    TellPlayer(WithChance(Fill(DuelLine(DuelNarration_Stays, npc, animal), name, 0, hours),
+    TellPlayer(WithChance(DuelWaitLine(DuelNarration_Stays, npc, animal, name,
+                                       decision.cooldownUntilMinute, nowHours),
                           decision.chance),
                false);
 }
@@ -1149,8 +1165,8 @@ void OnDuelWon(const DuelResolveResult& result, double nowHours)
     {
         char hours[32] = { 0 };
         _snprintf_s(hours, sizeof(hours), _TRUNCATE, "%.1f", decision.cooldownHours);
-        LogInfo(head + "stays (cooldown " + hours + " h until hour " +
-                IntToString(decision.cooldownUntilHour) + ") vs " + name + " level " +
+        LogInfo(head + "stays (cooldown " + hours + " h until game minute " +
+                IntToString(decision.cooldownUntilMinute) + ") vs " + name + " level " +
                 IntToString(facts.npcLevel) + " [key " + result.npc.ToString() + "]");
         OnDuelWonStays(npc, name, result, decision, nowHours);
         return;
@@ -1181,17 +1197,16 @@ void OnDuelLost(const DuelResolveResult& result, double nowHours)
 {
     Character* npc = FindNearSquad(result.npc);
     const std::string name = npc != NULL ? CharacterName(npc) : std::string("Tu rival");
-    const double left = (double)result.cooldownUntilHour - nowHours;
-    const int hours = left > 0.0 ? (int)(left + 0.999) : 0;
     const bool animal = DuelNpcIsAnimal(npc);
     if (npc != NULL && DuelRaisesHeadNotice(animal))
     {
         RaiseHeadNotice(npc, Say("duel.notice.lost", "Vuelve cuando seas mas fuerte", npc),
                         HeadNoticeKind_Info);
     }
-    TellPlayer(Fill(DuelLine(DuelNarration_Lost, npc, animal), name, 0, hours), false);
-    LogInfo("[duel] " + name + " won the duel: no challenge until hour " +
-            IntToString(result.cooldownUntilHour) + " [key " + result.npc.ToString() + "]");
+    TellPlayer(DuelWaitLine(DuelNarration_Lost, npc, animal, name, result.cooldownUntilMinute, nowHours),
+               false);
+    LogInfo("[duel] " + name + " won the duel: no challenge until game minute " +
+            IntToString(result.cooldownUntilMinute) + " [key " + result.npc.ToString() + "]");
 }
 
 void LogBout(const DuelBoutRecord& bout, DuelResolution resolution)

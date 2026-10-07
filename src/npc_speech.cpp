@@ -180,6 +180,8 @@ OfferTexts OfferWording()
     Word(&t.feedMore, "popup.button.feedMore");
     Word(&t.beat, "popup.button.cageBeat");
     Word(&t.knockout, "popup.button.cageKnockout");
+    Word(&t.restWait.hours, "cage.button.restHours");
+    Word(&t.restWait.minutes, "cage.button.restMinutes");
     Word(&t.ignore, "popup.button.ignore");
     Word(&t.decline, "popup.button.decline");
     Word(&t.routeHelper, "popup.route.helper");

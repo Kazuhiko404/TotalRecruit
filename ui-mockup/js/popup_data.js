@@ -178,7 +178,7 @@ var POPUP_STATES = [
   {
     id: 'cagedResting',
     title: 'Caged and defiant, GOLPEAR and NOQUEAR resting',
-    note: 'The same Holy Warden twenty game minutes after a blow and a knockout that landed, with <code>submissionBeatingCooldownHours</code> = <code>submissionKnockoutCooldownHours</code> = 1 (R2.3: an interval between beatings, and between knockouts). Both stay in the row and carry the hours left, rounded up (<code>RestLabel</code>; <code>beatHoursLeft</code> / <code>knockoutHoursLeft</code> from two <code>CageCooldownLedger</code>s, session-only like the defeat episodes); a resting NOQUEAR shows the wait instead of the odds (<code>KnockoutCaption</code>). Noquear rests only once the prisoner went down. A click closes the window and only says "Podrás volver a golpearlo en 1 h" (<code>cage.beatResting</code>) or "Podrás volver a noquearlo en 1 h" (<code>cage.knockoutResting</code>); the click re-reads the facts, so a window left open while he was freed or knocked out says "Ya no puedes hacerle eso" (<code>cage.notAllowed</code>).',
+    note: 'The same Holy Warden twenty game minutes after a blow and a knockout that landed, with <code>submissionBeatingCooldownHours</code> = <code>submissionKnockoutCooldownHours</code> = 1 (R2.3: an interval between beatings, and between knockouts). Both stay in the row and carry the wait left: under an hour in whole minutes, from an hour on in whole hours, both rounded up (priority-one B, <code>wait_format</code>: "GOLPEAR (40 min)" here, "GOLPEAR (1 min)" right after a blow in Cheat, "GOLPEAR (2 h)" with a 2 h interval; suffixes <code>cage.button.restMinutes</code> / <code>restHours</code>) (<code>RestLabel</code>; <code>beatHoursLeft</code> / <code>knockoutHoursLeft</code> from two <code>CageCooldownLedger</code>s, session-only like the defeat episodes); a resting NOQUEAR shows the wait instead of the odds (<code>KnockoutCaption</code>). Noquear rests only once the prisoner went down. A click closes the window and only says "Podrás volver a golpearlo en 40 min" (<code>cage.beatRestingMinutes</code>; "... en 2 h", <code>cage.beatResting</code>, from an hour on) or "Podrás volver a noquearlo en 40 min" (<code>cage.knockoutRestingMinutes</code> / <code>cage.knockoutResting</code>); the click re-reads the facts, so a window left open while he was freed or knocked out says "Ya no puedes hacerle eso" (<code>cage.notAllowed</code>).',
     // facts: as cagedDefiant; cage.beatHoursLeft 0.66, cage.knockoutHoursLeft 0.66
     vm: {
       title: 'Reclutamiento', name: 'Holy Warden', route: 'cautiverio', routeTag: 'Cautiverio',
@@ -187,7 +187,7 @@ var POPUP_STATES = [
       showPurse: false, purseText: '', affordable: true,
       showChance: true, chanceText: '87%',
       reason: 'Sigue desafiante: dejalo con hambre o hierelo', reasonRed: true,
-      accept: '', extra: '', beat: 'GOLPEAR (1 h)', knockout: 'NOQUEAR (1 h)', cancel: 'CERRAR'
+      accept: '', extra: '', beat: 'GOLPEAR (40 min)', knockout: 'NOQUEAR (40 min)', cancel: 'CERRAR'
     }
   },
   {

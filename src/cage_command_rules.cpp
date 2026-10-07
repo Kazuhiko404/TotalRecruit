@@ -74,16 +74,9 @@ int RestHoursShown(float hoursLeft)
     return ((float)whole < hoursLeft) ? whole + 1 : whole;
 }
 
-std::string RestLabel(const std::string& base, float hoursLeft)
+std::string RestLabel(const std::string& base, float hoursLeft, const WaitTexts& texts)
 {
-    const int hours = RestHoursShown(hoursLeft);
-    if (hours <= 0)
-    {
-        return base;
-    }
-    char buffer[24];
-    _snprintf_s(buffer, sizeof(buffer), _TRUNCATE, " (%d h)", hours);
-    return base + buffer;
+    return base + FillWait(texts, ShowWait(hoursLeft));
 }
 
 std::vector<ContextButtonKind> ComposeContextBlock(bool cageCommands)
@@ -184,9 +177,9 @@ std::string KnockoutLabel(const std::string& base, bool haveOdds, float probabil
 }
 
 std::string KnockoutCaption(const std::string& base, float hoursLeft, bool haveOdds,
-                            float probability)
+                            float probability, const WaitTexts& texts)
 {
-    return hoursLeft > 0.0f ? RestLabel(base, hoursLeft)
+    return hoursLeft > 0.0f ? RestLabel(base, hoursLeft, texts)
                             : KnockoutLabel(base, haveOdds, probability);
 }
 

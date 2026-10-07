@@ -14,6 +14,7 @@
 #include "recruit_core.h"
 #include "squad_leave.h"
 #include "submission_rules.h"
+#include "cooldown_minutes.h"
 #include "submission_tracker.h"
 
 #include <cstdio>
@@ -219,7 +220,7 @@ void Leave(Character* member, const CharKey& key, TempLeave why, double nowHours
     // every route while it runs).
     const int days = GetConfig().tempMembers.rejoinCooldownDays;
     if (days > 0)
-        SetRejectCooldownUntil(key, RejectCooldownUntilHour(nowHours, (float)(days * 24)));
+        SetRejectCooldownUntil(key, CooldownUntilMinute(nowHours, (float)(days * 24)));
 
     RemoveMember(key);
     LogInfo("[temp] " + name + (mistreated ? " left: mistreated." : " left: time up."));

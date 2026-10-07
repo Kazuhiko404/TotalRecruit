@@ -74,6 +74,18 @@ lo configurado. El enfriamiento de rechazo y el de duelo se guardan en horas
 enteras: en Cheat terminan en la proxima hora entera de juego (como mucho ~1 h).
 No se borro logica: cada lectura pasa por el modulo y Balanced no cambia.
 
+*Estado (2026-10-06, priority-one B):* **Las esperas de Cheat duran un minuto
+de verdad y se leen en minutos.** El enfriamiento de rechazo y el de duelo se
+guardan al minuto de juego (`cooldown_minutes`): una espera de una hora o mas
+sigue terminando en la hora entera de siempre (Balanced igual), una de menos de
+una hora termina en su minuto. Partidas viejas: la fila en horas se sigue
+escribiendo (redondeada hacia arriba) y una partida sin la fila nueva
+(`..._until_min`) lee su hora como el primer minuto de esa hora. Toda espera de
+menos de una hora se muestra en minutos (`wait_format`): botones "Golpear
+(1 min)", "Podrás volver a golpearlo en 1 min", el aviso de rechazo y las lineas
+del duelo, con claves gemelas `...Minutes` en `messages.json`. Desde una hora,
+igual que antes ("(2 h)"). QA 12.40 B1-B7.
+
 **R1.3 — Cero condiciones más.** *(P1)*
 Ni cats, ni comida, ni sumisión, ni nivel, ni relación. Cheat es "cualquiera,
 incluidos animales y únicos", y eso no cambia.

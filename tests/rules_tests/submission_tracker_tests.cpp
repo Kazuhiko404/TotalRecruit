@@ -69,6 +69,22 @@ void TheCooldownRidesInTheSave()
     ForgetAllSubmissionMemory();
 }
 
+void AnOldSaveHeldTheWholeHour()
+{
+    const char* name = "memory: the legacy whole-hour reject row reads back as that hour's minute; the minute row wins";
+    ForgetAllSubmissionMemory();
+    RestoreSavedRejectCooldownLegacyHour("alice", 172);
+    CHECK(RejectCooldownUntil(kAlice) == 172 * 60);
+    CHECK(SavedRejectCooldownLegacyHour("alice") == 172);
+    RestoreSavedRejectCooldownLegacyHour("bob", 11);
+    RestoreSavedRejectCooldown("bob", 616);
+    CHECK(RejectCooldownUntil(kBob) == 616);
+    CHECK(SavedRejectCooldownLegacyHour("bob") == 11);
+    RestoreSavedRejectCooldownLegacyHour("", 9);
+    CHECK(SavedRejectCooldownLegacyHour("") == 0);
+    ForgetAllSubmissionMemory();
+}
+
 void TheSessionMarksGoThroughTheSharedInstance()
 {
     const char* name = "memory: the process-wide asked and rolled marks";
@@ -89,5 +105,6 @@ void RunSubmissionTrackerTests()
     AFailedRollHoldsForTheDay();
     TheCooldownIsKeptAndForgotten();
     TheCooldownRidesInTheSave();
+    AnOldSaveHeldTheWholeHour();
     TheSessionMarksGoThroughTheSharedInstance();
 }

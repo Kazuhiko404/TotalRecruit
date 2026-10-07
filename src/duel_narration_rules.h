@@ -45,6 +45,11 @@ struct DuelNarration
 // challenge line.
 DuelNarration DuelNarrationFor(DuelNarrationId id, bool animal);
 
+// The built-in minute twin of a line that shows a wait (Stays, Lost), for a wait under
+// an hour (wait_format.h; messages.json "<key>Minutes", {minutes} in place of
+// {hours}); NULL for the lines with no wait.
+const char* DuelMinutesFallback(DuelNarrationId id, bool animal);
+
 // Whether the outcome is also said over the NPC's head (duel.notice.*): a person, yes;
 // an animal, never.
 bool DuelRaisesHeadNotice(bool animal);

@@ -1,6 +1,8 @@
 #include "common.h"
 #include "submission_director.h"
 #include "submission_rules.h"
+#include "cooldown_minutes.h"
+#include "wait_text.h"
 #include "submission_tracker.h"
 #include "approach_rules.h"
 #include "approach_driver.h"
@@ -259,20 +261,22 @@ void Apply(SubmissionOutcome outcome)
         int until = 0;
         if (SafeCharKey(npc, &key) && SafeGameHours(&now))
         {
-            until = RejectCooldownUntilHour(now, RejectCooldownHours(config));
+            until = CooldownUntilMinute(now, RejectCooldownHours(config));
             SetRejectCooldownUntil(key, until);
         }
-        // What is really left: the cooldown ends at a whole game hour, so Cheat's
-        // minute (cheat_waits.h) reads as the hour it rounds up to.
-        const double left = (double)until - now;
-        const int hours = left > 0.0 ? (int)(left + 0.999) : 0;
-        Log(name + Fmt(": reject cooldown until game hour %.0f (%.0f h)", (double)until,
-                       (double)hours));
+        // What is really left, to the minute (cooldown_minutes.h): Cheat's minute
+        // reads "1 min", a Balanced wait the whole hours it ends on.
+        double left = 0.0;
+        CooldownActiveAt(until, now, &left);
+        Log(name + Fmt(": reject cooldown until game minute %.0f (%.2f h)", (double)until, left));
         SpeakAloud(npc, Say("submissionEvent.rejected", "Entonces nos volveremos a ver.", npc));
-        TellPlayer(Line("submissionEvent.rejectedNotice",
-                        "{name}: lo rechazaste. No querr\xc3\xa1 saber nada de ti en {hours} h.",
-                        npc, hours),
-                   false);
+        int hours = 0;
+        const std::string notice =
+            SayWait("submissionEvent.rejectedNotice",
+                    "{name}: lo rechazaste. No querr\xc3\xa1 saber nada de ti en {hours} h.",
+                    "{name}: lo rechazaste. No querr\xc3\xa1 saber nada de ti en {minutes} min.",
+                    npc, (float)left, &hours);
+        TellPlayer(Fill(notice, CharacterName(npc), 0, hours, 0), false);
     }
 
     if (outcome == Outcome_Rejected)

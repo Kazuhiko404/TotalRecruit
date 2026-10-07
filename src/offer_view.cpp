@@ -211,9 +211,9 @@ void ApplyCageCommands(const OfferInput& in, const OfferTexts& t, OfferView* vie
     if (offered)
     {
         // While a command rests it stays, with the hours left (the block's caption).
-        view->beatLabel = RestLabel(t.beat, in.cage.beatHoursLeft);
+        view->beatLabel = RestLabel(t.beat, in.cage.beatHoursLeft, t.restWait);
         view->knockoutLabel = KnockoutCaption(t.knockout, in.cage.knockoutHoursLeft,
-                                              in.knockoutOddsKnown, in.knockoutOdds);
+                                              in.knockoutOddsKnown, in.knockoutOdds, t.restWait);
         return;
     }
     if (in.verdict.reasonKey == Reason_Defiant && view->reasonRefused)

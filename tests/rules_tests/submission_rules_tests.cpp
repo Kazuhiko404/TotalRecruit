@@ -400,14 +400,8 @@ void TheCooldownEndsOnAWholeHour()
 
 void TheCooldownRunsUntilItsHour()
 {
-    const char* name = "cooldown: runs before the end hour, with the hours left; none at 0";
-    double left = -1.0;
-    CHECK(RejectCooldownActive(172, 100.0, &left));
-    CHECK(Near((float)left, 72.0f));
-    CHECK(!RejectCooldownActive(172, 172.0, &left));
-    CHECK(Near((float)left, 0.0f));
-    CHECK(!RejectCooldownActive(0, 0.0, &left));
-    CHECK(!RejectCooldownActive(172, 500.0, NULL));
+    // Whether it runs is cooldown_minutes' CooldownActiveAt now (priority-one B).
+    const char* name = "cooldown: a negative saved value is none";
     CHECK(SanitiseSavedCooldown(-4) == 0);
     CHECK(SanitiseSavedCooldown(172) == 172);
 }

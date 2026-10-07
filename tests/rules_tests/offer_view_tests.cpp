@@ -361,7 +361,7 @@ void CagedRefusalShowsNoquearResting()
     in.knockoutOdds = 0.72f;
     in.cage.knockoutHoursLeft = 0.4f;
     const OfferView v = BuildOfferView(in, t);
-    CHECK(v.knockoutLabel == t.knockout + " (1 h)");
+    CHECK(v.knockoutLabel == t.knockout + " (24 min)");
     CHECK(v.beatLabel == t.beat);
 }
 

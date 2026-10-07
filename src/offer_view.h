@@ -69,10 +69,13 @@ struct OfferTexts
     std::string notNow;
     std::string feed;
     std::string feedMore;
-    // The cage commands as popup buttons: "GOLPEAR" (+ " (1 h)" while it rests,
-    // RestLabel), "NOQUEAR" (+ " 72%", or " (1 h)" while it rests: KnockoutCaption).
+    // The cage commands as popup buttons: "GOLPEAR" (+ " (1 h)" / " (1 min)" while it
+    // rests, RestLabel), "NOQUEAR" (+ " 72%", or the wait while it rests:
+    // KnockoutCaption). restWait: the wait suffix templates (cage.button.restHours /
+    // restMinutes, shared with the context menu).
     std::string beat;
     std::string knockout;
+    WaitTexts restWait;
     std::string ignore;
     std::string decline;
     // The free helper's route tag (helper.h): "Ayuda".

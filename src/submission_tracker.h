@@ -58,14 +58,20 @@ void MarkSubmissionAsked(const CharKey& key, int defeats);
 bool MaySubmissionAsk(const CharKey& key, int defeatsNow);
 void NoteSubmissionRollFailed(const CharKey& key, int day);
 bool SubmissionRollFailedOn(const CharKey& key, int day);
-void SetRejectCooldownUntil(const CharKey& key, int untilHour);
+// The reject cooldown's end, as a game MINUTE (cooldown_minutes.h, priority-one B).
+void SetRejectCooldownUntil(const CharKey& key, int untilMinute);
 int RejectCooldownUntil(const CharKey& key);
 
-// The saved-int bridge (saved_ints.cpp): the end hour to write into the save
-// state of the character carrying `persistedId`, and the one that save held
-// (sanitised: negative is none).
+// The saved-int bridge (saved_ints.cpp). Row total_recruit.reject_cooldown_until_min:
+// the end minute to write into the save state of the character carrying
+// `persistedId`, and the one that save held (sanitised: negative is none). Row
+// total_recruit.reject_cooldown_until (legacy, whole hours): the hour the minute
+// rounds up to, and an old save's hour read back as that hour's first minute; it
+// is restored first, so the minute row wins when a save has both.
 int SavedRejectCooldown(const std::string& persistedId);
-void RestoreSavedRejectCooldown(const std::string& persistedId, int untilHour);
+void RestoreSavedRejectCooldown(const std::string& persistedId, int untilMinute);
+int SavedRejectCooldownLegacyHour(const std::string& persistedId);
+void RestoreSavedRejectCooldownLegacyHour(const std::string& persistedId, int untilHour);
 
 // Load begin: all of it belongs to the world that was just abandoned.
 void ForgetAllSubmissionMemory();

@@ -15,6 +15,10 @@
 //   total_recruit.healed_by_player healing_ledger  1 once the player treated it (animals)
 //   total_recruit.reject_cooldown_until
 //                                  submission_tracker  game hour the reject cooldown ends
+//                                                  (legacy: the minute rounded up)
+//   total_recruit.reject_cooldown_until_min
+//                                  submission_tracker  game minute it ends on
+//                                                  (cooldown_minutes.h; wins over the hour)
 //   total_recruit.temp_expiry_hour temp_member.h   game hour a temporary member's stay ends
 //   total_recruit.temp_strikes     temp_member.h   a temporary member's mistreatment strikes
 //   total_recruit.helper_expiry_hour
@@ -24,6 +28,9 @@
 //   total_recruit.duel_cooldown_until
 //                                  duel_challenge_rules.h  game hour an NPC who won a
 //                                                  duel may be challenged again
+//                                                  (legacy: the minute rounded up)
+//   total_recruit.duel_cooldown_until_min
+//                                  duel_challenge_rules.h  the same, as a game minute
 //   total_recruit.beating_stress   beating_stress.h  the beating stress bar, in
 //                                                  thousandths, as last written
 //   total_recruit.beating_stress_hour

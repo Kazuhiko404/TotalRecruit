@@ -89,15 +89,15 @@ struct DuelWinDecision
     // The chance that was rolled against (100 in Cheat) and the roll (0 in Cheat).
     int chance;
     int roll;
-    // Stays: the drawn cooldown and the game hour it ends (DuelCooldownUntilHour).
+    // Stays: the drawn cooldown and the game minute it ends on (DuelCooldownUntilMinute).
     float cooldownHours;
-    int cooldownUntilHour;
+    int cooldownUntilMinute;
     // Under the minimum wins: how many more wins it still needs (0 otherwise). Such a
     // win has no roll and no cooldown.
     int winsStillNeeded;
 
     DuelWinDecision()
-        : joins(false), chance(0), roll(0), cooldownHours(0.0f), cooldownUntilHour(0), winsStillNeeded(0)
+        : joins(false), chance(0), roll(0), cooldownHours(0.0f), cooldownUntilMinute(0), winsStillNeeded(0)
     {
     }
 };

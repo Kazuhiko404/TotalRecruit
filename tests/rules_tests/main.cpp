@@ -98,6 +98,8 @@ const Suite kSuites[] = {
     { "offer_narration_rules", RunOfferNarrationRulesTests },
     { "beat_walk_rules", RunBeatWalkRulesTests },
     { "beat_hit_sound_rules", RunBeatHitSoundRulesTests },
+    { "cooldown_minutes", RunCooldownMinutesTests },
+    { "wait_format", RunWaitFormatTests },
 };
 } // namespace
 

@@ -137,9 +137,12 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     `submissionBeatingCooldownHours` game hours (Mod Hub "Sumision: horas entre golpizas"); after a knockout order
     that put the prisoner down, Noquear rests for `submissionKnockoutCooldownHours` ("Sumision: horas entre noqueos").
     Both 1 h by default, per prisoner, session-only like the defeat episodes (`CageCooldownLedger`). The buttons stay
-    in the block and carry the hours left, rounded up: "Golpear (1 h)" (`RestLabel`), "Noquear (1 h)" in place of the
-    odds (`KnockoutCaption`). A click only tells the wait ("Podrás volver a golpearlo en 1 h", `cage.beatResting`;
-    "Podrás volver a noquearlo en 1 h", `cage.knockoutResting`). Every click re-reads the facts the block was built
+    in the block and carry the wait left, rounded up: "Golpear (2 h)" (`RestLabel`), "Noquear (2 h)" in place of the
+    odds (`KnockoutCaption`); under an hour the wait reads in minutes (priority-one B, `wait_format`): "Golpear
+    (40 min)", and Cheat's one-minute rest "Golpear (1 min)" (it used to read "(1 h)"; suffixes
+    `cage.button.restHours` / `cage.button.restMinutes`). A click only tells the wait ("Podrás volver a golpearlo en
+    2 h", `cage.beatResting`, or "... en 40 min", `cage.beatRestingMinutes`; the same for Noquear with
+    `cage.knockoutResting` / `cage.knockoutRestingMinutes`). Every click re-reads the facts the block was built
     on: a prisoner freed, knocked out or out of the cage since says "Ya no puedes hacerle eso" (`cage.notAllowed`).
     Neither command's knockout counts as a defeat any more: each blow and each knockout adds beating stress (the
     card's Golpes).
@@ -155,8 +158,8 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     CERRAR; same orders, same selected actor, the same "Selecciona a alguien" line; the window closes. A yes keeps
     ACEPTAR / CANCELAR only, and the haggle slider owns its row, so neither carries them. Beating off: no buttons,
     and a defiant prisoner reads "Sigue desafiante: dejalo con hambre" (`popup.reason.defiantNoBeat`). The old
-    GOLPEARLO remedy is gone; GOLPEAR and NOQUEAR rest exactly as in the block above ("GOLPEAR (1 h)", "NOQUEAR
-    (1 h)", state "Caged and defiant, GOLPEAR and NOQUEAR resting"). Someone who cannot leave (caged, shackled, carried) never gets IGNORAR
+    GOLPEARLO remedy is gone; GOLPEAR and NOQUEAR rest exactly as in the block above ("GOLPEAR (40 min)", "NOQUEAR
+    (40 min)", state "Caged and defiant, GOLPEAR and NOQUEAR resting"). Someone who cannot leave (caged, shackled, carried) never gets IGNORAR
     (mercy) or PERDONAR (submission). States "Caged and defiant", "Caged and hungry", "Mercy plea from someone who
     cannot leave".
 

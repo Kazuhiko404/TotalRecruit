@@ -11,6 +11,8 @@
     "{name}  se reemplaza por el nombre del NPC",
     "{cats}  por el precio en cats",
     "{hours} por las horas que faltan",
+    "{minutes} por los minutos que faltan: una espera de menos de una hora usa la",
+    "  clave gemela terminada en Minutes (cage.beatRestingMinutes, duel.lostMinutes...)",
     "",
     "Los tramos de faccion van de -100 a 100:",
     "  aliado    >= 75    amistoso  25..74    cordial   5..24",
@@ -766,13 +768,17 @@
     "_comment": "Golpear y Noquear junto al menu contextual, para un preso despierto en tu jaula. Los hace el personaje que tengas seleccionado, con las ordenes del propio juego. Noquear muestra la probabilidad del juego (Noquear 72%).",
     "button": {
       "beat": "Golpear",
-      "knockout": "Noquear"
+      "knockout": "Noquear",
+      "restHours": " ({hours} h)",
+      "restMinutes": " ({minutes} min)"
     },
     "noActor": "Selecciona a alguien de tu grupo para hacerlo",
     "failed": "No se pudo dar la orden",
     "notAllowed": "Ya no puedes hacerle eso",
     "beatResting": "Podrás volver a golpearlo en {hours} h",
     "knockoutResting": "Podrás volver a noquearlo en {hours} h",
+    "beatRestingMinutes": "Podrás volver a golpearlo en {minutes} min",
+    "knockoutRestingMinutes": "Podrás volver a noquearlo en {minutes} min",
     "_beatComment": "Golpear camina primero: tu personaje va hasta la jaula y el golpe entra al llegar. beatLanded es el aviso con sonido ({actor} = quien golpea, {name} = el preso); beatOuch, la queja del preso (una por preso, siempre la misma; un animal o alguien inconsciente no dice nada); beatAbort, por que no hubo golpe.",
     "beatLanded": "{actor} golpea a {name}",
     "beatOuch": [
@@ -821,7 +827,7 @@
   "_sometido": [
     "Evento de sometido: un NPC vencido que se rinde camina hasta ti y te pide unirse.",
     "approach = lo que dice al acercarse; joinedNotice / forgivenNotice / rejectedNotice = la linea del registro.",
-    "{name} = su nombre, {hours} = horas de juego que dura el rechazo."
+    "{name} = su nombre, {hours} = horas de juego que dura el rechazo; rejectedNoticeMinutes, con {minutes}, cuando dura menos de una hora (Cheat: 1 minuto)."
   ],
   "submissionEvent": {
     "approach": [
@@ -852,6 +858,9 @@
     ],
     "rejectedNotice": [
       "{name}: lo rechazaste. No querra saber nada de ti en {hours} h."
+    ],
+    "rejectedNoticeMinutes": [
+      "{name}: lo rechazaste. No querra saber nada de ti en {minutes} min."
     ],
     "calmNotice": [
       "{name} no quiere unirse, pero deja de pelear por {seconds} s."
@@ -1003,8 +1012,14 @@
     "lost": [
       "{name} gano el duelo. Vuelve cuando seas mas fuerte (podras retarlo en {hours} h)."
     ],
+    "lostMinutes": [
+      "{name} gano el duelo. Vuelve cuando seas mas fuerte (podras retarlo en {minutes} min)."
+    ],
     "stays": [
       "{name} perdio el duelo, pero no se une ({chance}% de que se uniera). Podras retarlo otra vez en {hours} h."
+    ],
+    "staysMinutes": [
+      "{name} perdio el duelo, pero no se une ({chance}% de que se uniera). Podras retarlo otra vez en {minutes} min."
     ],
     "died": [
       "{name} murio en el duelo."
@@ -1036,8 +1051,14 @@
       "stays": [
         "{name} se sacude y se aleja sin seguirte ({chance}% de que se uniera). Podras retarlo otra vez en {hours} h."
       ],
+      "staysMinutes": [
+        "{name} se sacude y se aleja sin seguirte ({chance}% de que se uniera). Podras retarlo otra vez en {minutes} min."
+      ],
       "lost": [
         "{name} gana el duelo y se aleja sin volverse. Podras retarlo otra vez en {hours} h."
+      ],
+      "lostMinutes": [
+        "{name} gana el duelo y se aleja sin volverse. Podras retarlo otra vez en {minutes} min."
       ],
       "needMoreWins": [
         "{name} se sacude y se aleja sin seguirte. Victorias que faltan: {wins}."

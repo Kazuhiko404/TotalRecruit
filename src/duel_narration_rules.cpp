@@ -1,5 +1,7 @@
 #include "duel_narration_rules.h"
 
+#include <cstddef>
+
 namespace totalrecruit
 {
 namespace
@@ -31,6 +33,23 @@ DuelNarration DuelNarrationFor(DuelNarrationId id, bool animal)
     const int index = ((int)id >= 0 && (int)id < DuelNarration_Count) ? (int)id
                                                                         : (int)DuelNarration_Challenged;
     return animal ? kAnimal[index] : kPerson[index];
+}
+
+const char* DuelMinutesFallback(DuelNarrationId id, bool animal)
+{
+    if (id == DuelNarration_Stays)
+    {
+        return animal ? "{name} se sacude y se aleja sin seguirte ({chance}% de que se uniera). "
+                        "Podras retarlo otra vez en {minutes} min."
+                      : "{name} perdio el duelo, pero no se une ({chance}% de que se uniera). "
+                        "Podras retarlo otra vez en {minutes} min.";
+    }
+    if (id == DuelNarration_Lost)
+    {
+        return animal ? "{name} gana el duelo y se aleja sin volverse. Podras retarlo otra vez en {minutes} min."
+                      : "{name} gano el duelo. Vuelve cuando seas mas fuerte (podras retarlo en {minutes} min).";
+    }
+    return NULL;
 }
 
 bool DuelRaisesHeadNotice(bool animal)

@@ -1123,3 +1123,15 @@ Las correcciones de la prueba en juego de 12.39 y la lista "Prioridad 1". Con `p
 |---|---|---|---|
 | A1 | Ganar un duelo (Cheat o Balanced, `offerOnDuelWin` on) y, antes de que termine, alejar al lider a ~100 m del rival (o que el rival quede a 90-110 m al caer) | Igual que a corta distancia: camina a ofrecerse (o se calma si la tirada fallo) | `[offer] request: <nombre> (duel win ...)`; nunca `[duel] won against ..., who is not near the squad.` ni "tu rival ya no esta cerca" |
 | A2 | Lo mismo con el rival a mas de 120 m del lider | Comportamiento viejo (12.37 O18) | `is out of the event's reach` (o no se encuentra si esta a mas de 120 m de todos los tuyos) |
+
+**B Esperas de Cheat en minutos.** El enfriamiento de rechazo y el de duelo se guardan al minuto (antes en horas enteras: en Cheat duraban hasta la proxima hora). Toda espera de menos de una hora se lee en minutos; desde una hora, en horas como antes. Las lineas en minutos son claves nuevas (`cage.beatRestingMinutes`, `cage.knockoutRestingMinutes`, `cage.button.restHours` / `restMinutes`, `submissionEvent.rejectedNoticeMinutes`, `duel.lostMinutes`, `duel.staysMinutes`, `duel.animal.lostMinutes`, `duel.animal.staysMinutes`); un `messages.json` desplegado viejo las recibe con el deploy.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| B1 | Cheat: Golpear a un preso y abrir el menu enseguida | "Golpear (1 min)" (antes "(1 h)"); al minuto de juego vuelve "Golpear" | - |
+| B2 | Cheat: clic en Golpear mientras descansa | "Podrás volver a golpearlo en 1 min" | - |
+| B3 | Cheat: noquear (que caiga) y abrir el menu / la ventana | "Noquear (1 min)" y NOQUEAR (1 min) en la ventana | - |
+| B4 | Cheat: RECHAZAR a un sometido | "<nombre>: lo rechazaste. No querra saber nada de ti en 1 min."; al minuto de juego acepta de nuevo (antes hasta ~1 h) | `reject cooldown until game minute N (0.02 h)` |
+| B5 | Cheat: perder un duelo de reto | "... podras retarlo en 1 min"; al minuto se puede retar de nuevo | `no challenge until game minute N` |
+| B6 | Balanced con los valores por defecto: Golpear y abrir el menu a los 20 min de juego | "Golpear (40 min)" (antes "(1 h)"); desde una hora, "(2 h)" como siempre. Rechazo y duelo terminan en la misma hora entera que antes | - |
+| B7 | Cargar una partida guardada con una version anterior con un rechazo o un duelo perdido en curso | Sigue en enfriamiento hasta la misma hora entera; despues de guardar y cargar con esta version, igual | - |

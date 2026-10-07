@@ -23,6 +23,7 @@
 // No Kenshi / MyGUI include: tested in tests/rules_tests/cage_command_rules_tests.cpp.
 
 #include "char_key.h"
+#include "wait_format.h"
 
 #include <map>
 #include <string>
@@ -187,9 +188,10 @@ private:
 // The whole hours a wait shows: rounded up, 0 when there is none.
 int RestHoursShown(float hoursLeft);
 
-// `base` when the command is ready, else "<base> (<hours> h)" with the hours
-// rounded up.
-std::string RestLabel(const std::string& base, float hoursLeft);
+// `base` when the command is ready, else `base` plus the wait suffix
+// (wait_format.h: " (4 h)", or " (1 min)" under an hour; the templates come from
+// messages.json cage.button.restHours / restMinutes through `texts`).
+std::string RestLabel(const std::string& base, float hoursLeft, const WaitTexts& texts);
 
 // --- the knockout label ----------------------------------------------------
 
@@ -203,7 +205,7 @@ std::string KnockoutLabel(const std::string& base, bool haveOdds, float probabil
 // Noquear's caption: the wait while it rests ("Noquear (1 h)", RestLabel), else
 // the engine's odds (KnockoutLabel).
 std::string KnockoutCaption(const std::string& base, float hoursLeft, bool haveOdds,
-                            float probability);
+                            float probability, const WaitTexts& texts);
 
 // --- the fallback knockout -------------------------------------------------
 

@@ -300,12 +300,15 @@ void GolpearRestsForTheCooldownAfterABlow()
 
 void TheRestLabelCarriesTheWait()
 {
-    const char* name = "rest label: the plain verb when ready, the hours left rounded up while resting";
-    CHECK(RestLabel("Golpear", 0.0f) == "Golpear");
-    CHECK(RestLabel("Golpear", -1.0f) == "Golpear");
-    CHECK(RestLabel("Golpear", 3.2f) == "Golpear (4 h)");
-    CHECK(RestLabel("GOLPEAR", 4.0f) == "GOLPEAR (4 h)");
-    CHECK(RestLabel("Golpear", 0.1f) == "Golpear (1 h)");
+    const char* name = "rest label: the plain verb when ready, the wait left while resting (minutes under an hour)";
+    const WaitTexts texts;
+    CHECK(RestLabel("Golpear", 0.0f, texts) == "Golpear");
+    CHECK(RestLabel("Golpear", -1.0f, texts) == "Golpear");
+    CHECK(RestLabel("Golpear", 3.2f, texts) == "Golpear (4 h)");
+    CHECK(RestLabel("GOLPEAR", 4.0f, texts) == "GOLPEAR (4 h)");
+    CHECK(RestLabel("Golpear", 0.1f, texts) == "Golpear (6 min)");
+    // Cheat's one-minute rest (priority-one B): it used to read "(1 h)".
+    CHECK(RestLabel("Golpear", 1.0f / 60.0f, texts) == "Golpear (1 min)");
     CHECK(RestHoursShown(0.0f) == 0);
     CHECK(RestHoursShown(0.01f) == 1);
     CHECK(RestHoursShown(5.5f) == 6);
@@ -315,12 +318,13 @@ void TheRestLabelCarriesTheWait()
 // (a resting command has no odds worth showing).
 void TheKnockoutCaptionShowsTheWaitOrTheOdds()
 {
-    const char* name = "knockout caption: \"Noquear 72%\" when ready, \"Noquear (1 h)\" while resting";
-    CHECK(KnockoutCaption("Noquear", 0.0f, true, 0.72f) == "Noquear 72%");
-    CHECK(KnockoutCaption("Noquear", 0.0f, false, 0.72f) == "Noquear");
-    CHECK(KnockoutCaption("Noquear", 0.4f, true, 0.72f) == "Noquear (1 h)");
-    CHECK(KnockoutCaption("NOQUEAR", 1.0f, false, 0.0f) == "NOQUEAR (1 h)");
-    CHECK(KnockoutCaption("Noquear", -2.0f, true, 0.5f) == "Noquear 50%");
+    const char* name = "knockout caption: \"Noquear 72%\" when ready, \"Noquear (24 min)\" / \"(1 h)\" while resting";
+    const WaitTexts texts;
+    CHECK(KnockoutCaption("Noquear", 0.0f, true, 0.72f, texts) == "Noquear 72%");
+    CHECK(KnockoutCaption("Noquear", 0.0f, false, 0.72f, texts) == "Noquear");
+    CHECK(KnockoutCaption("Noquear", 0.4f, true, 0.72f, texts) == "Noquear (24 min)");
+    CHECK(KnockoutCaption("NOQUEAR", 1.0f, false, 0.0f, texts) == "NOQUEAR (1 h)");
+    CHECK(KnockoutCaption("Noquear", -2.0f, true, 0.5f, texts) == "Noquear 50%");
 }
 
 // The 1 h default the user asked for ("4h es mucho"), for both commands.

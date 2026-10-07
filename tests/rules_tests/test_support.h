@@ -71,3 +71,5 @@ void RunOfferRequestRulesTests();
 void RunOfferNarrationRulesTests();
 void RunBeatWalkRulesTests();
 void RunBeatHitSoundRulesTests();
+void RunCooldownMinutesTests();
+void RunWaitFormatTests();

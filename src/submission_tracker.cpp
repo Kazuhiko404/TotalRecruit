@@ -1,5 +1,6 @@
 #include "submission_tracker.h"
 #include "submission_rules.h"
+#include "cooldown_minutes.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -105,10 +106,10 @@ bool SubmissionRollFailedOn(const CharKey& key, int day)
     return g_memory.RollFailedOn(key, day);
 }
 
-void SetRejectCooldownUntil(const CharKey& key, int untilHour)
+void SetRejectCooldownUntil(const CharKey& key, int untilMinute)
 {
     Guard lock;
-    g_memory.SetCooldownUntil(key, untilHour);
+    g_memory.SetCooldownUntil(key, untilMinute);
 }
 
 int RejectCooldownUntil(const CharKey& key)
@@ -124,11 +125,21 @@ int SavedRejectCooldown(const std::string& persistedId)
     return RejectCooldownUntil(CharKey::FromId(persistedId));
 }
 
-void RestoreSavedRejectCooldown(const std::string& persistedId, int untilHour)
+void RestoreSavedRejectCooldown(const std::string& persistedId, int untilMinute)
 {
     if (persistedId.empty())
         return;
-    SetRejectCooldownUntil(CharKey::FromId(persistedId), SanitiseSavedCooldown(untilHour));
+    SetRejectCooldownUntil(CharKey::FromId(persistedId), SanitiseSavedCooldown(untilMinute));
+}
+
+int SavedRejectCooldownLegacyHour(const std::string& persistedId)
+{
+    return SavedHourFromUntilMinute(SavedRejectCooldown(persistedId));
+}
+
+void RestoreSavedRejectCooldownLegacyHour(const std::string& persistedId, int untilHour)
+{
+    RestoreSavedRejectCooldown(persistedId, UntilMinuteFromSavedHour(SanitiseSavedCooldown(untilHour)));
 }
 
 void ForgetAllSubmissionMemory()

@@ -159,12 +159,12 @@ void AWonDuelThatStaysUsesTheSameCooldownBook()
 {
     const char* name = "book: a win cooldown set by the engine hides the duel like a lost one";
     DuelChallengeBook book;
-    book.SetCooldownUntil(Key("npc"), 150);
+    book.SetCooldownUntil(Key("npc"), 150 * 60);
     CHECK(book.OnCooldown(Key("npc"), 149.5));
     CHECK(!book.OnCooldown(Key("npc"), 150.0));
-    SetDuelCooldownUntil(Key("npc-pw"), 150);
+    SetDuelCooldownUntil(Key("npc-pw"), 150 * 60);
     CHECK(DuelOnCooldown(Key("npc-pw"), 120.0));
-    CHECK(SavedDuelCooldownUntil("npc-pw") == 150);
+    CHECK(SavedDuelCooldownUntil("npc-pw") == 150 * 60);
     SetDuelCooldownUntil(Key("npc-pw"), 0);
     CHECK(!DuelOnCooldown(Key("npc-pw"), 120.0));
 }
@@ -177,8 +177,8 @@ void ALostOrDrawnDuelStartsTheCooldown()
     const DuelResolveResult lost = book.Resolve(Duel("me", "npc", DuelBout_BWon), 100.4, kConfig);
     CHECK(lost.resolution == DuelResolution_Lost);
     CHECK(lost.npc == Key("npc"));
-    CHECK(lost.cooldownUntilHour == 125);                // ceil(100.4 + 24)
-    CHECK(book.CooldownUntil(Key("npc")) == 125);
+    CHECK(lost.cooldownUntilMinute == 125 * 60);         // ceil(100.4 + 24), in minutes
+    CHECK(book.CooldownUntil(Key("npc")) == 125 * 60);
     CHECK(book.OnCooldown(Key("npc"), 124.9));
     CHECK(!book.OnCooldown(Key("npc"), 125.0));
     CHECK(!book.Pending(Key("npc"), NULL));
@@ -187,7 +187,7 @@ void ALostOrDrawnDuelStartsTheCooldown()
     other.Challenge(Key("npc2"), Key("me"), 10.0);
     const DuelResolveResult draw = other.Resolve(Duel("me", "npc2", DuelBout_Draw), 10.0, kConfig);
     CHECK(draw.resolution == DuelResolution_Lost);
-    CHECK(draw.cooldownUntilHour == 34);
+    CHECK(draw.cooldownUntilMinute == 34 * 60);
 }
 
 void ASparNeverCounts()
@@ -310,7 +310,7 @@ void AnExternalDuelResolvesLikeAChallenge()
     const DuelResolveResult lost = book.Resolve(Duel("me", "npc2", DuelBout_BWon), 100.4, kConfig, true);
     CHECK(lost.resolution == DuelResolution_Lost);
     CHECK(lost.external);
-    CHECK(lost.cooldownUntilHour == 125);
+    CHECK(lost.cooldownUntilMinute == 125 * 60);
     CHECK(book.OnCooldown(Key("npc2"), 124.0));
 
     // Not eligible (the engine said no), or a squad pair: ignored as before.
@@ -377,21 +377,26 @@ void ANewChallengeReplacesTheOld()
 
 void TheCooldownHourRoundsUp()
 {
-    const char* name = "cooldown: ceil(now + hours); no hours, no cooldown";
-    CHECK(DuelCooldownUntilHour(100.0, 24.0f) == 124);
-    CHECK(DuelCooldownUntilHour(100.2, 24.0f) == 125);
-    CHECK(DuelCooldownUntilHour(100.2, 0.0f) == 101);
-    CHECK(!DuelCooldownActive(DuelCooldownUntilHour(100.0, 0.0f), 100.0));
-    CHECK(DuelCooldownActive(124, 123.99));
+    const char* name = "cooldown: ceil(now + hours) as a minute for an hour or more, to the minute under; no hours, no cooldown";
+    CHECK(DuelCooldownUntilMinute(100.0, 24.0f) == 124 * 60);
+    CHECK(DuelCooldownUntilMinute(100.2, 24.0f) == 125 * 60);
+    CHECK(DuelCooldownUntilMinute(100.2, 0.0f) == 0);
+    CHECK(!DuelCooldownActive(DuelCooldownUntilMinute(100.0, 0.0f), 100.0));
+    CHECK(DuelCooldownActive(124 * 60, 123.99));
     CHECK(!DuelCooldownActive(0, 0.0));
+    // Cheat's minute (priority-one B): 100:15 + 1 min ends at 100:16, not at 101:00.
+    const int cheat = DuelCooldownUntilMinute(100.25, 1.0f / 60.0f);
+    CHECK(cheat == 100 * 60 + 16);
+    CHECK(DuelCooldownActive(cheat, 100.26));
+    CHECK(!DuelCooldownActive(cheat, 100.27));
 }
 
 void TheCooldownTravelsInTheSave()
 {
     const char* name = "cooldown: the saved hour comes back; 0 or less forgets it";
     DuelChallengeBook book;
-    book.SetCooldownUntil(Key("npc"), 300);
-    CHECK(book.CooldownUntil(Key("npc")) == 300);
+    book.SetCooldownUntil(Key("npc"), 300 * 60);
+    CHECK(book.CooldownUntil(Key("npc")) == 300 * 60);
     CHECK(book.OnCooldown(Key("npc"), 299.0));
     book.SetCooldownUntil(Key("npc"), 0);
     CHECK(book.CooldownUntil(Key("npc")) == 0);
@@ -411,8 +416,8 @@ void TheProcessWideBookBridgesTheSave()
     const char* name = "session: the save bridge reads and restores by persisted id";
     ForgetAllDuelChallenges();
     CHECK(SavedDuelCooldownUntil("abc") == 0);
-    RestoreSavedDuelCooldownUntil("abc", 77);
-    CHECK(SavedDuelCooldownUntil("abc") == 77);
+    RestoreSavedDuelCooldownUntil("abc", 77 * 60);
+    CHECK(SavedDuelCooldownUntil("abc") == 77 * 60);
     CHECK(DuelOnCooldown(Key("abc"), 76.0));
     RestoreSavedDuelCooldownUntil("", 99);       // no id, no row
     CHECK(SavedDuelCooldownUntil("") == 0);
@@ -420,7 +425,8 @@ void TheProcessWideBookBridgesTheSave()
     RecordDuelChallenge(Key("n"), Key("me"), 10.0);
     const DuelResolveResult r = ResolveDuelBout(Duel("me", "n", DuelBout_BWon), 11.0, kConfig);
     CHECK(r.resolution == DuelResolution_Lost);
-    CHECK(SavedDuelCooldownUntil("n") == 35);
+    CHECK(SavedDuelCooldownUntil("n") == 35 * 60);
+    CHECK(SavedDuelCooldownLegacyHour("n") == 35);
     RecordDuelChallenge(Key("m"), Key("me"), 10.0);
     CHECK(ExpireDuelChallenges(20.0, 6.0f) == 1);
     RecordDuelChallenge(Key("w"), Key("me"), 10.0);
@@ -429,6 +435,24 @@ void TheProcessWideBookBridgesTheSave()
           DuelResolution_Ignored);
     ForgetAllDuelChallenges();
     CHECK(SavedDuelCooldownUntil("abc") == 0);
+}
+
+void AnOldSaveHeldTheWholeHour()
+{
+    const char* name = "session: the legacy whole-hour row reads back as that hour, and the minute row wins when both are there";
+    ForgetAllDuelChallenges();
+    RestoreSavedDuelCooldownLegacyHour("old", 77);
+    CHECK(SavedDuelCooldownUntil("old") == 77 * 60);
+    CHECK(DuelOnCooldown(Key("old"), 76.5));
+    CHECK(!DuelOnCooldown(Key("old"), 77.0));
+    // A save from this build: the legacy row first (rounded up), then the minute row.
+    RestoreSavedDuelCooldownLegacyHour("new", 101);
+    RestoreSavedDuelCooldownUntil("new", 100 * 60 + 16);
+    CHECK(SavedDuelCooldownUntil("new") == 100 * 60 + 16);
+    CHECK(SavedDuelCooldownLegacyHour("new") == 101);
+    RestoreSavedDuelCooldownLegacyHour("", 5);
+    CHECK(SavedDuelCooldownLegacyHour("") == 0);
+    ForgetAllDuelChallenges();
 }
 
 void TheRecordReadsWinsDashLosses()
@@ -607,5 +631,6 @@ void RunDuelChallengeRulesTests()
     TheCooldownHourRoundsUp();
     TheCooldownTravelsInTheSave();
     TheProcessWideBookBridgesTheSave();
+    AnOldSaveHeldTheWholeHour();
     TheRecordReadsWinsDashLosses();
 }

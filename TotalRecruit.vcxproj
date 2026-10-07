@@ -144,6 +144,9 @@
     <ClCompile Include="src\beat_walk_sound.cpp" />
     <ClCompile Include="src\beat_hit_sound_rules.cpp" />
     <ClCompile Include="src\wwise_bridge.cpp" />
+    <ClCompile Include="src\cooldown_minutes.cpp" />
+    <ClCompile Include="src\wait_format.cpp" />
+    <ClCompile Include="src\wait_text.cpp" />
     <ClCompile Include="src\beat_walk_feedback.cpp" />
     <ClCompile Include="src\knockout_watch_rules.cpp" />
     <ClCompile Include="src\knockout_order_cleanup.cpp" />
@@ -234,6 +237,9 @@
     <ClInclude Include="src\beat_walk_sound.h" />
     <ClInclude Include="src\beat_hit_sound_rules.h" />
     <ClInclude Include="src\wwise_bridge.h" />
+    <ClInclude Include="src\cooldown_minutes.h" />
+    <ClInclude Include="src\wait_format.h" />
+    <ClInclude Include="src\wait_text.h" />
     <ClInclude Include="src\beat_walk_feedback.h" />
     <ClInclude Include="src\knockout_order_cleanup.h" />
     <ClInclude Include="src\menu_anchor.h" />

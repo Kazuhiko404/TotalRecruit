@@ -223,8 +223,10 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       // cagemenuwait: the same block while Golpear and Noquear rest (beatingCooldownHours
       // since the last blow, knockoutCooldownHours since the last knockout order that put
       // this prisoner down; cage_command_rules.h CageCooldownLedger). The buttons stay where
-      // they are and carry the wait, rounded up (RestLabel): "Golpear (1 h)"; a resting
-      // Noquear shows the wait instead of the odds (KnockoutCaption): "Noquear (1 h)".
+      // they are and carry the wait, rounded up (RestLabel): under an hour in minutes
+      // (priority-one B, wait_format: "Golpear (40 min)", Cheat "Golpear (1 min)"), from
+      // an hour on in hours ("Golpear (2 h)"); a resting Noquear shows the wait instead of
+      // the odds (KnockoutCaption): "Noquear (40 min)".
       var resting = mode === 'cagemenuwait';
       // The prisoner is awake in the player's own cage and allowBeating is on: the block
       // is [Hablar, Golpear, Noquear] (cage_command_rules.cpp ComposeContextBlock), one
@@ -241,9 +243,9 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
            '<div>Atacar</div><div>Examinar</div></div>';
       h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + cy + 'px">Hablar</div>';
       h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + (cy + bh + gy) + 'px">' +
-           (resting ? 'Golpear (1 h)' : 'Golpear') + '</div>';
+           (resting ? 'Golpear (40 min)' : 'Golpear') + '</div>';
       h += '<div class="ctxbtn" style="left:' + bx + 'px;top:' + (cy + 2 * (bh + gy)) + 'px">' +
-           (resting ? 'Noquear (1 h)' : 'Noquear 72%') + '</div>';
+           (resting ? 'Noquear (40 min)' : 'Noquear 72%') + '</div>';
       h += '<div class="ctxbtn" style="left:' + (cx + 122 + gx) + 'px;top:' + cy + 'px">Sparring</div>';
       h += '<div class="callout" style="left:16px;top:16px;max-width:300px">Right-click on a prisoner awake in your cage. ' +
            'Golpear walks the character you have selected to the cage, then lands one direct blow (its own attack damage ' +
@@ -253,8 +255,9 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
            (resting ? ' Golpear rests for beatingCooldownHours (Mod Hub "Sumision: horas entre golpizas", 1 by ' +
                       'default) after each blow on this prisoner, and Noquear for knockoutCooldownHours ("Sumision: ' +
                       'horas entre noqueos", 1 by default) after a knockout order that put him down: each caption ' +
-                      'shows the game hours left, rounded up, and a click only says "Podrás volver a golpearlo en ' +
-                      '1 h" / "Podrás volver a noquearlo en 1 h". Neither knockout counts as a defeat: each blow and ' +
+                      'shows the wait left, rounded up: in minutes under an hour (here 20 game minutes after the ' +
+                      'blow: "(40 min)"; Cheat, right after it: "(1 min)"), in hours from an hour on ("(2 h)"), and a ' +
+                      'click only says "Podrás volver a golpearlo en 40 min" / "Podrás volver a noquearlo en 40 min". Neither knockout counts as a defeat: each blow and ' +
                       'each knockout adds beating stress (the card\'s Golpes).' : '') +
            '</div>';
       if (!resting) {

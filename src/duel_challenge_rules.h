@@ -28,7 +28,8 @@
 //
 // A challenge nobody finished is forgotten after expiryHours. A win that does not join
 // (duel_join_rules.h) puts its own cooldown into the same book (SetDuelCooldownUntil),
-// so it is saved with the NPC the same way.
+// so it is saved with the NPC the same way. Cooldowns are kept as the game MINUTE
+// they end on (cooldown_minutes.h, priority-one B).
 //
 // DuelChallengeBook is the plain table (tests/rules_tests/duel_challenge_rules_tests.cpp);
 // the free functions at the end are the one process-wide instance behind a lock,
@@ -184,12 +185,13 @@ struct DuelOfferFacts
 //              animal has no ally tier and no 80+ cut).
 bool CanOfferDuel(const DuelOfferFacts& facts);
 
-// The game hour a lost duel's cooldown ends: ceil(now + hours). Hours of 0 or less
-// end it now (no cooldown).
-int DuelCooldownUntilHour(double nowHours, float cooldownHours);
+// The game minute a duel cooldown ends on (cooldown_minutes.h CooldownUntilMinute:
+// the whole hour ceil(now + hours) for an hour or more, the minute under an hour).
+// Hours of 0 or less are no cooldown (0).
+int DuelCooldownUntilMinute(double nowHours, float cooldownHours);
 
-// True while `untilHour` lies ahead of `nowHours`.
-bool DuelCooldownActive(int untilHour, double nowHours);
+// True while `untilMinute` lies ahead of `nowHours`.
+bool DuelCooldownActive(int untilMinute, double nowHours);
 
 struct PendingDuel
 {
@@ -216,14 +218,14 @@ struct DuelResolveResult
     // Won: the squad member who won (side A). TotalSparring's window may switch
     // fighters, so this is whose head-to-head record counts the win.
     CharKey winner;
-    // Lost: the game hour the cooldown ends.
-    int cooldownUntilHour;
+    // Lost: the game minute the cooldown ends on.
+    int cooldownUntilMinute;
     // Resolved as an external TotalSparring duel (no pending challenge; the
     // challenger is side A).
     bool external;
 
     DuelResolveResult()
-        : resolution(DuelResolution_Ignored), npc(), challenger(), winner(), cooldownUntilHour(0),
+        : resolution(DuelResolution_Ignored), npc(), challenger(), winner(), cooldownUntilMinute(0),
           external(false)
     {
     }
@@ -249,10 +251,10 @@ public:
                               const DuelChallenges& config, bool externalEligible = false);
 
     bool OnCooldown(const CharKey& npc, double nowHours) const;
-    // 0 when none.
+    // The end minute; 0 when none.
     int CooldownUntil(const CharKey& npc) const;
     // 0 or less forgets it.
-    void SetCooldownUntil(const CharKey& npc, int untilHour);
+    void SetCooldownUntil(const CharKey& npc, int untilMinute);
 
     // Everything (load begin).
     void Clear();
@@ -274,15 +276,20 @@ DuelResolveResult ResolveDuelBout(const DuelBoutRecord& bout, double nowHours,
 // A challenge waits for `npc` (expired or not).
 bool DuelChallengePending(const CharKey& npc);
 bool DuelOnCooldown(const CharKey& npc, double nowHours);
-// A win that does not join (duel_join_rules.h): its cooldown end hour; 0 or less
+// A win that does not join (duel_join_rules.h): its cooldown end minute; 0 or less
 // forgets it.
-void SetDuelCooldownUntil(const CharKey& npc, int untilHour);
+void SetDuelCooldownUntil(const CharKey& npc, int untilMinute);
 
-// The saved-int bridge (saved_ints.cpp, row total_recruit.duel_cooldown_until):
-// the end hour to write for the character carrying `persistedId` (0 = none), and
-// the one a loading save held.
+// The saved-int bridge (saved_ints.cpp). Row total_recruit.duel_cooldown_until_min:
+// the end minute to write for the character carrying `persistedId` (0 = none), and
+// the one a loading save held. Row total_recruit.duel_cooldown_until (legacy, whole
+// hours): the hour the minute rounds up to, and an old save's hour read back as
+// that hour's first minute. The legacy row is restored first, so the minute row
+// wins when a save has both.
 int SavedDuelCooldownUntil(const std::string& persistedId);
-void RestoreSavedDuelCooldownUntil(const std::string& persistedId, int untilHour);
+void RestoreSavedDuelCooldownUntil(const std::string& persistedId, int untilMinute);
+int SavedDuelCooldownLegacyHour(const std::string& persistedId);
+void RestoreSavedDuelCooldownLegacyHour(const std::string& persistedId, int untilHour);
 
 // Load begin: the pending challenges and the cooldowns of the abandoned world.
 void ForgetAllDuelChallenges();

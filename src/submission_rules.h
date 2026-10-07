@@ -285,16 +285,14 @@ struct GroundPoint
 GroundPoint FleePoint(const GroundPoint& npc, const GroundPoint& player, float distanceUnits);
 
 // ------------------------------------------------------------ The cooldown
-// The reject cooldown is kept as the whole game hour it ends on (saved per
-// character as idata "total_recruit.reject_cooldown_until"). 0 = none.
+// Whole-hour cooldown ends, for the helper's own reject book (helper.cpp, saved
+// as "total_recruit.helper_reject_until"). The submission reject cooldown and the
+// duel cooldown are kept to the minute instead (cooldown_minutes.h,
+// priority-one B). 0 = none.
 
 // PURE: the hour a cooldown started now ends on (rounded up); 0 when the
 // cooldown is 0 hours or less.
 int RejectCooldownUntilHour(double nowHours, float cooldownHours);
-
-// PURE: whether a stored end hour still runs at `nowHours`; the hours left go
-// to `hoursLeft` (0 when it does not run).
-bool RejectCooldownActive(int untilHour, double nowHours, double* hoursLeft);
 
 // A value read back from a save, made safe: negative is 0 (none).
 int SanitiseSavedCooldown(int raw);

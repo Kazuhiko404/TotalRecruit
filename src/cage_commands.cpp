@@ -11,6 +11,7 @@
 #include "knockout_watch_rules.h"
 #include "log.h"
 #include "messages.h"
+#include "wait_text.h"
 
 #include <kenshi/CharStats.h>
 #include <kenshi/Damages.h>
@@ -664,11 +665,21 @@ std::string CageCommandProblem(CageCommandResult result, Character* target)
     case CageCommand_NotAllowed:
         return Say("cage.notAllowed", "Ya no puedes hacerle eso", NULL);
     case CageCommand_BeatResting:
-        return Fill(Say("cage.beatResting", "Podr\xc3\xa1s volver a golpearlo en {hours} h", NULL),
-                    CharacterName(target), 0, RestHoursShown(BeatHoursLeft(target)));
+    {
+        int hours = 0;
+        const std::string text = SayWait("cage.beatResting", "Podr\xc3\xa1s volver a golpearlo en {hours} h",
+                                         "Podr\xc3\xa1s volver a golpearlo en {minutes} min", NULL,
+                                         BeatHoursLeft(target), &hours);
+        return Fill(text, CharacterName(target), 0, hours);
+    }
     case CageCommand_KnockoutResting:
-        return Fill(Say("cage.knockoutResting", "Podr\xc3\xa1s volver a noquearlo en {hours} h", NULL),
-                    CharacterName(target), 0, RestHoursShown(KnockoutHoursLeft(target)));
+    {
+        int hours = 0;
+        const std::string text = SayWait("cage.knockoutResting", "Podr\xc3\xa1s volver a noquearlo en {hours} h",
+                                         "Podr\xc3\xa1s volver a noquearlo en {minutes} min", NULL,
+                                         KnockoutHoursLeft(target), &hours);
+        return Fill(text, CharacterName(target), 0, hours);
+    }
     case CageCommand_Issued:
     default:
         return std::string();
@@ -677,7 +688,7 @@ std::string CageCommandProblem(CageCommandResult result, Character* target)
 
 std::string BeatButtonLabel(Character* target)
 {
-    return RestLabel(Say("cage.button.beat", "Golpear", NULL), BeatHoursLeft(target));
+    return RestLabel(Say("cage.button.beat", "Golpear", NULL), BeatHoursLeft(target), RestWaitTexts());
 }
 
 std::string KnockoutButtonLabel(Character* target)
@@ -685,7 +696,7 @@ std::string KnockoutButtonLabel(Character* target)
     float probability = 0.0f;
     const bool haveOdds = ReadKnockoutOdds(target, &probability);
     return KnockoutCaption(Say("cage.button.knockout", "Noquear", NULL), KnockoutHoursLeft(target),
-                           haveOdds, probability);
+                           haveOdds, probability, RestWaitTexts());
 }
 
 void TickCageCommands()

@@ -137,7 +137,7 @@ void CheatAlwaysJoins()
     const DuelWinDecision d = DecideDuelWin(f, c);
     CHECK(d.joins);
     CHECK(d.chance == 100);
-    CHECK(d.cooldownUntilHour == 0);
+    CHECK(d.cooldownUntilMinute == 0);
 }
 
 void TheMinimumWinsDefaultToOne()
@@ -172,7 +172,7 @@ void AWinUnderTheMinimumNeverJoins()
     CHECK(d.chance == 0);
     CHECK(d.roll == 0);
     CHECK(d.winsStillNeeded == 2);
-    CHECK(d.cooldownUntilHour == 0);
+    CHECK(d.cooldownUntilMinute == 0);
     cheat.wins = 2;
     CHECK(DecideDuelWin(cheat, c).winsStillNeeded == 1);
     cheat.wins = 3;
@@ -184,7 +184,7 @@ void AWinUnderTheMinimumNeverJoins()
     d = DecideDuelWin(balanced, c);
     CHECK(!d.joins);
     CHECK(d.winsStillNeeded == 1);
-    CHECK(d.cooldownUntilHour == 0);
+    CHECK(d.cooldownUntilMinute == 0);
     balanced.wins = 2;
     d = DecideDuelWin(balanced, c);
     CHECK(d.winsStillNeeded == 0);
@@ -260,7 +260,7 @@ void AWinThatStaysStartsTheWinCooldown()
     CHECK(d.cooldownHours >= 24.0f && d.cooldownHours <= 72.0f);
     const unsigned int seed = DailySeed(under.npc, 1, kDuelWinCooldownSalt);
     CHECK(d.cooldownHours == DuelWinCooldownHoursFromSeed(seed, 85, never));
-    CHECK(d.cooldownUntilHour >= 100 + 24 && d.cooldownUntilHour <= 100 + 73);
+    CHECK(d.cooldownUntilMinute >= (100 + 24) * 60 && d.cooldownUntilMinute <= (100 + 73) * 60);
 
     const DuelWinFacts wide = Win("id:stay", 1, 130);
     const DuelWinDecision w = DecideDuelWin(wide, never);
@@ -274,7 +274,7 @@ void AJoinHasNoCooldown()
     always.joinBaseChance = 100;
     const DuelWinDecision d = DecideDuelWin(Win("id:join", 1, 85), always);
     CHECK(d.joins);
-    CHECK(d.cooldownUntilHour == 0);
+    CHECK(d.cooldownUntilMinute == 0);
     CHECK(d.cooldownHours == 0.0f);
 }
 
@@ -289,7 +289,7 @@ void ATestHourCooldownWorks()
     c.winCooldownMaxHours = 1.0f;
     const DuelWinDecision d = DecideDuelWin(Win("id:test", 3, 85), c);
     CHECK(d.cooldownHours == 1.0f);
-    CHECK(d.cooldownUntilHour == 101);
+    CHECK(d.cooldownUntilMinute == 101 * 60);
 }
 } // namespace
 

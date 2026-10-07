@@ -15,9 +15,10 @@
 // than the config. Configuration clamps (hailFirstHours >= 8 h, ...) bound the
 // config value; they do not apply to the Cheat minute.
 //
-// Two of these waits are stored as whole game hours (the reject cooldown and the
-// lost-duel cooldown end at a rounded-up game hour, saved_ints): in Cheat they end at
-// the next whole game hour, never more than about an hour away.
+// The reject cooldown and the lost-duel cooldown are stored to the game minute
+// (cooldown_minutes.h, priority-one B), so Cheat's minute really is a minute; they
+// used to end at the next whole game hour. A wait under an hour reads in minutes
+// (wait_format.h).
 
 #include "config.h"
 

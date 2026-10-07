@@ -328,17 +328,6 @@ int RejectCooldownUntilHour(double nowHours, float cooldownHours)
     return until < 1.0 ? 1 : static_cast<int>(until);
 }
 
-bool RejectCooldownActive(int untilHour, double nowHours, double* hoursLeft)
-{
-    if (hoursLeft != NULL)
-        *hoursLeft = 0.0;
-    if (untilHour <= 0 || nowHours >= static_cast<double>(untilHour))
-        return false;
-    if (hoursLeft != NULL)
-        *hoursLeft = static_cast<double>(untilHour) - nowHours;
-    return true;
-}
-
 int SanitiseSavedCooldown(int raw)
 {
     return raw < 0 ? 0 : raw;
