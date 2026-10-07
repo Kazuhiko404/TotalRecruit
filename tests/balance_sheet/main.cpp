@@ -9,18 +9,22 @@
 //   tests/balance_sheet/x64/Release/balance_sheet.exe "$(git rev-parse --short HEAD)" > odd/balance/balance-sheet.md
 
 #include "ally_tier_rules.h"
+#include "animal_beating_rules.h"
+#include "animal_rules.h"
 #include "beating_stress_rules.h"
 #include "cage_command_rules.h"
 #include "cared_for_rules.h"
 #include "chance_rules.h"
 #include "cheat_waits.h"
 #include "config.h"
+#include "cooldown_minutes.h"
 #include "duel_challenge_rules.h"
 #include "duel_join_rules.h"
 #include "personality_groups.h"
 #include "reason_catalog.h"
 #include "route_decisions.h"
 #include "submission_rules.h"
+#include "wait_format.h"
 
 #include <cmath>
 #include <cstdio>
@@ -545,20 +549,59 @@ void PrintCheatLeftovers(const Config& c)
     Config cheat = c;
     cheat.preset = Preset_Cheat;
     std::printf("## 5. Restos de Cheat (esperas de 1 minuto)\n\n");
-    std::printf("`kCheatWaitHours` = %.4f h. Lo que se guarda como hora entera termina en la proxima hora entera; "
-                "la etiqueta redondea hacia arriba.\n\n", kCheatWaitHours);
+    std::printf("`kCheatWaitHours` = %.4f h. El rechazo y el duelo se guardan como el MINUTO de juego en que terminan "
+                "(`CooldownUntilMinute`, priority-one B): una espera de 1 h o mas termina en la hora entera redondeada "
+                "hacia arriba (como antes), una menor de 1 h en el minuto redondeado hacia arriba. Las etiquetas muestran "
+                "minutos bajo 1 h (`ShowWait`) y horas desde 1 h.\n\n", kCheatWaitHours);
     std::printf("| Espera | Cheat (h) | empieza 10.25 h, termina | etiqueta |\n|---|---|---|---|\n");
     const double now = 10.25;
-    std::printf("| rechazo del sometido | %.4f | %d h (%.0f min despues) | - |\n", RejectCooldownHours(cheat),
-                RejectCooldownUntilHour(now, RejectCooldownHours(cheat)),
-                (RejectCooldownUntilHour(now, RejectCooldownHours(cheat)) - now) * 60.0);
-    std::printf("| duelo perdido | %.4f | %d h (%.0f min despues) | - |\n", DuelLossCooldownHours(cheat),
-                DuelCooldownUntilHour(now, DuelLossCooldownHours(cheat)),
-                (DuelCooldownUntilHour(now, DuelLossCooldownHours(cheat)) - now) * 60.0);
+    const WaitTexts texts;
+    const int rejectUntil = CooldownUntilMinute(now, RejectCooldownHours(cheat));
+    const int duelUntil = DuelCooldownUntilMinute(now, DuelLossCooldownHours(cheat));
+    std::printf("| rechazo del sometido | %.4f | minuto %d (%.0f min despues) | \"%s\" |\n", RejectCooldownHours(cheat),
+                rejectUntil, rejectUntil - now * 60.0, FillWait(texts, ShowWait(RejectCooldownHours(cheat))).c_str());
+    std::printf("| duelo perdido | %.4f | minuto %d (%.0f min despues) | \"%s\" |\n", DuelLossCooldownHours(cheat),
+                duelUntil, duelUntil - now * 60.0, FillWait(texts, ShowWait(DuelLossCooldownHours(cheat))).c_str());
     std::printf("| descanso Golpear | %.4f | (ledger en horas de juego) | \"%s\" |\n", BeatingCooldownHours(cheat),
-                RestLabel("Golpear", BeatingCooldownHours(cheat)).c_str());
+                RestLabel("Golpear", BeatingCooldownHours(cheat), texts).c_str());
     std::printf("| descanso Noquear | %.4f | (ledger en horas de juego) | \"%s\" |\n\n", KnockoutCooldownHours(cheat),
-                RestLabel("Noquear", KnockoutCooldownHours(cheat)).c_str());
+                RestLabel("Noquear", KnockoutCooldownHours(cheat), texts).c_str());
+    const int balancedReject = CooldownUntilMinute(now, RejectCooldownHours(c));
+    std::printf("Comparacion Balanced: el rechazo (%.0f h) empezado a las 10.25 h termina en el minuto %d (hora %.2f); "
+                "Golpear en descanso pleno se lee \"%s\".\n\n", RejectCooldownHours(c), balancedReject,
+                balancedReject / 60.0, RestLabel("Golpear", BeatingCooldownHours(c), texts).c_str());
+}
+
+void PrintCagedAnimalBeating(const Config& c)
+{
+    const Animals& a = c.animals;
+    std::printf("## 6. Animal enjaulado: los golpes bajan la barra de comida (Balanced, priority-one D)\n\n");
+    std::printf("`DecideCagedAnimal` (`route_animal.cpp`): resolve = max(%.1f, %.2f + nivel x %.3f); "
+                "descuento = clamp(%.2f x estres / resolve, 0, %.2f); barra = barra x (1 - descuento). "
+                "La primera comida de mano del jugador sigue siendo obligatoria. Barra base = "
+                "`TamingFullnessNeeded` de un adulto (madurez 1.0) frente al lider %d, sin temperamento. "
+                "Estres por Golpear con temperamento normal (seccion 3).\n\n",
+                kAnimalBeatingResolveFloor, a.cageBeatingResolveBase, a.cageBeatingResolvePerLevel,
+                a.cageBeatingWeight, kAnimalBeatingMaxDiscount, kLeader);
+    std::printf("| Nivel animal | resolve | +Golpear | barra base | estres 0.25 | estres 0.5 | estres 1.0 |\n"
+                "|---|---|---|---|---|---|---|\n");
+    const int levels[] = { 5, 20, 40, 60, 90 };
+    const float stresses[] = { 0.25f, 0.5f, 1.0f };
+    for (int li = 0; li < 5; ++li)
+    {
+        const int lv = levels[li];
+        const float bar = TamingFullnessNeeded(1.0f, lv, kLeader, a);
+        std::printf("| %d | %.2f | %.3f | %.0f%% |", lv, AnimalBeatingResolve(lv, a),
+                    BeatingStressGain(BeatingBlow_Hit, kLeader, lv, Temperament_Normal, c.submission), bar * 100.0f);
+        for (int si = 0; si < 3; ++si)
+        {
+            std::printf(" %.0f%% (-%.0f%%) |", ApplyAnimalBeating(bar, stresses[si], lv, a) * 100.0f,
+                        AnimalBeatingDiscount(stresses[si], lv, a) * 100.0f);
+        }
+        std::printf("\n");
+    }
+    std::printf("\nCeldas: barra de estomago que debe alcanzar (descuento aplicado). Con `animalCageBeatingCounts` "
+                "apagado el descuento es 0.\n\n");
 }
 } // namespace
 
@@ -573,5 +616,6 @@ int main(int argc, char** argv)
     PrintBeating(config);
     PrintOtherRoutes(config);
     PrintCheatLeftovers(config);
+    PrintCagedAnimalBeating(config);
     return 0;
 }

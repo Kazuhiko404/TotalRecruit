@@ -1,7 +1,7 @@
 # Hoja de balance (Balanced, config por defecto)
 
 > **Generado, no editar a mano.** Programa: `tests/balance_sheet/main.cpp`, que llama a las funciones puras REALES de `src/` con `Config()` por defecto.
-> Reglas de `src/` en el commit `7bf8750`.
+> Reglas de `src/` en el commit `3fb81b2`.
 > Regenerar:
 >
 > ```bash
@@ -271,12 +271,28 @@ Cortes: medio 20, alto 50, elite 80, leyenda 100; descuento = min(tope, relacion
 
 ## 5. Restos de Cheat (esperas de 1 minuto)
 
-`kCheatWaitHours` = 0.0167 h. Lo que se guarda como hora entera termina en la proxima hora entera; la etiqueta redondea hacia arriba.
+`kCheatWaitHours` = 0.0167 h. El rechazo y el duelo se guardan como el MINUTO de juego en que terminan (`CooldownUntilMinute`, priority-one B): una espera de 1 h o mas termina en la hora entera redondeada hacia arriba (como antes), una menor de 1 h en el minuto redondeado hacia arriba. Las etiquetas muestran minutos bajo 1 h (`ShowWait`) y horas desde 1 h.
 
 | Espera | Cheat (h) | empieza 10.25 h, termina | etiqueta |
 |---|---|---|---|
-| rechazo del sometido | 0.0167 | 11 h (45 min despues) | - |
-| duelo perdido | 0.0167 | 11 h (45 min despues) | - |
-| descanso Golpear | 0.0167 | (ledger en horas de juego) | "Golpear (1 h)" |
-| descanso Noquear | 0.0167 | (ledger en horas de juego) | "Noquear (1 h)" |
+| rechazo del sometido | 0.0167 | minuto 616 (1 min despues) | " (1 min)" |
+| duelo perdido | 0.0167 | minuto 616 (1 min despues) | " (1 min)" |
+| descanso Golpear | 0.0167 | (ledger en horas de juego) | "Golpear (1 min)" |
+| descanso Noquear | 0.0167 | (ledger en horas de juego) | "Noquear (1 min)" |
+
+Comparacion Balanced: el rechazo (72 h) empezado a las 10.25 h termina en el minuto 4980 (hora 83.00); Golpear en descanso pleno se lee "Golpear (1 h)".
+
+## 6. Animal enjaulado: los golpes bajan la barra de comida (Balanced, priority-one D)
+
+`DecideCagedAnimal` (`route_animal.cpp`): resolve = max(0.1, 1.00 + nivel x 0.020); descuento = clamp(0.50 x estres / resolve, 0, 0.90); barra = barra x (1 - descuento). La primera comida de mano del jugador sigue siendo obligatoria. Barra base = `TamingFullnessNeeded` de un adulto (madurez 1.0) frente al lider 40, sin temperamento. Estres por Golpear con temperamento normal (seccion 3).
+
+| Nivel animal | resolve | +Golpear | barra base | estres 0.25 | estres 0.5 | estres 1.0 |
+|---|---|---|---|---|---|---|
+| 5 | 1.10 | 0.120 | 70% | 62% (-11%) | 54% (-23%) | 38% (-45%) |
+| 20 | 1.40 | 0.120 | 85% | 77% (-9%) | 70% (-18%) | 55% (-36%) |
+| 40 | 1.80 | 0.080 | 100% | 93% (-7%) | 86% (-14%) | 72% (-28%) |
+| 60 | 2.20 | 0.053 | 100% | 94% (-6%) | 89% (-11%) | 77% (-23%) |
+| 90 | 2.80 | 0.040 | 100% | 96% (-4%) | 91% (-9%) | 82% (-18%) |
+
+Celdas: barra de estomago que debe alcanzar (descuento aplicado). Con `animalCageBeatingCounts` apagado el descuento es 0.
 
