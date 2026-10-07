@@ -1,5 +1,8 @@
 # Handoff: TotalRecruit, 2026-10-03
 
+> **Histórico (2026-10-03); estado actual en [odd/system-status.md](../system-status.md).**
+> Las ramas y worktrees que nombra ya no existen: todo está en `main`.
+
 Written for the next Claude session. Read this whole document first, then the feature documents it names.
 
 ## Hard rules

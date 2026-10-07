@@ -153,8 +153,10 @@ enorme se somete solo. Debe convertirse en una probabilidad que participe del
 motor de R0.1, para todos los NPC y todas las bestias.
 
 *Pendiente de investigación:* qué hueco de nivel produce qué probabilidad, y si
-la curva actual (−6 puntos por nivel de diferencia) se siente bien en juego o
-castiga demasiado rápido.
+la curva actual se siente bien en juego o castiga demasiado rápido. Hoy:
+base 45, −1,5 puntos por nivel que el NPC te saca (`chanceLevelGapPenalty`,
+piso 2) y +1,5 por nivel de ventaja (`chanceLevelEdgeBonus`, tope +40); números
+reales en `odd/balance/balance-sheet.md` §1.
 
 **R2.2 — El gap que corta la charla, configurable.** *(P1)*
 El límite a partir del cual el NPC se niega con cortesía deja de estar fijo en
@@ -651,12 +653,10 @@ plugins".
   Balanced (25 + 20 por victoria, semilla estable, mismos enfriamientos) y una
   unión segura en Cheat. El animal no habla: líneas de narrador
   (`duel.animal.challenged/joined/stays/lost`, "agacha la cabeza y te sigue") y
-  ningún cartel sobre su cabeza. Perder no lo vuelve hostil. Limitación conocida
-  de TotalSparring (solo lectura desde este mod): la apuesta de la ventana Dueling
-  supone que el rival tiene cats; un animal no tiene, así que TotalSparring usa 1000
-  como riqueza de reserva (`duel_popup.cpp:1416-1418`) y el pago falla
-  (`economy.cpp:100-115`, `TransferCats`). Dejar la apuesta en 0 con animales;
-  arreglarlo del lado de TotalSparring necesita permiso del usuario.
+  ningún cartel sobre su cabeza. Perder no lo vuelve hostil. Contra un animal la
+  ventana Dueling de TotalSparring ya no ofrece apuesta (TotalSparring `master`
+  `8782b2c`, "no wager against animals": la fila de apuesta se oculta), así que la
+  limitación del pago con un animal sin cats ya no aplica.
 - **Duelos abiertos desde TotalSparring** (2026-10-05, duel-any-source U2). Un
   duelo que el jugador abre con el botón propio de TotalSparring, sin reto
   pendiente de TotalRecruit, cuenta como si lo hubiera abierto RETAR A DUELO

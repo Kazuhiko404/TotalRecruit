@@ -1,14 +1,20 @@
 # Ajuste fino de Balanced: calibrar la jaula con la hoja de balance
 
-Rama: `feat/balanced-tuning` (desde `main` @ `7bf8750`; primer commit `80ca99b`, generador de la hoja de balance).
+Rama: `feat/balanced-tuning` (desde `main` @ `7bf8750`), mergeada en `main` (`b87d0b2`) y borrada el 2026-10-06; el trabajo que queda se hace en `main`. Generador de la hoja: `af1ff35`.
 Ruta: por tarea (inline o escritor delegado), declarada en cada item del checklist al empezarlo.
 Engram: proyecto `totalrecruit`, espejo `odd/balanced-tuning/tasks`.
 
 ## Objetivo
 Que el preset Balanced se sienta lore-friendly y parejo: cuanto tarda en quebrarse un preso depende de quien es (personalidad, nivel, unico), y ninguna herramienta de la jaula (golpear, cuidar, esperar) domina a las demas. Cada cambio de numeros se mide contra `odd/balance/balance-sheet.md` antes y despues.
 
-## Contexto: estado de la v1
-`main` @ `7bf8750`, desplegado (DLL md5 `79a7eba70868acbc1830096b52f9f053`):
+## Contexto: estado actual (2026-10-06)
+`main` es la unica rama y esta desplegada (DLL commiteado en `3fb81b2`). Estado completo en `odd/system-status.md`. Desde que se escribio este documento:
+- **T5 hecho** por priority-one B (`9b0466a`): rechazo y duelo se guardan al minuto de juego; las esperas de menos de 1 h se leen en minutos ("Golpear (1 min)").
+- **T7 casi hecho**: duelo con animales libres 40+ en los dos presets (`fe90e80`), field-yield 2/2 para animales libres en Balanced (`6d956a1`), cura/derrota en Cheat (`588491c`) y los golpes bajan la barra de comida de un animal enjaulado en Balanced (priority-one D, `65c6652`). Falta: resolucion por especie (hoy por nivel).
+- **Hoja regenerada** sobre las reglas de `3fb81b2` (`b8ca98c`): las secciones 1-4 no cambiaron respecto de `7bf8750` (la evidencia de T1-T4 y T6 sigue valiendo tal cual); la seccion 5 ahora muestra las esperas de Cheat al minuto y la nueva seccion 6, la barra del animal enjaulado golpeado.
+- El usuario juega Cheat: T1-T4 y T6 solo tocan Balanced.
+
+Estado de la v1 cuando se escribio (`main` @ `7bf8750`, DLL md5 `79a7eba70868acbc1830096b52f9f053`):
 - **Cheat** = jaula + 1 minuto de juego y te llama; todas sus esperas duran 1 minuto (`cheat_waits`, `kCheatWaitHours`).
 - **Balanced** = motor completo (`JoinChance`, tirada diaria `DailyRoll`).
 - **Vanilla+ eliminado**: un `preset` fuera de rango (un 2 guardado) carga Balanced.
@@ -107,8 +113,8 @@ T1..T7 abajo. Solo reglas puras de Balanced (`src/*_rules.cpp`), sus claves de c
 - [ ] Propuesta: termino de **resignacion** por dia encerrado, leido del reloj de retencion persistido (`total_recruit.hold_start_hour`): `+resignationPerDay` por dia completo (p.ej. 2, rango 0..5), tope `resignationMax` (p.ej. 15, rango 0..30), dividido por la resolucion como estres y derrotas. Modulo puro `resignation_rules`; fila nueva en la hoja y en la tarjeta ("Resignado +N%") con maqueta primero.
 
 ### T5 Restos de Cheat
-- [ ] Evidencia (seccion 5): `kCheatWaitHours` = 0.0167 h; rechazo del sometido y duelo perdido empiezan a las 10.25 h y terminan a las 11 h (45 min despues), porque se guardan en horas enteras; los descansos muestran "Golpear (1 h)" y "Noquear (1 h)" para una espera de 1 minuto.
-- [ ] Propuesta: guardar los enfriamientos de rechazo y duelo en sub-hora (decimas de hora, como `hold_start_hour`), y etiquetar en minutos cuando la espera es menor a 1 h ("Golpear (1 min)"). Claves de `messages.json` nuevas; maqueta del boton primero.
+- [x] Hecho por priority-one B (`9b0466a`, `cooldown_minutes` + `wait_format`). Hoja regenerada (seccion 5): rechazo y duelo perdido empezados a las 10.25 h terminan en el minuto 616 (1 min despues); las etiquetas dicen " (1 min)", "Golpear (1 min)", "Noquear (1 min)". Antes: terminaban a las 11 h (45 min despues) y decian "(1 h)".
+- [x] Propuesta original (cumplida con minutos de juego en lugar de decimas de hora): guardar los enfriamientos de rechazo y duelo en sub-hora (decimas de hora, como `hold_start_hour`), y etiquetar en minutos cuando la espera es menor a 1 h ("Golpear (1 min)"). Claves de `messages.json` nuevas; maqueta del boton primero.
 
 ### T6 Otros desbalances visibles en la hoja
 - [ ] Revisar con el usuario, solo con numeros de la hoja:
@@ -119,7 +125,9 @@ T1..T7 abajo. Solo reglas puras de Balanced (`src/*_rules.cpp`), sus claves de c
   - **Field-yield casi seguro** con 2 derrotas: normal 91, fearful 95 (seccion 4); maniacal 66 supera a brave 62 pese a personalidad -25 (resolucion 1.0 contra 1.6).
 
 ### T7 Animales: reclutar con duelo (respeto) o sometiendolos
-- [ ] Pedido del usuario: un animal tambien se puede reclutar ganandole un duelo (se gana su respeto) o sometiendolo a golpes, no solo con comida.
+> Casi todo hecho (2026-10-06): duelo con animales libres 40+ (`fe90e80`, `0717f2e`), field-yield 2/2 de animales libres en Balanced (`6d956a1`), cura/derrota en Cheat (`588491c`), golpes en la jaula bajan la barra de comida en Balanced (`65c6652`, hoja seccion 6). TotalSparring acepta un animal como lado B y ya no ofrece apuesta contra animales (TotalSparring `8782b2c`). Queda abierto: resolucion por especie (hoy `animalCageBeatingResolveBase` + nivel x `animalCageBeatingResolvePerLevel`). El "Hoy" de abajo es el estado de cuando se escribio.
+
+- [x] Pedido del usuario: un animal tambien se puede reclutar ganandole un duelo (se gana su respeto) o sometiendolo a golpes, no solo con comida.
 - [ ] Hoy: el animal se doma solo por el estomago con comida del jugador (`DecideAnimal`, `route_cage.cpp` antes de cualquier argumento humano); el duelo excluye animales (`duel_challenge_rules.cpp:13` `!facts.isAnimal`, y `recruit_core.cpp:1120` en Cheat); field-yield excluye animales (`route_rules.cpp` `!f.animal`); Golpear/Noquear en jaula si aplican a un animal pero su estres no entra en la decision del animal.
 - [ ] Propuesta, dos vias nuevas en Balanced que conviven con la comida (cada una en su modulo puro, con tirada estable `DailySeed` y min/max configurables):
   - **Duelo / respeto**: RETAR A DUELO tambien para animales (sin el corte de nivel 80+ o con uno propio, p.ej. `animalDuelMinLevel`); ganar da una chance de unirse `animalDuelJoinBase` + `animalDuelJoinPerWin` por victoria previa (estilo `duel_join_rules`), con enfriamiento tras perder. Verificar primero que TotalSparring (puente `TS_*`) admite un animal como lado B; si no, documentarlo y pedir la parte de TotalSparring al usuario (no tocar ese repo sin permiso).
@@ -156,9 +164,10 @@ En juego, en este orden (ver `odd/system-status.md` y `QA.md`):
 Pasos de cierre: QA en juego -> merge de `feat/balanced-tuning` a `main` -> push (decide el usuario).
 
 ## Progreso
-- `80ca99b`: generador de la hoja de balance (`tests/balance_sheet`), hoja en `odd/balance/balance-sheet.md` sobre las reglas de `7bf8750`.
+- `af1ff35`: generador de la hoja de balance (`tests/balance_sheet`), hoja en `odd/balance/balance-sheet.md` sobre las reglas de `7bf8750`.
 - Este documento y `odd/balance/START-PROMPT.md` creados. Ningun numero cambiado todavia.
-- `133d08b`: T7 agregado (animales por duelo o sometimiento), pedido del usuario.
+- `1b310c7`: T7 agregado (animales por duelo o sometimiento), pedido del usuario.
+- 2026-10-06: rama mergeada en `main` (`b87d0b2`) y borrada. T5 hecho por priority-one B; T7 casi hecho (ver arriba). `b8ca98c`: la hoja compila contra los enfriamientos al minuto, suma la seccion 6 (animal enjaulado golpeado) y se regenero sobre `3fb81b2`.
 
 ## Proximo paso
-T1: confirmar la tabla objetivo con el usuario; despues T2-T4, luego T5, luego T6, luego T7 (animales: duelo y sometimiento).
+T1: confirmar la tabla objetivo con el usuario (solo Balanced; el usuario juega Cheat); despues T2-T4, luego T6, luego lo que queda de T7 (resolucion por especie).

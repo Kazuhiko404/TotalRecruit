@@ -1,7 +1,7 @@
 # Golpear: acercarse a la jaula y avisar que el golpe entro
 
 Localizador: `odd/tasks/beat-feedback.md` - espejo Engram: `odd/beat-feedback/tasks` (proyecto `totalrecruit`).
-Rama: `fix/beat-feedback` (desde `main` @ `3a42e53`).
+Rama: `fix/beat-feedback` (desde `main` @ `3a42e53`); mergeada en `main` y borrada (2026-10-06, `main` @ `3fb81b2`).
 Ruta: escritor delegado (caminata + golpe diferido + voz + mensaje + config/messages + maqueta + docs: 2+ archivos no triviales).
 
 ## Pedido del usuario (literal)
@@ -53,6 +53,8 @@ Decision del usuario:
 - Documento creado. Siguiente: T1-T3 con un escritor; T4 en paralelo con un explorador.
 - T1, T2, T3 y T5 hechos en `fix/beat-feedback`: codigo + tests en `320983c` (`feat(cage): Golpear walks to the cage before the blow lands`); docs (QA 12.39 G1-G17, REQUISITOS R2.3 estado beat-feedback, README, `ui-mockup/README.md` item 17, `readout.html` callout de la caminata) en `fd23727`. TotalRecruit.dll Release|x64 compila sin advertencias nuevas. Sin deploy, sin push.
 - Decisiones: "otra orden" se detecta por falta de avance (4 s sin acercarse 0,5 m), no por la tarea del actor (no esta probado que `MOVE_CUS_ORDERED` se lea como tarea actual en un personaje del jugador). En un aborto no se toca ninguna orden (no pisar lo que el jugador mando). Una carga no avisa (el mundo de la caminata ya no existe). `DEVELOPING.md` no estaba en las superficies permitidas: falta su fila para `beat_walk*`.
+
+- Prueba en juego del usuario (2026-10-06, preset Cheat): caminata, mensaje y notificacion OK; no sonaba nada y no habia animacion. Los dos siguieron en `odd/tasks/priority-one.md`: S1 (eventos reales de Wwise, `f7b719d`) y C (T4 de aqui, continuada como el golpe con el clip `badpunch`, `fb536ff`). Sin re-probar todavia.
 
 ## Siguiente paso
 QA en juego 12.39: que el personaje del jugador tome la orden de caminar del plugin hacia un preso dentro de una jaula y se detenga a menos de 4 m (si se queda mas lejos, subir `submissionBeatReachMeters`); que el sonido se oiga y que evento acepta el motor (G3, G17); que "otra orden" aborte en ~4 s (G6).

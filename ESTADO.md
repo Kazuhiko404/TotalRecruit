@@ -3,14 +3,14 @@
 Qué está hecho, qué falta, y qué tan seguro es cada afirmación. Todo verificado
 contra `src/` y contra el log de partidas reales, no de memoria.
 
-> **2026-10-04:** la foto vigente de todo el sistema (qué hace hoy el mod, qué está
-> verificado, qué falta, ideas) es [odd/system-status.md](odd/system-status.md).
+> **Histórico, ver [odd/system-status.md](odd/system-status.md)** (foto vigente al
+> 2026-10-06: qué hace hoy el mod, qué falta, avance por feature y riesgos).
 > Este documento queda como el registro detallado de la ronda `rebalance-and-ui`
-> y de las investigaciones; no se actualiza feature por feature. Desde entonces:
-> todas las rondas están en `main` @ `3554d19` y desplegadas; el usuario probó de
-> manera informal el ayudante nativo, la partida del temporal, el duelo vía
-> TotalSparring, el refresco del historial de duelos, los avisos de duelo de 25 s
-> y el nivel de TotalSparring. Nada tiene marca formal de QA.
+> y de las investigaciones; no se actualiza feature por feature. Hoy `main` es la
+> única rama, con todas las rondas mergeadas y desplegadas (DLL en `3fb81b2`).
+> Se corrigieron abajo las filas que el código ya contradecía (R1.1, R1.2, R2.3,
+> R6.1, R6.2, modo fácil, líneas de log de §6, riesgos). §2.1, §3 y §6 son de la
+> ronda `rebalance-and-ui` y no listan lo posterior. Nada tiene marca formal de QA.
 
 Escrito tras la ronda `rebalance-and-ui` (T1-T9, rama `feat/rebalance-and-ui`, ya en
 `main`). Todo lo nuevo de esa ronda estaba en **Compila + tests**: compila en
@@ -77,8 +77,8 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
-| R1.1 | Jaula obligatoria | ✅ **Compila** | Cheat exige jaula del jugador. `cheatNeedsCage` lo apaga |
-| R1.2 | Un minuto y avisa | ✅ **Compila + tests** | `cheatHoursCaged` = 0.02 (un minuto de juego); `DecideCheat` en `route_cheat.cpp` |
+| R1.1 | Jaula obligatoria | ✅ **Compila + tests** | Cheat exige una jaula, y sirve **cualquiera** (`cheatAnyCage`, on por defecto: jaula ajena, grilletes, secuestro; cheat-any-cage, QA 12.35). `cheatNeedsCage` apaga la jaula |
+| R1.2 | Un minuto y avisa | ✅ **Compila + tests** | En Cheat toda espera es como mucho un minuto de juego (`cheat_waits`, `kCheatWaitHours` = 1/60 h; `cheatHoursCaged` 0.02 solo cuenta si es menor); `DecideCheat` en `route_cheat.cpp` |
 | R1.3 | Cero condiciones más | ✅ **Jugado** | Es lo que hace hoy |
 | R1.4 | Umbral de amistad configurable, default 20 | ✅ **Compila** | `friendlyRelation`, default **20**. No aplica a Cheat |
 
@@ -88,7 +88,7 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 |---|---|---|---|
 | R2.1 | Nivel da chance, no permiso | ✅ **Jugado** | Las dos puertas eliminadas. El log muestra el desglose por término |
 | R2.2 | Gap configurable | ✅ **Compila** | 7 controles: castigo/piso por nivel, bono/techo por ventaja, piso/techo global, intimidación |
-| R2.3 | Castigo en jaula | ✅ **Compila** | Botón **GOLPEARLO**. Usa `knockoutForceTimer`, no daño real: no puede matarlo. Cooldown configurable |
+| R2.3 | Castigo en jaula | ✅ **Compila + tests** | **Golpear**: el personaje camina hasta la jaula (`beat_walk`), tira un puñetazo (clip `badpunch`, `beat_strike`) y el golpe cae directo y acotado sobre el preso, que sigue en la jaula y no muere; queja, aviso y sonido Wwise. Descanso `submissionBeatingCooldownHours` (1 h). **Noquear**: orden nativa de noqueo, descanso 1 h. Los dos suman estrés por golpes. Caminata/mensaje probados informalmente; sonido y puñetazo sin probar (QA 12.39, 12.40) |
 | R2.4 | Cooldown acumulativo y configurable | ✅ **Compila** | **Acumulativo**: horas × intentos de más, con techo. 4 controles. Sigue sin sobrevivir recarga (I5) |
 
 ### BALANCED — sumisión (§3)
@@ -129,8 +129,8 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
-| R6.1 | Todo lo nuevo configurable | ✅ **Compila + tests** | **~106 controles** (T8 sumó 19). Quedan literales: tramos de reputación 75/25/5/-5 y el 3.0 de barriga llena |
-| R6.2 | Preferir el hub | ✅ **Jugado** | 43+ controles |
+| R6.1 | Todo lo nuevo configurable | ✅ **Compila + tests** | Toda clave nueva va a `config.json` y al hub. Quedan literales: tramos de reputación 75/25/5/-5 y el 3.0 de barriga llena |
+| R6.2 | Preferir el hub | ✅ **Jugado** | **183 controles** registrados en `src/mod_hub_integration.cpp` (41 bool, 60 int, 82 float) |
 | R6.3 | Agrupar el panel | 🔬 **Instrumentada** | El hub da 160 bytes contra los 72 que declaramos. El log ahora vuelca los slots; llamar a ciegas crashea |
 | R6.4 | Documentar lo que no va al panel | ✅ **Corregido** | REQUISITOS.md ya lo dice según I6: el hub sí acepta texto libre (`register_text_setting`) |
 
@@ -147,7 +147,7 @@ Todo en **Compila + tests**. Nada de esto se jugó: cada fila apunta a su caso e
 | ACEPTAR una súplica = unirse gratis | T2 | ✅ **Compila + tests** | `AcceptMercy`; clave nueva `mercy.joinedNotice` | 12.1 F7-F8 |
 | Piso de derrotas persistido | T2 | ✅ **Compila + tests** | `PersistedDefeatFloor` nunca baja de `defeatsToBreak` | 12.1 F6 |
 | Súplica limpiada en cada cierre | T3 | ✅ **Compila + tests** | `PleaTracker` por `CharKey`, ya no un `Character*` crudo; `Close()` olvida la súplica | 12.2 M1-M4 |
-| Modo fácil 12h → 6h, plano | T4 | ✅ **Compila + tests** | `easyHoursCaged` 6; se quitaron `hoursCagedForProud` y `uniqueExtraHours` | 12.3 E1-E8 |
+| ~~Modo fácil 12h → 6h, plano~~ | T4 | Retirado | La espera fácil (`easyHoursCaged`) se quitó en v1-presets-close P4; la clave desplegada queda y se ignora | 12.3 |
 | Reloj de encierro | T4 | ✅ **Compila + tests** | `HoldClock`: arranca al enjaular, se suelta al salir, reinicia si el reloj de juego retrocede | 12.3 |
 | Curva de precio recalibrada | T5 | ✅ **Compila + tests** | `catsPerLevel 90, catsCeiling 28000, steepness 0.09, midpoint 31`; mínimo al final, redondeo a 10, `catsHardCap` 150000, `talentMaxMultiplier` 1.5 | 12.4 P1-P9 |
 | Cobro todo-o-nada, reembolso, transferencias | T5 | ✅ **Compila + tests** | `money_rules` + `cats_purse`; regalo y tributo con una sola convención | 12.4 |
@@ -254,17 +254,15 @@ adivinar. Buscá estas líneas:
 
 | Qué querés validar | Qué buscar en el log |
 |---|---|
-| **I4** — ¿el tag altera la IA? | `[I4 before-mark]` y `[I4 after-mark]` en la misma línea de tiempo. Si `intendedAggression`, `distress` o `intendsToAttack` cambian entre las dos, el tag mueve la IA |
 | **R2.1/R2.2** — el nivel ya no es puerta | `[chance] level=X relation=Y personality=Z defeats=N(xM) situation=S -> P%` en cada decisión |
-| **R3.2/R3.3** — conteo de derrotas | `defeated by the player (N this session, floor+session=M)` |
-| **R3.1** — rogar por vida baja | En esa misma línea: `blood=0.18 nearDeath=yes` |
+| **R3.2/R3.3** — conteo de derrotas | `<nombre> defeated by the player (<veredicto>; count N, <key>)` |
+| **R3.1** — rogar por vida baja | En esa misma línea: `blood=0.18 nearDeath=yes dead=no` |
 | **R6.3** — slots del hub | `Mod Hub slots (19 of 160 bytes): [0]=fn [1]=fn ...` |
 | **Alimentar** | `Fed X. hunger 1.70 -> 2.10 (credited by plugin)` |
 | **Regalo del rescate** | `X paid the player N cats for the rescue` |
 
-Para I4 concretamente: pegale a un NPC hasta dejarlo inconsciente, mirá las dos
-líneas `[I4 ...]`, y después observalo un rato. Si su facción no cambia de trato
-y no huye distinto, el tag es seguro y **R3.3 queda confirmado**.
+I4 ya no tiene líneas propias: el mod no escribe la marca de derrota (§1), así que
+no hay nada que observar.
 
 ### Siguiente paso: QA en partida
 
@@ -319,10 +317,10 @@ hay que sostener, no una casilla que queda marcada.
 
 ### Riesgos conocidos de la ronda anterior
 
-- **El botón extra es uno solo.** Si el prisionero tiene hambre y además se le
-  puede pegar, gana la comida. Es una limitación de la ventana, no un olvido.
-- **`knockoutForceTimer` no está probado en juego.** Linkea y es no-virtual,
-  pero nadie lo llamó todavía; si no deja inconsciente a nadie, R2.3 no hace nada.
+- ~~El botón extra es uno solo~~: superado; el preso de tu jaula tiene su bloque
+  Hablar / Golpear / Noquear y la ventana trae GOLPEAR / NOQUEAR.
+- ~~`knockoutForceTimer` no está probado~~: obsoleto; Golpear ya no lo usa (golpe
+  directo, cage-beat-direct-hit) y Noquear es la orden nativa.
 - **El conteo de derrotas depende de `lastGuyWhoDefeatedMe`.** Si el motor no lo
   llena como espero, el contador queda en cero y no se rompe nada — pero R3.2
   tampoco funciona. El log lo dice de inmediato.

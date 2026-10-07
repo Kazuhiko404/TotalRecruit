@@ -965,7 +965,7 @@ Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat), H (horas de
 
 ### 12.34 Animales: duelo, 2/2 en Balanced y cura/derrota en Cheat (animal-duel-submission)
 
-Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`duelAnimalsEnabled` on, `duelAnimalsFromLevel` 40, `submissionDefeatsToBreak` 2, `duelJoinBaseChance` 25 / `duelJoinChancePerWin` 20). "Animal libre" = sin dueno (fauna salvaje: "Wild Dogs", etc.). Mockup: `ui-mockup/readout.html`, tarjetas "Wild animal 40+ ...", "Wild animal beaten ..." y "Cheat: a wild animal your squad beat joins", ventanas "Wild animal 40+ can be challenged to a duel" y "Wild animal beaten twice yields". **Con animales dejar la apuesta de la ventana Dueling en 0**: un animal no tiene cats y TotalSparring falla al cobrar (limitacion conocida, REQUISITOS R4b.7).
+Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`duelAnimalsEnabled` on, `duelAnimalsFromLevel` 40, `submissionDefeatsToBreak` 2, `duelJoinBaseChance` 25 / `duelJoinChancePerWin` 20). "Animal libre" = sin dueno (fauna salvaje: "Wild Dogs", etc.). Mockup: `ui-mockup/readout.html`, tarjetas "Wild animal 40+ ...", "Wild animal beaten ..." y "Cheat: a wild animal your squad beat joins", ventanas "Wild animal 40+ can be challenged to a duel" y "Wild animal beaten twice yields". Contra un animal la ventana Dueling de TotalSparring ya no muestra apuesta (TotalSparring `master` `8782b2c`); si aparece la fila de apuesta, el TotalSparring instalado es anterior.
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|

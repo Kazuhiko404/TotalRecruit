@@ -157,8 +157,8 @@ Windows key code, 119 = F8) makes the selected NPC offer at once for testing.
 With TotalSparring installed, an ally of level 80 or more (in Cheat, any person
 from `duelCheatPeopleFromLevel`, 1 by default), or a free animal of level 40 or more in either preset
 (`duelAnimalsEnabled`, `duelAnimalsFromLevel`), can also be challenged to a duel.
-An animal's outcome is told by a narrator line, never in its voice; keep the bet
-at 0 against an animal (it carries no cats). Their popup keeps its usual answer and adds
+An animal's outcome is told by a narrator line, never in its voice; TotalSparring
+offers no wager against an animal (TotalSparring `8782b2c`). Their popup keeps its usual answer and adds
 **RETAR A DUELO**, with your selected fighter's head-to-head record against
 them ("DUELOS 2-1", also on their card as "Duelos: 2-1"). The button opens
 TotalSparring's own Dueling window with the character you have selected;

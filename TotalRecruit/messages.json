@@ -800,7 +800,7 @@
     ]
   },
   "cage": {
-    "_comment": "Golpear y Noquear junto al menu contextual, para un preso despierto en tu jaula. Los hace el personaje que tengas seleccionado, con las ordenes del propio juego. Noquear muestra la probabilidad del juego (Noquear 72%).",
+    "_comment": "Golpear y Noquear junto al menu contextual, para un preso despierto en tu jaula. Los hace el personaje que tengas seleccionado. Golpear: camina hasta la jaula, tira un punetazo y el golpe cae directo sobre el preso, que sigue en la jaula (sin ordenes de combate). Noquear: la orden de noqueo del propio juego, y muestra su probabilidad (Noquear 72%).",
     "button": {
       "beat": "Golpear",
       "knockout": "Noquear",

@@ -64,9 +64,9 @@ std::string RouteTag(ReadoutRoute route, const OfferTexts& t)
     case ReadoutRoute_Surrender: return t.routeSurrender;
     case ReadoutRoute_Mercy:     return t.routeMercy;
     case ReadoutRoute_Animal:    return t.routeAnimal;
-    // OfferTexts carries no slot for it yet (offer_view.h / npc_speech.cpp were
-    // outside T5's edit surface): the shared label table's text, which is also
-    // what messages.json ships for readout.route.fieldYield.
+    // Its own OfferTexts slot like the others: npc_speech.cpp loads it from
+    // messages.json readout.route.fieldYield, with the shared label table's
+    // text (ReadoutRouteDefaultText) as the built-in fallback.
     case ReadoutRoute_FieldYield: return t.routeFieldYield;
     case ReadoutRoute_Free:
     default:                     return t.routeFree;

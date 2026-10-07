@@ -1,7 +1,7 @@
 # Prioridad 1: sonido y animacion de Golpear, duelo lejano, esperas de Cheat, animales golpeados, frases editables
 
 Localizador: `odd/tasks/priority-one.md` - espejo Engram: `odd/priority-one/tasks` (proyecto `totalrecruit`).
-Rama: `feat/priority-one` (desde `fix/beat-feedback` @ `6b6ce58`, que sigue sin mergear en `main`).
+Rama: `feat/priority-one` (desde `fix/beat-feedback` @ `6b6ce58`); las dos mergeadas en `main` y borradas (2026-10-06); DLL desplegado y commiteado en `3fb81b2`.
 Ruta: escritor delegado por tarea (cada tarea toca 2+ archivos no triviales).
 
 ## Pedido del usuario (literal)
@@ -41,4 +41,4 @@ El usuario juega con preset Cheat (`"preset": 0` en el config desplegado).
 - Pendiente fuera de las superficies permitidas: `scripts/add_missing_keys.py` solo compara numeros en `--set-if`; para migrar `submissionBeatHitSound` "Heavy_Hit" -> "HtH_Impacts" hay que hacerlo sensible a strings y agregar la linea en `deploy.sh`. Mientras tanto "Heavy_Hit" suena (valor real del switch `Impacts`).
 
 ## Siguiente paso
-Deploy y QA en juego 12.40: S1-S5 (que se oiga y que diga `played id`), A1-A2, B1-B7, E1-E5, D1-D5, C1-C7 (que el clip `badpunch` se vea y el log diga `found playing`).
+Desplegado (`3fb81b2`). QA en juego 12.40: S1-S5 (que se oiga y que diga `played id`), A1-A2, B1-B7, E1-E5, D1-D5, C1-C7 (que el clip `badpunch` se vea y el log diga `found playing`).
