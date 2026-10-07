@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Balance sheet generator: prints odd/balance/balance-sheet.md from the REAL pure
+     rules in src/ (the same files tests/rules_tests compiles) with the default
+     Config. No engine, no KenshiLib, v100 like the plugin. Measures only.
+     Build and run:
+       MSBuild tests/balance_sheet/balance_sheet.vcxproj -p:Configuration=Release -p:Platform=x64
+       tests/balance_sheet/x64/Release/balance_sheet.exe COMMIT > odd/balance/balance-sheet.md
+     (COMMIT = the short hash of HEAD; see DEVELOPING.md section 7) -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7c3e1b90-4a2d-4f6e-9b81-3d5a7e2c4f19}</ProjectGuid>
+    <RootNamespace>balance_sheet</RootNamespace>
+    <TargetName>balance_sheet</TargetName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v100</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)x64\Release\</OutDir>
+    <IntDir>$(ProjectDir)x64\Release\obj\</IntDir>
+    <IncludePath>$(ProjectDir)..\..\src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\..\src\chance_rules.cpp" />
+    <ClCompile Include="..\..\src\price_rules.cpp" />
+    <ClCompile Include="..\..\src\route_rules.cpp" />
+    <ClCompile Include="..\..\src\defeat_rules.cpp" />
+    <ClCompile Include="..\..\src\defeat_episode_rules.cpp" />
+    <ClCompile Include="..\..\src\defeat_ledger.cpp" />
+    <ClCompile Include="..\..\src\mercy_rules.cpp" />
+    <ClCompile Include="..\..\src\plea_tracker.cpp" />
+    <ClCompile Include="..\..\src\hold_clock.cpp" />
+    <ClCompile Include="..\..\src\haggle_rules.cpp" />
+    <ClCompile Include="..\..\src\haggle_ledger.cpp" />
+    <ClCompile Include="..\..\src\money_rules.cpp" />
+    <ClCompile Include="..\..\src\json_merge.cpp" />
+    <ClCompile Include="..\..\src\atomic_file.cpp" />
+    <ClCompile Include="..\..\src\route_cage.cpp" />
+    <ClCompile Include="..\..\src\route_free.cpp" />
+    <ClCompile Include="..\..\src\route_cats.cpp" />
+    <ClCompile Include="..\..\src\route_animal.cpp" />
+    <ClCompile Include="..\..\src\route_yield.cpp" />
+    <ClCompile Include="..\..\src\route_rescue.cpp" />
+    <ClCompile Include="..\..\src\route_cheat.cpp" />
+    <ClCompile Include="..\..\src\route_gate.cpp" />
+    <ClCompile Include="..\..\src\relation_rules.cpp" />
+    <ClCompile Include="..\..\src\body_rules.cpp" />
+    <ClCompile Include="..\..\src\reason_catalog.cpp" />
+    <ClCompile Include="..\..\src\animal_rules.cpp" />
+    <ClCompile Include="..\..\src\readout_format.cpp" />
+    <ClCompile Include="..\..\src\readout_catalog.cpp" />
+    <ClCompile Include="..\..\src\readout_model.cpp" />
+    <ClCompile Include="..\..\src\talk_hint_cache.cpp" />
+    <ClCompile Include="..\..\src\menu_slot.cpp" />
+    <ClCompile Include="..\..\src\menu_button_release.cpp" />
+    <ClCompile Include="..\..\src\offer_view.cpp" />
+    <ClCompile Include="..\..\src\screen_projection.cpp" />
+    <ClCompile Include="..\..\src\card_dismiss_rules.cpp" />
+    <ClCompile Include="..\..\src\cage_command_rules.cpp" />
+    <ClCompile Include="..\..\src\beating_stress_rules.cpp" />
+    <ClCompile Include="..\..\src\feeding_ledger.cpp" />
+    <ClCompile Include="..\..\src\approach_rules.cpp" />
+    <ClCompile Include="..\..\src\submission_rules.cpp" />
+    <ClCompile Include="..\..\src\submission_tracker.cpp" />
+    <ClCompile Include="..\..\src\head_notice_rules.cpp" />
+    <ClCompile Include="..\..\src\personality_groups.cpp" />
+    <ClCompile Include="..\..\src\ally_tier_rules.cpp" />
+    <ClCompile Include="..\..\src\temp_member_rules.cpp" />
+    <ClCompile Include="..\..\src\helper_rules.cpp" />
+    <ClCompile Include="..\..\src\leave_homing_rules.cpp" />
+    <ClCompile Include="..\..\src\overlay_visibility_rules.cpp" />
+    <ClCompile Include="..\..\src\duel_challenge_rules.cpp" />
+    <ClCompile Include="..\..\src\level_rules.cpp" />
+    <ClCompile Include="..\..\src\duel_record_cache_rules.cpp" />
+    <ClCompile Include="..\..\src\duel_join_rules.cpp" />
+    <ClCompile Include="..\..\src\knockout_watch_rules.cpp" />
+    <ClCompile Include="..\..\src\preset_rules.cpp" />
+    <ClCompile Include="..\..\src\cheat_waits.cpp" />
+    <ClCompile Include="..\..\src\cared_for_rules.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

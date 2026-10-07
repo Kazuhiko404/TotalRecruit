@@ -5,9 +5,10 @@ One document for the whole mod: what it does today, what is still missing, and t
 Engram project: `totalrecruit` (`.engram/config.json`). This document is mirrored under the topic `odd/system-status`; each feature document under `odd/<feature>/tasks`.
 
 ## Where things stand
-- **`main` @ `3554d19`, deployed.** `feat/native-ai-packages` (native helper, native leave, KenshiLib 0.5.0, duel bridge, play-test fixes, duel join chance, daily notice) was fast-forwarded into `main`. Every merged local branch was deleted; `main` is the only local branch.
+- **`main` @ `7bf8750`, deployed (DLL md5 `79a7eba7`).** `fix/cage-beat-direct-hit` (prisoner module fixes, cage beating stress, v1 presets close) was fast-forwarded into `main` and deleted. Open branch: `feat/balanced-tuning` (balance sheet generator + tuning handoff). Nothing pushed.
 - **TotalSparring:** `feat/public-api` was merged into TotalSparring `master` (`be52149`); its branch and the `TotalSparring-worktrees/public-api` worktree were removed. The duel bridge talks to that API (v1, `TS_GetApi`).
 - **Awaiting play-test:** the duel join chance and the daily days-left notice (deployed in `3554d19`; QA.md 12.29, 12.25 T12-T14).
+- **Balanced tuning:** branch `feat/balanced-tuning` (from `main` @ `7bf8750`); plan and evidence in `odd/tasks/balanced-tuning.md`, numbers in `odd/balance/balance-sheet.md`, starter prompt in `odd/balance/START-PROMPT.md`.
 - **Not pushed.** `origin/main` is an unrelated squash commit (`6257bd6`), so a plain push is rejected. Delivery is the user's call.
 
 ## Features
