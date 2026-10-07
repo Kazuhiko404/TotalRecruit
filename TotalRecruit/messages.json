@@ -332,6 +332,7 @@
     }
   },
   "refusal": {
+    "_comment": "Lo primero que dice una persona que se niega (npc_speech, opening_line_rules), segun POR QUE se niega: grudge = algo que le hiciste; insistence = le insististe; tooWeak = te ve debil; honour = no se vende; loyalty = es leal a otros y no sabe quien eres; fallback = el resto. Una lista elige una frase fija por personaje. Si su faccion tiene faction.<tramo>.greeting, dice esa.",
     "grudge": [
       "Se lo que hiciste. Fuera de mi vista.",
       "No he olvidado lo que hiciste. Largate.",
@@ -388,6 +389,40 @@
     ]
   },
   "currency": {
+    "_comment": "Lo primero que dice una persona segun lo que pide (npc_speech, opening_line_rules): freedom = esclavo; care* = comida y cura (careKind honorable o bondadoso, careFearful miedoso); submission* = golpes y tiempo; rescue* = lo salvaste (rescueCold cruel o maniaco); ready = se une sin pedir nada; cats* = precio (catsBandit, catsTrader, catsSlaver por lo que es, catsFearful miedoso); unread = no se pudo leer su caracter. Una lista elige una frase fija por personaje.",
+    "unread": [
+      "¿Y bien? Habla de una vez."
+    ],
+    "rescueHonourable": [
+      "Estaba muerto y no me abandonaste. Eso es una deuda."
+    ],
+    "rescueCold": [
+      "Me curaste. Qué raro. Nadie hace eso por aquí."
+    ],
+    "rescueFearful": [
+      "Creí que era mi fin. Y te quedaste."
+    ],
+    "rescue": [
+      "Pudiste seguir de largo. No lo hiciste."
+    ],
+    "ready": [
+      "Estoy listo para unirme a ti."
+    ],
+    "catsBandit": [
+      "Todos tenemos un precio. El mío se paga en cats."
+    ],
+    "catsTrader": [
+      "Hablemos de negocios. Yo no trabajo gratis."
+    ],
+    "catsSlaver": [
+      "¿Me quieres? Cómprame, igual que yo te compraría."
+    ],
+    "catsFearful": [
+      "Solo quiero salir de aquí. ¿Me haces que valga la pena?"
+    ],
+    "cats": [
+      "Sigo a quien pague. ¿Estás pagando?"
+    ],
     "freedom": [
       "Quitame estas cadenas y sere tuyo.",
       "Liberame y te seguire hasta donde haga falta.",
@@ -447,7 +482,7 @@
       "Por favor, ya basta. Hare lo que sea necesario.",
       "No quiero volver a luchar. Solo quiero salir de aqui.",
       "No me hagas daño. Puedo serte util.",
-      "Te seguire. Solo prometeme que no me dejaras atras.",
+      "Todavia no puedo seguirte. Solo prometeme que no me dejaras atras.",
       "No quiero problemas contigo. Por favor."
     ],
     "submission": [

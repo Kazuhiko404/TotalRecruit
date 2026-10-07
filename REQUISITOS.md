@@ -37,6 +37,16 @@ exige reiniciar y reimportar, y eso hace que un valor no se toque nunca.
 líneas. Si falta una clave, el log la nombra al cerrar — ese aviso es parte del
 ciclo de trabajo, no un extra.
 
+*Estado (2026-10-06, priority-one E):* **Las frases de apertura salen del
+archivo.** Lo primero que dice una persona al hablarle (rechazo por motivo,
+rescate, libertad, comida, sumisión, precio, "listo para unirme") lee
+`refusal.*` y `currency.*` de `messages.json` (`opening_line_rules`); antes eran
+texto fijo y esas secciones no se leían. Una lista elige una frase fija por
+personaje; sin la clave dice lo mismo que antes. El deploy solo agrega claves:
+un `messages.json` ya desplegado conserva sus listas viejas (las nuevas
+`currency.cats*`, `rescue*`, `ready`, `unread` llegan con el deploy). QA 12.40
+E1-E5.
+
 **R0.6 — Todo rechazo nombra la salida.** No basta con decir que no; hay que
 decir qué lo cambiaría.
 

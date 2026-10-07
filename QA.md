@@ -1135,3 +1135,13 @@ Las correcciones de la prueba en juego de 12.39 y la lista "Prioridad 1". Con `p
 | B5 | Cheat: perder un duelo de reto | "... podras retarlo en 1 min"; al minuto se puede retar de nuevo | `no challenge until game minute N` |
 | B6 | Balanced con los valores por defecto: Golpear y abrir el menu a los 20 min de juego | "Golpear (40 min)" (antes "(1 h)"); desde una hora, "(2 h)" como siempre. Rechazo y duelo terminan en la misma hora entera que antes | - |
 | B7 | Cargar una partida guardada con una version anterior con un rechazo o un duelo perdido en curso | Sigue en enfriamiento hasta la misma hora entera; despues de guardar y cargar con esta version, igual | - |
+
+**E Frases de apertura editables.** La primera linea de una persona sale de `refusal.*` (por que se niega) y `currency.*` (que pide) de `messages.json`; una lista elige una frase fija por personaje. Sin la clave, el texto de siempre. Un `messages.json` desplegado viejo conserva sus listas; las claves nuevas (`currency.unread`, `rescue*`, `ready`, `cats*`) llegan con el deploy.
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| E1 | Hablar con varios bandidos libres (Balanced, piden cats) | "Todos tenemos un precio. El mío se paga en cats." (`currency.catsBandit`) | - |
+| E2 | Insistir a alguien que ya dijo que no hasta que se harte | Una frase de `refusal.insistence`; el mismo NPC repite siempre la misma, otro puede decir otra | - |
+| E3 | Hablar con un preso hambriento miedoso / honorable | Una de `currency.careFearful` / `currency.careKind` | - |
+| E4 | Editar `refusal.grudge` en el `messages.json` desplegado ("PRUEBA") y hablar con alguien que te guarda rencor | Dice "PRUEBA" | - |
+| E5 | Borrar `currency.ready` del desplegado y hablar con alguien que se une gratis | "Estoy listo para unirme a ti." (el respaldo), y al cerrar el juego el log nombra la clave faltante | `messages.json has no entry for: ... currency.ready` |

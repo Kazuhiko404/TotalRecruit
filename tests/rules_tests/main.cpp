@@ -100,6 +100,7 @@ const Suite kSuites[] = {
     { "beat_hit_sound_rules", RunBeatHitSoundRulesTests },
     { "cooldown_minutes", RunCooldownMinutesTests },
     { "wait_format", RunWaitFormatTests },
+    { "opening_line_rules", RunOpeningLineRulesTests },
 };
 } // namespace
 
