@@ -184,6 +184,10 @@
   "animalBigEdgeLevel": 20,
   "animalTemperamentBase": 0.85,
   "animalTemperamentWeight": 0.15,
+  "animalCageBeatingCounts": true,
+  "animalCageBeatingWeight": 0.5,
+  "animalCageBeatingResolveBase": 1.0,
+  "animalCageBeatingResolvePerLevel": 0.02,
 
   "dialoguePackage": "",
   "dialogueRescue": "",

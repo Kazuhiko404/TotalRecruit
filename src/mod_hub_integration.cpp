@@ -1,6 +1,7 @@
 #include "mod_hub_integration.h"
 #include "config.h"
 #include "beat_walk_rules.h"
+#include "animal_beating_rules.h"
 #include "log.h"
 #include <windows.h>
 #include <tlhelp32.h>
@@ -355,6 +356,10 @@ static bool DoRegisterModHub()
 
     regFloat(api, mod, "animal_nutrition_per_meal", "Animal: comida por racion", "Cuanto llena el estomago una racion (escala 0..3 del motor)", 0.05f, 3.0f, 0.05f, 2, &c.animals.nutritionPerMeal);
     regBool(api, mod, "animal_personality_matters", "Animal: cuenta la personalidad", "Un animal desconfiado pide mas comida que uno timido", &c.animals.personalityMatters);
+    regBool(api, mod, "animal_cage_beating_counts", "Animal: los golpes en la jaula cuentan", "En Balanced, el estres por golpes (Golpear / Noquear) baja la comida que necesita un animal enjaulado", &c.animals.cageBeatingCounts);
+    regFloat(api, mod, "animal_cage_beating_weight", "Animal: peso de los golpes", "Cuanto baja la barra de comida una paliza completa (dividido por la resistencia del animal)", 0.0f, kAnimalBeatingWeightMax, 0.05f, 2, &c.animals.cageBeatingWeight);
+    regFloat(api, mod, "animal_cage_beating_resolve_base", "Animal: resistencia base a golpes", "Resistencia de un animal de nivel 0 (mas resistencia, menos efecto de los golpes)", kAnimalBeatingResolveBaseMin, kAnimalBeatingResolveBaseMax, 0.1f, 1, &c.animals.cageBeatingResolveBase);
+    regFloat(api, mod, "animal_cage_beating_resolve_per_level", "Animal: resistencia por nivel", "Cuanta resistencia a golpes suma cada nivel del animal", 0.0f, kAnimalBeatingResolvePerLevelMax, 0.01f, 2, &c.animals.cageBeatingResolvePerLevel);
     regBool(api, mod, "animal_owned_need_cage", "Animal: domesticos solo por jaula", "Un animal con dueno no se convence con comida: hay que enjaularlo", &c.animals.ownedNeedCage);
     regFloat(api, mod, "animal_big_edge_discount", "Animal: descuento +20", "Descuento si le sacas 20 niveles o mas", 0.0f, 1.0f, 0.05f, 2, &c.animals.bigEdgeDiscount);
     regInt(api, mod, "animal_edge_level", "Animal: niveles para el descuento", "Cuantos niveles le tenes que sacar para el descuento chico", 1, 100, 1, &c.animals.edgeLevel);

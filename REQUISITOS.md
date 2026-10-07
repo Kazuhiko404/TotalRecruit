@@ -681,6 +681,15 @@ plugins".
 
 ## 5. Animales
 
+*Estado (2026-10-06, priority-one D):* **Golpear a un animal en la jaula ayuda
+a domarlo (Balanced).** El estrés por golpes que dejan Golpear y Noquear baja la
+barra de comida que necesita un animal enjaulado: `animalCageBeatingWeight`
+(0,5) × estrés / resistencia, resistencia = `animalCageBeatingResolveBase` (1) +
+nivel × `animalCageBeatingResolvePerLevel` (0,02); nunca más del 90 % de la
+barra. Sigue haciendo falta la primera comida de tu mano y llegar a la barra
+bajada. Un animal suelto y Cheat no cambian. Interruptor y pesos en Mod Hub
+(`animal_beating_rules`, `DecideCagedAnimal`). QA 12.40 D1-D5.
+
 **R5.1 — Domesticar por barra de hambre, no por comidas.** *(P1)*
 Reemplaza el conteo actual de comidas. El bucle pedido:
 

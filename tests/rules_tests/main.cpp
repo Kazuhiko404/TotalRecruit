@@ -101,6 +101,7 @@ const Suite kSuites[] = {
     { "cooldown_minutes", RunCooldownMinutesTests },
     { "wait_format", RunWaitFormatTests },
     { "opening_line_rules", RunOpeningLineRulesTests },
+    { "animal_beating_rules", RunAnimalBeatingRulesTests },
 };
 } // namespace
 

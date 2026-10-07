@@ -312,6 +312,13 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     minimo", 1), no ally tier needed. The RETAR A DUELO button keeps its 80+ tiered-ally gate; Cheat and animals
     keep their own gates. No new card or popup state: the mockup gains one `HUB` row, appended at the end.
 
+33. **A beaten animal in your cage needs less food (Balanced)** (priority-one D). The beating stress Golpear and
+    Noquear leave lowers the stomach bar of a caged animal (`animal_beating_rules`: `animalCageBeatingWeight` 0.5 x
+    stress / resolve, resolve = 1 + level x 0.02; at most 90% of the bar). The card adds no row, the notch just sits
+    lower (state "Animal in your cage, beaten (Balanced)": 56% against 66% instead of 80%). The first meal is still
+    required; a loose animal and Cheat are unchanged. Four Mod Hub entries ("Animal: los golpes en la jaula
+    cuentan", "Animal: peso de los golpes", "Animal: resistencia base a golpes", "Animal: resistencia por nivel").
+
 ### Native windows (sections 2 and 5: the card and the head notices)
 
 24. **The card and the notices step aside for Kenshi's own dialogue** (user report 2026-10-03: "if I talk to the

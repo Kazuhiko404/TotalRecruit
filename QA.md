@@ -1145,3 +1145,13 @@ Las correcciones de la prueba en juego de 12.39 y la lista "Prioridad 1". Con `p
 | E3 | Hablar con un preso hambriento miedoso / honorable | Una de `currency.careFearful` / `currency.careKind` | - |
 | E4 | Editar `refusal.grudge` en el `messages.json` desplegado ("PRUEBA") y hablar con alguien que te guarda rencor | Dice "PRUEBA" | - |
 | E5 | Borrar `currency.ready` del desplegado y hablar con alguien que se une gratis | "Estoy listo para unirme a ti." (el respaldo), y al cerrar el juego el log nombra la clave faltante | `messages.json has no entry for: ... currency.ready` |
+
+**D Golpear a un animal enjaulado ayuda a domarlo (Balanced).** El estres por golpes baja la barra de comida de un animal en tu jaula: `animalCageBeatingWeight` (0,5) x estres / resistencia, resistencia = 1 + nivel x 0,02 (`animalCageBeatingResolveBase`, `animalCageBeatingResolvePerLevel`); nunca mas del 90 % de la barra. La primera comida sigue haciendo falta. Mod Hub: "Animal: los golpes en la jaula cuentan", "Animal: peso de los golpes", "Animal: resistencia base a golpes", "Animal: resistencia por nivel". Maqueta: `ui-mockup/readout.html`, estado "Animal in your cage, beaten (Balanced)".
+
+| # | Que hacer | Esperado | Linea del log |
+|---|---|---|---|
+| D1 | Balanced: animal en tu jaula, alimentado una vez, con el estomago por debajo de la marca; Golpear 2-3 veces y mirar la tarjeta | La marca de "necesita" baja con cada golpe (y vuelve a subir a medida que el estres se desvanece, 24 h) | - |
+| D2 | Seguir golpeando hasta que el estomago actual pase la marca bajada | Puede unirse ("listo"), sin mas comida | - |
+| D3 | Lo mismo con un animal que nunca comio de tu mano | No se une: sigue pidiendo la primera comida | - |
+| D4 | Mod Hub "Animal: los golpes en la jaula cuentan" OFF y repetir D1 | La marca no se mueve con los golpes | - |
+| D5 | Cheat: animal en la jaula | Igual que antes: se une al minuto; los golpes no cambian nada | - |

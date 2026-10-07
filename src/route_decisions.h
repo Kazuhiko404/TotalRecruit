@@ -84,6 +84,10 @@ Verdict DecideAnimalFieldYield(const CoreFacts& core, const YieldExtra& yield,
 // fed it (`extra.fedByPlayer`) and its stomach reached the bar. `core.inMyCage`
 // matters: an animal that belongs to someone is only refused in the open.
 Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Config& config);
+// route_animal: an animal in the player's cage (priority-one D). The same taming,
+// with the bar lowered by the beating stress Golpear / Noquear left on it
+// (animal_beating_rules.h). DecideCage hands a caged animal here; Cheat never asks.
+Verdict DecideCagedAnimal(const CoreFacts& core, const AnimalExtra& extra, const Config& config);
 
 // route_free: whether someone outside the player's cage can be asked anything at
 // all -- not another faction's prisoner, not one who stopped listening. True when

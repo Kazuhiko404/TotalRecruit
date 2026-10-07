@@ -4,6 +4,7 @@
 #include "json_merge.h"
 #include "atomic_file.h"
 #include "beat_walk_rules.h"
+#include "animal_beating_rules.h"
 #include "head_notice_rules.h"
 #include "preset_rules.h"
 
@@ -468,6 +469,10 @@ std::vector<Field> ConfigFields(Config& c)
     AddInt(f, "animalBigEdgeLevel", &c.animals.bigEdgeLevel);
     AddFloat(f, "animalTemperamentBase", &c.animals.temperamentBase);
     AddFloat(f, "animalTemperamentWeight", &c.animals.temperamentWeight);
+    AddBool(f, "animalCageBeatingCounts", &c.animals.cageBeatingCounts);
+    AddFloat(f, "animalCageBeatingWeight", &c.animals.cageBeatingWeight);
+    AddFloat(f, "animalCageBeatingResolveBase", &c.animals.cageBeatingResolveBase);
+    AddFloat(f, "animalCageBeatingResolvePerLevel", &c.animals.cageBeatingResolvePerLevel);
 
     AddString(f, "dialoguePackage", &c.dialogue.package);
     AddString(f, "dialogueRescue", &c.dialogue.rescue);
@@ -603,6 +608,12 @@ void LoadConfig(const std::string& modDirectory)
     ClampInt(&g_config.animals.bigEdgeLevel, 1, 500);
     ClampFloat(&g_config.animals.temperamentBase, 0.0f, 2.0f);
     ClampFloat(&g_config.animals.temperamentWeight, 0.0f, 2.0f);
+    // A beaten caged animal (animal_beating_rules.h): the weight up to the whole
+    // bar (the rule itself never removes more than 90%), a resolve that is never 0.
+    ClampFloat(&g_config.animals.cageBeatingWeight, 0.0f, kAnimalBeatingWeightMax);
+    ClampFloat(&g_config.animals.cageBeatingResolveBase, kAnimalBeatingResolveBaseMin,
+               kAnimalBeatingResolveBaseMax);
+    ClampFloat(&g_config.animals.cageBeatingResolvePerLevel, 0.0f, kAnimalBeatingResolvePerLevelMax);
     ClampAllyTiers(&g_config.allyTiers);
     ClampTempMembers(&g_config.tempMembers);
     ClampHelpers(&g_config.helpers);

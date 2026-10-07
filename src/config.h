@@ -437,6 +437,14 @@ struct Animals
     // timid one settles for less, a stubborn one asks for more.
     float temperamentBase;
     float temperamentWeight;
+    // priority-one D: the beating stress on an animal in the player's cage lowers
+    // its stomach bar (animal_beating_rules.h): by cageBeatingWeight * stress /
+    // resolve, with resolve = cageBeatingResolveBase + level *
+    // cageBeatingResolvePerLevel. Off: a caged animal decides on food alone.
+    bool cageBeatingCounts;
+    float cageBeatingWeight;
+    float cageBeatingResolveBase;
+    float cageBeatingResolvePerLevel;
 
     // Calibrated against measured wildlife, not guessed: a loose bonedog sits
     // at hunger 1.69 of 3.0, so it starts the negotiation around 56% full. Any
@@ -460,7 +468,11 @@ struct Animals
           edgeLevel(10),
           bigEdgeLevel(20),
           temperamentBase(0.85f),
-          temperamentWeight(0.15f)
+          temperamentWeight(0.15f),
+          cageBeatingCounts(true),
+          cageBeatingWeight(0.5f),
+          cageBeatingResolveBase(1.0f),
+          cageBeatingResolvePerLevel(0.02f)
     {
     }
 };

@@ -1,5 +1,6 @@
 #include "route_decisions.h"
 #include "animal_rules.h"
+#include "animal_beating_rules.h"
 
 namespace totalrecruit
 {
@@ -16,7 +17,29 @@ namespace totalrecruit
 // bar. Maturity and level set the bar (animal_rules.cpp); the player's own level
 // discounts it, which in Kenshi terms is the animal judging whether you can keep
 // feeding it.
-Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Config& config)
+namespace
+{
+// The stomach bar this animal has to reach: maturity and level, the player's edge,
+// and its temperament.
+float TamingBar(const CoreFacts& core, const AnimalExtra& extra, const Config& config)
+{
+    float needed = TamingFullnessNeeded(extra.maturity, core.npcLevel, core.playerLevel,
+                                        config.animals);
+
+    // R5.4 -- animals have a temperament, and it varies: two bonedogs of the same
+    // breed measured PT_HONORABLE and PT_TRAITOROUS. So it counts here as it does
+    // everywhere else, expressed as how much convincing the creature takes rather
+    // than as a separate rule.
+    if (config.animals.personalityMatters)
+    {
+        const float resolve = ResolveMultiplier(core.temperament, config.submission);
+        needed = ApplyAnimalTemperament(needed, resolve, config.animals);
+    }
+    return needed;
+}
+
+// The taming verdict against the bar `needed`.
+Verdict DecideAgainstBar(const CoreFacts& core, const AnimalExtra& extra, float needed)
 {
     Verdict v;
     v.isAnimal = true;
@@ -34,18 +57,6 @@ Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Conf
     }
 
     const float fullness = HungerToFullness01(core.hunger);
-    float needed = TamingFullnessNeeded(extra.maturity, core.npcLevel, core.playerLevel,
-                                        config.animals);
-
-    // R5.4 -- animals have a temperament, and it varies: two bonedogs of the same
-    // breed measured PT_HONORABLE and PT_TRAITOROUS. So it counts here as it does
-    // everywhere else, expressed as how much convincing the creature takes rather
-    // than as a separate rule.
-    if (config.animals.personalityMatters)
-    {
-        const float resolve = ResolveMultiplier(core.temperament, config.submission);
-        needed = ApplyAnimalTemperament(needed, resolve, config.animals);
-    }
 
     const bool fedByPlayer = extra.fedByPlayer > 0;
     const bool pastTheBar = fullness >= needed;
@@ -80,5 +91,20 @@ Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Conf
     v.cats = MissingStomachPercent(needed, fullness);
     v.reasonKey = Reason_TameHungry;
     return v;
+}
+} // namespace
+
+Verdict DecideAnimal(const CoreFacts& core, const AnimalExtra& extra, const Config& config)
+{
+    return DecideAgainstBar(core, extra, TamingBar(core, extra, config));
+}
+
+// priority-one D: the blows count in the cage. The beating stress lowers the bar
+// (animal_beating_rules.h); the first meal and the stomach still decide.
+Verdict DecideCagedAnimal(const CoreFacts& core, const AnimalExtra& extra, const Config& config)
+{
+    const float needed = ApplyAnimalBeating(TamingBar(core, extra, config), core.beatingStress,
+                                            core.npcLevel, config.animals);
+    return DecideAgainstBar(core, extra, needed);
 }
 } // namespace totalrecruit

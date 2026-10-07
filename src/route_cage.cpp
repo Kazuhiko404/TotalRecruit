@@ -122,7 +122,8 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
     // animal route answers for itself: it does not carry what the cage route set.
     if (core.animal)
     {
-        return DecideAnimal(core, extra.animal, config);
+        // priority-one D: in the cage the blows count too (DecideCagedAnimal).
+        return DecideCagedAnimal(core, extra.animal, config);
     }
 
     v.viaCaptivity = true;

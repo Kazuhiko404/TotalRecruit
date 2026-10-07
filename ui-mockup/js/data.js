@@ -67,6 +67,21 @@ var STATES = [
     }
   },
   {
+    id: 'animalCagedBeaten',
+    title: 'Animal in your cage, beaten (Balanced)',
+    note: 'priority-one D. The same Perro hueso (level 20) in your cage after Golpear left half a beating bar (Golpes 50%). In Balanced the beating stress lowers the stomach bar a caged animal needs (<code>animal_beating_rules</code>): by <code>animalCageBeatingWeight</code> (0.5) x stress / resolve, resolve = <code>animalCageBeatingResolveBase</code> (1.0) + level x <code>animalCageBeatingResolvePerLevel</code> (0.02) = 1.4 here, so 80% x (1 - 0.18) = 66%. The card adds no row: the notch simply sits lower (no animal odds to show). The first meal from your hand is still needed; a loose animal and Cheat are unchanged. Mod Hub: "Animal: los golpes en la jaula cuentan", "Animal: peso de los golpes", "Animal: resistencia base a golpes", "Animal: resistencia por nivel".',
+    // facts: Route Cage animal, inMyCage, hunger 1.69/3 -> 56%, beatingStress .5, level 20, needed .80 -> .66
+    vm: {
+      name: 'Perro hueso', route: 'animal', routeLabel: 'Animal',
+      showStress: false, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
+      showChance: false, chancePct: 0, ready: false,
+      showDefeats: false, defeats: 0, defeatsNeeded: 0,
+      showFood: true, foodPct: 56, foodNeededPct: 66,
+      why:  { text: 'Hambre 56% / necesita 66%', tone: '' },
+      alt:  null
+    }
+  },
+  {
     id: 'refused',
     title: 'Refused NPC',
     note: 'Libre, grudge. The one honest no: there is no roll, so there is no chance to show -- a dash, and the reason says there is no way in. Stress and defeats are hidden because nothing here reads them.',
@@ -351,7 +366,15 @@ var HUB = [
   ['Duelo Balanced: victorias minimas', 'duelMinWinsBalanced', '1',
    'En Balanced, cuantas veces hay que ganarle a duelo antes de tirar la chance de que se una (1 = desde la primera; la chance sigue contando desde la primera victoria)'],
   ['Duelo externo Balanced: nivel minimo', 'duelExternalBalancedFromLevel', '1',
-   'En Balanced, un duelo abierto desde TotalSparring cuenta contra cualquier NPC reclutable desde este nivel, sin pedir aliado (el boton RETAR A DUELO sigue pidiendo aliado de nivel 80)']
+   'En Balanced, un duelo abierto desde TotalSparring cuenta contra cualquier NPC reclutable desde este nivel, sin pedir aliado (el boton RETAR A DUELO sigue pidiendo aliado de nivel 80)'],
+  ['Animal: los golpes en la jaula cuentan', 'animalCageBeatingCounts', 'ON',
+   'En Balanced, el estres por golpes (Golpear / Noquear) baja la comida que necesita un animal enjaulado'],
+  ['Animal: peso de los golpes', 'animalCageBeatingWeight', '0.50',
+   'Cuanto baja la barra de comida una paliza completa (dividido por la resistencia del animal)'],
+  ['Animal: resistencia base a golpes', 'animalCageBeatingResolveBase', '1.0',
+   'Resistencia de un animal de nivel 0 (mas resistencia, menos efecto de los golpes)'],
+  ['Animal: resistencia por nivel', 'animalCageBeatingResolvePerLevel', '0.02',
+   'Cuanta resistencia a golpes suma cada nivel del animal']
 ];
 
 // The proactive offer (src/offer_requests.h, src/submission_director.cpp): after a gesture of

@@ -65,7 +65,12 @@ the hit, and the message line says who hit whom. If the walk never gets there
 (`submissionBeatWalkSeconds`, stuck, or you order the character elsewhere) there
 is no blow and no rest, and the message line says why. Noquear is Kenshi's own
 stealth knockout order and shows the game's own odds. Neither knockout counts as
-a defeat: each blow and knockout adds beating stress instead.
+a defeat: each blow and knockout adds beating stress instead. In Balanced that
+stress also helps tame an animal in your cage: it lowers the food bar the animal
+needs (less for a high-level beast; `animalCageBeatingWeight` and friends, Mod
+Hub "Animal: los golpes en la jaula cuentan"), though the first meal from your
+hand is still required. A wait under an hour reads in minutes ("Golpear
+(1 min)" in Cheat).
 
 **No shortcuts in the Balanced cage.** Time alone no longer breaks anyone (the
 old 6-hour easy wait is gone), and a healthy, fed prisoner no longer joins on the

@@ -102,6 +102,7 @@
     <ClCompile Include="cooldown_minutes_tests.cpp" />
     <ClCompile Include="wait_format_tests.cpp" />
     <ClCompile Include="opening_line_rules_tests.cpp" />
+    <ClCompile Include="animal_beating_rules_tests.cpp" />
     <ClCompile Include="..\..\src\chance_rules.cpp" />
     <ClCompile Include="..\..\src\price_rules.cpp" />
     <ClCompile Include="..\..\src\route_rules.cpp" />
@@ -170,6 +171,7 @@
     <ClCompile Include="..\..\src\cooldown_minutes.cpp" />
     <ClCompile Include="..\..\src\wait_format.cpp" />
     <ClCompile Include="..\..\src\opening_line_rules.cpp" />
+    <ClCompile Include="..\..\src\animal_beating_rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_support.h" />
