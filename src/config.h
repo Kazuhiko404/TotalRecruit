@@ -191,7 +191,7 @@ struct Chance
     int personality[Temperament_Count];
 
     Chance()
-        : levelBase(45),
+        : levelBase(35),
           levelGapPenalty(1.5f),
           levelGapFloor(2),
           levelEdgeBonus(1.5f),
@@ -355,7 +355,7 @@ struct Submission
           stressFromHunger(0.5f),
           stressFromWounds(0.35f),
           stressFromExhaustion(0.15f),
-          maxStressChance(45),
+          maxStressChance(30),
           allowBeating(true),
           beatingCooldownHours(1.0f),
           knockoutCooldownHours(1.0f),

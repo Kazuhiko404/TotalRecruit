@@ -50,27 +50,27 @@ cuál falta escribir.
 Todo esto se lee de una sola línea:
 
 ```
-[chance] level=45 relation=0 personality=-20 defeats=0(x0) situation=15 -> 40%
+[chance] level=35 relation=0 personality=-20 defeats=0(x0) situation=15 -> 30%
 ```
 
 ### 2.1 Valores esperados, con los defaults de fábrica
 
-`levelBase 45 · penalidad 1.5/nivel · piso 2 · bono 1.5/nivel · techo del bono 40 · clamp 5..95`
+`levelBase 35 · penalidad 1.5/nivel · piso 2 · bono 1.5/nivel · techo del bono 40 · clamp 5..95`
 
 **Prisionero en tu jaula** (`situation=15`), sin derrotas, relación neutral:
 
 | Diferencia de nivel | Normal | Cobarde | Honorable |
 |---|---|---|---|
 | Te saca 40 | 17% | 37% | 5% |
-| Te saca 20 | 30% | 50% | 10% |
-| **Iguales** | **60%** | **80%** | **40%** |
-| Le sacás 20 | 90% | 95% | 70% |
-| Le sacás 40 | 95% | 95% | 80% |
+| Te saca 20 | 20% | 40% | 5% |
+| **Iguales** | **50%** | **70%** | **30%** |
+| Le sacás 20 | 80% | 95% | 60% |
+| Le sacás 40 | 90% | 95% | 70% |
 
 | # | Qué hacer | Esperado | Falla si |
 |---|---|---|---|
-| C1 | Click a un NPC de tu nivel | `level=45` en el log | Da 100 — volvió la saturación |
-| C2 | Click a uno que te saque 20 niveles | `level=15`, total ~30% | Sale rechazo seco: quedó una puerta |
+| C1 | Click a un NPC de tu nivel | `level=35` en el log | Da 100 — volvió la saturación |
+| C2 | Click a uno que te saque 20 niveles | `level=5`, total ~20% | Sale rechazo seco: quedó una puerta |
 | C3 | **Click a uno que te saque 40+ niveles** | Chance baja pero **no cero**, y ofrece algo | *"ni se molesta en escucharte"* — la puerta de +15 sigue viva |
 | C4 | **Ser 40+ niveles más fuerte que un honorable** | **No** se une automáticamente | *"se somete sin dudarlo"* — la puerta de −40 sigue viva |
 | C5 | Comparar un cobarde y un honorable del mismo nivel | `personality=20` vs `personality=-20` | Ambos dan lo mismo |

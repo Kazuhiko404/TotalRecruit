@@ -663,11 +663,11 @@ void FieldYieldRollsAtTheBeatingChance()
     CoreFacts core = Core();
     core.defeats = 2;
     YieldExtra extra;
-    extra.roll = KeyRolling(true, 79);
-    // 45 + 24 (two defeats at 12) + 0 (fed, unhurt, rested) + 10 = 79
+    extra.roll = KeyRolling(true, 69);
+    // 35 + 24 (two defeats at 12) + 0 (fed, unhurt, rested) + 10 = 69
     const Verdict v = DecideFieldYield(core, extra, kConfig);
     CHECK(v.rolled);
-    CHECK(v.chancePercent == 79);
+    CHECK(v.chancePercent == 69);
     CHECK(v.willJoin);
     CHECK(v.currency == Currency_Submission);
     CHECK(v.reasonKey == Reason_FieldYieldJoins);
@@ -749,7 +749,7 @@ void FieldYieldLoyaltyIsAPenaltyNotASkip()
     bandit.defeats = 2;
     YieldExtra extra;
     const int base = DecideFieldYield(bandit, extra, kConfig).chancePercent;
-    CHECK(base == 79);
+    CHECK(base == 69);
 
     const Archetype loyal[] = { Archetype_Military, Archetype_LawEnforcement };
     for (int i = 0; i < 2; ++i)
@@ -1083,17 +1083,17 @@ void AnAllyRollsWithTheAlliedBonus()
     const char* name = "free world (tiers off): an ally rolls level + relation + allied bonus";
     const Config kConfig = TiersOff();
     FreeExtra extra = Free(40.0f);
-    extra.roll = KeyRolling(true, 65);
-    // 45 + (int)(40 * 0.25) + 10 = 65
+    extra.roll = KeyRolling(true, 55);
+    // 35 + (int)(40 * 0.25) + 10 = 55
     Verdict v = DecideFreeWorld(Core(), extra, kConfig);
     CHECK(v.rolled);
-    CHECK(v.chancePercent == 65);
+    CHECK(v.chancePercent == 55);
     CHECK(v.willJoin);
     CHECK(v.currency == Currency_None);
     CHECK(v.reasonKey == Reason_AllyJoins);
     CHECK(v.band == "amistoso");
 
-    extra.roll = KeyRolling(false, 65);
+    extra.roll = KeyRolling(false, 55);
     v = DecideFreeWorld(Core(), extra, kConfig);
     CHECK(!v.willJoin);
     CHECK(v.currency == Currency_Refused);
@@ -1106,9 +1106,9 @@ void TheAlliedBonusIsConfigurable()
     Config config = TiersOff();
     config.chance.alliedBonus = 0;
     FreeExtra extra = Free(40.0f);
-    CHECK(DecideFreeWorld(Core(), extra, config).chancePercent == 55);
+    CHECK(DecideFreeWorld(Core(), extra, config).chancePercent == 45);
     config.chance.alliedBonus = 30;
-    CHECK(DecideFreeWorld(Core(), extra, config).chancePercent == 85);
+    CHECK(DecideFreeWorld(Core(), extra, config).chancePercent == 75);
 }
 
 void FriendlyIsAtOrAboveTheThreshold()
@@ -1143,11 +1143,11 @@ void AGoodLowLevelAllyStillRollsAndJoinsFree()
     const char* name = "balanced ally: a Good ally under level 20 joins free on today's roll";
     const CoreFacts core = AllyCore(12, 12, Temperament_Honorable);
     FreeExtra extra = Free(40.0f);
-    // 45 + 10 (relation) + 10 (allied) - 20 (honourable) = 45
-    extra.roll = KeyRolling(true, 45);
+    // 35 + 10 (relation) + 10 (allied) - 20 (honourable) = 35
+    extra.roll = KeyRolling(true, 35);
     Verdict v = DecideFreeWorld(core, extra, kConfig);
     CHECK(v.rolled);
-    CHECK(v.chancePercent == 45);
+    CHECK(v.chancePercent == 35);
     CHECK(v.willJoin);
     CHECK(v.currency == Currency_None);
     CHECK(v.reasonKey == Reason_AllyJoins);
@@ -1504,11 +1504,11 @@ void IntimidationIsAStrongArgumentNotAVerdict()
     const char* name = "cage: being caged and outmatched rolls level + defeats + stress + intimidation";
     CoreFacts core = Prisoner();
     CageExtra extra = InCage();
-    extra.roll = KeyRolling(true, 60);
-    // 45 + 15 = 60 at even levels with nothing else.
+    extra.roll = KeyRolling(true, 50);
+    // 35 + 15 = 50 at even levels with nothing else.
     Verdict v = DecideCage(core, extra, kConfig);
     CHECK(v.rolled);
-    CHECK(v.chancePercent == 60);
+    CHECK(v.chancePercent == 50);
     CHECK(v.willJoin);
     CHECK(v.currency == Currency_Submission);
     CHECK(v.reasonKey == Reason_Intimidated);
@@ -1848,12 +1848,12 @@ CoreFacts BeatenAnimal()
 void AnAnimalYieldsAtAPlainBeatingChance()
 {
     const char* name = "animal yield: the field-yield chance of a Normal, no loyalty penalty";
-    // The same 79 a Normal bandit gets: 45 + 24 + 0 + 10.
+    // The same 69 a Normal bandit gets: 35 + 24 + 0 + 10.
     YieldExtra yield;
-    yield.roll = KeyRolling(true, 79);
+    yield.roll = KeyRolling(true, 69);
     const Verdict v = DecideAnimalFieldYield(BeatenAnimal(), yield, Unfed(), kConfig);
     CHECK(v.rolled);
-    CHECK(v.chancePercent == 79);
+    CHECK(v.chancePercent == 69);
     CHECK(v.chanceInputs.personality == Temperament_Normal);
     CHECK(v.chanceInputs.situation == kConfig.submission.fieldYieldBonus);
     CHECK(v.willJoin);
@@ -1868,7 +1868,7 @@ void AnAnimalThatDoesNotYieldCanStillBeFed()
     CoreFacts core = BeatenAnimal();
     core.hunger = 1.5f;               // half a stomach: more stress, a higher chance
     const int chance = DecideAnimalFieldYield(core, YieldExtra(), Unfed(), kConfig).chancePercent;
-    CHECK(chance > 79 && chance < 100);
+    CHECK(chance > 69 && chance < 100);
     YieldExtra yield;
     yield.roll = KeyRolling(false, chance);
     const Verdict v = DecideAnimalFieldYield(core, yield, Unfed(), kConfig);

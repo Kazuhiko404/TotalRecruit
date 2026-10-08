@@ -19,14 +19,14 @@ const Submission kSub = Submission();
 void LevelGapEqualStartsAtBase()
 {
     const char* name = "level gap: equal levels start at levelBase";
-    CHECK(ChanceFromLevelGap(20, 20, kChance) == 45);
+    CHECK(ChanceFromLevelGap(20, 20, kChance) == 35);
 }
 
 void LevelGapStrongerNpcCostsPerLevel()
 {
     const char* name = "level gap: each level the NPC has over the player costs 1.5";
-    CHECK(ChanceFromLevelGap(30, 20, kChance) == 30);
-    CHECK(ChanceFromLevelGap(21, 20, kChance) == 44);   // 45 - (int)1.5 = 44
+    CHECK(ChanceFromLevelGap(30, 20, kChance) == 20);
+    CHECK(ChanceFromLevelGap(21, 20, kChance) == 34);   // 35 - (int)1.5 = 34
 }
 
 void LevelGapNeverBelowFloor()
@@ -38,8 +38,8 @@ void LevelGapNeverBelowFloor()
 void LevelGapWeakerNpcPaysUpToCap()
 {
     const char* name = "level gap: out-levelling pays per level, capped";
-    CHECK(ChanceFromLevelGap(20, 30, kChance) == 60);
-    CHECK(ChanceFromLevelGap(1, 200, kChance) == 85);   // 45 + cap 40
+    CHECK(ChanceFromLevelGap(20, 30, kChance) == 50);
+    CHECK(ChanceFromLevelGap(1, 200, kChance) == 75);   // 35 + cap 40
 }
 
 // ----------------------------------------------------------------- relation
@@ -95,10 +95,10 @@ void StressScalesByResolveAndCap()
 {
     const char* name = "stress: full stress argues for maxStressChance, divided by resolve";
     CHECK(ChanceFromStress(0.0f, Temperament_Normal, kSub) == 0);
-    CHECK(ChanceFromStress(1.0f, Temperament_Normal, kSub) == 45);
-    CHECK(ChanceFromStress(0.5f, Temperament_Normal, kSub) == 22);
-    CHECK(ChanceFromStress(1.0f, Temperament_Brave, kSub) == 28);     // 45 / 1.6
-    CHECK(ChanceFromStress(1.0f, Temperament_Fearful, kSub) == 45);   // capped
+    CHECK(ChanceFromStress(1.0f, Temperament_Normal, kSub) == 30);
+    CHECK(ChanceFromStress(0.5f, Temperament_Normal, kSub) == 15);
+    CHECK(ChanceFromStress(1.0f, Temperament_Brave, kSub) == 18);     // 30 / 1.6
+    CHECK(ChanceFromStress(1.0f, Temperament_Fearful, kSub) == 30);   // capped
 }
 
 void HungerRunsZeroToThree()
@@ -157,14 +157,14 @@ void JoinChanceSumsTheTerms()
     const char* name = "join chance: level + relation + personality + defeats + stress + situation";
     ChanceInputs in;
     in.npcLevel = 20;
-    in.playerLevel = 20;                    // 45
+    in.playerLevel = 20;                    // 35
     in.relation = 40.0f;
     in.haveRelation = true;                 // +10
     in.personality = Temperament_Normal;    // +0
     in.defeats = 1;                         // +12
     in.stress = 0.0f;
     in.situation = 5;
-    CHECK(JoinChance(in, kChance, kSub) == 72);   // 45+10+0+12+5
+    CHECK(JoinChance(in, kChance, kSub) == 62);   // 35+10+0+12+5
 }
 
 void JoinChanceSubtractsGrudgeAndUnique()
@@ -173,9 +173,9 @@ void JoinChanceSubtractsGrudgeAndUnique()
     ChanceInputs in;
     in.npcLevel = 20;
     in.playerLevel = 20;
-    CHECK(JoinChance(in, kChance, kSub) == 45);
+    CHECK(JoinChance(in, kChance, kSub) == 35);
     in.grudge = true;
-    CHECK(JoinChance(in, kChance, kSub) == 25);
+    CHECK(JoinChance(in, kChance, kSub) == 15);
     in.unique = true;
     CHECK(JoinChance(in, kChance, kSub) == 5);   // 0 clamped to the floor
 }
@@ -402,15 +402,15 @@ void JoinChanceUsesTheConfiguredTerms()
 {
     const char* name = "join chance: a configured weight and table reach the total";
     ChanceInputs in;
-    in.npcLevel = in.playerLevel = 20;     // +45
+    in.npcLevel = in.playerLevel = 20;     // +35
     in.relation = 80.0f;
     in.haveRelation = true;
     in.personality = Temperament_Brave;
     Chance chance;
-    CHECK(JoinChance(in, chance, kSub) == 45 + 20 - 15);
+    CHECK(JoinChance(in, chance, kSub) == 35 + 20 - 15);
     chance.relationWeight = 0.5f;          // +40 instead of +20
     chance.personality[Temperament_Brave] = 0;
-    CHECK(JoinChance(in, chance, kSub) == 45 + 40);
+    CHECK(JoinChance(in, chance, kSub) == 35 + 40);
 }
 
 // --- T8: the verdict roll, moved out of rules.cpp (StableChance) unchanged.

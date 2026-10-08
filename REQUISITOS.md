@@ -154,7 +154,7 @@ motor de R0.1, para todos los NPC y todas las bestias.
 
 *Pendiente de investigación:* qué hueco de nivel produce qué probabilidad, y si
 la curva actual se siente bien en juego o castiga demasiado rápido. Hoy:
-base 45, −1,5 puntos por nivel que el NPC te saca (`chanceLevelGapPenalty`,
+base 35 (era 45 hasta balanced-tuning T1), −1,5 puntos por nivel que el NPC te saca (`chanceLevelGapPenalty`,
 piso 2) y +1,5 por nivel de ventaja (`chanceLevelEdgeBonus`, tope +40); números
 reales en `odd/balance/balance-sheet.md` §1.
 
