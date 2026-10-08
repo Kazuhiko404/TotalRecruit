@@ -4,6 +4,7 @@
 #include "beat_walk_rules.h"
 #include "beat_strike_rules.h"
 #include "animal_beating_rules.h"
+#include "beating_daily_rules.h"
 #include "head_notice_rules.h"
 #include "preset_rules.h"
 
@@ -449,6 +450,8 @@ std::vector<Field> ConfigFields(Config& c)
     AddFloat(f, "submissionBeatingStressLevelMin", &c.submission.beatingStressLevelMin);
     AddFloat(f, "submissionBeatingStressLevelMax", &c.submission.beatingStressLevelMax);
     AddFloat(f, "submissionBeatingStressFadeHours", &c.submission.beatingStressFadeHours);
+    AddFloat(f, "submissionBeatingDiminishFactor", &c.submission.beatingDiminishFactor);
+    AddFloat(f, "submissionBeatingDailyStressCap", &c.submission.beatingDailyStressCap);
     AddBool(f, "submissionEventEnabled", &c.submission.eventEnabled);
     AddFloat(f, "submissionApproachSeconds", &c.submission.approachSeconds);
     AddFloat(f, "submissionForgiveSeconds", &c.submission.forgiveSeconds);
@@ -573,6 +576,11 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.submission.beatAnimSeconds, kBeatAnimMinSeconds, kBeatAnimMaxSeconds);
     ClampFloat(&g_config.submission.beatWindupSeconds, kBeatWindupMinSeconds,
                g_config.submission.beatAnimSeconds);
+    // The Balanced cage's daily beating limits (beating_daily_rules.h).
+    ClampFloat(&g_config.submission.beatingDiminishFactor, kBeatingDiminishFactorMin,
+               kBeatingDiminishFactorMax);
+    ClampFloat(&g_config.submission.beatingDailyStressCap, kBeatingDailyStressCapMin,
+               kBeatingDailyStressCapMax);
     // The proactive offer's calm after a failed roll: a few seconds to ten minutes.
     ClampFloat(&g_config.offer.failCalmSeconds, 0.0f, 600.0f);
     ClampInt(&g_config.submission.caredForBonusMin, 0, 50);

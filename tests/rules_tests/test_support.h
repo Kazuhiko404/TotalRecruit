@@ -57,6 +57,7 @@ void RunDuelRecordCacheRulesTests();
 void RunDuelJoinRulesTests();
 void RunKnockoutWatchRulesTests();
 void RunBeatingStressRulesTests();
+void RunBeatingDailyRulesTests();
 void RunMenuAnchorTests();
 void RunPresetRulesTests();
 void RunCheatWaitsTests();

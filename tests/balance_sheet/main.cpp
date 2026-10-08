@@ -11,6 +11,7 @@
 #include "ally_tier_rules.h"
 #include "animal_beating_rules.h"
 #include "animal_rules.h"
+#include "beating_daily_rules.h"
 #include "beating_stress_rules.h"
 #include "cage_command_rules.h"
 #include "cared_for_rules.h"
@@ -369,43 +370,81 @@ struct BeatSim
 {
     int sessionsToFull;   // -1 when it never reaches 1.0 in 72 h
     float plateau;        // value right after the last session of 72 h
+    float peak;           // highest value right after a session in 72 h
     float at24;           // value at hour 24 after sessions at hours 0..23
 };
 
-BeatSim SimulateBeating(float hitGain, float koGain, bool useHit, bool useKo, const Submission& s)
+// One blow (and/or one knockout) at every hour 0..71, the leader at kLeader. With
+// `daily` the gains go through the Balanced daily limits (beating_daily_rules.h:
+// diminishing per blow of the game day, then the daily cap); without, the plain
+// per-blow gain (Cheat, and Balanced before balanced-tuning T2).
+BeatSim SimulateBeating(Temperament t, int npcLevel, bool useHit, bool useKo, bool daily,
+                        const Submission& s)
 {
     BeatingStressLedger ledger;
+    BeatingDayLedger days;
     const CharKey key = CharKey::FromId("sim");
     BeatSim r;
     r.sessionsToFull = -1;
     r.plateau = 0.0f;
+    r.peak = 0.0f;
     r.at24 = 0.0f;
     for (int h = 0; h < 72; ++h)
     {
-        float v = 0.0f;
-        if (useHit) v = ledger.Add(key, hitGain, (double)h, s.beatingStressFadeHours);
-        if (useKo) v = ledger.Add(key, koGain, (double)h, s.beatingStressFadeHours);
+        float v = ledger.Get(key, (double)h, s.beatingStressFadeHours);
+        for (int blowIndex = 0; blowIndex < 2; ++blowIndex)
+        {
+            const bool knockout = blowIndex == 1;
+            if ((knockout && !useKo) || (!knockout && !useHit))
+            {
+                continue;
+            }
+            const BeatingBlow blow = knockout ? BeatingBlow_Knockout : BeatingBlow_Hit;
+            float gain = 0.0f;
+            if (daily)
+            {
+                const BeatingDay today = days.Today(key, DayIndexFromHours((double)h));
+                gain = DailyBeatingGain(blow, kLeader, npcLevel, t, today, s);
+                days.Record(key, RecordBeating(today, gain));
+            }
+            else
+            {
+                gain = BeatingStressGain(blow, kLeader, npcLevel, t, s);
+            }
+            v = ledger.Add(key, gain, (double)h, s.beatingStressFadeHours);
+        }
         if (r.sessionsToFull < 0 && v >= 0.999f) r.sessionsToFull = h + 1;
         if (h == 23) r.at24 = ledger.Get(key, 24.0, s.beatingStressFadeHours);
+        if (v > r.peak) r.peak = v;
         r.plateau = v;
     }
     return r;
+}
+
+void SessionsText(int sessions, char* out, size_t size)
+{
+    if (sessions < 0) sprintf_s(out, size, "nunca"); else sprintf_s(out, size, "%d", sessions);
 }
 
 void PrintBeating(const Config& c)
 {
     const Submission& s = c.submission;
     std::printf("## 3. Estres por golpes (Golpear / Noquear)\n\n");
-    std::printf("ganancia = clamp(base x factor de nivel / resolve, %.2f, %.2f); base Golpear %.2f, Noquear %.2f; "
-                "factor = lider/NPC acotado a [%.1f, %.1f]; descanso Golpear %.0f h, Noquear %.0f h; "
+    std::printf("ganancia = clamp(base x factor de nivel x rendimiento / resolve, %.2f, %.2f), despues tope diario; "
+                "base Golpear %.2f, Noquear %.2f; factor = lider/NPC acotado a [%.1f, %.1f]; "
+                "rendimiento = %.2f^(n-1) para el golpe n-esimo del dia de juego (Golpear y Noquear cuentan juntos); "
+                "tope diario %.2f de barra por preso y dia de juego (solo Balanced; Cheat sin limites diarios); "
+                "descanso Golpear %.0f h, Noquear %.0f h; "
                 "una barra llena se va en %.0f h (-%.4f/h). Simulacion: un golpe (y/o un noqueo) cada vez que el descanso "
-                "termina, 72 h seguidas, lider %d.\n\n",
+                "termina, 72 h seguidas (3 dias de juego), lider %d.\n\n",
                 s.beatingStressMin, s.beatingStressMax, s.beatStressBase, s.knockoutStressBase,
-                s.beatingStressLevelMin, s.beatingStressLevelMax, s.beatingCooldownHours, s.knockoutCooldownHours,
+                s.beatingStressLevelMin, s.beatingStressLevelMax, s.beatingDiminishFactor, s.beatingDailyStressCap,
+                s.beatingCooldownHours, s.knockoutCooldownHours,
                 s.beatingStressFadeHours, 1.0f / s.beatingStressFadeHours, kLeader);
     std::printf("| Temperamento | Nivel NPC | factor | +Golpear | +Noquear | sesiones a 1.0 (solo Golpear) | meseta solo Golpear | "
-                "a las 24 h solo Golpear | sesiones a 1.0 (Golpear+Noquear) | estres pleno vale |\n");
-    std::printf("|---|---|---|---|---|---|---|---|---|---|\n");
+                "a las 24 h solo Golpear | sesiones a 1.0 (Golpear+Noquear) | meseta Golpear+Noquear | maximo Golpear+Noquear | "
+                "sin limites diarios: sesiones a 1.0 (G+N) | estres pleno vale |\n");
+    std::printf("|---|---|---|---|---|---|---|---|---|---|---|---|---|\n");
     const Temperament temps[] = { Temperament_Fearful, Temperament_Normal, Temperament_Brave, Temperament_Honorable };
     const int levels[] = { 20, 27, 40, 60, 80 };
     for (int ti = 0; ti < 4; ++ti)
@@ -416,23 +455,33 @@ void PrintBeating(const Config& c)
             const int lv = levels[li];
             const float hit = BeatingStressGain(BeatingBlow_Hit, kLeader, lv, t, s);
             const float ko = BeatingStressGain(BeatingBlow_Knockout, kLeader, lv, t, s);
-            const BeatSim onlyHit = SimulateBeating(hit, ko, true, false, s);
-            const BeatSim both = SimulateBeating(hit, ko, true, true, s);
+            const BeatSim onlyHit = SimulateBeating(t, lv, true, false, true, s);
+            const BeatSim both = SimulateBeating(t, lv, true, true, true, s);
+            const BeatSim bothUnlimited = SimulateBeating(t, lv, true, true, false, s);
             char toFull[32];
             char toFullBoth[32];
-            if (onlyHit.sessionsToFull < 0) sprintf_s(toFull, sizeof(toFull), "nunca"); else sprintf_s(toFull, sizeof(toFull), "%d", onlyHit.sessionsToFull);
-            if (both.sessionsToFull < 0) sprintf_s(toFullBoth, sizeof(toFullBoth), "nunca"); else sprintf_s(toFullBoth, sizeof(toFullBoth), "%d", both.sessionsToFull);
-            std::printf("| %s | %d | %.2f | %.3f | %.3f | %s | %.2f (+%d) | %.2f (+%d) | %s | +%d |\n",
+            char toFullUnlimited[32];
+            SessionsText(onlyHit.sessionsToFull, toFull, sizeof(toFull));
+            SessionsText(both.sessionsToFull, toFullBoth, sizeof(toFullBoth));
+            SessionsText(bothUnlimited.sessionsToFull, toFullUnlimited, sizeof(toFullUnlimited));
+            std::printf("| %s | %d | %.2f | %.3f | %.3f | %s | %.2f (+%d) | %.2f (+%d) | %s | %.2f (+%d) | %.2f (+%d) | %s | +%d |\n",
                         TempName(t), lv, BeatingLevelFactor(kLeader, lv, s), hit, ko, toFull,
                         onlyHit.plateau, ChanceFromStress(StressFromState(kHungerFull, 0.0f, kRested, onlyHit.plateau, s), t, s),
                         onlyHit.at24, ChanceFromStress(StressFromState(kHungerFull, 0.0f, kRested, onlyHit.at24, s), t, s),
-                        toFullBoth, ChanceFromStress(1.0f, t, s));
+                        toFullBoth,
+                        both.plateau, ChanceFromStress(StressFromState(kHungerFull, 0.0f, kRested, both.plateau, s), t, s),
+                        both.peak, ChanceFromStress(StressFromState(kHungerFull, 0.0f, kRested, both.peak, s), t, s),
+                        toFullUnlimited, ChanceFromStress(1.0f, t, s));
         }
     }
-    std::printf("\nEl umbral para saturar a 1 golpe por hora es una ganancia > %.4f (lo que se desvanece en 1 h). "
-                "Una barra llena tarda %.0f h en irse si se deja de golpear. Golpear ademas hiere, asi que el preso golpeado "
-                "pierde el bono de cuidado y suma el termino de heridas.\n\n",
-                1.0f / s.beatingStressFadeHours, s.beatingStressFadeHours);
+    std::printf("\n\"+Golpear\" y \"+Noquear\" son el primer golpe del dia. \"Meseta\" es la barra tras la ultima sesion "
+                "de las 72 h y \"maximo\" la mas alta tras una sesion: con el tope diario un preso gana a lo sumo %.2f "
+                "por dia de juego, asi que la barra solo pasa de ese valor cuando lo que quedaba del dia anterior "
+                "aun no se desvanecio. La ultima columna de sesiones es la regla sin limites diarios (Cheat, y "
+                "Balanced antes de T2). El umbral para saturar a 1 golpe por hora sin limites es una ganancia > %.4f "
+                "(lo que se desvanece en 1 h). Una barra llena tarda %.0f h en irse si se deja de golpear. Golpear "
+                "ademas hiere, asi que el preso golpeado pierde el bono de cuidado y suma el termino de heridas.\n\n",
+                s.beatingDailyStressCap, 1.0f / s.beatingStressFadeHours, s.beatingStressFadeHours);
 }
 
 int OpenChance(const Config& c, Temperament t, int npcLevel, int defeats, float worst, int situation,

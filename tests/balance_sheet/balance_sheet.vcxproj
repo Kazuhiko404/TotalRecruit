@@ -77,6 +77,7 @@
     <ClCompile Include="..\..\src\card_dismiss_rules.cpp" />
     <ClCompile Include="..\..\src\cage_command_rules.cpp" />
     <ClCompile Include="..\..\src\beating_stress_rules.cpp" />
+    <ClCompile Include="..\..\src\beating_daily_rules.cpp" />
     <ClCompile Include="..\..\src\feeding_ledger.cpp" />
     <ClCompile Include="..\..\src\approach_rules.cpp" />
     <ClCompile Include="..\..\src\submission_rules.cpp" />

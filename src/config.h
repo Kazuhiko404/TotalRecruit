@@ -326,6 +326,13 @@ struct Submission
     float beatingStressLevelMin;
     float beatingStressLevelMax;
     float beatingStressFadeHours;
+    // The Balanced cage's daily limits (beating_daily_rules.h, balanced-tuning
+    // T2): the n-th blow or knockout of one prisoner's game day weighs
+    // beatingDiminishFactor^(n-1) of a fresh one (0.3..1.0; 1 is off), and one
+    // prisoner gains at most beatingDailyStressCap of the bar in one game day
+    // (0.1..1.0). Cheat ignores both.
+    float beatingDiminishFactor;
+    float beatingDailyStressCap;
     // The submission event (submission_director.h): a beaten NPC that yields
     // walks up to the player and asks to join -- Aceptar / Perdonar / Rechazar.
     // `approachSeconds` is how long the walk-up may take (and how long a hostile
@@ -374,6 +381,8 @@ struct Submission
           beatingStressLevelMin(0.5f),
           beatingStressLevelMax(1.5f),
           beatingStressFadeHours(24.0f),
+          beatingDiminishFactor(0.7f),
+          beatingDailyStressCap(0.35f),
           eventEnabled(true),
           approachSeconds(60.0f),
           forgiveSeconds(30.0f),

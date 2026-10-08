@@ -29,6 +29,9 @@ const SavedIntField kFields[] = {
     { "total_recruit.duel_cooldown_until_min", &SavedDuelCooldownUntil, &RestoreSavedDuelCooldownUntil },
     { "total_recruit.beating_stress", &SavedBeatingStress, &RestoreSavedBeatingStress },
     { "total_recruit.beating_stress_hour", &SavedBeatingStressHour, &RestoreSavedBeatingStressHour },
+    { "total_recruit.beating_day", &SavedBeatingDay, &RestoreSavedBeatingDay },
+    { "total_recruit.beating_day_blows", &SavedBeatingDayBlows, &RestoreSavedBeatingDayBlows },
+    { "total_recruit.beating_day_gained", &SavedBeatingDayGained, &RestoreSavedBeatingDayGained },
     { "total_recruit.hold_start_hour", &SavedHoldStart, &RestoreSavedHoldStart },
 };
 } // namespace

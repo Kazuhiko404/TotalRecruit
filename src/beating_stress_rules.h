@@ -50,6 +50,13 @@ float BeatingLevelFactor(int playerLevel, int npcLevel, const Submission& sub);
 float BeatingStressGain(BeatingBlow blow, int playerLevel, int npcLevel,
                         Temperament personality, const Submission& sub);
 
+// The same gain with the raw value weighed by `scale` (0 or less adds nothing)
+// before the [beatingStressMin, beatingStressMax] clamp: the Balanced daily
+// diminishing (beating_daily_rules.h) scales a repeated blow this way, so the
+// per-blow clamp still holds. A scale of 1 is BeatingStressGain.
+float BeatingStressGainScaled(BeatingBlow blow, int playerLevel, int npcLevel,
+                              Temperament personality, float scale, const Submission& sub);
+
 // `value` (clamped to 0..1) as it stands at `nowHours` when it was written at
 // `lastHours`: minus (now - last) / fadeHours, never below 0. A clock earlier
 // than `lastHours` (a load of an earlier save) does not decay it and never raises

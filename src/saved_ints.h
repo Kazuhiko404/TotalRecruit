@@ -36,6 +36,13 @@
 //   total_recruit.beating_stress_hour
 //                                  beating_stress.h  the game hour (tenths) it was
 //                                                  last written at
+//   total_recruit.beating_day      beating_stress.h  Balanced: the game day (+1; 0 =
+//                                                  none) of the prisoner's day record
+//                                                  (beating_daily_rules.h)
+//   total_recruit.beating_day_blows
+//                                  beating_stress.h  landed blows that day
+//   total_recruit.beating_day_gained
+//                                  beating_stress.h  bar gained that day (thousandths)
 //   total_recruit.hold_start_hour
 //                                  hold_tracking.h  the game hour (tenths) the
 //                                                  prisoner's hold in the player's

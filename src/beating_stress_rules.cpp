@@ -32,14 +32,20 @@ float BeatingLevelFactor(int playerLevel, int npcLevel, const Submission& sub)
 float BeatingStressGain(BeatingBlow blow, int playerLevel, int npcLevel,
                         Temperament personality, const Submission& sub)
 {
+    return BeatingStressGainScaled(blow, playerLevel, npcLevel, personality, 1.0f, sub);
+}
+
+float BeatingStressGainScaled(BeatingBlow blow, int playerLevel, int npcLevel,
+                              Temperament personality, float scale, const Submission& sub)
+{
     const float base = (blow == BeatingBlow_Knockout) ? sub.knockoutStressBase
                                                       : sub.beatStressBase;
-    if (base <= 0.0f)
+    if (base <= 0.0f || scale <= 0.0f)
     {
         return 0.0f;
     }
     const float resolve = ResolveMultiplier(personality, sub);
-    const float raw = base * BeatingLevelFactor(playerLevel, npcLevel, sub) /
+    const float raw = base * scale * BeatingLevelFactor(playerLevel, npcLevel, sub) /
                       (resolve > 0.01f ? resolve : 1.0f);
     return Clamp01(Clamp(raw, sub.beatingStressMin, sub.beatingStressMax));
 }

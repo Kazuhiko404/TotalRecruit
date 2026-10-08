@@ -12,13 +12,19 @@
 // The bar is saved with the character, two rows of the saved_ints.h table:
 // "total_recruit.beating_stress" (thousandths) and
 // "total_recruit.beating_stress_hour" (the game hour it was last written at, in
-// tenths). The load boundary clears it (ForgetAllBeatingStress) and each
+// tenths). Balanced also keeps each prisoner's beatings of the current game day
+// for the daily diminishing and cap (beating_daily_rules.h), three more rows:
+// "total_recruit.beating_day" (day index + 1; 0 = none),
+// "total_recruit.beating_day_blows" and "total_recruit.beating_day_gained"
+// (thousandths). An old save without them reads as a fresh day. The load
+// boundary clears it (ForgetAllBeatingStress) and each
 // character's load hook puts back what the loaded save holds, so a reload never
 // keeps a later world's beatings. The serialise hook may run off the game
 // thread: the ledger is behind a lock.
 //
 // Log: "[stress] <name> beating stress +X% (blow|knockout, player P vs npc N,
-// resolve R) -> Y%" with probeOnClick; a failure to read the clock or key always.
+// resolve R) -> Y% [day D blow N, xM, today T% of cap C%]" with probeOnClick
+// (the bracket only in Balanced); a failure to read the clock or key always.
 
 #include <string>
 
@@ -42,6 +48,12 @@ int SavedBeatingStress(const std::string& persistedId);
 void RestoreSavedBeatingStress(const std::string& persistedId, int value);
 int SavedBeatingStressHour(const std::string& persistedId);
 void RestoreSavedBeatingStressHour(const std::string& persistedId, int tenths);
+int SavedBeatingDay(const std::string& persistedId);
+void RestoreSavedBeatingDay(const std::string& persistedId, int value);
+int SavedBeatingDayBlows(const std::string& persistedId);
+void RestoreSavedBeatingDayBlows(const std::string& persistedId, int value);
+int SavedBeatingDayGained(const std::string& persistedId);
+void RestoreSavedBeatingDayGained(const std::string& persistedId, int value);
 
 // Load begin: the bars belong to the world that was just abandoned.
 void ForgetAllBeatingStress();
