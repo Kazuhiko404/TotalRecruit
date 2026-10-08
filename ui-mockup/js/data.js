@@ -53,6 +53,22 @@ var STATES = [
     }
   },
   {
+    id: 'resigned',
+    title: 'Prisoner caged for a week',
+    note: 'Cautiverio, Balanced (balanced-tuning T4). Time in the cage argues on its own again, slowly and capped: every full game day held (the saved hold clock, <code>total_recruit.hold_start_hour</code>) adds <code>submissionResignationPerDay</code> (1) up to <code>submissionResignationMax</code> (10), divided by the resolve like stress and defeats (<code>ResignationChance</code>). A normal prisoner held 7 days: +7, already inside the 74%. Below one full day, or with no hold clock, there is no row. It never decides on its own: it is one more term of the roll.',
+    // facts: route Cage, level 14 vs player 20, temperament normal, hunger raw 1.2/3,
+    // worstDamage 0, rested 1, beaten 0, defeats 1/2, held 7 d 2 h -> resignation +7, price 9570
+    vm: {
+      name: 'Kareem el Tuerto', route: 'cautiverio', routeLabel: 'Cautiverio',
+      showStress: true, stressPct: 30, stress: { hunger: 30, wounds: 0, tired: 0, beaten: 0 },
+      showChance: true, chancePct: 74, ready: false, resignedPct: 7,
+      showDefeats: true, defeats: 1, defeatsNeeded: 2,
+      showFood: false,
+      held: 'Encerrado: 7 d 2 h',
+      why:  { text: 'Precio 9.570 cats (tienes 12.000)', tone: '' }
+    }
+  },
+  {
     id: 'yield',
     title: 'Field-yield candidate',
     note: 'Sometido (its own tag, not Rendicion): beaten enough times in the open. The card asks as a bystander with no roll key, so it cannot know whether the roll passes: instead of a "not yet" that the click may contradict, the line states the odds (<code>kLineRollOpen</code>). With the key and a failed roll the line is "Aun no cede: vencelo otra vez" in the open, and "dejalo sin comer" only for someone in your own cage.',
