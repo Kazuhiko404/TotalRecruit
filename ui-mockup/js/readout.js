@@ -40,8 +40,12 @@ function chanceBlock(vm) {
 // The cared-for bonus (Balanced cage, v1-presets-close P4): the day's draw between
 // submissionCaredForBonusMin and Max when the prisoner is unhurt, fed and at full health.
 // Its own row under the chance, expanded only. C++ twin: readout_ui.cpp caredFor row.
+// With a care streak (balanced-tuning T3) the value names it: "+21% (racha 3 dias)"
+// (messages.json readout.caredForStreak); the bonus already includes the streak.
 function caredRow(vm) {
-  return '<div class="row"><span>Lo cuidaste</span><b style="color:var(--ready)">+' + vm.caredForPct + '%</b></div>';
+  var value = '+' + vm.caredForPct + '%';
+  if (vm.careStreakDays > 0) value += ' (racha ' + vm.careStreakDays + ' dias)';
+  return '<div class="row"><span>Lo cuidaste</span><b style="color:var(--ready)">' + value + '</b></div>';
 }
 
 function foodBlock(vm) {

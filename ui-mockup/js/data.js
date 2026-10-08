@@ -37,6 +37,22 @@ var STATES = [
     }
   },
   {
+    id: 'caredForStreak',
+    title: 'Caged prisoner cared for three days in a row',
+    note: 'Cautiverio, Balanced (balanced-tuning T3). The cared-for bonus grows with the care streak: game days in a row on which the prisoner was seen unhurt, fed and at full health, today not counted (<code>CareStreakDays</code>). Each day of streak adds <code>submissionCaredForStreakPerDay</code> (3) up to <code>submissionCaredForStreakMax</code> (15, a five-day streak). Today: the draw +12 plus 3 days x 3 = +21, already inside the 79%. A day seen hurt, hungry or below full health resets the streak to 0; the streak is saved with the character. No streak: the row is the plain "+12%".',
+    // facts: route Cage, level 14 vs player 20, fed, unhurt, health 1, rested 1, beaten 0,
+    // defeats 1/2, caredFor +21 (draw +12, streak 3 days x 3), held 3 d 4 h, price 9570
+    vm: {
+      name: 'Kareem el Tuerto', route: 'cautiverio', routeLabel: 'Cautiverio',
+      showStress: true, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
+      showChance: true, chancePct: 79, ready: false, caredForPct: 21, careStreakDays: 3,
+      showDefeats: true, defeats: 1, defeatsNeeded: 2,
+      showFood: false,
+      held: 'Encerrado: 3 d 4 h',
+      why:  { text: 'Precio 9.570 cats (tienes 12.000)', tone: '' }
+    }
+  },
+  {
     id: 'yield',
     title: 'Field-yield candidate',
     note: 'Sometido (its own tag, not Rendicion): beaten enough times in the open. The card asks as a bystander with no roll key, so it cannot know whether the roll passes: instead of a "not yet" that the click may contradict, the line states the odds (<code>kLineRollOpen</code>). With the key and a failed roll the line is "Aun no cede: vencelo otra vez" in the open, and "dejalo sin comer" only for someone in your own cage.',
