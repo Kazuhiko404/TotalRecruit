@@ -7,10 +7,10 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 
 | File | What it holds | C++ it mirrors |
 |---|---|---|
-| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / menu on your prisoner with Golpear and Noquear, one column and two columns / press Hablar / head notice and selecting the one who called / proactive offer: a person and an animal walk up, a bad roll calms), the per-route table, the Mod Hub controls, the recruit popup gallery (section 5) | -- |
+| `readout.html` | page: the six states (expanded / compact / side by side), the placement scene (selected NPC / right-click menu open / menu on your prisoner with Golpear and Noquear, one column and two columns / press Hablar / head notice and selecting the one who called / proactive offer: a person and an animal walk up, a bad roll calms), the per-route table, the recruit popup gallery (section 4) | -- |
 | `css/base.css` | palette tokens | `ui_style.h` / `ui_style.cpp` colours |
 | `css/readout.css` | the card: widths, padding, bar heights, segment colours | `kCardWidth`, `kCardWidthCompact`, `kPad`, `kBarH` ... |
-| `js/data.js` | one view-model per state (the facts that produce it are in a comment above each); `PLACEMENT` timings and gaps; `HUB` rows | `readout_model.cpp` output (`ReadoutView`); `readout.cpp` / `readout_ui.cpp` constants; `mod_hub_integration.cpp` |
+| `js/data.js` | one view-model per state (the facts that produce it are in a comment above each); `PLACEMENT` timings and gaps | `readout_model.cpp` output (`ReadoutView`); `readout.cpp` / `readout_ui.cpp` constants |
 | `js/readout.js` | draws a view-model as the card; `placeCard` (over the head, sideways beside the offer); `offerRect` (the popup centred); `menuAnchorUnion` (the native menu's one or two columns as one rectangle) | `screen_projection.cpp` (`PlaceCard`, called by `readout_ui.cpp` `PlaceUnguarded`); `offer_popup.cpp` (`ChoosePosition`); `menu_anchor.cpp` (`UnionMenuRect`) |
 | `css/popup.css` | the recruit popup: fonts and colours of each slot, flat buttons | `offer_popup.cpp` (widgets from `ui_style.cpp`) |
 | `js/popup_data.js` | `POPUP_LAYOUT` (every px of the popup) and one `OfferView` per state, the facts above each | `offer_popup.cpp` constants; `offer_view.cpp` output (`OfferView`) |
@@ -69,7 +69,7 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
    on the `ToolTip` layer, which has `Pick=false`, and every widget has `setNeedMouseFocus(false)`: it cannot take a click.
 9. **Player-facing text** is the `readout` block of `messages.json` (Spanish, no accents, like the rest of the file).
 
-### Recruit popup (section 5)
+### Recruit popup (section 4)
 
 10. **One window for every Hablar outcome.** (User request 2026-10-03: "en vez de mostrar una notificacion de cuanto
     cuesta, muestra un popup con la informacion y Aceptar o Cancelar".) Yes, a price, a price the purse cannot meet,
@@ -117,28 +117,28 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     gesture.
     **Golpear walks first and says it landed** (beat-feedback; callout in tab "Menu on your prisoner"). The click
     does not hit from where the character stands: the selected character walks to the prisoner (`beat_walk.h`,
-    `NpcMotion::MoveTo`, given once) and the blow lands only within `submissionBeatReachMeters` (4 m, Mod Hub
-    "Golpear: distancia para pegar"); already within reach, it lands at once. On landing the character stops and faces
+    `NpcMotion::MoveTo`, given once) and the blow lands only within `submissionBeatReachMeters` (4 m, a
+    `config.json` key); already within reach, it lands at once. On landing the character stops and faces
     the prisoner, the prisoner says one of "¡Ugh!" / "¡Agh!" / "¡Ay!" / "¡Basta!" over his head (`cage.beatOuch`,
     always the same one for the same prisoner; an animal or someone the blow knocked out says nothing), the roller says
     "Kazu golpea a Bandido" with the notification sound (`cage.beatLanded`), and a hit sound plays on the prisoner
-    (`submissionBeatHitSoundEnabled`, Mod Hub "Golpear: sonido del golpe"; since priority-one S1 the Wwise event `Impact`
+    (`submissionBeatHitSoundEnabled`; since priority-one S1 the Wwise event `Impact`
     with the `Impacts` switch = `submissionBeatHitSound`, "HtH_Impacts", plus the voice `VO_Get_Hit`, or
     `VO_Creature_Take_Damage` on an animal; `QA.md` 12.40 S1). Since priority-one C the character throws a punch on
-    arrival: the vanilla clip `badpunch` (`submissionBeatAnimClip`, Mod Hub "Golpear: animacion del golpe") plays for
+    arrival: the vanilla clip `badpunch` (`submissionBeatAnimClip`) plays for
     `submissionBeatAnimSeconds` (0.9 s) and the blow, the complaint, the sound and the roller line come at the end of
     the wind-up (`submissionBeatWindupSeconds`, 0.35 s); a clip the engine does not report playing lands at once, as
     before (`beat_strike_rules`). No extra line while walking: the walk is the feedback. A walk that ends without a blow starts no rest and the roller says why, as a problem line: "Kazu no
-    llegó a la jaula a tiempo: no hubo golpe" (`submissionBeatWalkSeconds`, 30 real seconds, Mod Hub "Golpear: segundos
-    para llegar"), "Kazu dejó de acercarse a la jaula: no hubo golpe" (no closer for 4 s: stuck, or the player ordered
+    llegó a la jaula a tiempo: no hubo golpe" (`submissionBeatWalkSeconds`, 30 real
+    seconds), "Kazu dejó de acercarse a la jaula: no hubo golpe" (no closer for 4 s: stuck, or the player ordered
     the character elsewhere), "Kazu ya no puede golpearlo: no hubo golpe" (the character went down), "Ya no puedes
     hacerle eso" (the prisoner left the cage or went down) or "Podrás volver a golpearlo en 1 h" (another character's
     blow landed first). A second Golpear by the same character replaces the walk silently; a load drops it silently.
     The popup's GOLPEAR (item 18) goes through the same walk and the same lines.
     **Golpear and Noquear rest** (tab "Menu on your prisoner, Golpear and Noquear resting"; R2.3,
     prisoner-module-fixes F6, cage-beating-stress S1). After each blow on a prisoner, Golpear rests for
-    `submissionBeatingCooldownHours` game hours (Mod Hub "Sumision: horas entre golpizas"); after a knockout order
-    that put the prisoner down, Noquear rests for `submissionKnockoutCooldownHours` ("Sumision: horas entre noqueos").
+    `submissionBeatingCooldownHours` game hours; after a knockout order
+    that put the prisoner down, Noquear rests for `submissionKnockoutCooldownHours`.
     Both 1 h by default, per prisoner, session-only like the defeat episodes (`CageCooldownLedger`). The buttons stay
     in the block and carry the wait left, rounded up: "Golpear (2 h)" (`RestLabel`), "Noquear (2 h)" in place of the
     odds (`KnockoutCaption`); under an hour the wait reads in minutes (priority-one B, `wait_format`): "Golpear
@@ -166,7 +166,7 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     (mercy) or PERDONAR (submission). States "Caged and defiant", "Caged and hungry", "Mercy plea from someone who
     cannot leave".
 
-### Submission event (section 5, "Submitted NPC asks to join")
+### Submission event (section 4, "Submitted NPC asks to join")
 
 19. **A beaten NPC asks; the window is the same popup** (user request 2026-10-03: "it should walk up to me
     automatically and ask to join ... Accept, Forgive, Reject"). Nothing new is drawn: `BuildSubmissionOfferView`
@@ -192,7 +192,7 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     notice hides that frame. Up to 8 at once, one per NPC. Hidden off screen and under a right-click menu; dropped when
     the NPC dies or joins, when the submission window opens or the event ends, and at a load.
 
-### Balanced allies by level (section 5, the "Ally ..." states)
+### Balanced allies by level (section 4, the "Ally ..." states)
 
 21. **The tier says what the ally wants** (user request 2026-10-03: allies by level, with friendship discounts).
     Nothing new is drawn: the same popup, with the body naming the tier (`popup.ally.*`). A paying ally reads
@@ -220,7 +220,7 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     Selecting a temporary member shows their card with one line, "Temporal: le quedan 4 dias"
     (`readout.line.temp.daysLeft`), and nothing else. Section 2, tab "Temporary member (squad notices)".
 
-### Free helper (section 5, "Free helper offers to escort you"; section 2, "Free helper ...")
+### Free helper (section 4, "Free helper offers to escort you"; section 2, "Free helper ...")
 
 23. **A stronger ally offers to escort the player, for free, without taking orders** (ally-tiers-temp-helpers
     T3, user request 2026-10-03: "higher-level allied NPCs with good personalities offer to help you for some
@@ -236,7 +236,7 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     Selecting a helper shows their card with one line, "Ayudante: le quedan 3 dias"
     (`readout.line.helper.daysLeft`), and nothing else.
 
-### Duel challenge (section 5, "Ally 80+ can be challenged ..." and "Cruel ally 80+ ..."; section 1, "Ally 80+ you can challenge")
+### Duel challenge (section 4, "Ally 80+ can be challenged ..." and "Cruel ally 80+ ..."; section 1, "Ally 80+ you can challenge")
 
 25. **An 80+ ally can be challenged to a TotalSparring duel and joins for good on a win** (ts-duel-bridge,
     user request 2026-10-03: "challenge him to a duel so he joins you; TotalSparring already has the duel logic").
@@ -279,7 +279,7 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
     cure or one knockout by the squad is the gesture ("Comio de tu mano / Lo curaste / Lo venciste: te sigue").
 
 28. **In Cheat any cage counts** (cheat-any-cage, user request 2026-10-05: "for cheat mode drop the limit of only
-    recruiting from your cell"). With `cheatAnyCage` on (Mod Hub "Cheat: cualquier jaula", last `HUB` row) a
+    recruiting from your cell"). With `cheatAnyCage` on (a `config.json` key) a
     prisoner in another faction's cage, shackles or carried off (`SafeInPrison`) gets the same one-minute wait and
     joins, on the cage route. The cage commands (Golpear / Noquear) stay on the player's own cages. Balanced is
     unchanged. Update (duel-any-source U5, user report): "metelo en una de tus jaulas" read wrong with any cage, so
@@ -289,15 +289,14 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 
 29. **Cheat offers the duel to a person of any level, and a TotalSparring duel counts too** (duel-any-source, user
     report 2026-10-05: "a los honorables no me deja ... retarlos a un duelo"). In Cheat a person gets RETAR A DUELO
-    from `duelCheatPeopleFromLevel` (Mod Hub "Duelo Cheat: nivel minimo de personas", 1) instead of Balanced's 80
+    from `duelCheatPeopleFromLevel` (1) instead of Balanced's 80
     (state "Cheat: any person can be challenged ..." now shows a level 33 NPC). With `duelCountExternalBouts` on
-    (Mod Hub "Duelo: contar duelos de TotalSparring") a duel the player opens from TotalSparring's own window
+    a duel the player opens from TotalSparring's own window
     against someone outside the squad who could be challenged counts like RETAR A DUELO: a win runs the duel join
-    (and the proactive offer), a loss the cooldown. No new card or popup state: the mockup gains the two `HUB`
-    rows (appended at the end) and the updated "Duelo: retar NPC 80+" description.
+    (and the proactive offer), a loss the cooldown. No new card or popup state.
 
 30. **A duel can require several wins before it recruits** (duel-any-source U4). `duelMinWinsCheat` /
-    `duelMinWinsBalanced` (Mod Hub "Duelo Cheat / Balanced: victorias minimas", 1 by default = today) hold off the
+    `duelMinWinsBalanced` (1 by default = today) hold off the
     join until that many head-to-head wins: an earlier win rolls nothing and starts no cooldown, and the card's
     record line counts the wins still missing (state "Ally you can challenge, under the minimum duel wins":
     "Duelos: 1-0, faltan 3 victorias"). From the minimum on, Cheat joins and Balanced rolls the usual curve,
@@ -311,18 +310,18 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
 
 32. **Balanced counts an external duel with any recruitable NPC** (duel-any-source U7). A duel opened from
     TotalSparring's own window (with `duelCountExternalBouts` on) now counts in Balanced against any person the
-    exclusion list lets you recruit, from `duelExternalBalancedFromLevel` (Mod Hub "Duelo externo Balanced: nivel
-    minimo", 1), no ally tier needed. The RETAR A DUELO button keeps its 80+ tiered-ally gate; Cheat and animals
-    keep their own gates. No new card or popup state: the mockup gains one `HUB` row, appended at the end.
+    exclusion list lets you recruit, from `duelExternalBalancedFromLevel` (1), no ally tier needed. The RETAR A DUELO button keeps its 80+ tiered-ally gate; Cheat and animals
+    keep their own gates. No new card or popup state.
 
 33. **A beaten animal in your cage needs less food (Balanced)** (priority-one D). The beating stress Golpear and
     Noquear leave lowers the stomach bar of a caged animal (`animal_beating_rules`: `animalCageBeatingWeight` 0.5 x
     stress / resolve, resolve = 1 + level x 0.02; at most 90% of the bar). The card adds no row, the notch just sits
     lower (state "Animal in your cage, beaten (Balanced)": 56% against 66% instead of 80%). The first meal is still
-    required; a loose animal and Cheat are unchanged. Four Mod Hub entries ("Animal: los golpes en la jaula
-    cuentan", "Animal: peso de los golpes", "Animal: resistencia base a golpes", "Animal: resistencia por nivel").
+    required; a loose animal and Cheat are unchanged. Four `config.json` keys
+    (`animalCageBeatingCounts`, `animalCageBeatingWeight`, `animalCageBeatingResolveBase`,
+    `animalCageBeatingResolvePerLevel`).
 
-### Native windows (sections 2 and 5: the card and the head notices)
+### Native windows (sections 2 and 4: the card and the head notices)
 
 24. **The card and the notices step aside for Kenshi's own dialogue** (user report 2026-10-03: "if I talk to the
     NPC and a dialogue comes up, the tooltip doesn't hide and covers the dialogue"). Both overlays sit on the

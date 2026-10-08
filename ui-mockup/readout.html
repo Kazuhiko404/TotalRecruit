@@ -67,10 +67,7 @@ asked as a bystander and remembered per NPC for 2 s (<code>src/talk_hint_cache.h
   <tr><td>Main line</td><td>always</td><td>the verdict's reason key, with the number it carries (price, hours, stomach). A rolled "not yet" the card could not roll (no roll key: field yield, ally) is the odds instead: "41%: puede unirse si le hablas". A field-yield "not yet" says "dejalo sin comer" only in your own cage, "vencelo otra vez" anywhere else.</td></tr>
 </table>
 
-<h2 class="sec">4. Mod Hub controls</h2>
-<div class="gal" id="hub"></div>
-
-<h2 class="sec">5. The recruit popup</h2>
+<h2 class="sec">4. The recruit popup</h2>
 <p class="lead">Every <i>Hablar</i> outcome opens this one window: a yes with its price, a price the purse cannot meet, a
 refusal and why, a refusal the player can act on, a plea for mercy, a rescue, a submitted NPC that walked up to ask.
 Nothing ends in a notification any more.
@@ -252,9 +249,9 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
            'as blunt, capped so the prisoner is never killed and stays caged); Noquear is Kenshi\'s own order (STEALTH_KNOCKOUT), given once: ' +
            'when he is down the character is let go. Nobody selected says "Selecciona a alguien de tu grupo para ' +
            'hacerlo". The 72% is the game\'s.' +
-           (resting ? ' Golpear rests for beatingCooldownHours (Mod Hub "Sumision: horas entre golpizas", 1 by ' +
-                      'default) after each blow on this prisoner, and Noquear for knockoutCooldownHours ("Sumision: ' +
-                      'horas entre noqueos", 1 by default) after a knockout order that put him down: each caption ' +
+           (resting ? ' Golpear rests for beatingCooldownHours (config.json key submissionBeatingCooldownHours, 1 by ' +
+                      'default) after each blow on this prisoner, and Noquear for knockoutCooldownHours (submissionKnockoutCooldownHours, ' +
+                      '1 by default) after a knockout order that put him down: each caption ' +
                       'shows the wait left, rounded up: in minutes under an hour (here 20 game minutes after the ' +
                       'blow: "(40 min)"; Cheat, right after it: "(1 min)"), in hours from an hour on ("(2 h)"), and a ' +
                       'click only says "Podrás volver a golpearlo en 40 min" / "Podrás volver a noquearlo en 40 min". Neither knockout counts as a defeat: each blow and ' +
@@ -279,7 +276,7 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       }
       h += '<div class="callout" style="left:860px;top:16px;max-width:400px">Anyone else -- not caged, already down, ' +
            'or beating switched off -- gets the block of one, [Hablar], as in "Right-click menu open". The popup\'s ' +
-           'GOLPEAR and NOQUEAR (section 5) give the same commands (the same blow, the same native knockout order) and close the window.</div>';
+           'GOLPEAR and NOQUEAR (section 4) give the same commands (the same blow, the same native knockout order) and close the window.</div>';
       scene.innerHTML = h;
       return;
     }
@@ -347,7 +344,7 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       h += '<div class="selring" style="left:629px"></div>';
       h += '<div class="callout" style="left:300px;top:16px;max-width:560px">Helpers stay in their own faction, ' +
            'so these are ordinary notices. Walking up: "' + HELPER.offer + '" (the popup "Free helper offers to ' +
-           'escort you", section 5, opens on arrival). Accepted: "' + HELPER.start + '". Before the end: "' +
+           'escort you", section 4, opens on arrival). Accepted: "' + HELPER.start + '". Before the end: "' +
            HELPER.expiring + '". Leaving: "' + HELPER.farewell + '", or "' + HELPER.betrayed + '" when the squad ' +
            'turned on them; after a load: "' + HELPER.rearmed + '". Each also has a roller line with the name. ' +
            'The offer asks the player to act and stays ' + HEAD_NOTICE.seconds + ' s (headNoticeSeconds); the ' +
@@ -371,7 +368,7 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
       h += '<div class="callout" style="left:300px;top:16px;max-width:560px">After a gesture (a won duel, a heal ' +
            'by your squad, the defeats) the rival comes to you: no need to press Hablar. A person says "' +
            OFFER_EVENT.personApproach + '" and the roller "' + OFFER_EVENT.personNotice + '"; an animal gets only ' +
-           'the roller: "' + OFFER_EVENT.animalNotice + '". On arrival the window opens (section 5, "Duel rival walks ' +
+           'the roller: "' + OFFER_EVENT.animalNotice + '". On arrival the window opens (section 4, "Duel rival walks ' +
            'up" / "Animal walks up"). A bad roll opens nothing: "' + OFFER_EVENT.personCalm + '" / "' +
            OFFER_EVENT.animalCalm + '" (' + OFFER_EVENT.failCalmSeconds + ' s, offerFailCalmSeconds). IGNORAR: "' +
            OFFER_EVENT.personIgnored + '" / "' + OFFER_EVENT.animalIgnored + '". ACEPTAR: "' +
@@ -391,7 +388,7 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
     h += '<div class="callout" style="left:16px;top:' + (VIEW.h - 64) + 'px;max-width:300px">No card for the other NPCs: ' +
          'only the selected one (or the one Hablar was pressed on) gets a card.</div>';
     scene.innerHTML = h;
-    // The recruit popup (section 5), measured and centred as ChoosePosition does.
+    // The recruit popup (section 4), measured and centred as ChoosePosition does.
     var pop = document.createElement('div');
     pop.className = 'placed';
     // haggleEnabled is on by default, so the cats offer opens with its slider (state 2).
@@ -413,12 +410,6 @@ for <code>src/offer_popup.cpp</code>; what goes in each slot is <code>src/offer_
     drawScene(sceneMode);
   });
   drawScene(sceneMode);
-
-  document.getElementById('hub').innerHTML = HUB.map(function (r) {
-    return '<figure><div class="rd noarrow" style="pointer-events:auto"><div class="hd"><span class="nm">' + r[0] +
-      '</span><span class="tag r-libre">' + r[2] + '</span></div><div class="why" style="border:0">' + r[3] +
-      '</div></div><figcaption><code>' + r[1] + '</code></figcaption></figure>';
-  }).join('');
 
   document.getElementById('popups').innerHTML = POPUP_STATES.map(function (s, i) {
     return '<figure><div class="pphold" id="pp-' + s.id + '">' + popupHTML(s.vm) + '</div><figcaption><b>' +
