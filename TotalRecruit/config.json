@@ -107,6 +107,8 @@
   "submissionCaredForBonusMax": 20,
   "submissionCaredForStreakPerDay": 3,
   "submissionCaredForStreakMax": 15,
+  "submissionResignationPerDay": 1,
+  "submissionResignationMax": 10,
   "submissionBeatStressBase": 0.08,
   "submissionKnockoutStressBase": 0.15,
   "submissionBeatingStressMin": 0.02,

@@ -1230,6 +1230,7 @@
     "chance": "CHANCE",
     "caredFor": "LO CUIDASTE",
     "caredForStreak": "+{chance}% (racha {need} dias)",
+    "resigned": "RESIGNADO",
     "defeats": "DERROTAS",
     "food": "BARRIGA",
     "route": {

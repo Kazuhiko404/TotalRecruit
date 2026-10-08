@@ -595,6 +595,21 @@ void TheCaredForBonusIsShownWithTheChance()
     CHECK(BuildReadout(noRoll, kConfig).caredForPct == 0);
 }
 
+void ResignationIsShownWithTheChance()
+{
+    const char* name = "card: a caged prisoner's resignation rides with the chance (T4)";
+    ReadoutInput in = Input(Route_Cage, Reason_CatsAsk);
+    in.verdict.rolled = true;
+    in.verdict.chancePercent = 74;
+    in.verdict.chanceInputs.resignation = 7;
+    CHECK(BuildReadout(in, kConfig).resignedPct == 7);
+    in.verdict.chanceInputs.resignation = 0;
+    CHECK(BuildReadout(in, kConfig).resignedPct == 0);
+    ReadoutInput noRoll = Input(Route_Cage, Reason_CatsAsk);
+    noRoll.verdict.chanceInputs.resignation = 7;
+    CHECK(BuildReadout(noRoll, kConfig).resignedPct == 0);
+}
+
 void TheCareStreakRidesWithTheCaredForBonus()
 {
     const char* name = "card: the care streak days ride with the cared-for bonus (T3)";
@@ -673,5 +688,6 @@ void RunReadoutModelTests()
     NoCageWaitLineAnyMore();
     TheCaredForBonusIsShownWithTheChance();
     TheCareStreakRidesWithTheCaredForBonus();
+    ResignationIsShownWithTheChance();
     StressTermsMakeStressFromState();
 }

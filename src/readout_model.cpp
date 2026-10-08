@@ -249,6 +249,8 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
         // The care streak inside it (care_streak_rules.h): "(racha 3 dias)".
         v.careStreakDays = v.caredForPct > 0 && in.verdict.chanceInputs.careStreakDays > 0
                                ? in.verdict.chanceInputs.careStreakDays : 0;
+        // Resignation inside it (resignation_rules.h): "Resignado +7%".
+        v.resignedPct = in.verdict.chanceInputs.resignation > 0 ? in.verdict.chanceInputs.resignation : 0;
     }
 
     const bool personDefeats = person && (stressRoute || in.core.defeats > 0);

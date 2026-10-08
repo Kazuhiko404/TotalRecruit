@@ -242,11 +242,15 @@ struct CageExtra
     // Balanced: the prisoner's care streak (care_streak_rules.h CareStreakDays) for
     // care.dayIndex, 0 with no key or no record.
     int careStreakDays;
+    // Balanced: how long they have been held in the player's cage, in game hours
+    // (hold_tracking.h PeekHoursHeld); 0 with no hold clock. Resignation reads it
+    // (resignation_rules.h).
+    float hoursHeld;
     PurseFact purse;
     PriceInputs price;
     HaggleFact haggle;
     AnimalExtra animal;
 
-    CageExtra() : careStreakDays(0) {}
+    CageExtra() : careStreakDays(0), hoursHeld(0.0f) {}
 };
 } // namespace totalrecruit

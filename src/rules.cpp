@@ -21,16 +21,16 @@ void LogChanceBreakdown(Character* character, const ChanceInputs& in, int total)
 {
     const Chance& cc = GetConfig().chance;
     const Submission& cs = GetConfig().submission;
-    char buf[256] = { 0 };
+    char buf[320] = { 0 };
     _snprintf_s(buf, sizeof(buf), _TRUNCATE,
                 "[chance] level=%d relation=%d personality=%d defeats=%d(x%d) "
-                "situation=%d stress=%d(%.0f%%) caredFor=+%d(streak %dd) grudge=-%d unique=-%d -> %d%%  (npc %d vs player %d, rel %.0f)",
+                "situation=%d stress=%d(%.0f%%) caredFor=+%d(streak %dd) resigned=+%d grudge=-%d unique=-%d -> %d%%  (npc %d vs player %d, rel %.0f)",
                 ChanceFromLevelGap(in.npcLevel, in.playerLevel, cc),
                 ChanceFromRelation(in.relation, in.haveRelation, cc),
                 ChanceFromPersonality(in.personality, cc),
                 ChanceFromDefeats(in.defeats, in.personality, cs), in.defeats,
                 in.situation, ChanceFromStress(in.stress, in.personality, cs),
-                in.stress * 100.0f, in.caredFor, in.careStreakDays,
+                in.stress * 100.0f, in.caredFor, in.careStreakDays, in.resignation,
                 in.grudge ? cc.grudgePenalty : 0,
                 in.unique ? cc.uniquePenalty : 0,
                 total, in.npcLevel, in.playerLevel,

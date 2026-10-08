@@ -27,6 +27,9 @@ struct ReadoutTexts
     // streak "+21% (racha 3 dias)".
     std::string caredForLabel;
     std::string caredForValue;
+    // The resignation row under it: "RESIGNADO" and "+7%".
+    std::string resignedLabel;
+    std::string resignedValue;
     std::string defeatsLabel;
     std::string defeatsValue;
     std::string foodLabel;

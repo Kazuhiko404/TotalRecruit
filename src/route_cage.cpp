@@ -2,6 +2,7 @@
 #include "body_rules.h"
 #include "cared_for_rules.h"
 #include "care_streak_rules.h"
+#include "resignation_rules.h"
 
 namespace totalrecruit
 {
@@ -165,6 +166,10 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
             in.careStreakDays = extra.careStreakDays > 0 ? extra.careStreakDays : 0;
             in.caredFor      += CareStreakBonus(in.careStreakDays, config.submission);
         }
+        // Time in the cage argues on its own again, slowly and capped: full game
+        // days on the saved hold clock, divided by resolve (resignation_rules.h,
+        // balanced-tuning T4). One more term of the roll, never a verdict.
+        in.resignation  = ResignationChance(extra.hoursHeld, core.temperament, config.submission);
 
         const int chance = JoinChance(in, config.chance, config.submission);
         v.rolled = true;

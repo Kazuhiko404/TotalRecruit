@@ -14,6 +14,7 @@
 #include "test_support.h"
 #include "route_decisions.h"
 #include "cared_for_rules.h"
+#include "resignation_rules.h"
 #include "route_rules.h"
 #include "chance_rules.h"
 #include "animal_rules.h"
@@ -1506,6 +1507,30 @@ void ACareStreakAddsToTheCaredForBonus()
     CHECK(DecideCage(Prisoner(), unkeyed, kConfig).chanceInputs.caredFor == 0);
 }
 
+void TimeHeldResignsThePrisoner()
+{
+    const char* name = "cage: full game days held add resignation to the roll, divided by resolve (T4)";
+    CoreFacts core = Prisoner();
+    core.wounded = true;   // no cared-for bonus in the way
+    CageExtra extra = FailingTheRoll(core);
+    const Verdict fresh = DecideCage(core, extra, kConfig);
+    CHECK(fresh.chanceInputs.resignation == 0);
+    extra.hoursHeld = 7.0f * 24.0f + 2.0f;
+    const Verdict week = DecideCage(core, extra, kConfig);
+    CHECK(week.chanceInputs.resignation == 7);
+    CHECK(week.chanceInputs.resignation ==
+          ResignationChance(extra.hoursHeld, core.temperament, kConfig.submission));
+    CHECK(week.chancePercent == fresh.chancePercent + 7);
+    CHECK(week.chancePercent == JoinChance(week.chanceInputs, kConfig.chance, kConfig.submission));
+    // Still a roll, never a verdict on its own.
+    CHECK(week.rolled);
+    CHECK(week.reasonKey != Reason_Intimidated);
+    // The proud resign slower.
+    core.temperament = Temperament_Honorable;
+    extra.hoursHeld = 30.0f * 24.0f;
+    CHECK(DecideCage(core, extra, kConfig).chanceInputs.resignation == 5);
+}
+
 void AHurtOrHungryPrisonerGetsNoCaredForBonus()
 {
     const char* name = "cage: wounded, starving or below full health means no cared-for bonus";
@@ -2033,6 +2058,7 @@ void RunRouteDecisionsTests()
     ACaredForPrisonerGetsTheBonusInTheRoll();
     AHurtOrHungryPrisonerGetsNoCaredForBonus();
     ACareStreakAddsToTheCaredForBonus();
+    TimeHeldResignsThePrisoner();
     ALongHeldHealthyPrisonerStillRolls();
     IntimidationIsAStrongArgumentNotAVerdict();
     TheCageRollCountsTheGrudgeAndTheName();

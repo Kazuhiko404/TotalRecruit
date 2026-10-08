@@ -85,6 +85,8 @@ struct Card
     MyGUI::TextBox* chanceValue;
     MyGUI::TextBox* caredLabel;
     MyGUI::TextBox* caredValue;
+    MyGUI::TextBox* resignedLabel;
+    MyGUI::TextBox* resignedValue;
     MyGUI::TextBox* foodLabel;
     MyGUI::TextBox* foodValue;
     MyGUI::TextBox* defeatsLabel;
@@ -169,6 +171,8 @@ bool BuildUnguarded()
     c.chanceValue = MakeLabel(c.root, kBodyFont, kAmber);
     c.caredLabel = MakeLabel(c.root, kSmallFont, kMuted);
     c.caredValue = MakeLabel(c.root, kBodyFont, kReady);
+    c.resignedLabel = MakeLabel(c.root, kSmallFont, kMuted);
+    c.resignedValue = MakeLabel(c.root, kBodyFont, kReady);
     c.foodLabel = MakeLabel(c.root, kSmallFont, kMuted);
     c.foodValue = MakeLabel(c.root, kBodyFont, kText);
     c.defeatsLabel = MakeLabel(c.root, kSmallFont, kMuted);
@@ -178,9 +182,9 @@ bool BuildUnguarded()
     c.held = MakeLabel(c.root, kSmallFont, kMuted);
 
     // The right-aligned values.
-    MyGUI::TextBox* rights[5] = { c.stressValue, c.chanceValue, c.foodValue, c.defeatsValue,
-                                  c.caredValue };
-    for (int i = 0; i < 5; ++i)
+    MyGUI::TextBox* rights[6] = { c.stressValue, c.chanceValue, c.foodValue, c.defeatsValue,
+                                  c.caredValue, c.resignedValue };
+    for (int i = 0; i < 6; ++i)
     {
         if (rights[i] != NULL)
             rights[i]->setTextAlign(MyGUI::Align::Right | MyGUI::Align::VCenter);
@@ -206,8 +210,8 @@ void HideAll()
     for (int i = 0; i < kMaxPips; ++i) Hide(c.pip[i]);
     MyGUI::TextBox* texts[] = {
         c.name, c.tag, c.stressLabel, c.stressValue, c.chanceLabel, c.chanceValue,
-        c.caredLabel, c.caredValue, c.foodLabel, c.foodValue, c.defeatsLabel, c.defeatsValue, c.primary, c.secondary,
-        c.held
+        c.caredLabel, c.caredValue, c.resignedLabel, c.resignedValue, c.foodLabel, c.foodValue, c.defeatsLabel,
+        c.defeatsValue, c.primary, c.secondary, c.held
     };
     for (size_t i = 0; i < sizeof(texts) / sizeof(texts[0]); ++i) Hide(texts[i]);
 }
@@ -344,6 +348,17 @@ void LayoutUnguarded(const ReadoutView& view, const ReadoutTexts& texts, bool co
         const int split = view.careStreakDays > 0 ? inner * 2 / 5 : inner / 2;
         Place(c.caredLabel, x, y, split, kLabelH);
         Place(c.caredValue, x + split, y, inner - split, kLabelH);
+        y += kLabelH + gap;
+    }
+
+    // Resignation inside that chance (Balanced cage, resignation_rules.h): its own
+    // label row under the cared-for one, expanded only.
+    if (view.showChance && view.resignedPct > 0 && !compact)
+    {
+        SetText(c.resignedLabel, texts.resignedLabel);
+        SetText(c.resignedValue, texts.resignedValue);
+        Place(c.resignedLabel, x, y, inner / 2, kLabelH);
+        Place(c.resignedValue, x + inner / 2, y, inner - inner / 2, kLabelH);
         y += kLabelH + gap;
     }
 
@@ -545,7 +560,7 @@ std::string LayoutKey(const ReadoutView& v, const ReadoutTexts& t, bool compact)
     const std::string* parts[] = {
         &t.name, &t.route, &t.stressLabel, &t.stressValue, &t.hungerLegend,
         &t.woundsLegend, &t.tiredLegend, &t.beatenLegend, &t.chanceLabel, &t.chanceValue,
-        &t.caredForLabel, &t.caredForValue,
+        &t.caredForLabel, &t.caredForValue, &t.resignedLabel, &t.resignedValue,
         &t.defeatsLabel, &t.defeatsValue, &t.foodLabel, &t.foodValue,
         &t.primary, &t.secondary, &t.held
     };

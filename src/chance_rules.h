@@ -46,11 +46,15 @@ struct ChanceInputs
     // The care streak days behind that share, for the card and the log only:
     // JoinChance does not read it. 0 when the bonus has no streak.
     int careStreakDays;
+    // Resignation (resignation_rules.h, balanced-tuning T4): what the full game
+    // days in the Balanced cage argue, already divided by resolve. 0 elsewhere.
+    int resignation;
 
     ChanceInputs()
         : npcLevel(1), playerLevel(1), relation(0.0f), haveRelation(false),
           personality(Temperament_Normal), situation(0), stress(0.0f),
-          defeats(0), grudge(false), unique(false), caredFor(0), careStreakDays(0)
+          defeats(0), grudge(false), unique(false), caredFor(0), careStreakDays(0),
+          resignation(0)
     {
     }
 };

@@ -278,6 +278,12 @@ struct Submission
     // clamped to 0..10 and 0..40.
     int caredForStreakPerDay;
     int caredForStreakMax;
+    // Resignation (balanced-tuning T4, resignation_rules.h): every full game day
+    // in the player's cage (the saved hold clock) adds resignationPerDay to the
+    // Balanced cage roll, up to resignationMax, divided by resolve like stress and
+    // defeats. Whole percent; clamped to 0..5 and 0..30.
+    int resignationPerDay;
+    int resignationMax;
     // What loyalty to a standing organisation (military, law enforcement) takes
     // off the field-yield roll. A penalty, not a refusal: in the open world they
     // cannot be bought, but being beaten is the one argument they still hear.
@@ -366,6 +372,8 @@ struct Submission
           caredForBonusMax(20),
           caredForStreakPerDay(3),
           caredForStreakMax(15),
+          resignationPerDay(1),
+          resignationMax(10),
           fieldYieldLoyaltyPenalty(25),
           stressFromHunger(0.5f),
           stressFromWounds(0.35f),

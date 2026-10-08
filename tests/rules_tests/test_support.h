@@ -63,6 +63,7 @@ void RunPresetRulesTests();
 void RunCheatWaitsTests();
 void RunCaredForRulesTests();
 void RunCareStreakRulesTests();
+void RunResignationRulesTests();
 void RunInsistenceRulesTests();
 void RunHealingLedgerTests();
 void RunDuelNarrationRulesTests();

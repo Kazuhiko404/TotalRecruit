@@ -16,6 +16,7 @@
 #include "cage_command_rules.h"
 #include "cared_for_rules.h"
 #include "care_streak_rules.h"
+#include "resignation_rules.h"
 #include "chance_rules.h"
 #include "cheat_waits.h"
 #include "config.h"
@@ -132,9 +133,11 @@ int DaysTo90(int percent)
 
 // The cage's JoinChance, composed exactly as DecideCage composes it
 // (route_cage.cpp): no relation, intimidation as the situation, the stress bar
-// from the state, defeats and the cared-for draw as given.
+// from the state, defeats and the cared-for draw as given, and the resignation of
+// `hoursHeld` in the cage (ResignationChance).
 int CageChance(const Config& c, Temperament t, bool unique, int npcLevel, float hunger,
-               float worst, float rested, float beaten, int caredFor, int defeats)
+               float worst, float rested, float beaten, int caredFor, int defeats,
+               float hoursHeld = 0.0f)
 {
     ChanceInputs in;
     in.npcLevel = npcLevel;
@@ -148,12 +151,14 @@ int CageChance(const Config& c, Temperament t, bool unique, int npcLevel, float 
     in.unique = unique;
     in.situation = c.chance.intimidationBonus;
     in.caredFor = caredFor;
+    in.resignation = ResignationChance(hoursHeld, t, c.submission);
     return JoinChance(in, c.chance, c.submission);
 }
 
 // Days until the cumulative join probability reaches 90% when the prisoner is kept
 // in the same state day after day: the roll is drawn once per game day, and what
-// grows with the days held is applied to day d (1 = the first roll): the care
+// grows with the days held is applied to day d (1 = the first roll, caged that
+// day): the resignation of d - 1 full days (ResignationChance) always, and the care
 // streak (CareStreakBonus of d - 1 kept days, care_streak_rules.h) when
 // `careDraw` >= 0, on top of that day's draw. -1 when 400 days are not enough.
 int CageDaysTo90(const Config& c, Temperament t, bool unique, int npcLevel, float hunger,
@@ -163,7 +168,8 @@ int CageDaysTo90(const Config& c, Temperament t, bool unique, int npcLevel, floa
     for (int day = 1; day <= 400; ++day)
     {
         const int cared = careDraw >= 0 ? careDraw + CareStreakBonus(day - 1, c.submission) : 0;
-        const int chance = CageChance(c, t, unique, npcLevel, hunger, worst, rested, beaten, cared, defeats);
+        const int chance = CageChance(c, t, unique, npcLevel, hunger, worst, rested, beaten, cared, defeats,
+                                      (float)(day - 1) * 24.0f);
         stillOut *= 1.0 - (double)chance / 100.0;
         if (stillOut <= 0.1 + 1e-9)
         {
@@ -212,7 +218,7 @@ void PrintTermCatalogue(const Config& c)
     const Chance& ch = c.chance;
     const Submission& s = c.submission;
     std::printf("## 1. Catalogo de terminos\n\n");
-    std::printf("`JoinChance` = nivel + relacion + personalidad + derrotas + estres + situacion + cuidado "
+    std::printf("`JoinChance` = nivel + relacion + personalidad + derrotas + estres + situacion + cuidado + resignacion "
                 "- rencor - unico, acotado a **[%d, %d]** (`chance.floor`/`ceiling`).\n\n", ch.floor, ch.ceiling);
     std::printf("| Termino | Funcion | Formula (defaults) | Min | Max |\n|---|---|---|---|---|\n");
     std::printf("| Nivel | `ChanceFromLevelGap` | base %d; NPC arriba: -%.1f/nivel (piso %d); NPC abajo: +%.1f/nivel (tope +%d) | %d | %d |\n",
@@ -243,6 +249,9 @@ void PrintTermCatalogue(const Config& c)
                 CaredForBonusFromSeed(0u, s.caredForBonusMin, s.caredForBonusMax),
                 CaredForBonusFromSeed((unsigned int)(s.caredForBonusMax - s.caredForBonusMin), s.caredForBonusMin, s.caredForBonusMax)
                     + CareStreakBonus(1000, s));
+    std::printf("| Resignacion (jaula) | `ResignationChance` | +%d por dia completo encerrado (reloj guardado), tope %d, "
+                "/ resolve | 0 | %d |\n",
+                s.resignationPerDay, s.resignationMax, ResignationChance(100000.0f, Temperament_Fearful, s));
     std::printf("| Rencor | `grudgePenalty` | fijo (honorable/valiente/amable: rechazo absoluto) | -%d | 0 |\n", ch.grudgePenalty);
     std::printf("| Unico | `uniquePenalty` | fijo | -%d | 0 |\n\n", ch.uniquePenalty);
 
@@ -295,11 +304,12 @@ void PrintCageMatrix(const Config& c)
                 "sano, alimentado y a vida plena SIEMPRE tiene el bono de cuidado); **cuid. min/max** = sano + bono %d / %d; "
                 "**hambre** = lleno 0; **herido** = worstDamage 0.8; **H+H+C** = hambre + herido + agotado (estres %.2f); "
                 "**golpes** = barra de golpes 1.0, por lo demas sano (sin bono: los golpes hieren); **quebrado** = todo junto (estres 1.0). "
-                "La chance es la del primer dia. Entre parentesis: dias hasta 90%% acumulado manteniendo ese estado; en las columnas "
-                "de cuidado eso incluye la racha que crece cada dia (+%d por dia seguido, tope +%d, `CareStreakBonus`).\n\n",
+                "La chance es la del primer dia (0 dias encerrado). Entre parentesis: dias hasta 90%% acumulado manteniendo ese estado, "
+                "con la resignacion que crece un dia completo por tirada (+%d por dia / resolve, tope %d, `ResignationChance`); en las "
+                "columnas de cuidado eso incluye ademas la racha (+%d por dia seguido, tope +%d, `CareStreakBonus`).\n\n",
                 kLeader, c.chance.intimidationBonus, s.caredForBonusMin, s.caredForBonusMax,
                 StressFromState(kHungerEmpty, kWoundHigh, kExhausted, 0.0f, s),
-                s.caredForStreakPerDay, s.caredForStreakMax);
+                s.resignationPerDay, s.resignationMax, s.caredForStreakPerDay, s.caredForStreakMax);
     std::printf("| Temperamento | Unico | Nivel NPC | sano | cuid. min | cuid. max | hambre | herido | H+H+C | golpes | quebrado |\n");
     std::printf("|---|---|---|---|---|---|---|---|---|---|---|\n");
     const Temperament temps[] = { Temperament_Fearful, Temperament_Normal, Temperament_Brave, Temperament_Honorable };
@@ -371,6 +381,29 @@ void PrintCageMatrix(const Config& c)
                 s.caredForBonusMax + week, s.caredForBonusMax, week,
                 (s.caredForBonusMax + week) * 100 / ChanceFromStress(1.0f, Temperament_Normal, s),
                 ChanceFromStress(1.0f, Temperament_Normal, s));
+
+    std::printf("### Resignacion por dias encerrado (nivel igual al lider, `ResignationChance`)\n\n");
+    std::printf("+%d por dia de juego completo en tu jaula (reloj de encierro guardado, `total_recruit.hold_start_hour`), tope %d, "
+                "dividido por la resolucion como el estres y las derrotas. Celdas: termino (chance de un preso sano sin bono ese dia).\n\n",
+                s.resignationPerDay, s.resignationMax);
+    std::printf("| Temperamento | Unico | 0 dias | 3 dias | 7 dias | 14 dias |\n|---|---|---|---|---|---|\n");
+    const int heldDays[] = { 0, 3, 7, 14 };
+    for (int u = 0; u < 2; ++u)
+    {
+        for (int ti = 0; ti < 4; ++ti)
+        {
+            const Temperament t = temps[ti];
+            std::printf("| %s | %s |", TempName(t), u == 1 ? "si" : "no");
+            for (int di = 0; di < 4; ++di)
+            {
+                const float hours = (float)heldDays[di] * 24.0f;
+                std::printf(" +%d (%d) |", ResignationChance(hours, t, s),
+                            CageChance(c, t, u == 1, kLeader, kHungerFull, 0.0f, kRested, 0.0f, 0, 0, hours));
+            }
+            std::printf("\n");
+        }
+    }
+    std::printf("\n");
 }
 
 void PrintCageVerdicts(const Config& c)

@@ -72,6 +72,11 @@ ReadoutTexts BuildReadoutTexts(const ReadoutView& view, const std::string& name,
                                    streak);
     }
 
+    t.resignedLabel = Say("readout.resigned", "RESIGNADO", NULL);
+    char resigned[16] = { 0 };
+    _snprintf_s(resigned, sizeof(resigned), _TRUNCATE, "+%d%%", view.resignedPct);
+    t.resignedValue = resigned;
+
     t.defeatsLabel = Say("readout.defeats", "DERROTAS", NULL);
     char frac[24] = { 0 };
     _snprintf_s(frac, sizeof(frac), _TRUNCATE, "%d/%d", view.defeats, view.defeatsNeeded);

@@ -772,6 +772,14 @@ CageExtra GatherCageExtra(Character* character, const CoreFacts& core, GatherMod
             extra.care.key, extra.care.dayIndex, mode == Gather_Decide,
             IsFullyCaredFor(core.wounded, core.starving, core.health));
     }
+    // Resignation (resignation_rules.h, balanced-tuning T4) reads the saved hold
+    // clock. Peeked in both modes: the sweep starts the clock, and a prisoner caged
+    // this very moment has no full day to count anyway.
+    float held = 0.0f;
+    if (!core.animal && PeekHoursHeld(character, &held))
+    {
+        extra.hoursHeld = held;
+    }
     extra.purse = ReadPurse();
     // Standing is not a factor in the cage: neither the chance nor the price reads it.
     extra.price = GatherPrice(character, core);
