@@ -41,7 +41,7 @@ La jaula de Balanced cobra tiempo de juego y decisiones (R2.x). Si una sola herr
 ## Principios (del usuario)
 - Lore-friendly y balanceado.
 - Aleatoriedad con margenes min/max, pero estable: sembrada por dia (`DailySeed`), nunca re-tirable con clics.
-- Todo numero configurable (`config.json` + Mod Hub).
+- Todo numero configurable (clave en `config.json`).
 - Modulos aislados (SOLID), sin parche sobre parche.
 - Maqueta en `ui-mockup/` antes de cambiar cualquier UI; las maquetas quedan al dia.
 - Nunca pisar el `config.json` desplegado: `scripts/deploy.sh` solo agrega claves.
@@ -50,7 +50,7 @@ La jaula de Balanced cobra tiempo de juego y decisiones (R2.x). Si una sola herr
 - Conventional Commits; docs en espanol, codigo en ingles.
 
 ## Alcance
-T1..T7 abajo. Solo reglas puras de Balanced (`src/*_rules.cpp`), sus claves de config, Mod Hub, mensajes y docs. Cheat no cambia salvo T5.
+T1..T7 abajo. Solo reglas puras de Balanced (`src/*_rules.cpp`), sus claves de config, mensajes y docs. Cheat no cambia salvo T5.
 
 ## Restricciones
 - Toolset v100: sin C++11.
@@ -138,7 +138,7 @@ Ruta: inline (dos defaults + pruebas de caracterizacion; sin regla nueva).
 - Cuidar una semana seguida vale aprox. lo mismo que quebrar (T3).
 - El tiempo encerrado suma un termino acotado y visible (T4).
 - En Cheat los enfriamientos terminan al minuto y las etiquetas dicen minutos (T5).
-- Todo numero nuevo tiene clave en `config.json` (solo agregada) y fila en Mod Hub; `rules_tests` verde; DLL compila.
+- Todo numero nuevo tiene clave en `config.json` (solo agregada) y su clamp en `LoadConfig`; `rules_tests` verde; DLL compila.
 
 ## Checks
 - `"$MSBUILD" tests/rules_tests/rules_tests.vcxproj -p:Configuration=Release -p:Platform=x64 && tests/rules_tests/x64/Release/rules_tests.exe`

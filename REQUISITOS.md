@@ -29,9 +29,9 @@ hasta que salga bien. La tirada se siembra con el NPC **y el día de juego**
 recargas, y al día siguiente se vuelve a sortear. "Volvé mañana" significa algo,
 y un 37% es un 37% a lo largo del tiempo, no un sí o un no para siempre.
 
-**R0.4 — Todo número es configurable.** Sin excepciones nuevas. Preferentemente
-en el panel del hub, porque ahí el cambio es inmediato; el archivo de config
-exige reiniciar y reimportar, y eso hace que un valor no se toque nunca.
+**R0.4 — Todo número es configurable.** Sin excepciones nuevas. Cada número es
+una clave de `config.json`, que el jugador edita a mano y el mod nunca escribe,
+con su rango acotado en `LoadConfig`.
 
 **R0.5 — Todo texto vive en el archivo de mensajes.** Cada regla nueva trae sus
 líneas. Si falta una clave, el log la nombra al cerrar — ese aviso es parte del
@@ -59,7 +59,7 @@ Hoy Cheat recluta al instante a cualquiera, en cualquier estado. Debe exigir que
 el NPC esté en una jaula del jugador. Sin jaula, no hay oferta.
 
 *Estado (cheat-any-cage, pedido del usuario 2026-10-05):* con `cheatAnyCage`
-(on por defecto, Mod Hub "Cheat: cualquier jaula") en Cheat sirve **cualquier**
+(on por defecto) en Cheat sirve **cualquier**
 jaula: la de otra faccion, grilletes o cargado por otro (`SafeInPrison`), con el
 mismo minuto de espera (`CheatCageSatisfied`, `src/route_cheat.cpp`; el reloj de
 encierro corre para esos presos en Cheat, `HoldClockCountsAnyCage`). Sigue
@@ -217,8 +217,8 @@ vanilla `ma badpunch`), pedido cada cuadro con `runSlaveAnim` y terminado con
 `endSlaveAnim` en el personaje y su `AnimationClass`. El golpe (daño, estrés,
 queja, sonido, mensaje) entra al final del amago (`submissionBeatWindupSeconds`,
 0,35 s) y el clip dura `submissionBeatAnimSeconds` (0,9 s). Si el motor no
-reporta el clip, o la animación está apagada (Mod Hub "Golpear: animacion del
-golpe"), el golpe entra en el acto como antes. Cargar, que tu personaje caiga o
+reporta el clip, o la animación está apagada
+(`submissionBeatAnimEnabled`), el golpe entra en el acto como antes. Cargar, que tu personaje caiga o
 que el preso deje de ser válido durante el amago terminan el clip sin golpe
 (`beat_strike_rules`, `beat_strike`). Se confirma en juego (`QA.md` 12.40
 C1-C7).
@@ -247,8 +247,7 @@ no corren con el juego en pausa.
 
 *Estado (2026-10-04, prisoner-module-fixes F6):* **intervalo entre golpizas.**
 Tras un golpe que pegó, Golpear descansa sobre ese preso
-`submissionBeatingCooldownHours` horas de juego (Mod Hub "Sumision: horas entre
-golpizas", 6 por defecto; por preso y solo de sesión, como los episodios de
+`submissionBeatingCooldownHours` horas de juego (6 por defecto; por preso y solo de sesión, como los episodios de
 derrota). El botón sigue en el bloque y en la ventana y muestra la espera
 ("Golpear (4 h)", horas redondeadas hacia arriba); un clic solo la dice ("Podrás
 volver a golpearlo en 4 h"). Cada clic vuelve a leer los hechos: una ventana o un
@@ -265,8 +264,8 @@ fuera de las dos; con una sola columna queda donde siempre.
 
 *Estado (2026-10-04, cage-beating-stress):* **descansos de 1 h y estrés por
 golpes.** Golpear descansa `submissionBeatingCooldownHours` (ahora 1 h por
-defecto) y Noquear también descansa: `submissionKnockoutCooldownHours` (1 h,
-Mod Hub "Sumision: horas entre noqueos"), contado desde una orden de Noquear que
+defecto) y Noquear también descansa: `submissionKnockoutCooldownHours` (1 h),
+contado desde una orden de Noquear que
 tumbó al preso; por preso y solo de sesión. Los botones muestran la espera
 ("Golpear (1 h)", "Noquear (1 h)" en lugar del %) y un clic la dice ("Podrás
 volver a noquearlo en 1 h"). Los noqueos de Golpear y Noquear ya **no son
@@ -594,7 +593,7 @@ los puedas controlar; parecido a los mercenarios de Kenshi, pero gratis".
 también ("Aliado: 1.840 cats con descuento"). Las negativas llevan su motivo.
 
 **R4b.5 — Todo configurable.** *(P1, hecho)* Claves `allyTier*` en
-`config.json` y en el Mod Hub: los niveles de corte, los máximos de cada tramo,
+`config.json`: los niveles de corte, los máximos de cada tramo,
 la escala, la distancia de nivel y los días. El miembro temporal, `tempMember*`:
 faltas para irse, umbral y horas de hambre, horas entre faltas, aviso antes de
 irse y días sin volver. El ayudante, `helper*`: activo, chance por día, niveles de
@@ -699,7 +698,7 @@ barra de comida que necesita un animal enjaulado: `animalCageBeatingWeight`
 (0,5) × estrés / resistencia, resistencia = `animalCageBeatingResolveBase` (1) +
 nivel × `animalCageBeatingResolvePerLevel` (0,02); nunca más del 90 % de la
 barra. Sigue haciendo falta la primera comida de tu mano y llegar a la barra
-bajada. Un animal suelto y Cheat no cambian. Interruptor y pesos en Mod Hub
+bajada. Un animal suelto y Cheat no cambian. Interruptor y pesos en `config.json`
 (`animal_beating_rules`, `DecideCagedAnimal`). QA 12.40 D1-D5.
 
 **R5.1 — Domesticar por barra de hambre, no por comidas.** *(P1)*
@@ -752,26 +751,11 @@ Umbral de hambre, peso de la madurez, peso del nivel, descuento por ventaja.
 **R6.1 — Todo lo nuevo, configurable.** *(P1)*
 Sin números escondidos en el código.
 
-**R6.2 — Preferir el panel del hub.** *(P1)*
-Ahí el cambio es inmediato. El archivo exige reiniciar y reimportar, y un valor
-que cuesta eso no se toca nunca.
+**R6.2 — Preferir el panel del hub.** *Retirado 2026-10-07: el Mod Hub ya no se usa; la config vive solo en `config.json`.*
 
-**R6.3 — El panel necesita orden.** *(P1)*
-Ya lleva más de treinta controles en una lista plana, y esto agrega diez o más.
-Hace falta agrupar por ruta: general, jaula, amistoso, rescate, sumisión,
-animales, precios.
+**R6.3 — El panel necesita orden.** *Retirado 2026-10-07: el Mod Hub ya no se usa; la config vive solo en `config.json`.*
 
-*Verificado:* el hub instalado ofrece más tipos de control de los que usamos
-—entre ellos listas de opciones y filas de acción— y una versión más nueva de su
-interfaz que la que declaramos. Un desplegable para el preset y agrupadores para
-el resto son alcanzables sin inventar nada.
-
-**R6.4 — Los que no se pueden llevar al panel, documentados.** *(P2)*
-
-*Corregido por I6:* el hub **sí** acepta texto libre (`register_text_setting`), así que los
-identificadores de diálogo y las listas de exclusión **pueden** ir al panel; este requisito
-partía de que no. Lo que queda solo en el archivo es menos de lo que decía. Falta confirmar
-el layout del struct antes de llamar esas funciones (ver [ESTADO.md](ESTADO.md) §5).
+**R6.4 — Los que no se pueden llevar al panel, documentados.** *Retirado 2026-10-07: el Mod Hub ya no se usa; la config vive solo en `config.json`.*
 
 ---
 
@@ -790,7 +774,7 @@ construir sobre una suposición.
 | I3 | Qué señal sirve de "vida restante" | R3.1 | ✅ `blood`/`getMaxBlood()` o `derivedFleshHealthPercent` |
 | I4 | Si escribir la marca de derrota altera la conducta de la IA | R3.3 | ✅ **Resuelta: ya no se escribe ni se lee.** El conteo vive en el save del personaje (recruit-gating T1) |
 | I5 | Si el conteo de intentos de charla sobrevive una recarga | R2.4 | ✅ **No**, y la clave es un puntero crudo — bug latente |
-| I6 | Qué tipos de control acepta realmente el panel del hub | R6.3 | ✅ Secciones, select, texto libre y más |
+| I6 | Qué tipos de control acepta realmente el panel del hub | R6.3 | Retirado 2026-10-07: el Mod Hub ya no se usa; la config vive solo en `config.json` |
 
 ---
 
@@ -798,11 +782,11 @@ construir sobre una suposición.
 
 1. **Las investigaciones I1 a I6.** Baratas, y evitan rehacer.
 2. **El motor de chance (R0.1 a R0.3).** Todo lo demás se apoya en él.
-3. **Configurables (R6.1, R6.2) y los umbrales sueltos (R1.4, R2.2, R2.4).**
+3. **Configurables (R6.1) y los umbrales sueltos (R1.4, R2.2, R2.4).**
    Cambios chicos, efecto inmediato, se prueban jugando.
 4. **Cheat con jaula (R1.1 a R1.3).** Autocontenido.
 5. **Rescate (R4.1 a R4.4).** Es el que más criterio necesita.
 6. **Sumisión (R3.1 a R3.7).** Depende del motor y de I3, I4.
 7. **Animales por hambre (R5.1, R5.5).** Depende de I2.
-8. **Orden del panel (R6.3).** Cuando ya estén todos los controles.
+8. ~~**Orden del panel (R6.3).**~~ Retirado 2026-10-07 junto con el Mod Hub.
 9. **Extras (R2.3, R3.4, R3.8).** Cuando el resto se sienta bien.

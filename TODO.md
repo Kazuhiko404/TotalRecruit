@@ -2,7 +2,7 @@
 
 Última actualización: 2026-10-06. `main` es la única rama; todo mergeado y desplegado (DLL en `3fb81b2`).
 Foto completa (qué hace el mod, avance por feature, riesgos): [odd/system-status.md](odd/system-status.md).
-La configuración vive en el Mod Hub de Emkej (`src/mod_hub_integration.cpp`, 183 controles).
+La configuración vive solo en `config.json`: el jugador lo edita a mano y el mod nunca lo escribe (el Mod Hub se quitó el 2026-10-07).
 
 ---
 
@@ -48,7 +48,6 @@ La configuración vive en el Mod Hub de Emkej (`src/mod_hub_integration.cpp`, 18
 ### 3. Después
 - [ ] Reglas y precios por personaje único.
 - [ ] Bolsa de comida para animales (como TameBeasties).
-- [ ] Secciones del Mod Hub (R6.3): bloqueado hasta tener el volcado de slots.
 
 ### Descartado / limpieza (sin valor para el jugador)
 Puente de diálogo FCS (apagado a propósito, `dialogue_bridge.cpp:235`), config INI por capas,

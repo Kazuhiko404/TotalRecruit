@@ -157,8 +157,8 @@ Con esos números el dinero no es un precio, es vuelto. La idea central de for
 Cats — *"capturar a alguien no debería significar que puedes obtener gratis un
 personaje muy fuerte"* — no llega a cumplirse con nuestra escala.
 
-**Es configurable sin recompilar**: `cats_per_level` y `cats_minimum` están en el
-panel de Mod Hub.
+**Es configurable sin recompilar**: `catsPerLevel` y `catsMinimum` son claves de
+`config.json`.
 
 ### 3.2 El precio no lee las estadísticas reales
 
@@ -216,7 +216,7 @@ y una lectura de estadísticas.
 
 ## 6. Si hubiera que priorizar
 
-1. **Subir la escala de cats.** Sin recompilar, desde el hub. Es el cambio con
+1. **Subir la escala de cats.** Sin recompilar, desde `config.json`. Es el cambio con
    mejor relación esfuerzo/efecto de toda esta lista.
 2. **Precio por estadísticas reales.** Convierte el precio en información sobre
    el personaje, que es lo que for Cats hace bien.

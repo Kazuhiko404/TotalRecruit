@@ -16,6 +16,10 @@ caso falla aunque en pantalla parezca bien.
 **Cerrá Kenshi del todo y abrilo de nuevo.** El config se lee al cargar el
 plugin; cambiarlo con el juego abierto no hace nada.
 
+No hay panel de ajustes: toda la configuración vive en `config.json` y el mod
+nunca lo escribe. Cuando una fila nombra una clave (por ejemplo `readoutEnabled`
+en OFF), se edita esa clave en `config.json` y se reinicia el juego.
+
 Comprobá que arrancó bien: el log debe traer una línea nueva de
 `startPlugin called`. Si no está, seguís probando el build anterior.
 
@@ -35,8 +39,8 @@ tail -f "/d/SteamLibrary/steamapps/common/Kenshi/RE_Kenshi_log.txt" | rg "TotalR
 
 | # | Qué hacer | Esperado | Línea del log |
 |---|---|---|---|
-| S1 | Abrir el juego | El mod carga y el hub engancha | `startPlugin complete.` y `Mod Hub attached: api v1, size 160 bytes.` |
-| S2 | Abrir el panel de Mod Hub | ~106 controles de TotalRecruit (T8 sumo 19), ninguno rechazado | Ningún `Mod Hub rejected` |
+| S1 | Abrir el juego | El mod carga | `startPlugin complete.` |
+| S2 | Mirar el log tras cargar | El config se leyó del archivo | `Loaded config from ...config.json` |
 | S3 | Click derecho a cualquier NPC | Sale el bloque de diagnóstico completo | `--- probe: <nombre> ---` … `--- end probe ---` |
 | S4 | Cerrar el juego | Nombra las claves de texto que falten | `messages.json has no entry for:` (o nada) |
 
@@ -271,14 +275,8 @@ Poné `"preset": 0` y **reiniciá el juego**.
 
 ### R6.3 — el layout del hub
 
-Buscá al arrancar:
-
-```
-Mod Hub slots (19 of 160 bytes): [0]=fn [1]=fn [2]=fn ...
-```
-
-Pasame esa línea. Con ella puedo mapear los punteros que faltan y llamar a
-`register_setting_section` **sin adivinar** — que es lo que crashea el juego.
+**Retirada (2026-10-07):** el Mod Hub ya no se usa; la config vive solo en
+`config.json`.
 
 ---
 
@@ -370,12 +368,12 @@ Con `probeOnClick` el reloj deja líneas `[hold]`.
 
 | # | Qué hacer | Esperado | Línea del log |
 |---|---|---|---|
-| E1 | Abrir el hub | **No** hay fila `Horas jaula (modo facil)` (retirada en P4) | — |
+| E1 | Mirar la plantilla `config.json` | **No** hay clave de horas de jaula del modo facil (retirada en P4) | — |
 | E2 | Encerrar a alguien en una jaula tuya y quedarse cerca (< ~900 unidades) | El reloj arranca **al encerrarlo**, no al primer click | `<nombre> [hold] clock started: seen in your cage` |
 | E3 | Balanced: esperar 6 horas de juego con el preso en la jaula y hablarle | **No** se rinde por tiempo: tira la chance normal (estres, personalidad, nivel, bonus por cuidarlo si corresponde) | `[chance] ...`; ninguna linea `easy-mode needs` |
 | E4 | Cheat: hablarle antes y despues del minuto | Antes: "dale un momento"; despues se une (el reloj de encierro solo decide la espera de Cheat) | `[hold] clock started` |
 | E5 | Encerrarlo un día, **sacarlo de la jaula** (que te vean pasar con él libre), volver a encerrarlo y hablarle enseguida | **No** se une al instante: el reloj empieza de cero | `[hold] clock dropped: no longer in your cage`, luego `clock started` y `held=0.0h` |
-| E6 | Abrir el hub | **Ya no** están `Horas jaula (Orgullosos)` ni `Horas jaula (Únicos)` | S2: sin `Mod Hub rejected` |
+| E6 | Mirar la plantilla `config.json` | **Ya no** están `hoursCagedForProud` ni `uniqueExtraHours` (ver E7) | — |
 | E8 | Con un preso encerrado, guardar, salir y cargar ese save | El reloj sigue desde el encierro original, no desde la carga (v1-presets-close P3, 12.33 H1-H4) | sin `[hold] clock started` nuevo tras la carga |
 | E7 | Cargar una config vieja que todavía trae `hoursCagedForProud` y `uniqueExtraHours` | Carga sin quejas; esas claves se ignoran | Sin errores de config en el log |
 | E8 | Con `hailWhenReady` en `false`, repetir E2 y E3 | El reloj anda igual (el barrido sigue vivo) | Las mismas líneas `[hold]` |
@@ -393,23 +391,16 @@ Con `probeOnClick` cada cotización deja una línea `[price]` con todos los fact
 | P5 | Provocar que el reclutamiento falle después de cobrar (si el motor lo rechaza) | La bolsa vuelve al valor de antes | `Refunded N cats: <nombre> could not be recruited.` |
 | P6 | Rescatar a alguien que no puede seguirte y lleva cats | Te los deja una sola vez; la bolsa del NPC queda en 0 y la tuya sube exactamente eso | `<nombre> paid the player N cats for the rescue.`; sin segunda línea al reabrir |
 | P7 | Soltar con IGNORAR a quien suplicó piedad y llevaba cats | Tu bolsa sube N y la suya queda en 0 | `Tribute of N cats from <nombre>` |
-| P8 | Cambiar cualquier ajuste en el hub y reiniciar el juego | Los precios no cambian respecto a antes de tocar el hub (techo, pendiente, punto medio, talento y únicos se conservan) | `[price]` con los mismos factores |
-| P9 | Mirar el hub | Aparecen `Talento: tope` y `Cats: tope final`; `Cats por nivel` llega a 300 | S2: sin `Mod Hub rejected` |
+| P8 | Reiniciar el juego sin tocar `config.json` | Los precios no cambian (techo, pendiente, punto medio, talento y únicos se conservan) | `[price]` con los mismos factores |
+| P9 | Poner `catsPerLevel` en 300 en `config.json` y reiniciar | El clamp acepta 300; `talentMaxMultiplier` y `catsHardCap` se leen del archivo | `[price]` con la curva editada |
 
 ### 12.5 Escritor de config (T6)
 
-Cada guardado deja una línea `Saved config to ...config.json (N changed, M added)`. `SaveConfig` corre cada vez que se toca un ajuste del Mod Hub.
+**Retirado (2026-10-07):** el mod ya no escribe `config.json` (`SaveConfig` se quitó junto con el Mod Hub). Solo queda una comprobación:
 
 | # | Qué hacer | Esperado | Línea del log |
 |---|---|---|---|
-| C1 | Cambiar un ajuste en el hub y abrir `config.json` | Solo cambió ese valor: mismo orden, mismas líneas en blanco y espacios, ninguna clave perdida | `(1 changed, 0 added)` |
-| C2 | Antes de tocar el hub, agregar al `config.json` una línea `// mis notas`, una clave propia `"miClave": 5` y un `/* comentario */`. Cambiar un ajuste | Los tres siguen donde estaban | `(1 changed, ...)` |
-| C3 | Borrar `catsHardCap` del `config.json` y cambiar cualquier ajuste | La clave vuelve al final del archivo con su valor actual; la coma del último miembro queda bien y el archivo carga | `(1 changed, 1 added)` |
-| C4 | Editar a mano `catsCeiling` (p. ej. 30000), cambiar otro ajuste del hub y reiniciar | `catsCeiling` conserva 30000 (antes se perdía y volvía al default) | `[price]` con la curva editada |
-| C5 | Un valor escrito como `6.0` o `0.60` que el hub no tocó | Sigue escrito igual (`6.0`, `0.60`), no se reformatea a `6` / `0.6` | — |
-| C6 | Borrar `config.json` y tocar un ajuste | Se crea un archivo completo, con el bloque `exclude` anidado | `(N changed, M added)` |
-| C7 | Romper el `config.json` a mano (borrar la última llave) y tocar un ajuste | Queda `config.json.bak` con el texto roto y un `config.json` nuevo válido | `config.json is not valid JSON; kept a copy as ...config.json.bak` |
-| C8 | Tras varios guardados mirar la carpeta del mod | No hay `config.json.tmp` | — |
+| C1 | Editar a mano `config.json` (agregar `// mis notas`, una clave propia, cambiar `catsCeiling`), jugar y cerrar el juego | El archivo queda exactamente como se dejó: el mod nunca lo reescribe | Ninguna línea `Saved config to` |
 
 ### 12.6 Identidad estable y reinicio al cargar (T7)
 
@@ -441,10 +432,9 @@ T8 es un refactor: **el comportamiento no debe cambiar** salvo A1 (golpiza) y la
 | Z2 | Insistir 3 veces a un NPC libre | Linea "¡Me estás hartando! Déjame en paz." y motivo "está harto de tu insistencia...". Editar `reason.insistence` en `messages.json` (otro texto) **no cambia** la linea que dice el NPC | `[route] free-world` |
 | Z3 | Honorable, Valiente o Bondadoso que te guarda rencor (mataste a uno de los suyos), **fuera** de la jaula | Rechazo absoluto (`grudge-refusal`) y **siempre** dice "Sé lo que hiciste. Fuera de mi vista." Antes solo la decia si el texto del motivo contenia "mataste" (2 de las 7 variantes del `messages.json`); las otras 5 caian en "¿Quién eres tú? No tengo nada que hablar contigo." | `[route] grudge-refusal` |
 | Z4 | El mismo NPC con rencor, pero **dentro** de tu jaula | Sigue la ruta de jaula (ya no hay rechazo absoluto), igual que antes | `[route] cage` |
-| C1 | Hub: buscar los 19 controles nuevos | `Chance: peso de la reputacion`, `Chance: bono de aliado`, 9 `Personalidad: ...`, `Reputacion: honorables se niegan`, `Reputacion: nadie trata`, `Talento: peso de oficio`, `Talento: peso de sombra`, 4 de `Animal: ...` (niveles del descuento y factores del temperamento). Con los valores de fabrica, todo se comporta como antes | S2: sin `Mod Hub rejected` |
-| C2 | Poner `"chanceRelationWeight": 0` (o moverlo en el hub) y hacer clic en un aliado | En `[chance]` el termino `relation=` pasa a 0 | `[chance] ... relation=0 ...` |
-| C3 | Tocar un control nuevo en el hub y mirar `config.json` | La clave aparece (o cambia) en su lugar, sin perder ninguna otra edicion a mano (T6) | `Saved config to ... (N changed, M added)` |
-| C4 | Cargar con un `config.json` viejo (sin las claves nuevas) | Carga normal con los valores de antes; no se escribe nada hasta tocar el hub | `Loaded config from ...` |
+| C1 | Buscar en `config.json` las 19 claves nuevas | `chanceRelationWeight`, `chanceAlliedBonus`, 9 `chancePersonality*`, `relationRefuseGoodNatured`, `relationRefuseAll`, `talentCraftWeight`, `talentShadowWeight`, `animalEdgeLevel`, `animalBigEdgeLevel`, `animalTemperamentBase`, `animalTemperamentWeight`. Con los valores de fabrica, todo se comporta como antes | `Loaded config from ...` |
+| C2 | Poner `"chanceRelationWeight": 0` y hacer clic en un aliado | En `[chance]` el termino `relation=` pasa a 0 | `[chance] ... relation=0 ...` |
+| C4 | Cargar con un `config.json` viejo (sin las claves nuevas) | Carga normal con los valores de antes; las claves que faltan usan su default y el archivo no se toca | `Loaded config from ...` |
 | R1 | Prisionero con 6h de encierro (modo fácil), NPC en rescate, cheat, animal con hambre, animal en jaula | Todas las rutas responden como antes (mismos motivos, mismos precios, misma barra de domesticación) | `[route] <ruta>`, `[chance] ...`, `[price] ...`, `[hold] held=...` |
 | R2 | Disparar un plea por vida baja (mercy) y por golpiza hasta casi matar | La ventana de piedad sigue abriendose (ahora por el listener de `defeats`, ya no por una llamada directa) | `defeated by the player (...) nearDeath=yes` y la ventana |
 | N1 | Insistir 5+ veces a un prisionero **en jaula** | **No** pasa nada: la insistencia no corta la charla de jaula (solo un desafiante o un zelote registran el intento, y nadie consulta el castigo en la jaula). R2.4 no dice nada de jaulas; queda como estaba y anotado en el doc de la feature | (sin `harto` en la linea del NPC) |
@@ -473,7 +463,7 @@ Desde 12.11 la tarjeta sale al **seleccionar** el NPC (clic izquierdo) y al apre
 | U12 | Mouse sobre una ventana del juego (inventario, etc.) con un NPC detras | La tarjeta se oculta (modo hover); vuelve al sacar el mouse | (sin linea) |
 | U13 | Seleccionar un NPC que no es tuyo (clic izquierdo), con la configuracion por defecto | **No** aparece tarjeta: la seleccion ya no es una fuente (12.9) | (sin linea) |
 | U14 | Abrir el menu contextual sobre un NPC, sin apretar Hablar | **No** aparece tarjeta: el menu abierto ya no es una fuente; el boton `Hablar` sigue a su lado | (sin linea) |
-| U15 | Hub: `Lectura: activa` en OFF | Ninguna tarjeta; en ON vuelve en <0.5 s. `Lectura: compacta` ON: tarjeta de 176 px sin leyenda ni derrotas ni segunda linea | S2: sin `Mod Hub rejected` |
+| U15 | `readoutEnabled` en OFF | Ninguna tarjeta; en ON vuelve. `readoutCompact` ON: tarjeta de 176 px sin leyenda ni derrotas ni segunda linea | — |
 | U16 | Mover la camara / el NPC camina con la tarjeta visible | La tarjeta lo sigue cada cuadro, nunca se sale de la pantalla (se pega al borde) | (sin linea) |
 | U17 | **No debe tener efectos**: pasar el mouse por un prisionero nuevo (sin id) en tu jaula, y por un NPC libre cualquiera | No aparece `first character id created` por pasar el mouse; el reloj de encierro **no** arranca por mirarlo (la linea `Faltan` aparece recien cuando el barrido de `hail` ya vio al prisionero); sin insistencia registrada | `[identity] first character id created` ausente tras solo pasar el mouse |
 | U18 | Cargar un save con la tarjeta a la vista | La tarjeta desaparece sola; no queda apuntando a nadie | `[identity] load begin: session state cleared (offer window, overlay, readout and cursor targets, ...)` |
@@ -497,8 +487,8 @@ Por defecto la tarjeta sale **solo** al apretar `Hablar`, al lado de la ventana 
 | H6 | `Hablar` en un NPC y que muera / salga de pantalla con la tarjeta a la vista | La tarjeta desaparece | |
 | H7 | Rescate automatico (un NPC que curaste se ofrece solo) | La oferta aparece **sin** tarjeta (el rescate no la pide) | |
 | H8 | (Reemplazado por 12.11: el modo hover se quito) | | |
-| H9 | Hub: `Lectura: activa` OFF y apretar `Hablar` | Oferta sin tarjeta | |
-| H10 | Zona con muchos NPCs en pantalla (una ciudad, 20+ personajes) con la config por defecto | FPS normales (comparar con el mod apagado en el hub); antes caian por el globo y la tarjeta | |
+| H9 | `readoutEnabled` OFF y apretar `Hablar` | Oferta sin tarjeta | |
+| H10 | Zona con muchos NPCs en pantalla (una ciudad, 20+ personajes) con la config por defecto | FPS normales (comparar con el mod apagado, `"enabled": false`); antes caian por el globo y la tarjeta | |
 | H11 | Globo de chat (`showTalkCursor` ON): mirar prisioneros reclutables y NPCs comunes | El globo sigue apareciendo sobre quien vale la pena hablar (incluye rescates con chance > 0); alimentar o golpear a uno cambia su globo en ~2 s | |
 | H12 | **Sin efectos** del globo: mirar un prisionero nuevo en tu jaula sin hacer clic | No aparece `first character id created` ni `[route]`/`[hold]` por solo mirarlo | |
 | H13 | Clic derecho en un NPC con `probeOnClick` OFF y luego ON | Con OFF no hay evaluacion extra al abrir el menu; con ON sigue la linea `Context menu: <nombre> -> ...` | `Context menu: ...` solo con probe |
@@ -521,7 +511,7 @@ Por defecto la tarjeta sale **solo** al apretar `Hablar`, al lado de la ventana 
 
 ### 12.11 Tarjeta al seleccionar el NPC (price-readout-button-tweaks T5)
 
-La tarjeta sigue a la **seleccion**: clic izquierdo en un NPC que no es tuyo y aparece sobre su cabeza; se calcula al cambiar la seleccion y se refresca cada 2 s, no cada cuadro. `Hablar` la sigue poniendo al lado de la oferta. Hub: `Lectura: al seleccionar` (ON por defecto). Con `"probeOnClick": true`.
+La tarjeta sigue a la **seleccion**: clic izquierdo en un NPC que no es tuyo y aparece sobre su cabeza; se calcula al cambiar la seleccion y se refresca cada 2 s, no cada cuadro. `Hablar` la sigue poniendo al lado de la oferta. `readoutOnSelect` (ON por defecto). Con `"probeOnClick": true`.
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
@@ -536,7 +526,7 @@ La tarjeta sigue a la **seleccion**: clic izquierdo en un NPC que no es tuyo y a
 | S9 | Seleccionado, apretar `Hablar` | La tarjeta se pone al lado de la oferta (no encima); al cerrar la oferta sigue sobre el NPC porque sigue seleccionado (recalculada) | `[readout] ... [hablar]` y luego `[select]` |
 | S10 | `Hablar` sobre un NPC **sin** seleccionarlo, y cerrar la oferta | La tarjeta se va con la oferta | |
 | S11 | Seleccionado y que el NPC salga de pantalla (mover la camara) y vuelva | Se oculta fuera de pantalla y reaparece sola al volver, sin linea nueva de log | |
-| S12 | Hub: `Lectura: al seleccionar` OFF | Seleccionar ya no muestra nada; `Hablar` sigue mostrandola junto a la oferta | |
+| S12 | `readoutOnSelect` OFF | Seleccionar ya no muestra nada; `Hablar` sigue mostrandola junto a la oferta | |
 | S13 | `config.json` viejo con `"readoutOnHover": true` | Se ignora sin error; la tarjeta funciona por seleccion | sin `[config]` de error |
 | S14 | Cargar un save con la tarjeta a la vista | Desaparece; no queda apuntando a nadie | `[identity] load begin ...` |
 
@@ -578,7 +568,7 @@ Con `"probeOnClick": true`. El conteo vive en el save del personaje y un noqueo 
 | Y1 | Vencer 2 veces a un prisionero en la jaula de **otra** faccion y hablarle | "esta en la jaula de otro"; no se une | `[route] field-yield` y luego `Refused ...: está en la jaula de otro` |
 | Y2 | Vencer 2 veces a un NPC libre, insistirle hasta que te ignore, hablarle de nuevo | "esta harto de tu insistencia"; no tira el dado | `[route] field-yield` y luego `Refused ...: está harto de tu insistencia` |
 | Y3 | Vencer 2 veces a un guardia o soldado (no a un bandido) | Tira el dado con 25 menos que un bandido igual; puede unirse | `chance=` 25 por debajo del bandido |
-| Y4 | Hub: `Sumision: lealtad al rendirse` en 0 y repetir Y3 | La misma chance que el bandido | |
+| Y4 | `submissionFieldYieldLoyaltyPenalty` en 0 y repetir Y3 | La misma chance que el bandido | |
 | Y5 | `config.json` con `"submissionFieldYieldLoyaltyPenalty": 500` | Se lee como 100 (tope) | |
 
 ### 12.15 Ventana de reclutamiento unica (recruit-gating T4)
@@ -638,7 +628,7 @@ Kenshi no limpia la seleccion al caminar con clic derecho, asi que la tarjeta qu
 | C2 | Con la tarjeta a la vista, clic derecho en el suelo para caminar | La tarjeta se va al instante; el personaje camina igual | `[readout] <nombre> dismissed: right` |
 | C3 | Volver a C1 y hacer clic izquierdo en el suelo | La tarjeta se va | `dismissed: left` |
 | C4 | Con la tarjeta guardada, clic izquierdo sobre el mismo NPC (cuerpo, no solo la cabeza) | La tarjeta vuelve, con numeros al dia | `shown again: left` |
-| C5 | Con la tarjeta a la vista, clic en la ventana de oferta, en el Mod Hub o en el boton `Hablar` | La tarjeta **se queda** | (sin `dismissed`) |
+| C5 | Con la tarjeta a la vista, clic en la ventana de oferta, en otra ventana del juego o en el boton `Hablar` | La tarjeta **se queda** | (sin `dismissed`) |
 | C6 | Con la tarjeta guardada, seleccionar a otro NPC reclutable | La tarjeta aparece para el nuevo | `shown again: ... (selection)` o un `[readout] ... [select]` nuevo |
 | C7 | Con la tarjeta a la vista, clic derecho sobre el NPC | Se abre el menu (la tarjeta se oculta mientras esta abierto, como antes); al cerrarlo con Esc vuelve | (sin `dismissed`) |
 | C8 | Con la tarjeta guardada, clic derecho en el NPC y `Hablar` | La tarjeta vuelve al lado de la oferta; clics en el mundo con la oferta abierta no la guardan; se va con la oferta | `shown again: ... (hablar)` |
@@ -661,7 +651,7 @@ Solo para precios en cats (soborno en el mundo libre y la ruta de cautiverio con
 | H9 | Mismo dia, misma oferta, otro intento tras cargar el save | La ofensa se olvida al cargar (solo memoria); la misma oferta el mismo dia da el mismo resultado (semilla diaria) | `[haggle] ...` igual que antes de cargar |
 | H10 | Un mercenario que pide mas de lo que tenes | Al abrir: TIENES en rojo, "No te alcanzan para esa oferta (te faltan N)" en la linea del slider y solo CANCELAR; bajando la oferta por debajo de tu bolsa aparece OFRECER | — |
 | H11 | Rescate, piedad, rendicion / sometido y un rechazo sin precio | Ninguno tiene slider ni linea de regateo | — |
-| H12 | `haggleEnabled` en false (Mod Hub "Regateo: activo") y `Hablar` a alguien con precio | La ventana de siempre, sin slider | — |
+| H12 | `haggleEnabled` en false (`haggleEnabled`) y `Hablar` a alguien con precio | La ventana de siempre, sin slider | — |
 
 ### 12.19 Golpear y Noquear al preso de tu jaula (cage-animals-submission T1)
 
@@ -672,7 +662,7 @@ Golpear y Noquear los da el personaje **seleccionado**. Golpear (desde `fix/cage
 | C1 | Seleccionar a uno de los tuyos, clic derecho sobre un preso **despierto** en tu jaula | Al lado del menu, un bloque de tres: Hablar, Golpear, "Noquear NN%" (o "Noquear" si el juego no da probabilidad); el bloque no tapa los botones de TotalSparring / TotalLoot | `Context menu: <nombre> -> ... [cage commands]` |
 | C2 | Clic derecho sobre un NPC libre, un preso inconsciente, o con `allowBeating` apagado | Solo Hablar | sin `[cage commands]` |
 | C3 | Golpear (clic izquierdo, y otra vez con el gesto: mantener clic derecho, deslizar, soltar) | Un solo golpe en el acto por gesto: la vida del torso del preso baja; el preso **sigue en la jaula** (nadie se pone a pelear, la lectura no pasa a `route=free`) | `[cage] <tuyo> -> <preso> beat hit (blunt X, part health A -> B)` con B < A |
-| C3b | Con Mod Hub "Sumision: horas entre golpizas" en 0,5, golpear al mismo preso muchas veces (esperando el descanso entre golpes, a velocidad x3) | Puede quedar inconsciente; **nunca muere** ni sangra hasta morir; los golpes cuando la parte ya esta en el piso no bajan nada | `beat hit (blunt 0.0, part health -N -> -N)` en el piso (N = la mitad de la vida maxima de la parte) |
+| C3b | Con `submissionBeatingCooldownHours` en 0,5, golpear al mismo preso muchas veces (esperando el descanso entre golpes, a velocidad x3) | Puede quedar inconsciente; **nunca muere** ni sangra hasta morir; los golpes cuando la parte ya esta en el piso no bajan nada | `beat hit (blunt 0.0, part health -N -> -N)` en el piso (N = la mitad de la vida maxima de la parte) |
 | C3h | Golpear a un preso despierto cuyo torso ya esta por debajo del piso (-0,5 x su vida maxima), por ejemplo muy herido de una pelea anterior; si no se consigue, anotarlo | El golpe no pega y la vida del torso **no sube** | `beat hit (blunt 0.0, part health A -> A)` con A igual en los dos lados |
 | C3c | Justo despues de C3, clic derecho otra vez sobre el mismo preso (horas entre golpizas en 1, el valor por defecto desde cage-beating-stress) | El bloque sigue con Golpear, que dice "Golpear (1 h)" (las horas que faltan, redondeadas hacia arriba); otro preso sin golpes dice "Golpear" | — |
 | C3d | Golpear en C3c | No hay golpe; mensaje "Podras volver a golpearlo en N h" | sin `beat hit` |
@@ -733,7 +723,7 @@ Un NPC vencido que se rinde (derrotas >= `submissionDefeatsToBreak` y la tirada 
 | S13 | Tener la ventana de otro NPC abierta cuando llega | Se queda parado mirandote hasta que cierres la otra ventana; entonces abre la suya (si no pasaron los 60 s) | `arrived, waits for the window to be free` |
 | S14 | Cargar un save mientras camina o con la ventana abierta | Nada queda colgado; el NPC del mundo cargado no recuerda el evento | `load begin: session state cleared (... submission event ... reject cooldowns ...)` |
 | S15 | Vencer al mismo NPC otra vez despues de PERDONAR | Vuelve a acercarse (una vez por paliza, no una vez por sesion) | `submitted (...)` de nuevo |
-| S16 | `submissionEventEnabled` apagado en Mod Hub | Ningun NPC viene; Hablar sigue igual | sin `[submission]` |
+| S16 | `submissionEventEnabled` apagado | Ningun NPC viene; Hablar sigue igual | sin `[submission]` |
 
 ### 12.22 La ventana de un preso: GOLPEAR / NOQUEAR, nunca IGNORAR / PERDONAR (fix tras T3)
 
@@ -748,7 +738,7 @@ Reporte del usuario (2026-10-03): un "Holy Warden" en tu jaula, Cautiverio 87%, 
 | W5 | El mismo preso con hambre, llevando comida | DARLE COMIDA, GOLPEAR, NOQUEAR en la primera fila y CERRAR solo a la derecha en una segunda | — |
 | W5b | Un preso **esclavo** (o de arquetipo esclavo) con hambre en tu jaula, llevando comida | Se une sin pedir comida (como G3: la libertad va antes que el hambre): solo ACEPTAR / CANCELAR, sin DARLE COMIDA | — |
 | W6 | Un preso de tu jaula que **si** se une (intimidado, alimentado y curado...) | Solo ACEPTAR / CANCELAR | — |
-| W7 | `allowBeating` apagado (Mod Hub "Sumision: permitir golpear") y W1 | Sin GOLPEAR ni NOQUEAR; el motivo dice "Sigue desafiante: dejalo con hambre" (no pide herirlo) | — |
+| W7 | `allowBeating` apagado (`submissionAllowBeating`) y W1 | Sin GOLPEAR ni NOQUEAR; el motivo dice "Sigue desafiante: dejalo con hambre" (no pide herirlo) | — |
 | W8 | Preso inconsciente en tu jaula, o un preso en la jaula de otro | Sin GOLPEAR ni NOQUEAR (como C2) | — |
 | W9 | Un preso de tu jaula lisiado que pide piedad (si llega a pasar) | ACEPTAR / RECHAZAR, **nunca** IGNORAR | — |
 | W10 | Durante el evento de 12.21, levantar (cargar) al NPC antes de que llegue | Si la ventana se abre, ACEPTAR / RECHAZAR, **nunca** PERDONAR | — |
@@ -766,7 +756,7 @@ Pedido del usuario (2026-10-03): "el juego te avisa, pero si no lees el nombre n
 | N5 | Con el cartel sobre A, seleccionar a otro NPC B | B tiene la tarjeta normal; el cartel de A sigue | — |
 | N6 | Clic izquierdo o derecho en el suelo con el cartel visible | El cartel sigue (solo seleccionarlo o el tiempo lo quitan) | — |
 | N7 | B seleccionado justo al lado de A, de modo que la tarjeta de B tape el cartel de A | El cartel de A se oculta mientras se tocarian; la tarjeta gana | — |
-| N8 | No hacer nada `headNoticeSeconds` (90 s por defecto; bajar a 10 s en Mod Hub "Aviso: segundos sobre la cabeza" para probar) | El cartel se va solo, a los ~90 s con el valor por defecto | — |
+| N8 | No hacer nada `headNoticeSeconds` (90 s por defecto; bajar a 10 s en `headNoticeSeconds` para probar) | El cartel se va solo, a los ~90 s con el valor por defecto | — |
 | N9 | Pausar el juego con el cartel visible | El tiempo del cartel se congela; al despausar sigue contando | — |
 | N10 | Evento del sometido (12.21) | Al empezar a caminar: cartel "Se acerca para hablar contigo"; se va cuando abre la ventana o si se cancela el evento | `[notice] <nombre>: "Se acerca para hablar contigo" ...` |
 | N11 | Que el NPC del cartel muera o se una al grupo | El cartel se va (en menos de 1 s) | — |
@@ -774,7 +764,7 @@ Pedido del usuario (2026-10-03): "el juego te avisa, pero si no lees el nombre n
 | N13 | Ventana de oferta abierta y el cartel caeria encima | Se corre de costado a la altura de la cabeza (como la tarjeta), u oculto sin lugar | — |
 | N14 | Tomar un miembro temporal (12.25) y no hacer nada | "Te acompanare N dias" se va solo a los ~25 s (`headNoticeInfoSeconds`), no a los 90 | `[notice] <nombre>: "Te acompanare N dias" over the head [key ...] (squad) (info)` |
 | N15 | Una falta o la despedida de un temporal; el inicio, aviso o despedida de un ayudante (12.26) | Cada linea dura ~25 s; la oferta del ayudante ("Quiere ofrecerte ayuda") dura ~90 s | `... (info)` para las lineas, `... (prompt)` para la oferta |
-| N16 | Mod Hub "Aviso: segundos de un cartel informativo" a 5 s | Los carteles informativos se van a los ~5 s; "Quiere hablar contigo" sigue usando "Aviso: segundos sobre la cabeza" | — |
+| N16 | `headNoticeInfoSeconds` a 5 s | Los carteles informativos se van a los ~5 s; "Quiere hablar contigo" sigue usando `headNoticeSeconds` | — |
 | N17 | Deploy (`bash scripts/deploy.sh`) sobre un `config.json` desplegado con `"headNoticeSeconds": 300` sin tocar | La salida dice `~ headNoticeSeconds: 300.0 -> 90.0 (still the old default)` y `+ headNoticeInfoSeconds`; con otro valor puesto a mano (p. ej. 120) dice `= headNoticeSeconds: 120.0 kept` y no lo cambia | — |
 
 ### 12.24 Aliados por nivel y descuento por amistad (ally-tiers-temp-helpers T1)
@@ -795,12 +785,12 @@ Pedido del usuario (2026-10-03): en Balanced, el nivel y la personalidad de un a
 | A10 | Seleccionar al aliado de A2 (tarjeta) | Linea "Aliado: X cats con descuento" en verde, sin barra de chance | — |
 | A11 | `allyTierEnabled` apagado con el aliado de A2 (Vanilla+ se retiro en v1) | Como antes: una tirada diaria, PROBABILIDAD, sin "-N%" | — |
 | A12 | Preset 0 (Cheat) | Sin cambios: jaula y un momento | — |
-| A13 | Mod Hub "Aliados por nivel: activo" apagado, preset 1 | Todos los aliados vuelven a la tirada diaria | — |
-| A14 | Mod Hub: bajar "Aliados: peso de la amistad" a 0.5 con relacion 28 | El descuento pasa a 14% | — |
+| A13 | `allyTierEnabled` apagado, preset 1 | Todos los aliados vuelven a la tirada diaria | — |
+| A14 | Bajar `allyTierDiscountScale` a 0.5 con relacion 28 | El descuento pasa a 14% | — |
 
 ### 12.25 El miembro temporal: avisos, maltrato y partida (ally-tiers-temp-helpers T2)
 
-Un aliado Bueno o Neutral de nivel 80+ reclutado como en 12.24 A6. Preset 1 (Balanced). Defaults: 3 faltas, hambre 12 h seguidas bajo 25%, 12 h entre faltas del mismo tipo, aviso 12 h antes, 7 dias sin volver. Para no esperar dias de juego: Mod Hub "Temporal: horas de hambre" = 1, "Temporal: horas entre faltas" = 1, `allyTierTempMinDays` = `allyTierTempMaxDays` = 1, y la velocidad del juego al maximo. Mockup: `ui-mockup/readout.html` seccion 2, "Temporary member (squad notices)". Las faltas se loguean siempre (`[temp] strikes N (...)`).
+Un aliado Bueno o Neutral de nivel 80+ reclutado como en 12.24 A6. Preset 1 (Balanced). Defaults: 3 faltas, hambre 12 h seguidas bajo 25%, 12 h entre faltas del mismo tipo, aviso 12 h antes, 7 dias sin volver. Para no esperar dias de juego: `tempMemberHungryHours` = 1, `tempMemberStrikeCooldownHours` = 1, `allyTierTempMinDays` = `allyTierTempMaxDays` = 1, y la velocidad del juego al maximo. Mockup: `ui-mockup/readout.html` seccion 2, "Temporary member (squad notices)". Las faltas se loguean siempre (`[temp] strikes N (...)`).
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
@@ -817,11 +807,11 @@ Un aliado Bueno o Neutral de nivel 80+ reclutado como en 12.24 A6. Preset 1 (Bal
 | T11 | Faccion de origen que no existe o es del jugador (raro) | Se va igual a "1233-gamedata.base" o a la faccion vacia | `left the squad for faction 1233-gamedata.base` |
 | T12 | Un temporal de 4+ dias, bien tratado: dejar pasar los dias de juego (duel-join-chance D5) | Una vez por dia de juego, cartel informativo (~25 s) "Me quedan N dias" (el ultimo dia "Me queda 1 dia"); **no** el dia en que se unio, **no** el dia de "Me ire pronto"; si ese paso hubo una falta, sale en el chequeo siguiente (2 s) | `[temp] <nombre> daily notice: N day(s) left (day D)` |
 | T13 | Guardar y cargar a mitad de un dia en que ya lo dijo | Lo repite una vez ese dia (el dia anunciado es de sesion); al dia siguiente, una vez | igual que T12 |
-| T14 | Mod Hub "Temporal: aviso diario de dias" apagado | Nunca "Me quedan N dias"; los demas carteles igual | — |
+| T14 | `tempMemberDailyNotice` apagado | Nunca "Me quedan N dias"; los demas carteles igual | — |
 
 ### 12.26 El ayudante gratis (ally-tiers-temp-helpers T3)
 
-Pedido del usuario (2026-10-03): aliados mas fuertes y de buena personalidad se ofrecen a acompanarte unos dias, gratis, sin que los puedas controlar (REQUISITOS R4b.6). Preset 1 (Balanced). **Mecanismo** (native-ai-packages T2): con `helperNativeBodyguard` encendido (por defecto) el ayudante recibe el contrato nativo de guardaespaldas del juego (`5090-gamedata.base`) con tu lider como empleador, como un mercenario contratado; si el contrato falla o esta apagado, el **respaldo B** lo escolta por codigo (repath cada 1 s, corre si esta lejos, ataca al blanco del lider). Los casos propios del contrato y del respaldo estan en 12.30 N1-N5. La escalera vieja BODYGUARD -> FOLLOW_PLAYER_ORDER -> walk ya no existe. Para probar sin esperar la tirada: Mod Hub "Ayudante: tecla de prueba" = 119 (F8) o `"helperDebugKey": 119` en `config.json`; seleccionar un NPC ajeno y apretar F8. Para no esperar dias: `helperDaysMin` = `helperDaysMax` = 1 y la velocidad al maximo. Mockup: `ui-mockup/readout.html` seccion 5 "Free helper offers to escort you" y seccion 2 "Free helper (offer and escort notices)". Todo se loguea como `[helper]`.
+Pedido del usuario (2026-10-03): aliados mas fuertes y de buena personalidad se ofrecen a acompanarte unos dias, gratis, sin que los puedas controlar (REQUISITOS R4b.6). Preset 1 (Balanced). **Mecanismo** (native-ai-packages T2): con `helperNativeBodyguard` encendido (por defecto) el ayudante recibe el contrato nativo de guardaespaldas del juego (`5090-gamedata.base`) con tu lider como empleador, como un mercenario contratado; si el contrato falla o esta apagado, el **respaldo B** lo escolta por codigo (repath cada 1 s, corre si esta lejos, ataca al blanco del lider). Los casos propios del contrato y del respaldo estan en 12.30 N1-N5. La escalera vieja BODYGUARD -> FOLLOW_PLAYER_ORDER -> walk ya no existe. Para probar sin esperar la tirada: `helperDebugKey` = 119 (F8) o `"helperDebugKey": 119` en `config.json`; seleccionar un NPC ajeno y apretar F8. Para no esperar dias: `helperDaysMin` = `helperDaysMax` = 1 y la velocidad al maximo. Mockup: `ui-mockup/readout.html` seccion 5 "Free helper offers to escort you" y seccion 2 "Free helper (offer and escort notices)". Todo se loguea como `[helper]`.
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
@@ -842,7 +832,7 @@ Pedido del usuario (2026-10-03): aliados mas fuertes y de buena personalidad se 
 | H15 | Ordenar a uno de tu grupo que lo ataque | Cartel "No vuelvo a ayudarte", roller "<nombre> dejo de ayudarte: tu grupo lo ataco."; deja de seguirte; 3 dias sin ofrecerse | `stops helping: attacked by the squad` |
 | H16 | Noquearlo con tu grupo | Igual que H15 | `stops helping: knocked out by the squad` |
 | H17 | Mientras un sometido camina hacia vos (12.x) | Ningun ayudante se ofrece hasta que termina, y al reves | — |
-| H18 | Mod Hub "Ayudante: activo" apagado, o preset 0 (Cheat) | Nadie se ofrece (los contratos en curso siguen hasta su fin) | — |
+| H18 | `helperEnabled` apagado, o preset 0 (Cheat) | Nadie se ofrece (los contratos en curso siguen hasta su fin) | — |
 
 ### 12.27 La tarjeta y los carteles se ocultan con el dialogo de Kenshi (fix card-hide-on-dialogue)
 
@@ -878,12 +868,12 @@ Pedido del usuario (2026-10-03): retar a un aliado 80+ a un duelo de TotalSparri
 | T12 | Retar y cancelar la ventana Dueling, o interrumpir el duelo | Nada pasa; el reto queda pendiente; un duelo terminado dentro de 6 h de juego todavia cuenta; despues de 6 h no | `-> ignored`; `challenge(s) expired unanswered` |
 | T13 | Duelo a muerte ganado | Si murio: roller "<nombre> murio en el duelo." y nadie se une | `died in the duel: nobody to recruit` |
 | T14 | La fila DUELOS contra el Fight Log de TotalSparring para ese par | Mismos ganados-perdidos (empates como tercer numero) | — |
-| T15 | Mod Hub "Duelo: retar NPC 80+" apagado | Nunca RETAR A DUELO | — |
+| T15 | `duelChallengeEnabled` apagado | Nunca RETAR A DUELO | — |
 | T16 | Salir de la partida / cerrar el juego con TotalSparring cargado | Sin crash; TotalRecruit se descarga limpio (el listener se da de baja) | `stopPlugin called.` sin errores de `[ts-bridge]` |
 
 ### 12.29 Ganar un duelo da una chance de que se una; Cheat tambien reta (duel-join-chance)
 
-Diseno del usuario (2026-10-04). Preparacion como 12.28. Defaults: chance base 25, +20 por victoria (25/45/65/85/100), enfriamiento tras ganar sin union 24-72 h (nivel 80-99) o 24-120 h (100+), horas de juego. Para probar rapido: Mod Hub "Duelo: horas minimas tras ganar" = 1 y las dos maximas = 1 (o `duelWinCooldown*Hours` = 1 en `config.json`); "Duelo: chance base al ganar" = 0 fuerza "no se une", = 100 fuerza "se une". Mockup: `ui-mockup/readout.html` seccion 5 "Ally 80+ can be challenged ...", "Cruel ally 80+ ...", "Cheat: an 80+ NPC ..." y seccion 1 "Ally 80+ you can challenge".
+Diseno del usuario (2026-10-04). Preparacion como 12.28. Defaults: chance base 25, +20 por victoria (25/45/65/85/100), enfriamiento tras ganar sin union 24-72 h (nivel 80-99) o 24-120 h (100+), horas de juego. Para probar rapido: `duelWinCooldownMinHours` = 1 y las dos maximas = 1 (o `duelWinCooldown*Hours` = 1 en `config.json`); `duelJoinBaseChance` = 0 fuerza "no se une", = 100 fuerza "se une". Mockup: `ui-mockup/readout.html` seccion 5 "Ally 80+ can be challenged ...", "Cruel ally 80+ ...", "Cheat: an 80+ NPC ..." y seccion 1 "Ally 80+ you can challenge".
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
@@ -896,7 +886,7 @@ Diseno del usuario (2026-10-04). Preparacion como 12.28. Defaults: chance base 2
 | J7 | Preset Cheat: Hablar con un NPC no animal de nivel 80+ (TotalSparring presente) | La respuesta de Cheat de siempre (p. ej. "Metelo en una de tus jaulas...") mas RETAR A DUELO, DUELOS y SI LE GANAS "se une"; tarjeta "Duelos: W-L, si ganas se une"; nivel 79 o un animal: sin duelo | — |
 | J8 | Cheat: ganar el duelo | Se une para siempre siempre (chance 100, sin enfriamiento) | `join chance 100%, roll 0 -> joined` |
 | J9 | Perder o empatar (Balanced o Cheat) | Igual que 12.28 T9 (`duelChallengeCooldownHours`); en Cheat la espera es 1 minuto, redondeada a la proxima hora entera (8 H10) | `-> lost` |
-| J10 | Cambiar en Mod Hub la chance base o por victoria | La fila y la tarjeta cambian en el siguiente refresco (la tarjeta en <= 2 s) | — |
+| J10 | Cambiar `duelJoinBaseChance` o `duelJoinChancePerWin` en `config.json` y reiniciar | La fila y la tarjeta muestran la chance nueva | — |
 
 ### 12.30 Ayudante con contrato nativo y temporal que vuelve a casa (native-ai-packages T2/T3)
 
@@ -907,7 +897,7 @@ KenshiLib 0.5.0 vendorizado: el ayudante usa el paquete Bodyguard del juego (com
 | N1 | Aceptar un ayudante (12.26 H1/H4) con `helperNativeBodyguard` encendido | Te sigue a distancia de mercenario, corre si quedas lejos y pelea a quien te ataca | `[helper] <nombre> native bodyguard contract -> <lider> (N h) ok: ...; package ...` |
 | N2 | Ayudante que venia en un pelotón con otros | Antes del contrato pasa a un pelotón propio (sus companeros no te siguen) | `in a platoon of N; moved to a platoon of its own (package ...)` |
 | N3 | F8 sobre un ayudante ya activo | Loguea si es nativo o por codigo y le asigna el contrato nativo | `debug key on helper <nombre>: native|code-driven ...` |
-| N4 | Mod Hub "Ayudante: contrato nativo" apagado (o el contrato falla) | Escolta por codigo (mecanismo B): repath cada 1 s, camina cerca, corre si esta a mas de 12 m, se ubica a ~3 m del lider y ataca al blanco del lider | `helperNativeBodyguard is off; code-driven escort` / `native contract failed; the code-driven escort takes over`, `escort runs|walks to the leader (X m)`, `fights for the leader against <enemigo>` |
+| N4 | `helperNativeBodyguard` apagado (o el contrato falla) | Escolta por codigo (mecanismo B): repath cada 1 s, camina cerca, corre si esta a mas de 12 m, se ubica a ~3 m del lider y ataca al blanco del lider | `helperNativeBodyguard is off; code-driven escort` / `native contract failed; the code-driven escort takes over`, `escort runs|walks to the leader (X m)`, `fights for the leader against <enemigo>` |
 | N5 | Fin del contrato (vencido o traicion) | El contrato nativo se termina y vuelve a su rutina | `native bodyguard contract removed (...) ok` y `stops helping: ...` |
 | N6 | Un temporal cumple su tiempo y se va (12.25 T7) | Camina o viaja (a su casa, una ciudad), no se queda parado | `[temp] <nombre> native wander package <paquete> assigned (...)` |
 | N7 | Si el paquete falla | Camina de vuelta al lugar donde se unio; llega a ~6 m o se rinde a los 240 s y vuelve a su IA | `native wander package failed: ...`, `[temp] <nombre> heading back to (x,z)`, luego `arrived` o `gave up` |
@@ -936,7 +926,7 @@ Con `"probeOnClick": true` y los valores por defecto (descansos de 1 h; base 0,0
 | S8 | Noquear a un NPC en el campo, fuera de una jaula (con el menu del juego o en pelea) | Cuenta como derrota igual que antes | `<nombre> defeated by the player (...; count N ...)` |
 | S9 | Con la barra en, por ejemplo, 30%, esperar 6 horas de juego (a velocidad x3) | Baja 25 puntos (una barra llena se va en 24 h): queda en 5%; nunca baja de 0 | `[readout] ... beaten 5)` |
 | S10 | Con estres por golpes, guardar, salir y cargar ese save | La barra vuelve con el valor del save, desvanecida segun las horas de juego que pasaron desde el ultimo golpe; cargar un save **anterior** a los golpes la deja en 0 | `[readout] ... beaten N)` |
-| S11 | Mod Hub: "Estres: base por golpe" en 0 y golpear | El golpe no suma estres (base 0 apaga el termino; el minimo no aplica) | `beating stress +0% (blow, ...)` |
+| S11 | `submissionBeatStressBase` en 0 y golpear | El golpe no suma estres (base 0 apaga el termino; el minimo no aplica) | `beating stress +0% (blow, ...)` |
 | S12 | Con la barra de golpes alta, comparar la chance de la tarjeta antes y despues de golpear | La chance sube con el estres (pesa como el resto del estres, con su tope `maxStressChance` y el aguante) | `[chance] ... stress=N(..%)` |
 
 ### 12.33 Dos presets, esperas de Cheat de 1 minuto y horas de jaula guardadas (v1-presets-close)
@@ -945,7 +935,7 @@ Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat), H (horas de
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
-| P1 | Mod Hub, fila "Dificultad (Preset)" | Va de 0 a 1 y dice "0: Cheat, 1: Balanced"; no hay fila "Peso de Faccion" | — |
+| P1 | `preset` | Va de 0 a 1 y dice "0: Cheat, 1: Balanced"; no hay fila "Peso de Faccion" | — |
 | P2 | Cerrar Kenshi, poner `"preset": 2` en el `config.json` desplegado, abrir | Corre Balanced (precios, aliados por nivel); el log lo dice una sola vez | `config.json preset 2 is not a preset (0: Cheat, 1: Balanced); running Balanced.` |
 | P3 | Dejar una clave `"factionWeight": 0.75` en el `config.json` desplegado y abrir | Nada cambia: la clave se ignora, sin errores ni avisos; el precio de un hostil y el de un amigo no aliado salen de la misma curva | sin lineas de `factionWeight` |
 | W1 | Cheat (`"preset": 0`): los casos 8 H2, H3, H7, H8, H9, H10 | Cada espera dura 1 minuto de juego; rechazo y duelo terminan en la proxima hora entera (como mucho ~1 h) | `[hold] clock started`, `called out to the player.`, `reject cooldown until game hour N (1 h)`, `no challenge until hour N` |
@@ -959,7 +949,7 @@ Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat), H (horas de
 | C3 | Esperar al dia de juego siguiente y repetir C1 | N puede cambiar (otro sorteo), siempre entre 5 y 20 | `caredFor=+N2` |
 | C4 | Un preso herido, hambriento o con la salud no llena | Sin fila `LO CUIDASTE` y `caredFor=+0` | `[chance] ... caredFor=+0` |
 | C5 | Un animal en tu jaula, sano y lleno | Sin bonus: lo deciden la comida del jugador y la barriga (12.20) | sin `caredFor` (ruta animal) |
-| C6 | Mod Hub: "Sumision: bonus por cuidarlo min" = "max" = 12; luego min 15 y max 3 | Primero siempre +12; despues siempre +15 (un maximo menor que el minimo cuenta como el minimo) | `caredFor=+12` / `caredFor=+15` |
+| C6 | `submissionCaredForBonusMin` = "max" = 12; luego min 15 y max 3 | Primero siempre +12; despues siempre +15 (un maximo menor que el minimo cuenta como el minimo) | `caredFor=+12` / `caredFor=+15` |
 | C7 | Balanced: dejar a un preso 6 h o mas en la jaula y hablarle | No se une por tiempo (12.3 E3) | ninguna linea `easy-mode needs` |
 | C8 | Dejar `"easyHoursCaged": 6.0` en el `config.json` desplegado y abrir | Se ignora: sin errores ni avisos, y nadie se une por tiempo | sin lineas de `easyHoursCaged` |
 
@@ -972,7 +962,7 @@ Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`
 | A1 | Balanced: seleccionar un animal libre de nivel 40 o mas y abrir Hablar | La ventana conserva la respuesta de doma (p. ej. DARLE COMIDA) y agrega **RETAR A DUELO**, DUELOS y SI LE GANAS "25% de que se una"; la tarjeta trae "Duelos: 0-0, si ganas 25% se une" | `[readout] <animal> route=animal ...` |
 | A2 | Balanced: un animal libre de nivel **menor que 40** | Sin RETAR A DUELO en la ventana ni linea de duelos en la tarjeta | sin `[duel]` |
 | A3 | Balanced: un animal **con dueno** (bestia de carga de una faccion, perro de los Holy Nation Outlaws) de nivel 40+ | Sin RETAR A DUELO; la doma dice "ya tiene dueno" | `refuses`/`Refused <animal> (rechazo): ya tiene dueno ...` |
-| A4 | Mod Hub "Duelo: retar animales" OFF (o `exclude.animals` true) y repetir A1 | Sin RETAR A DUELO (con `exclude.animals` el animal ni siquiera se puede hablar) | sin `[duel]` |
+| A4 | `duelAnimalsEnabled` OFF (o `exclude.animals` true) y repetir A1 | Sin RETAR A DUELO (con `exclude.animals` el animal ni siquiera se puede hablar) | sin `[duel]` |
 | A5 | A1 -> RETAR A DUELO con un personaje seleccionado | Se abre la ventana Dueling de TotalSparring; el roller dice "<animal> grune y se planta frente a ti: elige el duelo ..." (narrador, nunca su voz) | `[duel] <retador> challenges <animal> [key id:...]` |
 | A6 | Balanced: ganar el duelo de A5 | Tirada al 25%: si sale, "<animal> agacha la cabeza y te sigue ..." y se une para siempre; si no, "<animal> se sacude y se aleja sin seguirte (25% ...). Podras retarlo otra vez en N h" (24-72 h). **Ningun cartel** sobre su cabeza en ningun caso | `[duel] <ganador> won (wins 1): join chance 25%, roll R -> joined vs <animal> ...` y `[duel] <animal> lost the duel and joins for good (animal) [key ...]`, `Recruited <animal>.`; o `-> stays (cooldown X h until hour N) vs <animal> level L` |
 | A7 | Balanced: perder (o empatar) el duelo de A5 | "<animal> gana el duelo y se aleja sin volverse. Podras retarlo otra vez en 24 h"; sin cartel; el animal **no** queda hostil por el mod; el boton desaparece 24 h | `[duel] <animal> won the duel: no challenge until hour N` |
@@ -992,14 +982,14 @@ Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`
 
 ### 12.35 Cheat: sirve cualquier jaula (cheat-any-cage)
 
-Con `"probeOnClick": true`, Cheat (`"preset": 0`) y los valores por defecto (`cheatNeedsCage` on, `cheatAnyCage` on, Mod Hub "Cheat: cualquier jaula"). "Jaula ajena" = jaula de otra faccion (esclavistas, prision de una ciudad), grilletes o cargado por otro (`SafeInPrison`). Mockup: ultima fila de la tabla Mod Hub en `ui-mockup/readout.html`.
+Con `"probeOnClick": true`, Cheat (`"preset": 0`) y los valores por defecto (`cheatNeedsCage` on, `cheatAnyCage` on). "Jaula ajena" = jaula de otra faccion (esclavistas, prision de una ciudad), grilletes o cargado por otro (`SafeInPrison`).
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
 | X1 | Acercarse a un preso en una jaula ajena (que el barrido lo vea) | El reloj arranca sin hablarle | `<nombre> [hold] clock started: seen in a cage` |
 | X2 | Hablarle enseguida (antes del minuto) | "esta dentro: dale un momento y te llamara"; la tarjeta muestra la ruta de captividad | `Refused <nombre> (...): esta dentro: dale un momento y te llamara` |
 | X3 | Esperar un minuto de juego y hablarle | Se une sin condiciones (sigue encerrado: hay que abrir la jaula, y los guardias pueden reaccionar como a una fuga) | sin `Refused`; `Recruited <nombre>.` |
-| X4 | Mod Hub "Cheat: cualquier jaula" OFF y repetir X2/X3 con otro preso ajeno | Pide tu jaula como antes ("metelo en una de tus jaulas") y el reloj no arranca por la jaula ajena | `Refused <nombre> (rechazo): metelo en una de tus jaulas ...`; sin `seen in a cage` |
+| X4 | `cheatAnyCage` OFF y repetir X2/X3 con otro preso ajeno | Pide tu jaula como antes ("metelo en una de tus jaulas") y el reloj no arranca por la jaula ajena | `Refused <nombre> (rechazo): metelo en una de tus jaulas ...`; sin `seen in a cage` |
 | X5 | Cheat ON: un NPC libre en la calle | Pide una jaula, sin decir "tus jaulas" (duel-any-source U5, 12.38 D14) | `Refused <nombre> (rechazo): metelo en una jaula ...` (o otra linea de `cheat.needsAnyCage`) |
 | X6 | Liberar al preso de X1 antes de hablarle (o que salga de la jaula) | El reloj se pierde; al volver a una jaula empieza de cero | `<nombre> [hold] clock dropped: no longer in a cage` |
 | X7 | Tu propia jaula en Cheat | Igual que H2/H3; el log dice tu jaula | `<nombre> [hold] clock started: seen in your cage` |
@@ -1024,7 +1014,7 @@ Con `"probeOnClick": true`. La linea va justo bajo la cabecera (nombre + etiquet
 
 ### 12.37 Oferta proactiva: viene a ofrecerse sin Hablar (proactive-offer)
 
-Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`offerOnDuelWin` on, `offerOnHeal` on, `offerFailCalmSeconds` 20, `submissionEventEnabled` on; Mod Hub "Oferta: al ganar un duelo", "Oferta: al curarlo", "Oferta: segundos en calma si no se une"). IGNORAR dura `submissionForgiveSeconds` (30 s por defecto; `deploy.sh` pasa 300 -> 30 solo si tu config sigue en el viejo default). Mockup: `ui-mockup/readout.html`, escena "Proactive offer" y ventanas "Submitted NPC asks to join" (ahora con IGNORAR), "Duel rival walks up and offers to join" y "Animal walks up and offers to join". El rival tiene que estar a 120 m o menos del lider cuando termina el duelo. Filtrar el log por `[offer]`.
+Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`offerOnDuelWin` on, `offerOnHeal` on, `offerFailCalmSeconds` 20, `submissionEventEnabled` on). IGNORAR dura `submissionForgiveSeconds` (30 s por defecto; `deploy.sh` pasa 300 -> 30 solo si tu config sigue en el viejo default). Mockup: `ui-mockup/readout.html`, escena "Proactive offer" y ventanas "Submitted NPC asks to join" (ahora con IGNORAR), "Duel rival walks up and offers to join" y "Animal walks up and offers to join". El rival tiene que estar a 120 m o menos del lider cuando termina el duelo. Filtrar el log por `[offer]`.
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
@@ -1046,53 +1036,53 @@ Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`
 | O16 | Cheat: noquear una vez en el campo a un animal libre y alejarse a menos de 40 m | Al levantarse camina hasta ti y ofrece (el evento de sometido ya admite animales) | `[submission] <animal> submitted (...cheat.animal.defeated...), walks up ...; animal` |
 | O17 | Balanced: una persona o un animal libre vencido 2 veces cuya tirada de rendicion **falla**, peleando | Deja de atacar 20 s; no se vuelve a tirar ese dia | `[submission] <nombre>: field yield not today (N%, day D)`, `[offer] calm: <nombre>: the field yield roll failed; hostile before yes` |
 | O18 | Ganar un duelo con el rival a mas de 120 m del lider | Comportamiento viejo (Cheat se une al instante; Balanced tira) | `[offer] <nombre> is out of the event's reach: the duel win resolves as before` |
-| O19 | Mod Hub "Oferta: al ganar un duelo" OFF y ganar un duelo | Comportamiento viejo (`-> joined vs <nombre>` en Cheat) | sin `[offer]` |
-| O20 | Mod Hub "Oferta: al curarlo" OFF y curar a alguien | Nadie camina a ofrecerse por la cura | sin `[offer] request` |
+| O19 | `offerOnDuelWin` OFF y ganar un duelo | Comportamiento viejo (`-> joined vs <nombre>` en Cheat) | sin `[offer]` |
+| O20 | `offerOnHeal` OFF y curar a alguien | Nadie camina a ofrecerse por la cura | sin `[offer] request` |
 | O21 | Una peticion que nunca se puede servir (el paciente no se levanta en 5 min, o queda lejos) | Se descarta sola | `[offer] 1 request(s) expired unserved after 300 s (never up or never in reach)` |
 | O22 | Hablar a mano con cualquiera, sin gesto previo | Igual que antes | sin `[offer]` salvo `consume` si habia una peticion |
 | O23 | Guardar y cargar con un evento o una peticion en curso | El NPC recupera su ritmo; la peticion se olvida (hay que repetir el gesto) | `[submission] ...: unloaded (...)` |
 
 ### 12.38 Duelos: Cheat a cualquier nivel, duelos de TotalSparring que cuentan, victorias minimas y texto de cualquier jaula (duel-any-source)
 
-Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`duelCheatPeopleFromLevel` 1, `duelCountExternalBouts` on, `duelMinWinsCheat` 1, `duelMinWinsBalanced` 1, `duelExternalBalancedFromLevel` 1, `cheatAnyCage` on; Mod Hub "Duelo Cheat: nivel minimo de personas", "Duelo: contar duelos de TotalSparring", "Duelo Cheat: victorias minimas", "Duelo Balanced: victorias minimas", "Duelo externo Balanced: nivel minimo"). "Duelo externo" = abierto con el boton propio de TotalSparring, sin RETAR A DUELO. Mockup: filas finales de la tabla Mod Hub, estado de tarjeta "Ally you can challenge, under the minimum duel wins" y estado de ventana "Cheat: any person can be challenged ...".
+Con `"probeOnClick": true`, TotalSparring instalado y los valores por defecto (`duelCheatPeopleFromLevel` 1, `duelCountExternalBouts` on, `duelMinWinsCheat` 1, `duelMinWinsBalanced` 1, `duelExternalBalancedFromLevel` 1, `cheatAnyCage` on). "Duelo externo" = abierto con el boton propio de TotalSparring, sin RETAR A DUELO. Mockup: estado de tarjeta "Ally you can challenge, under the minimum duel wins" y estado de ventana "Cheat: any person can be challenged ...".
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
 | D1 | Cheat (`"preset": 0`): abrir la ventana de una persona de nivel ~33 (p. ej. "Recluta Samurai") | RETAR A DUELO aparece junto a la respuesta de Cheat | -- |
-| D2 | Mod Hub "Duelo Cheat: nivel minimo de personas" = 40 y repetir D1 | Sin RETAR A DUELO para el nivel 33 | -- |
+| D2 | `duelCheatPeopleFromLevel` = 40 y repetir D1 | Sin RETAR A DUELO para el nivel 33 | -- |
 | D3 | Balanced (`"preset": 1`): un aliado de nivel 33 | Sin RETAR A DUELO (sigue pidiendo aliado con niveles y 80+) | -- |
 | D4 | Cheat: abrir un duelo desde la ventana de TotalSparring (sin RETAR A DUELO) contra un NPC ajeno y ganarlo | Igual que un reto de TotalRecruit ganado: camina a ofrecerse (o se une al instante si esta fuera de 120 m) | `[duel] external bout: <nombre> counts (won)`, `[duel] bout duel outcome=1 a=... (squad) b=... -> won`, `[duel] <tuyo> won (wins N): join chance 100%, roll 0 -> the offer event brings <nombre> over [key ...]` |
 | D5 | Como D4 pero perderlo (o empatar) | "Vuelve cuando seas mas fuerte" y el enfriamiento de siempre (en Cheat, un minuto) | `[duel] external bout: <nombre> counts (lost)`, `-> lost`, `[duel] <nombre> won the duel: no challenge until hour H [key ...]` |
 | D6 | Sparring o duelo desde TotalSparring entre dos miembros de tu grupo | No cuenta: nadie se une ni se enfria | `[duel] external bout: <id> ignored (squad pair)` (solo duelo; un sparring no escribe esta linea) |
 | D7 | Balanced: duelo externo ganado contra alguien excluido (nombre en `exclude.characterNames` o faccion en `exclude.factions`) | Ignorado (U7: desde entonces un NPC reclutable cualquiera cuenta, ver D17) | `[duel] external bout: <nombre> ignored (not offered)` y `-> ignored` |
 | D8 | Balanced: duelo externo ganado contra un aliado 80+ que queda noqueado | Cuenta (el tramo de aliado se lee en reposo, no por la ruta inconsciente): tirada de la chance de siempre | `[duel] external bout: <nombre> counts (won)`, `join chance 25%, roll R -> ...` |
-| D9 | Mod Hub "Duelo: contar duelos de TotalSparring" OFF y repetir D4 | Ignorado, como antes del cambio | `[duel] external bout: <nombre> ignored (switch off)`, `-> ignored` |
+| D9 | `duelCountExternalBouts` OFF y repetir D4 | Ignorado, como antes del cambio | `[duel] external bout: <nombre> ignored (switch off)`, `-> ignored` |
 | D10 | RETAR A DUELO desde TotalRecruit y ganarlo | Sin cambios (el reto pendiente responde primero; ninguna linea `external bout`) | `-> won` sin `external bout` |
-| D11 | Mod Hub "Duelo Balanced: victorias minimas" = 3; ganarle a un aliado 80+ por primera vez | No se une ni tira; cartel "Buena pelea. Ganame otra vez"; roller "<nombre> perdio el duelo, pero aun no se une. Victorias que faltan: 2."; sin espera: el boton sigue (D12) | `[duel] <tuyo> won (wins 1): join chance 0%, roll 0 -> needs 2 more win(s) vs <nombre> [key ...]` |
+| D11 | `duelMinWinsBalanced` = 3; ganarle a un aliado 80+ por primera vez | No se une ni tira; cartel "Buena pelea. Ganame otra vez"; roller "<nombre> perdio el duelo, pero aun no se une. Victorias que faltan: 2."; sin espera: el boton sigue (D12) | `[duel] <tuyo> won (wins 1): join chance 0%, roll 0 -> needs 2 more win(s) vs <nombre> [key ...]` |
 | D12 | Abrir la ventana y la tarjeta del NPC de D11 (1 victoria, minimo 3) | Tarjeta "Duelos: 1-0, faltan 2 victorias"; fila SI LE GANAS "Ganale 2 veces mas" (U6, D19) | -- |
 | D13 | Ganarle la segunda vez (D11) | Tarjeta "Duelos: 2-0, si ganas 65% se une" (la proxima decide; la curva cuenta desde la primera victoria) y "Victorias que faltan: 1." en el roller | `... needs 1 more win(s) vs <nombre>` |
 | D14 | Cheat, `cheatAnyCage` ON: hablar a una persona libre en la calle | "metelo en una jaula y hablara enseguida" (u otra linea neutra de `cheat.needsAnyCage`), nunca "tus jaulas"; tarjeta "Metelo en una jaula" | `Refused <nombre> (rechazo): metelo en una jaula ...` |
-| D15 | Mod Hub "Cheat: cualquier jaula" OFF y repetir D14 | La linea de siempre: "metelo en una de tus jaulas ..." | `Refused <nombre> (rechazo): metelo en una de tus jaulas ...` |
+| D15 | `cheatAnyCage` OFF y repetir D14 | La linea de siempre: "metelo en una de tus jaulas ..." | `Refused <nombre> (rechazo): metelo en una de tus jaulas ...` |
 | D16 | Cheat con "Duelo Cheat: victorias minimas" = 2: ganarle un duelo a una persona | No se une todavia: "Victorias que faltan: 1."; la segunda victoria recluta (o trae la oferta) | `join chance 0%, roll 0 -> needs 1 more win(s)` y luego `join chance 100%, roll 0 -> ...` |
 | D17 | Balanced (U7), valores por defecto: duelo externo ganado contra un NPC comun no aliado de nivel 33 (p. ej. "Recluta Samurai") | Cuenta: tirada de la curva (25% la primera victoria) y la oferta proactiva si sale | `[duel] external bout: <nombre> counts (won)`, `-> won`, `[duel] <tuyo> won (wins 1): join chance 25%, roll R -> ...` |
-| D18 | Mod Hub "Duelo externo Balanced: nivel minimo" = 40 y repetir D17 | Ignorado (nivel 33 < 40); un aliado 80+ con tramo sigue contando (D8) | `[duel] external bout: <nombre> ignored (not offered)`, `-> ignored` |
+| D18 | `duelExternalBalancedFromLevel` = 40 y repetir D17 | Ignorado (nivel 33 < 40); un aliado 80+ con tramo sigue contando (D8) | `[duel] external bout: <nombre> ignored (not offered)`, `-> ignored` |
 | D19 | Balanced, "Duelo Balanced: victorias minimas" = 4 y 1 victoria: abrir la ventana del NPC con RETAR A DUELO (aliado 80+) | Fila SI LE GANAS "Ganale 3 veces mas" (U6; antes "0% de que se una"); la tarjeta "Duelos: 1-0, faltan 3 victorias" | -- |
 | D20 | Balanced: tras D17, abrir la ventana de ese NPC de nivel 33 | Sin RETAR A DUELO (el boton sigue pidiendo aliado 80+): solo el duelo externo cuenta | -- |
 
 ### 12.39 Golpear: caminar hasta la jaula, queja, aviso y sonido (beat-feedback)
 
-Golpear ya no pega desde cualquier lado sin que se note: el personaje **seleccionado** camina hasta el preso (la orden de caminar de `npc_motion`, una sola vez, nunca se repite encima de una orden tuya) y el golpe de 12.19 C3 entra recien al llegar a `submissionBeatReachMeters` (4 m; Mod Hub "Golpear: distancia para pegar", 1..15). Si ya esta cerca, pega en el acto. Al pegar: el preso se queja en voz alta ("¡Ugh!", "¡Agh!", "¡Ay!" o "¡Basta!", `cage.beatOuch`, siempre la misma para el mismo preso; un animal o alguien inconsciente no dice nada), el roller dice "<tuyo> golpea a <preso>" con el sonido de notificacion (`cage.beatLanded`) y suena un golpe y la queja sobre el preso (`submissionBeatHitSoundEnabled`, Mod Hub "Golpear: sonido del golpe"; desde priority-one S1: el evento Wwise `Impact` con el switch `Impacts` = `submissionBeatHitSound` ("HtH_Impacts", el golpe sin arma) y la voz `VO_Get_Hit`, o `VO_Creature_Take_Damage` en un animal; ver 12.40 S1-S4). Si la caminata no termina en golpe, no hay golpe ni descanso, y el roller dice por que. Mockup: `ui-mockup/readout.html` seccion 2, "Menu on your prisoner" (callout de la caminata) y `ui-mockup/README.md` item 17. Con `probeOnClick`.
+Golpear ya no pega desde cualquier lado sin que se note: el personaje **seleccionado** camina hasta el preso (la orden de caminar de `npc_motion`, una sola vez, nunca se repite encima de una orden tuya) y el golpe de 12.19 C3 entra recien al llegar a `submissionBeatReachMeters` (4 m; `submissionBeatReachMeters`, 1..15). Si ya esta cerca, pega en el acto. Al pegar: el preso se queja en voz alta ("¡Ugh!", "¡Agh!", "¡Ay!" o "¡Basta!", `cage.beatOuch`, siempre la misma para el mismo preso; un animal o alguien inconsciente no dice nada), el roller dice "<tuyo> golpea a <preso>" con el sonido de notificacion (`cage.beatLanded`) y suena un golpe y la queja sobre el preso (`submissionBeatHitSoundEnabled`, `submissionBeatHitSoundEnabled`; desde priority-one S1: el evento Wwise `Impact` con el switch `Impacts` = `submissionBeatHitSound` ("HtH_Impacts", el golpe sin arma) y la voz `VO_Get_Hit`, o `VO_Creature_Take_Damage` en un animal; ver 12.40 S1-S4). Si la caminata no termina en golpe, no hay golpe ni descanso, y el roller dice por que. Mockup: `ui-mockup/readout.html` seccion 2, "Menu on your prisoner" (callout de la caminata) y `ui-mockup/README.md` item 17. Con `probeOnClick`.
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
 | G1 | Seleccionar a uno de los tuyos a ~20 m de la jaula; clic derecho sobre el preso despierto, Golpear | Tu personaje camina hasta la jaula; al llegar se detiene, mira al preso y el golpe entra (la vida del torso baja como en 12.19 C3) | `[cage] <tuyo> -> <preso> beat walk started (20.0 m)`, luego `beat walk arrived (D m)` con D <= 4 y `beat hit (blunt X, part health A -> B)` |
 | G2 | Lo mismo con tu personaje ya junto a la jaula (a menos de 4 m) | Golpe en el acto, sin caminar | `beat walk arrived (D m)` y `beat hit` sin `beat walk started` |
 | G3 | En G1 / G2, mirar y escuchar al llegar | El preso dice "¡Ugh!" (o una de las otras tres) sobre su cabeza; el roller dice "<tuyo> golpea a <preso>" con el sonido de notificacion; suena un golpe sin arma y el quejido del preso (**verificar en juego**, 12.40 S1) | `[cage] beat hit sound Impact (Impacts=HtH_Impacts) played id N` y `[cage] beat hit sound VO_Get_Hit played id N` |
-| G4 | Golpear a un preso muy herido hasta que **ese** golpe lo deje inconsciente (Mod Hub "Sumision: horas entre golpizas" en 0,5 para repetir; un preso ya caido no ofrece Golpear, 12.19 C2) | En el golpe que lo tumba: sin queja (ya no puede hablar); el aviso del roller y el sonido si | `beat hit` y `[defeat] <preso> cage knockout: not a defeat ...`, sin globo de texto |
+| G4 | Golpear a un preso muy herido hasta que **ese** golpe lo deje inconsciente (`submissionBeatingCooldownHours` en 0,5 para repetir; un preso ya caido no ofrece Golpear, 12.19 C2) | En el golpe que lo tumba: sin queja (ya no puede hablar); el aviso del roller y el sonido si | `beat hit` y `[defeat] <preso> cage knockout: not a defeat ...`, sin globo de texto |
 | G5 | Golpear a un animal despierto en tu jaula | Golpe, aviso y sonido; **sin** globo de texto | `beat hit` |
 | G6 | Golpear y, mientras camina, darle a tu personaje otra orden (moverse a otro lado o quedarse quieto) | En unos 4 s: no hay golpe, Golpear no queda en descanso, roller "<tuyo> dejo de acercarse a la jaula: no hubo golpe"; tu orden nueva se cumple (no se pisa) | `beat walk aborted (stalled)`, sin `beat hit` |
 | G7 | Golpear desde un lugar del que no se puede llegar (otra planta sin camino, puerta cerrada) | Igual que G6 (se traba y aborta) | `beat walk aborted (stalled)` |
-| G8 | Mod Hub "Golpear: segundos para llegar" = 5 y Golpear desde ~60 m | A los 5 s de caminata (sin contar la pausa): sin golpe ni descanso, roller "<tuyo> no llego a la jaula a tiempo: no hubo golpe" | `beat walk aborted (timeout)` |
+| G8 | `submissionBeatWalkSeconds` = 5 y Golpear desde ~60 m | A los 5 s de caminata (sin contar la pausa): sin golpe ni descanso, roller "<tuyo> no llego a la jaula a tiempo: no hubo golpe" | `beat walk aborted (timeout)` |
 | G9 | Golpear y, mientras camina, liberar al preso o noquearlo con otro personaje | Sin golpe; roller "Ya no puedes hacerle eso" | `beat walk aborted (not allowed)` |
 | G10 | Golpear y, mientras camina, que tu personaje caiga (noqueado en una pelea) | Sin golpe; roller "<tuyo> ya no puede golpearlo: no hubo golpe" | `beat walk aborted (actor down)` |
 | G11 | Dos personajes tuyos: Golpear con uno y enseguida con el otro sobre el mismo preso, ambos lejos | El primero en llegar golpea; el segundo, al llegar o antes, recibe "Podras volver a golpearlo en 1 h" sin golpe | uno `beat hit`, otro `beat walk aborted (resting)` |
@@ -1100,7 +1090,7 @@ Golpear ya no pega desde cualquier lado sin que se note: el personaje **seleccio
 | G13 | Golpear y cargar un save antes de que llegue | Nada queda pendiente; sin mensaje; al cargar nadie golpea | `beat walk aborted (at load)` |
 | G14 | Golpear y pausar mientras camina; esperar mas de 30 s en pausa y reanudar | La caminata sigue y el golpe entra al llegar (la pausa no cuenta para el tiempo) | `beat walk arrived`, sin `timeout` durante la pausa |
 | G15 | Ventana de un preso de tu jaula: GOLPEAR (12.22) lejos de la jaula | La ventana se cierra y pasa lo mismo que G1 / G3 | igual que G1 |
-| G16 | Mod Hub "Golpear: sonido del golpe" OFF y repetir G2 | Golpe, queja y aviso; sin sonido de golpe | sin `beat hit sound` |
+| G16 | `submissionBeatHitSoundEnabled` OFF y repetir G2 | Golpe, queja y aviso; sin sonido de golpe | sin `beat hit sound` |
 | G17 | `config.json` del juego con `"submissionBeatHitSound": "NoExiste"` y repetir G2 | El quejido se oye igual; el golpe suena con el switch que el preso ya tenia o con el de fabrica (Light_Hit), o no suena (Wwise ignora un valor de switch desconocido) | `beat hit sound: SetSwitch Impacts=NoExiste failed ...` o `Impact (Impacts=NoExiste) played id N`; `VO_Get_Hit played id N` |
 
 ### 12.40 Prioridad 1: sonido y animacion de Golpear, duelo lejano, esperas de Cheat, animales golpeados, frases editables (priority-one)
@@ -1146,23 +1136,23 @@ Las correcciones de la prueba en juego de 12.39 y la lista "Prioridad 1". Con `p
 | E4 | Editar `refusal.grudge` en el `messages.json` desplegado ("PRUEBA") y hablar con alguien que te guarda rencor | Dice "PRUEBA" | - |
 | E5 | Borrar `currency.ready` del desplegado y hablar con alguien que se une gratis | "Estoy listo para unirme a ti." (el respaldo), y al cerrar el juego el log nombra la clave faltante | `messages.json has no entry for: ... currency.ready` |
 
-**D Golpear a un animal enjaulado ayuda a domarlo (Balanced).** El estres por golpes baja la barra de comida de un animal en tu jaula: `animalCageBeatingWeight` (0,5) x estres / resistencia, resistencia = 1 + nivel x 0,02 (`animalCageBeatingResolveBase`, `animalCageBeatingResolvePerLevel`); nunca mas del 90 % de la barra. La primera comida sigue haciendo falta. Mod Hub: "Animal: los golpes en la jaula cuentan", "Animal: peso de los golpes", "Animal: resistencia base a golpes", "Animal: resistencia por nivel". Maqueta: `ui-mockup/readout.html`, estado "Animal in your cage, beaten (Balanced)".
+**D Golpear a un animal enjaulado ayuda a domarlo (Balanced).** El estres por golpes baja la barra de comida de un animal en tu jaula: `animalCageBeatingWeight` (0,5) x estres / resistencia, resistencia = 1 + nivel x 0,02 (`animalCageBeatingResolveBase`, `animalCageBeatingResolvePerLevel`); nunca mas del 90 % de la barra. La primera comida sigue haciendo falta. `animalCageBeatingCounts`, `animalCageBeatingWeight`, `animalCageBeatingResolveBase`, `animalCageBeatingResolvePerLevel`. Maqueta: `ui-mockup/readout.html`, estado "Animal in your cage, beaten (Balanced)".
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
 | D1 | Balanced: animal en tu jaula, alimentado una vez, con el estomago por debajo de la marca; Golpear 2-3 veces y mirar la tarjeta | La marca de "necesita" baja con cada golpe (y vuelve a subir a medida que el estres se desvanece, 24 h) | - |
 | D2 | Seguir golpeando hasta que el estomago actual pase la marca bajada | Puede unirse ("listo"), sin mas comida | - |
 | D3 | Lo mismo con un animal que nunca comio de tu mano | No se une: sigue pidiendo la primera comida | - |
-| D4 | Mod Hub "Animal: los golpes en la jaula cuentan" OFF y repetir D1 | La marca no se mueve con los golpes | - |
+| D4 | `animalCageBeatingCounts` OFF y repetir D1 | La marca no se mueve con los golpes | - |
 | D5 | Cheat: animal en la jaula | Igual que antes: se une al minuto; los golpes no cambian nada | - |
 
-**C Animacion de Golpear.** Al llegar a la jaula tu personaje lanza un punetazo: el clip `submissionBeatAnimClip` ("badpunch", la tecnica vanilla `ma badpunch`) pedido cada cuadro (`runSlaveAnim`) durante `submissionBeatAnimSeconds` (0,9 s) y terminado con `endSlaveAnim` en el personaje y su `AnimationClass`. El golpe, la queja, el sonido y el mensaje entran al final del amago (`submissionBeatWindupSeconds`, 0,35 s). Mod Hub: "Golpear: animacion del golpe", "Golpear: duracion de la animacion", "Golpear: amago antes del golpe". Con `probeOnClick`.
+**C Animacion de Golpear.** Al llegar a la jaula tu personaje lanza un punetazo: el clip `submissionBeatAnimClip` ("badpunch", la tecnica vanilla `ma badpunch`) pedido cada cuadro (`runSlaveAnim`) durante `submissionBeatAnimSeconds` (0,9 s) y terminado con `endSlaveAnim` en el personaje y su `AnimationClass`. El golpe, la queja, el sonido y el mensaje entran al final del amago (`submissionBeatWindupSeconds`, 0,35 s). `submissionBeatAnimEnabled`, `submissionBeatAnimSeconds`, `submissionBeatWindupSeconds`. Con `probeOnClick`.
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
 | C1 | Golpear a un preso (12.39 G1 o G2) | Al llegar, tu personaje lanza un punetazo; el golpe, el "¡Ugh!", el sonido y el mensaje llegan a mitad del gesto; despues vuelve a su pose normal (no queda congelado) | una vez por sesion `[cage] beat anim: clip 'badpunch' found playing`; `beat strike started (clip 'badpunch')`, `beat strike clip playing`, `beat strike landed`, `beat strike ended` |
 | C2 | Si el log dice `NOT found playing` | El golpe entra en el acto (como antes); anotar si igual se vio el gesto | `beat anim: clip 'badpunch' NOT found playing (the blow lands at once)` |
-| C3 | Mod Hub "Golpear: animacion del golpe" OFF y repetir C1 | Golpe en el acto, sin gesto | `beat strike landed` sin `started (clip ...)` |
+| C3 | `submissionBeatAnimEnabled` OFF y repetir C1 | Golpe en el acto, sin gesto | `beat strike landed` sin `started (clip ...)` |
 | C4 | `config.json` desplegado con `"submissionBeatAnimClip": "NoExiste"` y repetir C1 | Golpe en el acto; nada raro en el personaje | `NOT found playing` (si es el primero de la sesion), `beat strike landed` |
 | C5 | Golpear y cargar una partida durante el gesto (o usar `submissionBeatAnimSeconds` 3 para tener tiempo) | Sin golpe, sin cuelgue; tras cargar nadie queda congelado | `beat strike aborted (at load)` |
 | C6 | Durante el amago (subir `submissionBeatWindupSeconds` a 2-3 s), que el preso salga de la jaula o noquear a tu personaje | Sin golpe ni descanso; el roller dice por que (`cage.notAllowed` / `cage.beatAbort.actor`); el gesto termina | `beat strike aborted (not allowed)` / `(actor down)` |

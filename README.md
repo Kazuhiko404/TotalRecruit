@@ -61,7 +61,7 @@ taken through the cage.
 buttons stand under Hablar, done by the character you have selected. Golpear
 walks that character to the cage and, when it gets there (within
 `submissionBeatReachMeters`, 4 m), throws a punch (the vanilla `badpunch` clip;
-Mod Hub "Golpear: animacion del golpe") that lands one capped blow at the end of
+`submissionBeatAnimEnabled`) that lands one capped blow at the end of
 the wind-up: the prisoner complains aloud, you hear the hit, and the message line
 says who hit whom. If the walk never gets there
 (`submissionBeatWalkSeconds`, stuck, or you order the character elsewhere) there
@@ -69,8 +69,8 @@ is no blow and no rest, and the message line says why. Noquear is Kenshi's own
 stealth knockout order and shows the game's own odds. Neither knockout counts as
 a defeat: each blow and knockout adds beating stress instead. In Balanced that
 stress also helps tame an animal in your cage: it lowers the food bar the animal
-needs (less for a high-level beast; `animalCageBeatingWeight` and friends, Mod
-Hub "Animal: los golpes en la jaula cuentan"), though the first meal from your
+needs (less for a high-level beast; `animalCageBeatingWeight` and friends,
+`animalCageBeatingCounts`), though the first meal from your
 hand is still required. A wait under an hour reads in minutes ("Golpear
 (1 min)" in Cheat).
 
@@ -134,7 +134,7 @@ the ordinary only come along as temporary members, for 3 to 10 days, and only
 behind a leader no more than 15 levels below them; the cruel refuse, and from
 level 100 so do the greedy. The popup says which: "Aliado (nivel 34): te cobra
 1.840 cats, con 14% de descuento por amistad", with the discount beside the
-price. Every number is an `allyTier*` key in `config.json` and in Mod Hub;
+price. Every number is an `allyTier*` key in `config.json`;
 Cheat, and Balanced with `allyTierEnabled` off, keep the single daily ally roll.
 
 A temporary member tells you, over their head, how long they will stay ("Te
@@ -182,7 +182,7 @@ mas"). Without TotalSparring nothing
 changes. `duelChallenge*`, `duelJoin*`, `duelWinCooldown*`, `duelAnimals*`,
 `duelCheatPeopleFromLevel`, `duelCountExternalBouts`, `duelMinWins*` and
 `duelExternalBalancedFromLevel` keys in
-`config.json` and in Mod Hub.
+`config.json`.
 
 ### Refusal, with a reason
 
@@ -231,9 +231,8 @@ launcher.
 `gui/images` is needed for the readout bars to look right with a skin mod such as
 DarkUI or PowerModUI; without it the mod still works and falls back to `WhiteSkin`.
 
-Requires [RE_Kenshi](https://www.nexusmods.com/kenshi/mods/847). Settings live in
-Emkej's Mod Hub (optional: without it the mod
-runs on `config.json`). It coexists with UnlimitedRecruitV2 and with the
+Requires [RE_Kenshi](https://www.nexusmods.com/kenshi/mods/847). Settings live only in
+`config.json`, which you edit by hand. It coexists with UnlimitedRecruitV2 and with the
 dialogue-based recruitment mods — all widget names are distinct. The Hablar
 button sits beside the context menu in the first free slot (left, right, then
 below whatever is already there), so it never covers the buttons TotalSparring,
@@ -255,7 +254,7 @@ their stable roll is recast once.
 | Press the recruit button (Hablar): click it, or hold right click on the NPC, slide onto it and release, as with the game's own menu options | The recruit popup, with the stress and join-chance card beside it (see below) |
 | **Shift+K** | Spawn panel |
 
-Settings are in the Mod Hub panel, not in a window of this mod.
+Settings are in `config.json` (see Configuration), not in a window of this mod.
 
 ### The recruit popup
 
@@ -290,8 +289,9 @@ It follows the selection: deselect the NPC and it goes, select another and it
 switches. It is worked out when the selection changes and refreshed every 2
 seconds, so it costs nothing per frame. Pressing Hablar places it beside the offer
 window; when the offer closes it stays only if that NPC is still selected. It never
-takes a click and hides while a right-click menu is open. Hub switches: card
-on/off, compact, and "on selection" (on by default; off, it only shows on Hablar).
+takes a click and hides while a right-click menu is open. `config.json` switches:
+card on/off (`readoutEnabled`), compact (`readoutCompact`), and "on selection"
+(`readoutOnSelect`, on by default; off, it only shows on Hablar).
 
 ## Optional: FCS dialogue
 
@@ -324,9 +324,10 @@ Useful actions: `DA_JOIN_SQUAD_FAST`, `DA_TAKE_MONEY`, `DA_FREE_TARGET_SLAVE`,
 
 ## Configuration
 
-Everything in the Mod Hub is also in `config.json`. `preset` is `0` Cheat, `1`
-Balanced (any other value runs Balanced). The Hub writes by merging into the file: keys you edited
-by hand, comments and unknown keys are kept.
+Every setting lives in `config.json`, in the mod folder. Edit it by hand and
+restart the game: it is read once when the plugin loads, and the mod never writes
+it. A missing key keeps its default; an out-of-range value is clamped. `preset` is
+`0` Cheat, `1` Balanced (any other value runs Balanced).
 
 Set `probeOnClick` to `true` to log an NPC's personality, archetype and medical
 state on right-click. That goes to `RE_Kenshi_log.txt` in the Kenshi root —

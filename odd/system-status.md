@@ -45,7 +45,7 @@ Every document in `odd/tasks/` is implemented and on `main`. "QA" is the `QA.md`
 Status tags:
 - `verified in game`: seen working in a real game with the log line that proves it (ESTADO "Jugado"). It predates the later rounds and is not a formal QA pass.
 - `play-tested informally`: the user played it and reported it working. No QA row was marked.
-- `not verified`: built and unit-tested (`tests/rules_tests`, 63 suites), not yet seen in game. The QA.md section to run is given.
+- `not verified`: built and unit-tested (`tests/rules_tests`, 61 suites), not yet seen in game. The QA.md section to run is given.
 
 ### 1. Recruitment routes and gating
 | Feature | Status |
@@ -155,11 +155,10 @@ Status tags:
 | Prompt notices 90 s, info notices 25 s, frozen in pause | `not verified` (12.23 N8, N14-N16) |
 | Squad notices for temporary members | `play-tested informally` (12.25 T1) |
 
-### 11. Config, Mod Hub, messages and deploy
+### 11. Config, messages and deploy
 | Feature | Status |
 |---|---|
-| Every setting in Emkej's Mod Hub: 183 controls registered in `src/mod_hub_integration.cpp` (41 bool, 60 int, 82 float); two presets (Cheat, Balanced; a saved `preset` 2 loads as Balanced) | `verified in game` (R6.2); preset range `not verified` (12.33 P1) |
-| Config writer merges into `config.json` (hand edits and unknown keys kept), atomic write | `not verified` (12.5) |
+| Every setting lives only in `config.json`, edited by hand and read once at plugin load (`LoadConfig`, clamped); the mod never writes it. The Mod Hub integration was removed on 2026-10-07. Two presets (Cheat, Balanced; a saved `preset` 2 loads as Balanced) | `play-tested informally` (config read on every launch); preset range `not verified` (12.33 P1) |
 | Every player-facing line in `messages.json`; a missing key announces itself | `not verified` (§1 S4) |
 | `scripts/deploy.sh`: never-overwrite key merge, `--set-if` default migration (numbers only), dry run, refuses while Kenshi runs | `play-tested informally` (used for every deploy) |
 | `probeOnClick` diagnostics to `RE_Kenshi_log.txt` | `verified in game` |
@@ -171,7 +170,7 @@ Status tags:
 | Stable character id saved as `total_recruit.character_id`; session state reset on load | `not verified` (12.6 I1-I10, highest risk) |
 | Per-character saved ints and strings: defeats, beating stress, reject / duel cooldowns (hour rows plus `_min` rows), hold start, temp expiry / home / join spot / strikes, helper expiry / reject, meals, heals | `not verified` (12.6, 12.25 T8, 12.28 T10, 12.40 B) |
 | Builds against vendored KenshiLib 0.5.0 (`deps/kenshilib-0.5.0/`) | `play-tested informally` (loads and runs) |
-| `tests/rules_tests`: engine-free rules harness, 63 suites | runs green on every build |
+| `tests/rules_tests`: engine-free rules harness, 61 suites | runs green on every build |
 | `tests/balance_sheet`: prints the Balanced numbers from the real pure rules into `odd/balance/balance-sheet.md` (regenerated at `3fb81b2`; §5 Cheat waits in minutes, §6 caged-animal beating bar) | builds and runs |
 
 ## Missing / pending
@@ -195,7 +194,6 @@ From `odd/tasks/balanced-tuning.md`, measured against `odd/balance/balance-sheet
 ### Later (player value, not started)
 - Per-unique-character rules and prices (brainstorm §4.5).
 - An animal food bag like TameBeasties.
-- Mod Hub sections (R6.3): blocked on the slot layout dump (`Mod Hub slots (...)` log line).
 
 ### Dropped / cleanup (no player value)
 - FCS dialogue bridge: deliberately disabled (`dialogue_bridge.cpp:235`); not worth re-enabling.
@@ -216,7 +214,6 @@ From `odd/tasks/balanced-tuning.md`, measured against `odd/balance/balance-sheet
 - **Temporary members.** Warnings, cooldowns and the daily notice can repeat once after a load; the leaver's walk-back fallback is session-only.
 
 ## Ideas (not implemented)
-- Mod Hub preset dropdown and text settings (with R6.3).
 - Per-species animal resolve (balanced-tuning T7).
 - Unique characters with their own rules (`UNIVERSAL-RECRUIT-BRAINSTORM.md` §4.5).
 - Animal food bag.

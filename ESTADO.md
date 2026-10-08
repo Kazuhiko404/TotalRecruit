@@ -11,6 +11,9 @@ contra `src/` y contra el log de partidas reales, no de memoria.
 > Se corrigieron abajo las filas que el código ya contradecía (R1.1, R1.2, R2.3,
 > R6.1, R6.2, modo fácil, líneas de log de §6, riesgos). §2.1, §3 y §6 son de la
 > ronda `rebalance-and-ui` y no listan lo posterior. Nada tiene marca formal de QA.
+> El 2026-10-07 se quitó el Mod Hub: la config vive solo en `config.json`, que el
+> jugador edita a mano y el mod nunca escribe. Las filas del hub abajo quedan
+> marcadas como retiradas.
 
 Escrito tras la ronda `rebalance-and-ui` (T1-T9, rama `feat/rebalance-and-ui`, ya en
 `main`). Todo lo nuevo de esa ronda estaba en **Compila + tests**: compila en
@@ -51,7 +54,7 @@ inconsciente; `hunger` no es 0..1. Los headers dan el **tipo**, nunca el
 | **I3** | Qué señal sirve de "vida restante" | ✅ **Leído** | `blood`/`getMaxBlood()` y `derivedFleshHealthPercent`. Nunca `getOverallHealthRating` |
 | **I4** | ¿Escribir la marca de derrota altera la IA? | ✅ **Resuelta** | Ya no se escribe ni se lee la marca: el conteo vive en el save del personaje (`total_recruit.player_defeats`, recruit-gating T1; QA.md §9, REQUISITOS §7) |
 | **I5** | ¿El conteo de intentos sobrevive la recarga? | ✅ **Leído** | **No** — sigue en memoria. El bug de identidad que destapó se arregló con el id estable (§2.1, T7); falta probarlo con una recarga real (QA 12.6 I4/I5) |
-| **I6** | Qué controles acepta el hub | ✅ **Leído** | Mucho más de lo que usamos. Ver §5 |
+| **I6** | Qué controles acepta el hub | ⛔ **Retirado** | Retirado 2026-10-07: el Mod Hub ya no se usa; la config vive solo en `config.json` |
 
 ### Cómo se resolvió I2, que es el caso ejemplar
 
@@ -122,17 +125,17 @@ signifique eso en general. Hay que mirar qué hace la función que lo contiene.
 | R5.2 | Cachorros: poco | ✅ **Compila** | `cubFullness` |
 | R5.3 | Adultos: más | ✅ **Compila** | Escala por madurez y nivel |
 | R5.4 | Personalidad animal | ✅ **Compila** | Entra vía `ResolveMultiplier`: un animal desconfiado pide más comida. Configurable |
-| R5.5 | Todo configurable | ✅ **Jugado** | 10 valores en config y hub |
+| R5.5 | Todo configurable | ✅ **Jugado** | 10 valores en `config.json` |
 | — | Doméstico vs salvaje (pedido tuyo) | ✅ **Jugado** | `Goat Pet` de Nómadas rechazado. Ver §4 |
 
 ### Config e interfaz (§6)
 
 | Req | Qué pide | Estado | Detalle |
 |---|---|---|---|
-| R6.1 | Todo lo nuevo configurable | ✅ **Compila + tests** | Toda clave nueva va a `config.json` y al hub. Quedan literales: tramos de reputación 75/25/5/-5 y el 3.0 de barriga llena |
-| R6.2 | Preferir el hub | ✅ **Jugado** | **183 controles** registrados en `src/mod_hub_integration.cpp` (41 bool, 60 int, 82 float) |
-| R6.3 | Agrupar el panel | 🔬 **Instrumentada** | El hub da 160 bytes contra los 72 que declaramos. El log ahora vuelca los slots; llamar a ciegas crashea |
-| R6.4 | Documentar lo que no va al panel | ✅ **Corregido** | REQUISITOS.md ya lo dice según I6: el hub sí acepta texto libre (`register_text_setting`) |
+| R6.1 | Todo lo nuevo configurable | ✅ **Compila + tests** | Toda clave nueva va a `config.json`, con su clamp en `LoadConfig`. Quedan literales: tramos de reputación 75/25/5/-5 y el 3.0 de barriga llena |
+| R6.2 | Preferir el hub | ⛔ **Retirado** | Retirado 2026-10-07: el Mod Hub ya no se usa; la config vive solo en `config.json` |
+| R6.3 | Agrupar el panel | ⛔ **Retirado** | Retirado 2026-10-07: el Mod Hub ya no se usa; la config vive solo en `config.json` |
+| R6.4 | Documentar lo que no va al panel | ⛔ **Retirado** | Retirado 2026-10-07: el Mod Hub ya no se usa; la config vive solo en `config.json` |
 
 ---
 
@@ -151,11 +154,11 @@ Todo en **Compila + tests**. Nada de esto se jugó: cada fila apunta a su caso e
 | Reloj de encierro | T4 | ✅ **Compila + tests** | `HoldClock`: arranca al enjaular, se suelta al salir, reinicia si el reloj de juego retrocede | 12.3 |
 | Curva de precio recalibrada | T5 | ✅ **Compila + tests** | `catsPerLevel 90, catsCeiling 28000, steepness 0.09, midpoint 31`; mínimo al final, redondeo a 10, `catsHardCap` 150000, `talentMaxMultiplier` 1.5 | 12.4 P1-P9 |
 | Cobro todo-o-nada, reembolso, transferencias | T5 | ✅ **Compila + tests** | `money_rules` + `cats_purse`; regalo y tributo con una sola convención | 12.4 |
-| Escritor de config que mezcla | T6 | ✅ **Compila + tests** | `SaveConfig` actualiza en su lugar y conserva ediciones a mano; escritura atómica | 12.5 C1-C8 |
+| Escritor de config que mezcla | T6 | ⛔ **Retirado** | 2026-10-07: el mod ya no escribe `config.json` (se quitó junto con el Mod Hub) | 12.5 C1 |
 | Id estable de personaje en el save | T7 | ✅ **Compila + tests** | `total_recruit.character_id`; `CharKey` = id o handle; reinicio de sesión al empezar una carga. **La parte del motor (hooks) no está probada** | 12.6 I1-I10 |
 | `Evaluate` dividido por ruta | T8 | ✅ **Compila + tests** | `route_*.cpp`, `character_facts`, `reason_catalog`; `rules.cpp` 2221 → 189 líneas | 12.7 |
 | Motivos por clave, textos en `messages.json` | T8 | ✅ **Compila + tests** | Bloque `reason` nuevo (29 claves); el tono del rechazo sale de la clave | 12.7 Z1-Z4 |
-| 19 números sueltos a config + hub | T8 | ✅ **Compila + tests** | Defaults = los literales viejos | 12.7 C1-C4 |
+| 19 números sueltos a config | T8 | ✅ **Compila + tests** | Defaults = los literales viejos | 12.7 C1-C4 |
 | Anillo de includes `defeats`/`mercy`/`recruit_core` roto | T8 | ✅ **Compila** | `SetNearDeathListener` | 12.7 R2 |
 | Golpiza `GOLPEARLO` acreditada al jugador | T8 | ✅ **Compila + tests** | `CreditDefeatToPlayer` | 12.7 A1-A3 |
 | Tarjeta de estrés y chance | T9 | ✅ **Compila + tests** | Vista pura probada; la UI MyGUI, la puntería del hover y que el texto quepa **no** están probados | 12.8 U1-U21 |
@@ -201,7 +204,7 @@ Revisar mods ajenos resolvió cosas que los headers no podían.
 | **KEP** (`AppearanceExtension.cpp`) | `clamp(hunger - 1.0, 0, 1)` | **Trampa**: es apariencia visual, no escala. Me costó un bug |
 | **CorpseFeeder** (`.ini`, sin fuentes) | `3.00 ~= 300 UI hunger`, `nutrition_per_body=0.40`, `hunger_gain_enabled` | Confirmó el techo, dio la escala de UI, y **probó que el patrón correcto es escribir el hambre uno mismo** |
 | **KEP** (`InformationPanel`, `StatsTool`) | Lee y escribe `myPersonality` sin distinguir animal | Primera pista para I1 |
-| **Emkejs-Mod-Core** (`.dll`, sin fuentes) | Strings de `register_*` | I6 entera: secciones, select, texto libre |
+| **Emkejs-Mod-Core** (`.dll`, sin fuentes) | Strings de `register_*` | I6 (retirada 2026-10-07 con el Mod Hub) |
 | **Guía de los 4 mods** | Precios publicados de *for Cats* | Calibración de la curva de precios |
 
 **Lo más valioso fue un `.ini` de un mod sin fuentes.** CorpseFeeder documenta en
@@ -230,18 +233,12 @@ Cosas verificadas que están listas para aprovechar:
 
 | Hallazgo | Qué habilita |
 |---|---|
-| `register_setting_section` en el hub | **R6.3** — agrupar el panel |
-| `register_select_setting` | Desplegable para el preset |
-| `register_text_setting` | Desmiente R6.4: IDs de diálogo y exclusiones **sí** pueden ir al panel |
-| `register_bool_condition_rule` | Settings que se habilitan según otro |
 | `derivedFleshHealthPercent` + `healthAsPercent()` | **R3.1** — porcentaje de vida real |
 | `blood` / `getMaxBlood()` | Ídem, y funciona en inconscientes |
 | Personalidad animal (I1) | **R5.4** — meterla al cálculo |
 
-⚠️ **Advertencia sobre el hub:** nuestro `mod_hub_api.h` declara 9 funciones (72
-bytes) contra las ~17 del hub real (160 bytes, confirmado en el log). El orden
-del struct es **hipótesis, no hecho**. Llamar un puntero en el offset equivocado
-se lleva el proceso — hay que confirmar el layout antes de usar los nuevos.
+Los hallazgos del Mod Hub (`register_*`, layout del struct) se retiraron el
+2026-10-07 junto con el hub.
 
 ---
 
@@ -257,7 +254,6 @@ adivinar. Buscá estas líneas:
 | **R2.1/R2.2** — el nivel ya no es puerta | `[chance] level=X relation=Y personality=Z defeats=N(xM) situation=S -> P%` en cada decisión |
 | **R3.2/R3.3** — conteo de derrotas | `<nombre> defeated by the player (<veredicto>; count N, <key>)` |
 | **R3.1** — rogar por vida baja | En esa misma línea: `blood=0.18 nearDeath=yes dead=no` |
-| **R6.3** — slots del hub | `Mod Hub slots (19 of 160 bytes): [0]=fn [1]=fn ...` |
 | **Alimentar** | `Fed X. hunger 1.70 -> 2.10 (credited by plugin)` |
 | **Regalo del rescate** | `X paid the player N cats for the rescue` |
 
@@ -268,14 +264,14 @@ no hay nada que observar.
 
 El orden de prioridad esta en **QA.md §12** (arriba de todo):
 
-1. Humo **S1-S4**: carga, hub, probe, texto faltante.
+1. Humo **S1-S4**: carga, config leído, probe, texto faltante.
 2. **12.6 I4/I5**: el id estable sobrevive una recarga y un relanzamiento. Es lo que mas
    riesgo tiene (hooks de `Character` sin verificar contra el exe).
 3. **12.8 U1/U2/U6/U13/U17**: la tarjeta (puntería, números iguales al clic, sin efectos).
 4. **12.4 P1-P9**: el dinero.
 5. El resto de §12 (F, M, E, C, A/Z/N).
 
-Pendientes abiertos fuera de QA: **R6.3** (secciones del hub), ejercitar el puente de
+Pendientes abiertos fuera de QA: ejercitar el puente de
 diálogo FCS. I4 quedó resuelta (§1). Ver TODO.md y odd/system-status.md.
 
 ### Lo grande de la ronda anterior: la sumisión sin jaula
@@ -333,7 +329,7 @@ hay que sostener, no una casilla que queda marcada.
 |---|---|
 | `COMPARATIVA.md` | §3.1 y §3.2 ya resueltos, sigue diciendo que faltan |
 | `SPEC-ESTADO.md`, `COMPARATIVA.md` | Marcados como históricos (banner arriba); la verdad vigente es este documento |
-| `REQUISITOS.md` R6.4 | ✅ Corregido (I6) |
+| `REQUISITOS.md` R6.2-R6.4, I6 | Retirados 2026-10-07 con el Mod Hub |
 | `REQUISITOS.md` §7 | Cinco de seis investigaciones cerradas |
 | `PLAN.md` §8 | No incluye lo de esta ronda |
 | `KENSHI-MODDING-NOTES.md` §11 | ✅ Corregido: se agregó `eatItem` no alimenta animales, y que los `.ini` de mods sin fuentes pueden ser documentación |
