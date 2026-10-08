@@ -1,7 +1,7 @@
 # Hoja de balance (Balanced, config por defecto)
 
 > **Generado, no editar a mano.** Programa: `tests/balance_sheet/main.cpp`, que llama a las funciones puras REALES de `src/` con `Config()` por defecto.
-> Reglas de `src/` en el commit `3fb81b2`.
+> Reglas de `src/` en el commit `8b9081d`.
 > Regenerar:
 >
 > ```bash
@@ -17,11 +17,11 @@ Supuestos comunes: lider del grupo nivel 40; la tirada de unirse se sortea una v
 
 | Termino | Funcion | Formula (defaults) | Min | Max |
 |---|---|---|---|---|
-| Nivel | `ChanceFromLevelGap` | base 45; NPC arriba: -1.5/nivel (piso 2); NPC abajo: +1.5/nivel (tope +40) | 2 | 85 |
+| Nivel | `ChanceFromLevelGap` | base 35; NPC arriba: -1.5/nivel (piso 2); NPC abajo: +1.5/nivel (tope +40) | 2 | 75 |
 | Relacion | `ChanceFromRelation` | relacion x 0.25 (no en la jaula ni en field-yield) | -25 | 25 |
 | Personalidad | `ChanceFromPersonality` | `chance.personality[]` (tabla abajo) | -25 | 20 |
 | Derrotas | `ChanceFromDefeats` | 12/derrota / resolve, tope 45 | 0 | 45 |
-| Estres | `ChanceFromStress` | estres(0..1) x 45 / resolve, tope 45 | 0 | 45 |
+| Estres | `ChanceFromStress` | estres(0..1) x 30 / resolve, tope 30 | 0 | 30 |
 | Situacion: jaula | `intimidationBonus` | fijo | 15 | 15 |
 | Situacion: field-yield | `fieldYieldBonus` - lealtad | 10 (militar/ley: -25) | -15 | 10 |
 | Situacion: rescate | `rescueBaseBonus` + curado x `rescueHealWeight` | 25 + 30 x curado(0..1) | 25 | 55 |
@@ -33,16 +33,16 @@ Supuestos comunes: lider del grupo nivel 40; la tirada de unirse se sortea una v
 
 | Temperamento | Personalidad | Resolve (divide estres, derrotas y golpes) | Estres pleno vale | Grupo |
 |---|---|---|---|---|
-| normal | +0 | 1.0 | +45 | neutral |
-| fearful | +20 | 0.6 | +45 | neutral |
-| traitorous | +15 | 1.0 | +45 | greedy |
-| dumb | +10 | 0.6 | +45 | neutral |
-| smart | -5 | 1.0 | +45 | greedy |
-| brave | -15 | 1.6 | +28 | neutral |
-| honourable | -20 | 1.8 | +25 | good |
-| maniacal | -25 | 1.0 | +45 | bad |
-| cold/cruel | +0 | 1.0 | +45 | bad |
-| warm/kind | +0 | 1.0 | +45 | good |
+| normal | +0 | 1.0 | +30 | neutral |
+| fearful | +20 | 0.6 | +30 | neutral |
+| traitorous | +15 | 1.0 | +30 | greedy |
+| dumb | +10 | 0.6 | +30 | neutral |
+| smart | -5 | 1.0 | +30 | greedy |
+| brave | -15 | 1.6 | +18 | neutral |
+| honourable | -20 | 1.8 | +16 | good |
+| maniacal | -25 | 1.0 | +30 | bad |
+| cold/cruel | +0 | 1.0 | +30 | bad |
+| warm/kind | +0 | 1.0 | +30 | good |
 
 ### Barra de estres (`StressTermsFromState`)
 
@@ -62,7 +62,7 @@ estres = clamp01(hambre x 0.50 + heridas x 0.35 + cansancio x 0.15 + golpes x 1.
 
 | Diferencia | -60 | -40 | -27 | -20 | -10 | +0 | +10 | +20 | +30 | +40 | +50 | +60 | 
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Nivel | 85 | 85 | 85 | 75 | 60 | 45 | 30 | 15 | 2 | 2 | 2 | 2 | 
+| Nivel | 75 | 75 | 75 | 65 | 50 | 35 | 20 | 5 | 2 | 2 | 2 | 2 | 
 
 ## 2. Jaula: probabilidad diaria de unirse (Balanced)
 
@@ -71,52 +71,52 @@ Lider 40. Intimidacion +15 siempre. Columnas: **sano** = estres 0 sin bono (refe
 | Temperamento | Unico | Nivel NPC | sano | cuid. min | cuid. max | hambre | herido | H+H+C | golpes | quebrado |
 |---|---|---|---|---|---|---|---|---|---|---|
 | fearful | no | 20 (-20) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) |
-| fearful | no | 40 (+0) | 80 (2) | 85 (2) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) |
-| fearful | no | 60 (+20) | 50 (4) | 55 (3) | 70 (2) | 87 (2) | 71 (2) | 95 (1) | 95 (1) | 95 (1) |
-| fearful | no | 90 (+50) | 37 (5) | 42 (5) | 57 (3) | 74 (2) | 58 (3) | 82 (2) | 82 (2) | 82 (2) |
-| normal | no | 20 (-20) | 90 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) |
-| normal | no | 40 (+0) | 60 (3) | 65 (3) | 80 (2) | 82 (2) | 72 (2) | 95 (1) | 95 (1) | 95 (1) |
-| normal | no | 60 (+20) | 30 (7) | 35 (6) | 50 (4) | 52 (4) | 42 (5) | 71 (2) | 75 (2) | 75 (2) |
-| normal | no | 90 (+50) | 17 (13) | 22 (10) | 37 (5) | 39 (5) | 29 (7) | 58 (3) | 62 (3) | 62 (3) |
-| brave | no | 20 (-20) | 75 (2) | 80 (2) | 95 (1) | 89 (2) | 82 (2) | 95 (1) | 95 (1) | 95 (1) |
-| brave | no | 40 (+0) | 45 (4) | 50 (4) | 65 (3) | 59 (3) | 52 (4) | 71 (2) | 73 (2) | 73 (2) |
-| brave | no | 60 (+20) | 15 (15) | 20 (11) | 35 (6) | 29 (7) | 22 (10) | 41 (5) | 43 (5) | 43 (5) |
-| brave | no | 90 (+50) | 5 (45) | 7 (32) | 22 (10) | 16 (14) | 9 (25) | 28 (8) | 30 (7) | 30 (7) |
-| honourable | no | 20 (-20) | 70 (2) | 75 (2) | 90 (1) | 82 (2) | 77 (2) | 93 (1) | 95 (1) | 95 (1) |
-| honourable | no | 40 (+0) | 40 (5) | 45 (4) | 60 (3) | 52 (4) | 47 (4) | 63 (3) | 65 (3) | 65 (3) |
-| honourable | no | 60 (+20) | 10 (22) | 15 (15) | 30 (7) | 22 (10) | 17 (13) | 33 (6) | 35 (6) | 35 (6) |
-| honourable | no | 90 (+50) | 5 (45) | 5 (45) | 17 (13) | 9 (25) | 5 (45) | 20 (11) | 22 (10) | 22 (10) |
-| fearful | si | 20 (-20) | 85 (2) | 90 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) |
-| fearful | si | 40 (+0) | 55 (3) | 60 (3) | 75 (2) | 92 (1) | 76 (2) | 95 (1) | 95 (1) | 95 (1) |
-| fearful | si | 60 (+20) | 25 (9) | 30 (7) | 45 (4) | 62 (3) | 46 (4) | 70 (2) | 70 (2) | 70 (2) |
-| fearful | si | 90 (+50) | 12 (19) | 17 (13) | 32 (6) | 49 (4) | 33 (6) | 57 (3) | 57 (3) | 57 (3) |
-| normal | si | 20 (-20) | 65 (3) | 70 (2) | 85 (2) | 87 (2) | 77 (2) | 95 (1) | 95 (1) | 95 (1) |
-| normal | si | 40 (+0) | 35 (6) | 40 (5) | 55 (3) | 57 (3) | 47 (4) | 76 (2) | 80 (2) | 80 (2) |
-| normal | si | 60 (+20) | 5 (45) | 10 (22) | 25 (9) | 27 (8) | 17 (13) | 46 (4) | 50 (4) | 50 (4) |
-| normal | si | 90 (+50) | 5 (45) | 5 (45) | 12 (19) | 14 (16) | 5 (45) | 33 (6) | 37 (5) | 37 (5) |
-| brave | si | 20 (-20) | 50 (4) | 55 (3) | 70 (2) | 64 (3) | 57 (3) | 76 (2) | 78 (2) | 78 (2) |
-| brave | si | 40 (+0) | 20 (11) | 25 (9) | 40 (5) | 34 (6) | 27 (8) | 46 (4) | 48 (4) | 48 (4) |
-| brave | si | 60 (+20) | 5 (45) | 5 (45) | 10 (22) | 5 (45) | 5 (45) | 16 (14) | 18 (12) | 18 (12) |
+| fearful | no | 40 (+0) | 70 (2) | 75 (2) | 90 (1) | 94 (1) | 83 (2) | 95 (1) | 95 (1) | 95 (1) |
+| fearful | no | 60 (+20) | 40 (5) | 45 (4) | 60 (3) | 64 (3) | 53 (4) | 70 (2) | 70 (2) | 70 (2) |
+| fearful | no | 90 (+50) | 37 (5) | 42 (5) | 57 (3) | 61 (3) | 50 (4) | 67 (3) | 67 (3) | 67 (3) |
+| normal | no | 20 (-20) | 80 (2) | 85 (2) | 95 (1) | 95 (1) | 88 (2) | 95 (1) | 95 (1) | 95 (1) |
+| normal | no | 40 (+0) | 50 (4) | 55 (3) | 70 (2) | 65 (3) | 58 (3) | 77 (2) | 80 (2) | 80 (2) |
+| normal | no | 60 (+20) | 20 (11) | 25 (9) | 40 (5) | 35 (6) | 28 (8) | 47 (4) | 50 (4) | 50 (4) |
+| normal | no | 90 (+50) | 17 (13) | 22 (10) | 37 (5) | 32 (6) | 25 (9) | 44 (4) | 47 (4) | 47 (4) |
+| brave | no | 20 (-20) | 65 (3) | 70 (2) | 85 (2) | 74 (2) | 70 (2) | 82 (2) | 83 (2) | 83 (2) |
+| brave | no | 40 (+0) | 35 (6) | 40 (5) | 55 (3) | 44 (4) | 40 (5) | 52 (4) | 53 (4) | 53 (4) |
+| brave | no | 60 (+20) | 5 (45) | 10 (22) | 25 (9) | 14 (16) | 10 (22) | 22 (10) | 23 (9) | 23 (9) |
+| brave | no | 90 (+50) | 5 (45) | 7 (32) | 22 (10) | 11 (20) | 7 (32) | 19 (11) | 20 (11) | 20 (11) |
+| honourable | no | 20 (-20) | 60 (3) | 65 (3) | 80 (2) | 68 (3) | 64 (3) | 75 (2) | 76 (2) | 76 (2) |
+| honourable | no | 40 (+0) | 30 (7) | 35 (6) | 50 (4) | 38 (5) | 34 (6) | 45 (4) | 46 (4) | 46 (4) |
+| honourable | no | 60 (+20) | 5 (45) | 5 (45) | 20 (11) | 8 (28) | 5 (45) | 15 (15) | 16 (14) | 16 (14) |
+| honourable | no | 90 (+50) | 5 (45) | 5 (45) | 17 (13) | 5 (45) | 5 (45) | 12 (19) | 13 (17) | 13 (17) |
+| fearful | si | 20 (-20) | 75 (2) | 80 (2) | 95 (1) | 95 (1) | 88 (2) | 95 (1) | 95 (1) | 95 (1) |
+| fearful | si | 40 (+0) | 45 (4) | 50 (4) | 65 (3) | 69 (2) | 58 (3) | 75 (2) | 75 (2) | 75 (2) |
+| fearful | si | 60 (+20) | 15 (15) | 20 (11) | 35 (6) | 39 (5) | 28 (8) | 45 (4) | 45 (4) | 45 (4) |
+| fearful | si | 90 (+50) | 12 (19) | 17 (13) | 32 (6) | 36 (6) | 25 (9) | 42 (5) | 42 (5) | 42 (5) |
+| normal | si | 20 (-20) | 55 (3) | 60 (3) | 75 (2) | 70 (2) | 63 (3) | 82 (2) | 85 (2) | 85 (2) |
+| normal | si | 40 (+0) | 25 (9) | 30 (7) | 45 (4) | 40 (5) | 33 (6) | 52 (4) | 55 (3) | 55 (3) |
+| normal | si | 60 (+20) | 5 (45) | 5 (45) | 15 (15) | 10 (22) | 5 (45) | 22 (10) | 25 (9) | 25 (9) |
+| normal | si | 90 (+50) | 5 (45) | 5 (45) | 12 (19) | 7 (32) | 5 (45) | 19 (11) | 22 (10) | 22 (10) |
+| brave | si | 20 (-20) | 40 (5) | 45 (4) | 60 (3) | 49 (4) | 45 (4) | 57 (3) | 58 (3) | 58 (3) |
+| brave | si | 40 (+0) | 10 (22) | 15 (15) | 30 (7) | 19 (11) | 15 (15) | 27 (8) | 28 (8) | 28 (8) |
+| brave | si | 60 (+20) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
 | brave | si | 90 (+50) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
-| honourable | si | 20 (-20) | 45 (4) | 50 (4) | 65 (3) | 57 (3) | 52 (4) | 68 (3) | 70 (2) | 70 (2) |
-| honourable | si | 40 (+0) | 15 (15) | 20 (11) | 35 (6) | 27 (8) | 22 (10) | 38 (5) | 40 (5) | 40 (5) |
-| honourable | si | 60 (+20) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 8 (28) | 10 (22) | 10 (22) |
+| honourable | si | 20 (-20) | 35 (6) | 40 (5) | 55 (3) | 43 (5) | 39 (5) | 50 (4) | 51 (4) | 51 (4) |
+| honourable | si | 40 (+0) | 5 (45) | 10 (22) | 25 (9) | 13 (17) | 9 (25) | 20 (11) | 21 (10) | 21 (10) |
+| honourable | si | 60 (+20) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
 | honourable | si | 90 (+50) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
 
 ### Cuidar contra quebrar (mismo NPC, nivel igual al lider)
 
 | Temperamento | Unico | cuidado medio (+12) | quebrado | ventaja de quebrar | dias 90% cuidando | dias 90% quebrando |
 |---|---|---|---|---|---|---|
-| fearful | no | 92 | 95 | +3 | 1 | 1 |
-| normal | no | 72 | 95 | +23 | 2 | 1 |
-| brave | no | 57 | 73 | +16 | 3 | 2 |
-| honourable | no | 52 | 65 | +13 | 4 | 3 |
-| fearful | si | 67 | 95 | +28 | 3 | 1 |
-| normal | si | 47 | 80 | +33 | 4 | 2 |
-| brave | si | 32 | 48 | +16 | 6 | 4 |
-| honourable | si | 27 | 40 | +13 | 8 | 5 |
+| fearful | no | 82 | 95 | +13 | 2 | 1 |
+| normal | no | 62 | 80 | +18 | 3 | 2 |
+| brave | no | 47 | 53 | +6 | 4 | 4 |
+| honourable | no | 42 | 46 | +4 | 5 | 4 |
+| fearful | si | 57 | 75 | +18 | 3 | 2 |
+| normal | si | 37 | 55 | +18 | 5 | 3 |
+| brave | si | 22 | 28 | +6 | 10 | 8 |
+| honourable | si | 17 | 21 | +4 | 13 | 10 |
 
-El bono de cuidado maximo (+20) vale 44% de lo que vale el estres pleno de un normal (+45).
+El bono de cuidado maximo (+20) vale 66% de lo que vale el estres pleno de un normal (+30).
 
 ### Que pasa cuando la tirada de la jaula FALLA (`DecideCage`, tabla de monedas)
 
@@ -179,26 +179,26 @@ ganancia = clamp(base x factor de nivel / resolve, 0.02, 0.25); base Golpear 0.0
 
 | Temperamento | Nivel NPC | factor | +Golpear | +Noquear | sesiones a 1.0 (solo Golpear) | meseta solo Golpear | a las 24 h solo Golpear | sesiones a 1.0 (Golpear+Noquear) | estres pleno vale |
 |---|---|---|---|---|---|---|---|---|---|
-| fearful | 20 | 1.50 | 0.200 | 0.250 | 7 | 1.00 (+45) | 0.96 (+45) | 3 | +45 |
-| fearful | 27 | 1.48 | 0.198 | 0.250 | 7 | 1.00 (+45) | 0.96 (+45) | 3 | +45 |
-| fearful | 40 | 1.00 | 0.133 | 0.250 | 11 | 1.00 (+45) | 0.96 (+45) | 3 | +45 |
-| fearful | 60 | 0.67 | 0.089 | 0.167 | 21 | 1.00 (+45) | 0.96 (+45) | 5 | +45 |
-| fearful | 80 | 0.50 | 0.067 | 0.125 | 39 | 1.00 (+45) | 0.60 (+44) | 7 | +45 |
-| normal | 20 | 1.50 | 0.120 | 0.225 | 13 | 1.00 (+45) | 0.96 (+43) | 4 | +45 |
-| normal | 27 | 1.48 | 0.119 | 0.222 | 13 | 1.00 (+45) | 0.96 (+43) | 4 | +45 |
-| normal | 40 | 1.00 | 0.080 | 0.150 | 25 | 1.00 (+45) | 0.92 (+41) | 6 | +45 |
-| normal | 60 | 0.67 | 0.053 | 0.100 | nunca | 0.88 (+39) | 0.28 (+12) | 9 | +45 |
-| normal | 80 | 0.50 | 0.040 | 0.075 | nunca | 0.04 (+1) | 0.00 (+0) | 14 | +45 |
-| brave | 20 | 1.50 | 0.075 | 0.141 | 29 | 1.00 (+28) | 0.80 (+22) | 6 | +28 |
-| brave | 27 | 1.48 | 0.074 | 0.139 | 30 | 1.00 (+28) | 0.78 (+21) | 6 | +28 |
-| brave | 40 | 1.00 | 0.050 | 0.094 | nunca | 0.64 (+18) | 0.20 (+5) | 10 | +28 |
-| brave | 60 | 0.67 | 0.033 | 0.063 | nunca | 0.03 (+0) | 0.00 (+0) | 18 | +28 |
-| brave | 80 | 0.50 | 0.025 | 0.047 | nunca | 0.02 (+0) | 0.00 (+0) | 32 | +28 |
-| honourable | 20 | 1.50 | 0.067 | 0.125 | 39 | 1.00 (+25) | 0.60 (+15) | 7 | +25 |
-| honourable | 27 | 1.48 | 0.066 | 0.123 | 40 | 1.00 (+25) | 0.58 (+14) | 7 | +25 |
-| honourable | 40 | 1.00 | 0.044 | 0.083 | nunca | 0.24 (+6) | 0.07 (+1) | 12 | +25 |
-| honourable | 60 | 0.67 | 0.030 | 0.056 | nunca | 0.03 (+0) | 0.00 (+0) | 22 | +25 |
-| honourable | 80 | 0.50 | 0.022 | 0.042 | nunca | 0.02 (+0) | 0.00 (+0) | 44 | +25 |
+| fearful | 20 | 1.50 | 0.200 | 0.250 | 7 | 1.00 (+30) | 0.96 (+30) | 3 | +30 |
+| fearful | 27 | 1.48 | 0.198 | 0.250 | 7 | 1.00 (+30) | 0.96 (+30) | 3 | +30 |
+| fearful | 40 | 1.00 | 0.133 | 0.250 | 11 | 1.00 (+30) | 0.96 (+30) | 3 | +30 |
+| fearful | 60 | 0.67 | 0.089 | 0.167 | 21 | 1.00 (+30) | 0.96 (+30) | 5 | +30 |
+| fearful | 80 | 0.50 | 0.067 | 0.125 | 39 | 1.00 (+30) | 0.60 (+29) | 7 | +30 |
+| normal | 20 | 1.50 | 0.120 | 0.225 | 13 | 1.00 (+30) | 0.96 (+28) | 4 | +30 |
+| normal | 27 | 1.48 | 0.119 | 0.222 | 13 | 1.00 (+30) | 0.96 (+28) | 4 | +30 |
+| normal | 40 | 1.00 | 0.080 | 0.150 | 25 | 1.00 (+30) | 0.92 (+27) | 6 | +30 |
+| normal | 60 | 0.67 | 0.053 | 0.100 | nunca | 0.88 (+26) | 0.28 (+8) | 9 | +30 |
+| normal | 80 | 0.50 | 0.040 | 0.075 | nunca | 0.04 (+1) | 0.00 (+0) | 14 | +30 |
+| brave | 20 | 1.50 | 0.075 | 0.141 | 29 | 1.00 (+18) | 0.80 (+14) | 6 | +18 |
+| brave | 27 | 1.48 | 0.074 | 0.139 | 30 | 1.00 (+18) | 0.78 (+14) | 6 | +18 |
+| brave | 40 | 1.00 | 0.050 | 0.094 | nunca | 0.64 (+12) | 0.20 (+3) | 10 | +18 |
+| brave | 60 | 0.67 | 0.033 | 0.063 | nunca | 0.03 (+0) | 0.00 (+0) | 18 | +18 |
+| brave | 80 | 0.50 | 0.025 | 0.047 | nunca | 0.02 (+0) | 0.00 (+0) | 32 | +18 |
+| honourable | 20 | 1.50 | 0.067 | 0.125 | 39 | 1.00 (+16) | 0.60 (+10) | 7 | +16 |
+| honourable | 27 | 1.48 | 0.066 | 0.123 | 40 | 1.00 (+16) | 0.58 (+9) | 7 | +16 |
+| honourable | 40 | 1.00 | 0.044 | 0.083 | nunca | 0.24 (+4) | 0.07 (+1) | 12 | +16 |
+| honourable | 60 | 0.67 | 0.030 | 0.056 | nunca | 0.03 (+0) | 0.00 (+0) | 22 | +16 |
+| honourable | 80 | 0.50 | 0.022 | 0.042 | nunca | 0.02 (+0) | 0.00 (+0) | 44 | +16 |
 
 El umbral para saturar a 1 golpe por hora es una ganancia > 0.0417 (lo que se desvanece en 1 h). Una barra llena tarda 24 h en irse si se deja de golpear. Golpear ademas hiere, asi que el preso golpeado pierde el bono de cuidado y suma el termino de heridas.
 
@@ -210,11 +210,11 @@ Situacion +10 (militar/ley: -15). Nivel igual al lider. Recien vencido = worstDa
 
 | Temperamento | 2 derrotas | 3 derrotas | 4 derrotas | 4 derr. +20 niveles | 2 derr. leal | 4 derr. leal |
 |---|---|---|---|---|---|---|
-| fearful | 95 | 95 | 95 | 95 | 95 | 95 |
-| normal | 91 | 95 | 95 | 82 | 66 | 87 |
-| brave | 62 | 69 | 77 | 47 | 37 | 52 |
-| honourable | 55 | 62 | 68 | 38 | 30 | 43 |
-| maniacal | 66 | 78 | 87 | 57 | 41 | 62 |
+| fearful | 95 | 95 | 95 | 93 | 93 | 95 |
+| normal | 77 | 89 | 95 | 68 | 52 | 73 |
+| brave | 50 | 57 | 65 | 35 | 25 | 40 |
+| honourable | 42 | 49 | 55 | 25 | 17 | 30 |
+| maniacal | 52 | 64 | 73 | 43 | 27 | 48 |
 
 ### Rescate (situacion 25 + 30 x curado)
 
@@ -222,11 +222,11 @@ Nivel igual al lider, sin derrotas, sano al despertar (estres 0), relacion desco
 
 | Temperamento | curado 0 (+25) | curado 0.5 (+40) | curado 1 (+55) | curado 1, NPC +20 | curado 1, relacion -30 |
 |---|---|---|---|---|---|
-| fearful | 90 | 95 | 95 | 90 | 95 |
-| normal | 70 | 85 | 95 | 70 | 93 |
-| brave | 55 | 70 | 85 | 55 | 78 |
-| honourable | 50 | 65 | 80 | 50 | 73 |
-| maniacal | 45 | 60 | 75 | 45 | 68 |
+| fearful | 80 | 95 | 95 | 80 | 95 |
+| normal | 60 | 75 | 90 | 60 | 83 |
+| brave | 45 | 60 | 75 | 45 | 68 |
+| honourable | 40 | 55 | 70 | 40 | 63 |
+| maniacal | 35 | 50 | 65 | 35 | 58 |
 
 ### Duelo ganado (80+, TotalSparring)
 

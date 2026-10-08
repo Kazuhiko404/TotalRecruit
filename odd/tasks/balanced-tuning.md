@@ -62,28 +62,23 @@ T1..T7 abajo. Solo reglas puras de Balanced (`src/*_rules.cpp`), sus claves de c
 ## Checklist
 
 ### T1 Calibracion: tabla objetivo
-- [ ] Acordar con el usuario la tabla objetivo (unica pregunta de producto). Propuesta, en dias de juego hasta 90 % acumulado con el preso trabajado (hambre/heridas/golpes), nivel igual al lider:
+Ruta: inline (dos defaults + pruebas de caracterizacion; sin regla nueva).
+- [x] Tabla objetivo acordada con el usuario el 2026-10-07: "balanced, ni dificil ni super facil". Dias de juego hasta 90 % acumulado, nivel igual al lider:
 
-  | Temperamento | Objetivo |
-  |---|---|
-  | cobarde (fearful) | ~1 dia |
-  | normal | ~2-3 dias |
-  | valiente / honorable | ~5-7 dias |
-  | unico honorable | ~1-2 semanas |
+  | Temperamento | Sano, sin trabajar | Cuidado | Quebrado |
+  |---|---|---|---|
+  | cobarde | 2 | 1-2 | 1 |
+  | normal | 4 | 3 | 2 |
+  | valiente | 7 | 5 | 3 |
+  | honorable | 9 | 6 | 4 |
+  | unico honorable | - | - | ~10 |
 
-- [ ] Contrastar con la hoja. Evidencia (seccion 2, "dias 90%" entre parentesis, nivel +0):
-  - fearful: quebrado 95 (1). Ya en objetivo.
-  - normal: sano 60 (3), quebrado 95 (1). Quebrado queda por debajo del objetivo (1 contra 2-3).
-  - brave: sano 45 (4), quebrado 73 (2). Objetivo 5-7.
-  - honourable: sano 40 (5), quebrado 65 (3). Objetivo 5-7.
-  - honourable unico: sano 15 (15), quebrado 40 (5). Objetivo 7-14.
-- [ ] Contrastar los terminos fijos con la hoja (seccion 1):
-  - **Diferencia de nivel**: base 45, +-1.5 por nivel, rango 2..85; a -27 ya vale 85 y a +30 ya vale 2 (tope y piso). Es el termino de mayor rango (83 puntos) contra personalidad -25..20.
-  - **Personalidad**: fearful +20 ... maniacal -25; resolucion 0.6 (fearful, dumb) a 1.8 (honourable).
-  - **Piso/techo** de `JoinChance`: [5, 95]. Muchas filas tocan el techo 95 al dia 1 (fearful +0 hambre, normal +0 H+H+C).
-  - **Unicos**: -25 fijo. brave/honourable unicos a +50 quedan en 5 (45) en TODAS las columnas.
-  - **Intimidacion**: +15 fijo en la jaula.
-- Propuesta: ajustar primero los multiplicadores de resolucion y el tope de estres (`ChanceFromStress`, 45 / resolve) hasta que la columna "quebrado" calce con la tabla; despues, si hace falta, la pendiente de nivel (1.5/nivel). Claves existentes, sin regla nueva. Si un ajuste necesita un termino nuevo, va en T2-T4.
+- [x] Hallazgo que cambio la palanca: con base 45 + intimidacion 15, un normal sano ya estaba en 60 (3 dias) sin tocarlo, asi que bajar solo resolucion/estres no alcanzaba sin anular el estres. La palanca es la base, no el estres.
+- [x] Cambio (`8b9081d`): `chanceLevelBase` 45 -> 35 y `submissionMaxStressChance` 45 -> 30 (defaults en `src/config.h` y en la plantilla `TotalRecruit/config.json`). Aguante y castigo de unico sin cambios. El `config.json` desplegado del usuario NO se toca (sigue en 45/45; juega Cheat).
+- [x] Pruebas: RED 13 checks en `chance_rules`; GREEN tras el cambio; caracterizaciones de `route_decisions` actualizadas a la base 35 (field-yield 79 -> 69, aliado 65 -> 55, jaula 60 -> 50). `rules_tests` 63/63, 0/73382 fallos. DLL compila.
+- [x] Hoja regenerada sobre `8b9081d` (seccion 2, nivel +0, sano / cuidado medio / quebrado): fearful 2/2/1, normal 4/3/2, brave 6/4/4, honourable 7/5/4, unico honourable 45/13/10. Todo dentro de +-1 dia salvo honorable sano (7 contra 9, mas facil). Valiente quebrado 4 contra 3: dentro de +-1.
+- Efecto lateral (aceptado, apunta a T6): toda ruta de Balanced comparte la base. Field-yield normal con 2 derrotas 79 -> 69; aliado tiers-off 65 -> 55. `QA.md` 2.1 y `REQUISITOS.md` R2.1 actualizados.
+- Nota para T3: con estres pleno 30, cuidar ya casi iguala a quebrar en valiente/honorable (ventaja +6/+4); el bono maximo +20 vale 66 % del estres pleno de un normal.
 
 ### T2 Golpear domina
 - [ ] Evidencia (seccion 3, lider 40, un golpe cada vez que termina el descanso de 1 h):
@@ -168,6 +163,7 @@ Pasos de cierre: QA en juego -> merge de `feat/balanced-tuning` a `main` -> push
 - Este documento y `odd/balance/START-PROMPT.md` creados. Ningun numero cambiado todavia.
 - `1b310c7`: T7 agregado (animales por duelo o sometimiento), pedido del usuario.
 - 2026-10-06: rama mergeada en `main` (`b87d0b2`) y borrada. T5 hecho por priority-one B; T7 casi hecho (ver arriba). `b8ca98c`: la hoja compila contra los enfriamientos al minuto, suma la seccion 6 (animal enjaulado golpeado) y se regenero sobre `3fb81b2`.
+- 2026-10-07: T1 hecho (`8b9081d`): tabla objetivo acordada, base de nivel 35 y estres pleno 30; hoja regenerada.
 
 ## Proximo paso
-T1: confirmar la tabla objetivo con el usuario (solo Balanced; el usuario juega Cheat); despues T2-T4, luego T6, luego lo que queda de T7 (resolucion por especie).
+Quitar el Mod Hub (pedido del usuario 2026-10-07, `odd/tasks/remove-mod-hub.md`), asi T2-T4 no agregan filas al hub; despues T2, T3, T4, T6 y lo que queda de T7.
