@@ -282,10 +282,10 @@ llena vuelve a 0 en `submissionBeatingStressFadeHours` (24) horas de juego. Se
 ve en la tarjeta ("Golpes N") y en la línea `[readout]`.
 **Límites diarios (solo Balanced, balanced-tuning T2).** Golpear y Noquear ya no
 llenan la barra en una tarde: el golpe n-ésimo del mismo día de juego (Golpear y
-Noquear cuentan juntos) vale `submissionBeatingDiminishFactor`^(n-1) (0,7; rango
+Noquear cuentan juntos) vale `submissionBeatingDiminishFactor`^(n-1) (0,9; rango
 0,3..1,0, 1 lo apaga) de uno fresco, aplicado antes del acotado 0,02..0,25 (todo
 golpe sigue sumando al menos el mínimo); y un preso gana como mucho
-`submissionBeatingDailyStressCap` (0,35; rango 0,1..1,0) de barra por día de
+`submissionBeatingDailyStressCap` (0,6; rango 0,1..1,0) de barra por día de
 juego, aplicado después del acotado (el tope es lo único que baja un golpe del
 mínimo, hasta 0). El día es el de la tirada diaria (`DayIndexFromHours`). El
 registro del día se guarda con el personaje (`total_recruit.beating_day`,

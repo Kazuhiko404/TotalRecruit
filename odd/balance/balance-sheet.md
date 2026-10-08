@@ -1,7 +1,7 @@
 # Hoja de balance (Balanced, config por defecto)
 
 > **Generado, no editar a mano.** Programa: `tests/balance_sheet/main.cpp`, que llama a las funciones puras REALES de `src/` con `Config()` por defecto.
-> Reglas de `src/` en el commit `aedc3b4`.
+> Reglas de `src/` en el commit `6a08e0e`.
 > Regenerar:
 >
 > ```bash
@@ -175,32 +175,32 @@ Preso sano, alimentado, vida plena, nivel igual al lider, bolsillo conocido en 0
 
 ## 3. Estres por golpes (Golpear / Noquear)
 
-ganancia = clamp(base x factor de nivel x rendimiento / resolve, 0.02, 0.25), despues tope diario; base Golpear 0.08, Noquear 0.15; factor = lider/NPC acotado a [0.5, 1.5]; rendimiento = 0.70^(n-1) para el golpe n-esimo del dia de juego (Golpear y Noquear cuentan juntos); tope diario 0.35 de barra por preso y dia de juego (solo Balanced; Cheat sin limites diarios); descanso Golpear 1 h, Noquear 1 h; una barra llena se va en 24 h (-0.0417/h). Simulacion: un golpe (y/o un noqueo) cada vez que el descanso termina, 72 h seguidas (3 dias de juego), lider 40.
+ganancia = clamp(base x factor de nivel x rendimiento / resolve, 0.02, 0.25), despues tope diario; base Golpear 0.08, Noquear 0.15; factor = lider/NPC acotado a [0.5, 1.5]; rendimiento = 0.90^(n-1) para el golpe n-esimo del dia de juego (Golpear y Noquear cuentan juntos); tope diario 0.60 de barra por preso y dia de juego (solo Balanced; Cheat sin limites diarios); descanso Golpear 1 h, Noquear 1 h; una barra llena se va en 24 h (-0.0417/h). Simulacion: un golpe (y/o un noqueo) cada vez que el descanso termina, 72 h seguidas (3 dias de juego), lider 40.
 
 | Temperamento | Nivel NPC | factor | +Golpear | +Noquear | sesiones a 1.0 (solo Golpear) | meseta solo Golpear | a las 24 h solo Golpear | sesiones a 1.0 (Golpear+Noquear) | meseta Golpear+Noquear | maximo Golpear+Noquear | sin limites diarios: sesiones a 1.0 (G+N) | estres pleno vale |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| fearful | 20 | 1.50 | 0.200 | 0.250 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.35 (+17) | 3 | +30 |
-| fearful | 27 | 1.48 | 0.198 | 0.250 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.35 (+17) | 3 | +30 |
-| fearful | 40 | 1.00 | 0.133 | 0.250 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.31 (+15) | 3 | +30 |
-| fearful | 60 | 0.67 | 0.089 | 0.167 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.27 (+13) | 5 | +30 |
-| fearful | 80 | 0.50 | 0.067 | 0.125 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.19 (+9) | 7 | +30 |
-| normal | 20 | 1.50 | 0.120 | 0.225 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.31 (+9) | 4 | +30 |
-| normal | 27 | 1.48 | 0.119 | 0.222 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.31 (+9) | 4 | +30 |
-| normal | 40 | 1.00 | 0.080 | 0.150 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.24 (+7) | 6 | +30 |
-| normal | 60 | 0.67 | 0.053 | 0.100 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.14 (+4) | 9 | +30 |
-| normal | 80 | 0.50 | 0.040 | 0.075 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.10 (+2) | 14 | +30 |
-| brave | 20 | 1.50 | 0.075 | 0.141 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.22 (+4) | 6 | +18 |
-| brave | 27 | 1.48 | 0.074 | 0.139 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.22 (+4) | 6 | +18 |
-| brave | 40 | 1.00 | 0.050 | 0.094 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.13 (+2) | 10 | +18 |
-| brave | 60 | 0.67 | 0.033 | 0.063 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.08 (+1) | 18 | +18 |
-| brave | 80 | 0.50 | 0.025 | 0.047 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.06 (+1) | 32 | +18 |
-| honourable | 20 | 1.50 | 0.067 | 0.125 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.19 (+3) | 7 | +16 |
-| honourable | 27 | 1.48 | 0.066 | 0.123 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.19 (+3) | 7 | +16 |
-| honourable | 40 | 1.00 | 0.044 | 0.083 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.11 (+1) | 12 | +16 |
-| honourable | 60 | 0.67 | 0.030 | 0.056 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.07 (+1) | 22 | +16 |
-| honourable | 80 | 0.50 | 0.022 | 0.042 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.05 (+0) | 44 | +16 |
+| fearful | 20 | 1.50 | 0.200 | 0.250 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.56 (+27) | 3 | +30 |
+| fearful | 27 | 1.48 | 0.198 | 0.250 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.56 (+27) | 3 | +30 |
+| fearful | 40 | 1.00 | 0.133 | 0.250 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.56 (+27) | 3 | +30 |
+| fearful | 60 | 0.67 | 0.089 | 0.167 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.51 (+25) | 5 | +30 |
+| fearful | 80 | 0.50 | 0.067 | 0.125 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.43 (+21) | 7 | +30 |
+| normal | 20 | 1.50 | 0.120 | 0.225 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.54 (+16) | 4 | +30 |
+| normal | 27 | 1.48 | 0.119 | 0.222 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.53 (+16) | 4 | +30 |
+| normal | 40 | 1.00 | 0.080 | 0.150 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.47 (+14) | 6 | +30 |
+| normal | 60 | 0.67 | 0.053 | 0.100 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.34 (+10) | 9 | +30 |
+| normal | 80 | 0.50 | 0.040 | 0.075 | nunca | 0.02 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.21 (+6) | 14 | +30 |
+| brave | 20 | 1.50 | 0.075 | 0.141 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.48 (+8) | 6 | +18 |
+| brave | 27 | 1.48 | 0.074 | 0.139 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.47 (+8) | 6 | +18 |
+| brave | 40 | 1.00 | 0.050 | 0.094 | nunca | 0.01 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.30 (+5) | 10 | +18 |
+| brave | 60 | 0.67 | 0.033 | 0.063 | nunca | 0.02 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.15 (+2) | 18 | +18 |
+| brave | 80 | 0.50 | 0.025 | 0.047 | nunca | 0.02 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.09 (+1) | 32 | +18 |
+| honourable | 20 | 1.50 | 0.067 | 0.125 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.43 (+7) | 7 | +16 |
+| honourable | 27 | 1.48 | 0.066 | 0.123 | nunca | 0.00 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.43 (+7) | 7 | +16 |
+| honourable | 40 | 1.00 | 0.044 | 0.083 | nunca | 0.02 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.25 (+4) | 12 | +16 |
+| honourable | 60 | 0.67 | 0.030 | 0.056 | nunca | 0.02 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.12 (+1) | 22 | +16 |
+| honourable | 80 | 0.50 | 0.022 | 0.042 | nunca | 0.02 (+0) | 0.00 (+0) | nunca | 0.00 (+0) | 0.07 (+1) | 44 | +16 |
 
-"+Golpear" y "+Noquear" son el primer golpe del dia. "Meseta" es la barra tras la ultima sesion de las 72 h y "maximo" la mas alta tras una sesion: con el tope diario un preso gana a lo sumo 0.35 por dia de juego, asi que la barra solo pasa de ese valor cuando lo que quedaba del dia anterior aun no se desvanecio. La ultima columna de sesiones es la regla sin limites diarios (Cheat, y Balanced antes de T2). El umbral para saturar a 1 golpe por hora sin limites es una ganancia > 0.0417 (lo que se desvanece en 1 h). Una barra llena tarda 24 h en irse si se deja de golpear. Golpear ademas hiere, asi que el preso golpeado pierde el bono de cuidado y suma el termino de heridas.
+"+Golpear" y "+Noquear" son el primer golpe del dia. "Meseta" es la barra tras la ultima sesion de las 72 h y "maximo" la mas alta tras una sesion: con el tope diario un preso gana a lo sumo 0.60 por dia de juego, asi que la barra solo pasa de ese valor cuando lo que quedaba del dia anterior aun no se desvanecio. La ultima columna de sesiones es la regla sin limites diarios (Cheat, y Balanced antes de T2). El umbral para saturar a 1 golpe por hora sin limites es una ganancia > 0.0417 (lo que se desvanece en 1 h). Una barra llena tarda 24 h en irse si se deja de golpear. Golpear ademas hiere, asi que el preso golpeado pierde el bono de cuidado y suma el termino de heridas.
 
 ## 4. Otras rutas
 
