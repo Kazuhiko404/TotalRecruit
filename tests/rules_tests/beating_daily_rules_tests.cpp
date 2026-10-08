@@ -28,12 +28,22 @@ BeatingDay Day(int dayIndex, int blows, float gained)
     return day;
 }
 
+// The mechanics tests pin the original T2 numbers (0.7, 0.35) so they keep
+// checking order and cap when the shipped defaults are retuned.
+Submission MechanicsSub()
+{
+    Submission sub;
+    sub.beatingDiminishFactor = 0.7f;
+    sub.beatingDailyStressCap = 0.35f;
+    return sub;
+}
+
 void TheDefaultsAreTheAgreedOnes()
 {
-    const char* name = "beating daily: defaults diminish 0.7 (0.3..1.0), daily cap 0.35 (0.1..1.0)";
+    const char* name = "beating daily: defaults diminish 0.9 (0.3..1.0), daily cap 0.6 (0.1..1.0)";
     const Submission sub;
-    CHECK(sub.beatingDiminishFactor == 0.7f);
-    CHECK(sub.beatingDailyStressCap == 0.35f);
+    CHECK(sub.beatingDiminishFactor == 0.9f);
+    CHECK(sub.beatingDailyStressCap == 0.6f);
     CHECK(kBeatingDiminishFactorMin == 0.3f);
     CHECK(kBeatingDiminishFactorMax == 1.0f);
     CHECK(kBeatingDailyStressCapMin == 0.1f);
@@ -87,7 +97,7 @@ void TheCapLeavesOnlyWhatIsLeftOfTheDay()
 void TheDiminishedGainKeepsThePerBlowClamp()
 {
     const char* name = "beating daily: diminish before the per-blow clamp, the cap after it";
-    const Submission sub;
+    const Submission sub = MechanicsSub();
     // Even levels, a normal prisoner: 0.08, then 0.056, then 0.0392.
     CHECK(Near(BeatingStressGainScaled(BeatingBlow_Hit, 40, 40, Temperament_Normal, 1.0f, sub), 0.08f));
     CHECK(Near(DailyBeatingGain(BeatingBlow_Hit, 40, 40, Temperament_Normal, Day(3, 0, 0.0f), sub), 0.08f));
@@ -125,7 +135,7 @@ void RecordingCountsEveryBlow()
 void ADayOfBeatingNeverPassesTheCap()
 {
     const char* name = "beating daily: Golpear+Noquear every hour of a day gains at most the cap";
-    const Submission sub;
+    const Submission sub = MechanicsSub();
     BeatingDay day = BeatingDayFor(BeatingDay(), 2);
     float total = 0.0f;
     for (int h = 0; h < 24; ++h)

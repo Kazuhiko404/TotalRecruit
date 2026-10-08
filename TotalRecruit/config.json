@@ -112,8 +112,8 @@
   "submissionBeatingStressLevelMin": 0.5,
   "submissionBeatingStressLevelMax": 1.5,
   "submissionBeatingStressFadeHours": 24.0,
-  "submissionBeatingDiminishFactor": 0.7,
-  "submissionBeatingDailyStressCap": 0.35,
+  "submissionBeatingDiminishFactor": 0.9,
+  "submissionBeatingDailyStressCap": 0.6,
 
   "submissionEventEnabled": true,
   "submissionApproachSeconds": 60.0,
