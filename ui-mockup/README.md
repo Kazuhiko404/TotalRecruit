@@ -64,7 +64,10 @@ px values are the C++ constants, mock data in `js/data.js`, a pure renderer in `
    (balanced-tuning T3: game days in a row seen unhurt, fed and at full health) its value reads "+21% (racha 3
    dias)" (`readout.caredForStreak`), the bonus already including the streak. Under it, a "Resignado +N%" row
    for a Balanced prisoner held one full game day or more (balanced-tuning T4: +1 a day on the saved hold clock,
-   up to +10, divided by resolve; `readout.resigned`). MyGUI text
+   up to +10, divided by resolve; `readout.resigned`). An honourable or warm/kind prisoner whose roll failed
+   and who is cared for but has a care streak under `submissionCareJoinStreakDays` (4) no longer joins on care
+   alone: the main line reads "Cuidado: le faltan 2 dias de trato" (balanced-tuning T6,
+   `readout.line.cared.notYet`, state `caredNotYet`). MyGUI text
    boxes do not wrap, so every line is written to fit the card (about 36 characters at the body font).
 7. **Compact** drops the legend, the defeats row and the second line, narrows the card (176 vs 264) and thins
    the bars (5 vs 8). The route tag, the bars and the main line stay.

@@ -53,6 +53,23 @@ var STATES = [
     }
   },
   {
+    id: 'caredNotYet',
+    title: 'Honourable prisoner cared for, care streak too short',
+    note: 'Cautiverio, Balanced (balanced-tuning T6). The honourable and the warm/kind take no cats: when the roll fails, the currency table sends them to care. Care used to make them join on the spot (healthy + fed); now it joins only once the care streak reaches <code>submissionCareJoinStreakDays</code> (4, clamp 0..30; 0 = the old join on the first cared-for day). Below it the main line says how many more cared-for days are missing (<code>readout.line.cared.notYet</code>, "{need}" = 4 - streak). Here the streak is 2 days: 2 more to go. With a streak of 4 the line is the old "Alimentado y curado: se une". The bonus row and the chance are unchanged: the roll still runs every day.',
+    // facts: route Cage, honourable, level 20 vs player 20, fed, unhurt, health 1, rested 1,
+    // beaten 0, caredFor +18 (draw +12, streak 2 days x 3), held 2 d 5 h (resigned +1),
+    // roll failed -> currency care, streak 2 < 4 -> Reason_CaredForNotYet, need 2
+    vm: {
+      name: 'Paladin Seto', route: 'cautiverio', routeLabel: 'Cautiverio',
+      showStress: true, stressPct: 0, stress: { hunger: 0, wounds: 0, tired: 0, beaten: 0 },
+      showChance: true, chancePct: 49, ready: false, caredForPct: 18, careStreakDays: 2, resignedPct: 1,
+      showDefeats: true, defeats: 1, defeatsNeeded: 2,
+      showFood: false,
+      held: 'Encerrado: 2 d 5 h',
+      why:  { text: 'Cuidado: le faltan 2 dias de trato', tone: '' }
+    }
+  },
+  {
     id: 'resigned',
     title: 'Prisoner caged for a week',
     note: 'Cautiverio, Balanced (balanced-tuning T4). Time in the cage argues on its own again, slowly and capped: every full game day held (the saved hold clock, <code>total_recruit.hold_start_hour</code>) adds <code>submissionResignationPerDay</code> (1) up to <code>submissionResignationMax</code> (10), divided by the resolve like stress and defeats (<code>ResignationChance</code>). A normal prisoner held 7 days: +7, already inside the 74%. Below one full day, or with no hold clock, there is no row. It never decides on its own: it is one more term of the roll.',
