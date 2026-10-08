@@ -33,9 +33,9 @@ El mod deja de integrarse con el Mod Hub de Emkej. Toda la configuracion se lee 
 - Rama de Ctrl en `TotalRecruit.cpp:105-108`: se queda (evita que Shift dispare); solo cambia el comentario.
 
 ## Checklist
-- [ ] M1 Maqueta: quitar la seccion "4. Mod Hub controls" de `ui-mockup/readout.html` y las menciones en `ui-mockup/js/data.js` y `ui-mockup/README.md`. Ruta: escritor delegado (junto con M2-M3).
-- [ ] M2 Codigo: borrar `src/mod_hub_integration.*`, `src/emc/`, llamadas, entradas del `.vcxproj`; borrar `SaveConfig`, `json_merge.*`, `atomic_file.*` y sus pruebas y entradas en `tests/rules_tests` y `tests/balance_sheet`; reescribir los comentarios que citan el hub. Ruta: escritor delegado.
-- [ ] M3 Docs: README, REQUISITOS (R6.2-R6.4, I6 retirados), QA (S1/S2, §9, 12.5, filas 'Mod Hub "X"' pasan a la clave de `config.json`), DEVELOPING, TODO, `odd/system-status.md`, ESTADO, COMPARATIVA, `odd/balance/START-PROMPT.md`, criterios de `odd/tasks/balanced-tuning.md` ("fila en Mod Hub" -> "clave en config.json"). Ruta: escritor delegado.
+- [x] M1 Maqueta: quitar la seccion "4. Mod Hub controls" de `ui-mockup/readout.html` y las menciones en `ui-mockup/js/data.js` y `ui-mockup/README.md`. Ruta: escritor delegado (junto con M2-M3). Commit `28bf061`; la seccion 5 (popup) pasa a ser la 4.
+- [x] M2 Codigo: borrar `src/mod_hub_integration.*`, `src/emc/`, llamadas, entradas del `.vcxproj`; borrar `SaveConfig`, `json_merge.*`, `atomic_file.*` y sus pruebas y entradas en `tests/rules_tests` y `tests/balance_sheet`; reescribir los comentarios que citan el hub. Ruta: escritor delegado. Commit `82da5a7`.
+- [x] M3 Docs: README, REQUISITOS (R6.2-R6.4, I6 retirados), QA (S1/S2, §9, 12.5, filas 'Mod Hub "X"' pasan a la clave de `config.json`), DEVELOPING, TODO, `odd/system-status.md`, ESTADO, COMPARATIVA, `odd/balance/START-PROMPT.md`, criterios de `odd/tasks/balanced-tuning.md` ("fila en Mod Hub" -> "clave en config.json"). Ruta: escritor delegado. Commit `1fb8bda`.
 
 ## Criterios de aceptacion
 - `rg -i "mod.?hub|emkej|InitModHub|ModHubTick|SaveConfig" src tests TotalRecruit.vcxproj` sin resultados.
@@ -48,7 +48,10 @@ El mod deja de integrarse con el Mod Hub de Emkej. Toda la configuracion se lee 
 - `"$MSBUILD" tests/balance_sheet/balance_sheet.vcxproj -p:Configuration=Release -p:Platform=x64`
 
 ## Progreso
-- Documento creado. Ningun cambio todavia.
+- M1-M3 hechos (2026-10-07) por un escritor delegado.
+- Verificado tras M2 y al final: `rules_tests` 61/61 suites, 0/73291 checks fallidos; `TotalRecruit.dll` y `balance_sheet` compilan.
+- `rg -i "mod.?hub|emkej|InitModHub|ModHubTick|SaveConfig" src tests TotalRecruit.vcxproj`: queda solo `src/spawn_core.cpp:14` ("Emkej's Test Kit", credito de otra herramienta, no del hub; fuera de las superficies permitidas).
+- Pendiente fuera de alcance: `tests/rules_tests/test_support.h:26-27` aun declara `RunJsonMergeTests` / `RunAtomicFileTests` (declaraciones sin uso, compila igual); `odd/tasks/balanced-tuning.md` "Proximo paso" todavia dice "Quitar el Mod Hub".
 
 ## Proximo paso
-M1-M3 con un escritor delegado; despues seguir con balanced-tuning T2.
+Limpiar las dos declaraciones de `test_support.h` y el credito de `spawn_core.cpp` si se quiere el `rg` en cero; despues seguir con balanced-tuning T2 (sin filas de hub: clave en `config.json` + clamp en `LoadConfig`).
