@@ -3,7 +3,6 @@
 #include "rescue.h"
 #include "hail.h"
 #include "head_notice.h"
-#include "mod_hub_integration.h"
 #include "readout.h"
 #include "cage_commands.h"
 #include "submission_director.h"
@@ -28,7 +27,7 @@ void SafeTick()
     // HeadNoticeTick after ReadoutTick: it reads where the normal card is this frame.
     // DuelChallengeTick attaches to TotalSparring lazily and acts on its bouts a frame
     // after they were reported (never inside TotalSparring's teardown).
-    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); HeadNoticeTick(); TickCageCommands(); SubmissionTick(); HelperTick(); TempMemberTick(); LeaveHomingTick(); DuelChallengeTick(); ModHubTick(); }
+    TR_TRY { RescueTick(); HailTick(); ReadoutTick(); HeadNoticeTick(); TickCageCommands(); SubmissionTick(); HelperTick(); TempMemberTick(); LeaveHomingTick(); DuelChallengeTick(); }
     TR_CATCH { }
 }
 

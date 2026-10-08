@@ -72,7 +72,7 @@ struct CardDismissInput
 {
     // A press that started this frame (NextPressEdge).
     MousePress press;
-    // The cursor was over a MyGUI widget (the offer window, Mod Hub, a menu button).
+    // The cursor was over a MyGUI widget (the offer window, a menu button).
     bool overMyGui;
     // The press was on the card's NPC (PointOnBody). Only read for a press.
     bool onNpc;

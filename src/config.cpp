@@ -1,8 +1,6 @@
 #include "common.h"
 #include "config.h"
 #include "log.h"
-#include "json_merge.h"
-#include "atomic_file.h"
 #include "beat_walk_rules.h"
 #include "beat_strike_rules.h"
 #include "animal_beating_rules.h"
@@ -244,9 +242,7 @@ void ReadStringArray(const std::string& text, const std::string& key,
 }
 
 // One table describes every setting: the file key, its type and where it lives.
-// LoadConfig and SaveConfig both walk it, so a key can no longer be read but not
-// saved (which is how the price curve, the grudge penalty and half a dozen
-// animal settings used to be dropped on the first Mod Hub click).
+// LoadConfig walks it, so every key has exactly one name, type and target.
 enum FieldType
 {
     Field_Bool,
@@ -506,33 +502,6 @@ void ReadField(const std::string& text, const Field& field)
     }
 }
 
-JsonUpdate WriteField(const Field& field)
-{
-    switch (field.type)
-    {
-    case Field_Bool:       return JsonUpdate(field.key, JsonBool(*(bool*)field.target));
-    case Field_Int:        return JsonUpdate(field.key, JsonInt(*(int*)field.target));
-    case Field_Float:      return JsonUpdate(field.key, JsonFloat(*(float*)field.target));
-    case Field_String:     return JsonUpdate(field.key, JsonString(*(std::string*)field.target));
-    case Field_StringList: return JsonUpdate(field.key, JsonStringArray(*(std::vector<std::string>*)field.target));
-    }
-    return JsonUpdate(field.key, "null");
-}
-
-// What a brand new config.json starts from. The exclusion keys are read by name
-// wherever they sit, but the documented layout nests them, so a file the plugin
-// creates itself keeps that layout and the merge fills in the values.
-const char* const kFreshConfig =
-    "{\n"
-    "  \"exclude\": {\n"
-    "    \"dead\": true,\n"
-    "    \"unconscious\": false,\n"
-    "    \"animals\": false,\n"
-    "    \"sameFaction\": true,\n"
-    "    \"factions\": [],\n"
-    "    \"characterNames\": []\n"
-    "  }\n"
-    "}\n";
 } // namespace
 
 void LoadConfig(const std::string& modDirectory)
@@ -648,65 +617,6 @@ void LoadConfig(const std::string& modDirectory)
 std::string GetModDirectory()
 {
     return g_modDirectory;
-}
-
-// Merges the current settings into the file that is there rather than rewriting
-// it: values of known keys change in place, keys the file lacks are appended, and
-// everything else -- comments, unknown keys, the player's own order and spacing --
-// is left alone. The result goes through a temporary file, so a crash cannot leave
-// a half-written config.json.
-bool SaveConfig(const std::string& modDirectory)
-{
-    std::string dir = modDirectory.empty() ? g_modDirectory : modDirectory;
-    if (dir.empty())
-    {
-        return false;
-    }
-
-    const std::string path = dir + "\\config.json";
-    const std::string existing = Slurp(path);
-
-    const std::vector<Field> fields = ConfigFields(g_config);
-    std::vector<JsonUpdate> updates;
-    for (size_t i = 0; i < fields.size(); ++i)
-    {
-        updates.push_back(WriteField(fields[i]));
-    }
-
-    const bool blank = existing.find_first_not_of(" \t\r\n") == std::string::npos;
-    MergeResult merged = MergeJsonKeys(blank ? std::string(kFreshConfig) : existing, updates);
-    if (!merged.ok)
-    {
-        // The file is there but is not one object we can edit safely. Keep what
-        // the player wrote next to it and start again from a fresh document,
-        // rather than either dropping their text silently or never saving.
-        const std::string backup = path + ".bak";
-        if (!CopyFileA(path.c_str(), backup.c_str(), FALSE))
-        {
-            LogError(path + " is not valid JSON and could not be backed up; not overwriting it.");
-            return false;
-        }
-        LogError(path + " is not valid JSON; kept a copy as " + backup + " and wrote a fresh file.");
-        merged = MergeJsonKeys(kFreshConfig, updates);
-    }
-
-    if (merged.ok && merged.text == existing)
-    {
-        return true;    // nothing differs, so there is nothing to write
-    }
-
-    std::string error;
-    if (!merged.ok || !WriteFileAtomically(path, merged.text, &error))
-    {
-        LogError("Failed to write config to " + path + (error.empty() ? std::string() : ": " + error));
-        return false;
-    }
-
-    char counts[96] = { 0 };
-    _snprintf_s(counts, sizeof(counts), _TRUNCATE, " (%d changed, %d added)",
-                merged.replaced, merged.appended);
-    LogInfo("Saved config to " + path + counts);
-    return true;
 }
 
 Config& GetConfig()

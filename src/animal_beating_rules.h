@@ -24,7 +24,7 @@
 
 namespace totalrecruit
 {
-// The clamps config.cpp and the Mod Hub use.
+// The clamps LoadConfig (config.cpp) uses.
 const float kAnimalBeatingWeightMax = 1.0f;
 const float kAnimalBeatingResolveBaseMin = 0.1f;
 const float kAnimalBeatingResolveBaseMax = 10.0f;

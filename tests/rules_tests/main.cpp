@@ -51,8 +51,6 @@ const Suite kSuites[] = {
     { "plea_tracker", RunPleaTrackerTests },
     { "hold_clock", RunHoldClockTests },
     { "money_rules", RunMoneyRulesTests },
-    { "json_merge", RunJsonMergeTests },
-    { "atomic_file", RunAtomicFileTests },
     { "char_key", RunCharKeyTests },
     { "identity_registry", RunIdentityRegistryTests },
     { "route_decisions", RunRouteDecisionsTests },

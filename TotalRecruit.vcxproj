@@ -74,7 +74,6 @@
     <ClCompile Include="src\dialogue_bridge.cpp" />
     <ClCompile Include="src\rescue.cpp" />
     <ClCompile Include="src\frame_tick.cpp" />
-    <ClCompile Include="src\mod_hub_integration.cpp" />
     <ClCompile Include="src\surrender.cpp" />
     <ClCompile Include="src\dialogue_authoring.cpp" />
     <ClCompile Include="src\offer_popup.cpp" />
@@ -91,8 +90,6 @@
     <ClCompile Include="src\price_rules.cpp" />
     <ClCompile Include="src\money_rules.cpp" />
     <ClCompile Include="src\cats_purse.cpp" />
-    <ClCompile Include="src\json_merge.cpp" />
-    <ClCompile Include="src\atomic_file.cpp" />
     <ClCompile Include="src\route_rules.cpp" />
     <ClCompile Include="src\temperament_map.cpp" />
     <ClCompile Include="src\defeat_rules.cpp" />
@@ -224,7 +221,6 @@
     <ClInclude Include="src\dialogue_bridge.h" />
     <ClInclude Include="src\rescue.h" />
     <ClInclude Include="src\frame_tick.h" />
-    <ClInclude Include="src\mod_hub_integration.h" />
     <ClInclude Include="src\surrender.h" />
     <ClInclude Include="src\dialogue_authoring.h" />
     <ClInclude Include="src\offer_popup.h" />
@@ -275,8 +271,6 @@
     <ClInclude Include="src\price_rules.h" />
     <ClInclude Include="src\money_rules.h" />
     <ClInclude Include="src\cats_purse.h" />
-    <ClInclude Include="src\json_merge.h" />
-    <ClInclude Include="src\atomic_file.h" />
     <ClInclude Include="src\route_rules.h" />
     <ClInclude Include="src\defeat_rules.h" />
     <ClInclude Include="src\defeat_episode_rules.h" />

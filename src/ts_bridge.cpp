@@ -221,7 +221,7 @@ void __cdecl OnBout(void* /*user*/, const TS_BoutEvent* ev)
 
 // --------------------------------------------------------------- Attaching
 // TotalSparring by its module name, or any module exporting TS_GetApi (a renamed
-// DLL), the way mod_hub_integration.cpp finds Mod Hub.
+// DLL).
 TS_GetApiFn FindGetApi()
 {
     const char* names[] = { "TotalSparring.dll", "TotalSparring" };

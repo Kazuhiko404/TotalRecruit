@@ -11,7 +11,7 @@
 //   - Attach is lazy and never in startPlugin (load order is not guaranteed): the
 //     frame tick calls TsBridgeTick, which tries every kAttachRetryMs (2 s). It finds
 //     TotalSparring.dll by name (GetModuleHandleA), or by scanning the process for
-//     the TS_GetApi export (the Mod Hub pattern, mod_hub_integration.cpp), asks
+//     the TS_GetApi export, asks
 //     TS_GetApi for version 1, checks the table's size and entry points, and registers
 //     one bout listener. No TotalSparring after kAttachTries tries, an old one without
 //     the export, or a refused version: absent for the session (logged once), and

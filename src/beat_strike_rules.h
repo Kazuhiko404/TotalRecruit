@@ -33,8 +33,8 @@
 namespace totalrecruit
 {
 // The config's clip (submissionBeatAnimClip), duration (submissionBeatAnimSeconds)
-// and wind-up (submissionBeatWindupSeconds): defaults and clamps for config.cpp
-// and the Mod Hub. Real seconds that stop while the game is paused.
+// and wind-up (submissionBeatWindupSeconds): defaults and clamps for config.cpp.
+// Real seconds that stop while the game is paused.
 extern const char* const kBeatAnimDefaultClip;
 const float kBeatAnimDefaultSeconds = 0.9f;
 const float kBeatAnimMinSeconds = 0.2f;

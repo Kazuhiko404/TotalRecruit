@@ -30,8 +30,8 @@
 namespace totalrecruit
 {
 // The config's reach (submissionBeatReachMeters) and walk time
-// (submissionBeatWalkSeconds): defaults and the clamps config.cpp and the Mod Hub
-// use. Real seconds that stop while the game is paused, like the submission
+// (submissionBeatWalkSeconds): defaults and the clamps config.cpp
+// uses. Real seconds that stop while the game is paused, like the submission
 // event's walk-up.
 const float kBeatReachDefaultMeters = 4.0f;
 const float kBeatReachMinMeters = 1.0f;

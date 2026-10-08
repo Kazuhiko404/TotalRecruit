@@ -24,7 +24,6 @@
 #include "rescue.h"
 #include "defeats.h"
 #include "frame_tick.h"
-#include "mod_hub_integration.h"
 #include "offer_popup.h"
 #include "cursor_hint.h"
 #include "hail.h"
@@ -104,7 +103,7 @@ void InputHandler_keyDownEvent_hook(InputHandler* thisptr, OIS::KeyCode key)
 
     if (ctrlHeld)
     {
-        // Settings are in Mod Hub
+        // Ctrl-click is left to the game; this branch keeps Shift from firing.
     }
     else if (shiftHeld)
     {
@@ -187,7 +186,6 @@ __declspec(dllexport) void startPlugin()
     // Makes the mod visible: the cursor tells the player who can be talked to.
     const bool cursorOk = InstallCursorHint();
     InstallHailing();
-    InitModHub();
 
     if (!overlayOk && !inputOk)
     {

@@ -197,7 +197,7 @@ void AddDuelRecord(Character* character, ReadoutInput* input)
     input->duelLosses = c.losses;
     input->duelDraws = c.draws;
     // What the next win does (duel_join_rules.h): computed from the cached wins every
-    // time, so a Mod Hub change of the chance shows at once.
+    // time, so a new chance from config.json shows at once.
     const DuelJoinOdds odds = DuelNextWinOddsNow(c.known ? c.wins : 0);
     input->duelJoinKnown = c.known;
     input->duelJoinSure = odds.sure;

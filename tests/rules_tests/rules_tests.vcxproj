@@ -51,8 +51,6 @@
     <ClCompile Include="plea_tracker_tests.cpp" />
     <ClCompile Include="hold_clock_tests.cpp" />
     <ClCompile Include="money_rules_tests.cpp" />
-    <ClCompile Include="json_merge_tests.cpp" />
-    <ClCompile Include="atomic_file_tests.cpp" />
     <ClCompile Include="char_key_tests.cpp" />
     <ClCompile Include="identity_registry_tests.cpp" />
     <ClCompile Include="route_decisions_tests.cpp" />
@@ -116,8 +114,6 @@
     <ClCompile Include="..\..\src\haggle_rules.cpp" />
     <ClCompile Include="..\..\src\haggle_ledger.cpp" />
     <ClCompile Include="..\..\src\money_rules.cpp" />
-    <ClCompile Include="..\..\src\json_merge.cpp" />
-    <ClCompile Include="..\..\src\atomic_file.cpp" />
     <ClCompile Include="..\..\src\route_cage.cpp" />
     <ClCompile Include="..\..\src\route_free.cpp" />
     <ClCompile Include="..\..\src\route_cats.cpp" />
