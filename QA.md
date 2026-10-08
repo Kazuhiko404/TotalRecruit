@@ -912,7 +912,7 @@ KenshiLib 0.5.0 vendorizado: el ayudante usa el paquete Bodyguard del juego (com
 
 ### 12.32 Descanso de Noquear y estres por golpes (cage-beating-stress)
 
-Con `"probeOnClick": true` y los valores por defecto (descansos de 1 h; base 0,08 por golpe y 0,15 por noqueo; ganancia 0,02..0,25; niveles 0,5..1,5; se desvanece en 24 h). Mockup: `ui-mockup/readout.html`, "Menu on your prisoner, Golpear and Noquear resting" y la tarjeta "Caged bandit" (Golpes). La ganancia es `clamp(base x clamp(nivel lider / nivel preso, 0,5, 1,5) / aguante, 0,02, 0,25)` (aguante: miedoso 0,6, valiente 1,6, honorable 1,8, el resto 1).
+Con `"probeOnClick": true` y los valores por defecto (descansos de 1 h; base 0,08 por golpe y 0,15 por noqueo; ganancia 0,02..0,25; niveles 0,5..1,5; se desvanece en 24 h; en Balanced rendimiento 0,7 por golpe del dia y tope diario 0,35, S13-S18). En Balanced la linea `[stress]` termina en `[day D blow N, xM, today T% of cap C%]`; S1-S12 siguen valiendo para el primer golpe del dia. Mockup: `ui-mockup/readout.html`, "Menu on your prisoner, Golpear and Noquear resting" y la tarjeta "Caged bandit" (Golpes). La ganancia es `clamp(base x clamp(nivel lider / nivel preso, 0,5, 1,5) / aguante, 0,02, 0,25)` (aguante: miedoso 0,6, valiente 1,6, honorable 1,8, el resto 1).
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
@@ -928,6 +928,12 @@ Con `"probeOnClick": true` y los valores por defecto (descansos de 1 h; base 0,0
 | S10 | Con estres por golpes, guardar, salir y cargar ese save | La barra vuelve con el valor del save, desvanecida segun las horas de juego que pasaron desde el ultimo golpe; cargar un save **anterior** a los golpes la deja en 0 | `[readout] ... beaten N)` |
 | S11 | `submissionBeatStressBase` en 0 y golpear | El golpe no suma estres (base 0 apaga el termino; el minimo no aplica) | `beating stress +0% (blow, ...)` |
 | S12 | Con la barra de golpes alta, comparar la chance de la tarjeta antes y despues de golpear | La chance sube con el estres (pesa como el resto del estres, con su tope `maxStressChance` y el aguante) | `[chance] ... stress=N(..%)` |
+| S13 | Balanced (balanced-tuning T2), rendimiento decreciente: preso normal del nivel de tu lider; Golpear (S1), esperar el descanso, Noquear (S3), esperar, Golpear otra vez, todo el mismo dia de juego | Cada golpe del dia vale menos: +8%, +11% (15 x 0,7), +4% (8 x 0,49); nunca menos de 2% mientras quede tope | `[stress] <preso> beating stress +8% (...) -> 8% [day D blow 1, x1.00, today 8% of cap 35%]`, luego `+11% (knockout, ...) [day D blow 2, x0.70, today 19% of cap 35%]`, luego `+4% (blow, ...) [day D blow 3, x0.49, today 22% of cap 35%]` |
+| S14 | Balanced, tope diario: seguir golpeando y noqueando al mismo preso el mismo dia de juego | Lo ganado en el dia no pasa de 35%; al llegar, los golpes siguientes suman +0% (siguen contando para el rendimiento) | `[day D blow N, ..., today 35% of cap 35%]` y `beating stress +0%` |
+| S15 | Balanced, dia nuevo: tras S14, esperar a que cambie el dia de juego (medianoche) y golpear | El primer golpe del dia vuelve a valer completo (+8% en un normal del mismo nivel) | `[day D+1 blow 1, x1.00, today 8% of cap 35%]` |
+| S16 | Balanced, save: a mitad de S13 o S14, guardar, salir y cargar ese save; golpear otra vez el mismo dia | Sigue la cuenta del dia (blow N+1, el "today" del save); un save de antes de T2 (sin las filas) cuenta como dia nuevo | `[day D blow N+1, ...]`; en un save viejo `[day D blow 1, x1.00, ...]` |
+| S17 | `submissionBeatingDiminishFactor` 1.0 y `submissionBeatingDailyStressCap` 1.0 en `config.json` | Sin rendimiento decreciente: cada golpe vale como el primero (la barra igual topa en 100%) | `[day D blow N, x1.00, today ... of cap 100%]` |
+| S18 | Cheat: golpear varias veces el mismo dia | Sin limites diarios: cada golpe suma lo de S1/S2 y la linea no lleva el corchete del dia | `beating stress +8% (...) -> N%` sin `[day ...]` |
 
 ### 12.33 Dos presets, esperas de Cheat de 1 minuto y horas de jaula guardadas (v1-presets-close)
 

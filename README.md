@@ -67,7 +67,11 @@ says who hit whom. If the walk never gets there
 (`submissionBeatWalkSeconds`, stuck, or you order the character elsewhere) there
 is no blow and no rest, and the message line says why. Noquear is Kenshi's own
 stealth knockout order and shows the game's own odds. Neither knockout counts as
-a defeat: each blow and knockout adds beating stress instead. In Balanced that
+a defeat: each blow and knockout adds beating stress instead. In Balanced each
+further blow of the same game day counts for less
+(`submissionBeatingDiminishFactor`, 0.7 per blow) and one prisoner gains at most
+`submissionBeatingDailyStressCap` (0.35) of the bar per game day, so beating
+alone never breaks someone in an afternoon. In Balanced that
 stress also helps tame an animal in your cage: it lowers the food bar the animal
 needs (less for a high-level beast; `animalCageBeatingWeight` and friends,
 `animalCageBeatingCounts`), though the first meal from your

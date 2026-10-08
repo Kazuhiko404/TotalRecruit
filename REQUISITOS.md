@@ -280,6 +280,18 @@ save del personaje (`total_recruit.beating_stress` y
 `total_recruit.beating_stress_hour`) y se desvanece en línea recta: una barra
 llena vuelve a 0 en `submissionBeatingStressFadeHours` (24) horas de juego. Se
 ve en la tarjeta ("Golpes N") y en la línea `[readout]`.
+**Límites diarios (solo Balanced, balanced-tuning T2).** Golpear y Noquear ya no
+llenan la barra en una tarde: el golpe n-ésimo del mismo día de juego (Golpear y
+Noquear cuentan juntos) vale `submissionBeatingDiminishFactor`^(n-1) (0,7; rango
+0,3..1,0, 1 lo apaga) de uno fresco, aplicado antes del acotado 0,02..0,25 (todo
+golpe sigue sumando al menos el mínimo); y un preso gana como mucho
+`submissionBeatingDailyStressCap` (0,35; rango 0,1..1,0) de barra por día de
+juego, aplicado después del acotado (el tope es lo único que baja un golpe del
+mínimo, hasta 0). El día es el de la tirada diaria (`DayIndexFromHours`). El
+registro del día se guarda con el personaje (`total_recruit.beating_day`,
+`beating_day_blows`, `beating_day_gained`); un save viejo sin esas filas cuenta
+como día nuevo. Cheat no cambia. No hay penalización de relación ni opinión
+(la jaula no usa la relación) y el término de golpes sigue pesando 1,00.
 
 **R2.4 — Cooldown de insistencia acumulativo y configurable.** *(P1)*
 Hoy funciona pero con horas fijas. Debe pasar a:

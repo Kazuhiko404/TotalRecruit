@@ -81,7 +81,8 @@ Ruta: inline (dos defaults + pruebas de caracterizacion; sin regla nueva).
 - Nota para T3: con estres pleno 30, cuidar ya casi iguala a quebrar en valiente/honorable (ventaja +6/+4); el bono maximo +20 vale 66 % del estres pleno de un normal.
 
 ### T2 Golpear domina
-- [ ] Evidencia (seccion 3, lider 40, un golpe cada vez que termina el descanso de 1 h):
+Ruta: escritor delegado (modulo puro nuevo + pegamento del motor + filas del save + config + generador de la hoja + docs: varios archivos no triviales).
+- [x] Evidencia (seccion 3, lider 40, un golpe cada vez que termina el descanso de 1 h):
   - normal nivel 40: +0.080 por golpe, barra a 1.0 en 25 sesiones solo Golpear, en **6** con Golpear+Noquear; meseta 1.00 (+45).
   - fearful nivel 40: 11 sesiones solo Golpear, 3 con Golpear+Noquear.
   - brave nivel 40: meseta solo Golpear 0.64 (+18), pero 10 sesiones a 1.0 con Golpear+Noquear; honourable nivel 40: meseta 0.24 (+6), 12 sesiones con Golpear+Noquear.
@@ -89,11 +90,28 @@ Ruta: inline (dos defaults + pruebas de caracterizacion; sin regla nueva).
   - El termino de golpes entra al estres con peso 1.00 (hambre 0.50, heridas 0.35, cansancio 0.15): una barra de golpes llena satura sola el estres.
   - Columna "golpes" (seccion 2, nivel +0): normal 95 (1), brave 73 (2), honourable 65 (3): igual que "quebrado".
   - Unico costo que muestra la hoja: Golpear hiere, asi que se pierde el bonus de cuidado. Sin efecto en relacion ni opinion.
-- [ ] Propuesta (modulo puro nuevo o extension de `beating_stress_rules`, test-first):
+- [x] Propuesta (modulo puro nuevo o extension de `beating_stress_rules`, test-first). Hecho lo de abajo marcado; el resto descartado por el padre:
   - **Rendimiento decreciente** por golpe del mismo dia de juego: la ganancia n-esima del dia se multiplica por `beatingDiminishFactor` (p.ej. 0.7, rango 0.3..1.0).
   - **Tope diario** de estres por golpes: `beatingDailyStressCap` (p.ej. 0.35, rango 0.1..1.0).
-  - **Penalizacion de relacion/opinion** al golpear: `beatingRelationPenaltyMin/Max` (p.ej. 2..6 por golpe), x1.5 para honorable y valiente (`beatingRelationPenaltyPrideMult`). Nota: la jaula hoy no usa la relacion en `JoinChance`; decidir si la penalizacion pesa en la tirada de la jaula o solo despues (miembro reclutado, rencor).
-  - Considerar bajar el peso del termino de golpes (hoy 1.00) a la par de hambre (0.50): `stressWeightBeaten`.
+  - ~~**Penalizacion de relacion/opinion** al golpear~~ (descartado por el padre: la jaula no usa relacion; el tope diario basta): `beatingRelationPenaltyMin/Max` (p.ej. 2..6 por golpe), x1.5 para honorable y valiente (`beatingRelationPenaltyPrideMult`). Nota: la jaula hoy no usa la relacion en `JoinChance`; decidir si la penalizacion pesa en la tirada de la jaula o solo despues (miembro reclutado, rencor).
+  - ~~Considerar bajar el peso del termino de golpes (hoy 1.00) a la par de hambre (0.50): `stressWeightBeaten`~~ (descartado por el padre: la jaula no usa relacion; el tope diario basta; el peso sigue en 1.00).
+- [x] Hecho (`aedc3b4`, solo Balanced; Cheat sin cambios): modulo puro `src/beating_daily_rules.cpp/.h`.
+  - **Orden por golpe** (`DailyBeatingGain`, comentado en el encabezado): 1) rendimiento `submissionBeatingDiminishFactor`^(n-1) (0.7, rango 0.3..1.0) sobre la ganancia cruda, **antes** del acotado 0.02..0.25 (`BeatingStressGainScaled`, extension limpia de `beating_stress_rules`; `BeatingStressGain` = escala 1): todo golpe sigue sumando al menos el minimo y el maximo sigue acotando un noqueo fresco; 2) tope diario `submissionBeatingDailyStressCap` (0.35, rango 0.1..1.0) **despues** del acotado: lo unico que baja un golpe del minimo, hasta 0. Golpear y Noquear cuentan juntos para n; un golpe que el tope dejo en 0 igual cuenta.
+  - Dia = `DayIndexFromHours` (el de `DailySeed`). Registro por preso (dia, golpes, ganado) en `BeatingDayLedger`, detras del mismo lock que la barra (`beating_stress.cpp`); se guarda con el personaje en tres filas nuevas de `saved_ints` (`total_recruit.beating_day` = dia + 1, `beating_day_blows`, `beating_day_gained` en milesimas). Save viejo sin filas = dia nuevo; un registro de otro dia (o de un reloj que volvio atras) = dia nuevo. `load_boundary` lo vacia con la barra (`ForgetAllBeatingStress`).
+  - Log con `probeOnClick` en Balanced: `[stress] <preso> beating stress +X% (...) -> Y% [day D blow N, xM, today T% of cap C%]`.
+  - Claves nuevas solo agregadas a la plantilla `TotalRecruit/config.json`, clamp en `LoadConfig` con las constantes del modulo. Sin control de hub (el Mod Hub ya no existe).
+- [x] Pruebas: RED 38 checks en `beating_daily_rules` (62 suites, 61 pasan, 38/73355 fallos) con los cuerpos vacios; GREEN tras implementar: 62/62 suites, 0/73355 fallos. DLL compila.
+- [x] Hoja regenerada sobre `aedc3b4` (seccion 3, lider 40, nivel 40; columnas nuevas "meseta" y "maximo" de Golpear+Noquear y "sin limites diarios" para comparar):
+
+  | Temperamento | Antes: sesiones a 1.0 solo Golpear / G+N, meseta solo Golpear | Despues: sesiones a 1.0 solo Golpear / G+N | Despues: maximo G+N (chance) | Despues: meseta G+N a las 72 h |
+  |---|---|---|---|---|
+  | fearful | 11 / 3, 1.00 (+30) | nunca / nunca | 0.31 (+15) | 0.00 |
+  | normal | 25 / 6, 1.00 (+30) | nunca / nunca | 0.24 (+7) | 0.00 |
+  | brave | nunca / 10, 0.64 (+12) | nunca / nunca | 0.13 (+2) | 0.00 |
+  | honourable | nunca / 12, 0.24 (+4) | nunca / nunca | 0.11 (+1) | 0.00 |
+
+  Criterio de aceptacion cumplido: Golpear+Noquear no saturan la barra de un normal de igual nivel ni en un dia ni en tres. La meseta a las 72 h es 0 porque, golpeando cada hora, el tope del dia se alcanza en las primeras horas y el resto del dia se desvanece (0.0417/h contra golpes de 0.02).
+- Nota para T3: la columna "golpes" de la seccion 2 sigue suponiendo una barra de golpes 1.0, que en Balanced ya no se alcanza golpeando (maximo ~0.35 por dia mas lo que quede del anterior); la ventaja de quebrar sobre cuidar es ahora menor de lo que muestra esa columna. Revisar esa columna o su supuesto en T3.
 
 ### T3 Quebrar pesa mucho mas que cuidar
 - [ ] Evidencia (seccion 2, "Cuidar contra quebrar", nivel igual al lider):
@@ -164,6 +182,7 @@ Pasos de cierre: QA en juego -> merge de `feat/balanced-tuning` a `main` -> push
 - `1b310c7`: T7 agregado (animales por duelo o sometimiento), pedido del usuario.
 - 2026-10-06: rama mergeada en `main` (`b87d0b2`) y borrada. T5 hecho por priority-one B; T7 casi hecho (ver arriba). `b8ca98c`: la hoja compila contra los enfriamientos al minuto, suma la seccion 6 (animal enjaulado golpeado) y se regenero sobre `3fb81b2`.
 - 2026-10-07: T1 hecho (`8b9081d`): tabla objetivo acordada, base de nivel 35 y estres pleno 30; hoja regenerada.
+- 2026-10-07: T2 hecho (`aedc3b4`): rendimiento decreciente 0.7 y tope diario 0.35 del estres por golpes en Balanced, guardados con el personaje; hoja regenerada (seccion 3); QA 12.32 S13-S18.
 
 ## Proximo paso
-Mod Hub quitado (`odd/tasks/remove-mod-hub.md`, 2026-10-07): las claves nuevas van solo a `config.json`. Sigue T2, T3, T4, T6 y lo que queda de T7.
+Mod Hub quitado (`odd/tasks/remove-mod-hub.md`, 2026-10-07): las claves nuevas van solo a `config.json`. T2 hecho; sigue **T3** (cuidar contra quebrar, con la nota de la columna "golpes"), luego T4, T6 y lo que queda de T7.
