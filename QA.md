@@ -958,6 +958,13 @@ Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat), H (horas de
 | C6 | `submissionCaredForBonusMin` = "max" = 12; luego min 15 y max 3 | Primero siempre +12; despues siempre +15 (un maximo menor que el minimo cuenta como el minimo) | `caredFor=+12` / `caredFor=+15` |
 | C7 | Balanced: dejar a un preso 6 h o mas en la jaula y hablarle | No se une por tiempo (12.3 E3) | ninguna linea `easy-mode needs` |
 | C8 | Dejar `"easyHoursCaged": 6.0` en el `config.json` desplegado y abrir | Se ignora: sin errores ni avisos, y nadie se une por tiempo | sin lineas de `easyHoursCaged` |
+| C9 | Racha de cuidado (balanced-tuning T3). Balanced: el primer dia de un preso sano, comido y con la salud llena en tu jaula; Hablar | Racha 0: la fila dice `LO CUIDASTE +N%` sin "(racha ...)" | `[chance] ... caredFor=+N(streak 0d)` |
+| C10 | Mantenerlo asi, cerca del preso (el barrido lo ve), hasta el dia de juego siguiente; Hablar | `LO CUIDASTE +M% (racha 1 dias)`, M = el sorteo del dia + 3; la chance ya lo incluye | `<preso> [care] streak 0 -> 1 days (day D, cared for)` y `caredFor=+M(streak 1d)` |
+| C11 | Seguir asi 5 dias de juego o mas | La racha sube un dia por dia; desde 5 dias el extra queda en +15 (M = sorteo + 15) | `caredFor=+M(streak 5d)`, `(streak 6d)`, ... |
+| C12 | Con racha, Golpear al preso (o dejarlo sin comer) | La racha vuelve a 0 en el momento; curado y comido otra vez, la fila no muestra racha hasta el dia siguiente al primer dia entero cuidado | `[care] streak D -> 0 days (day N, not cared for: reset)` |
+| C13 | Con racha 3, guardar, salir de Kenshi, abrir y cargar ese save | La misma racha tras la carga | `caredFor=+M(streak 3d)` |
+| C14 | Con racha, alejarse del preso un dia de juego entero (fuera del radio del barrido) y volver | La racha se corta: un dia sin verlo no cuenta | `caredFor=+N(streak 0d)` |
+| C15 | Cheat (`"preset": 0`) | Sin racha: Cheat no tira la chance ni registra avistajes | sin lineas `[care]` |
 
 ### 12.34 Animales: duelo, 2/2 en Balanced y cura/derrota en Cheat (animal-duel-submission)
 

@@ -115,12 +115,39 @@ Ruta: escritor delegado (modulo puro nuevo + pegamento del motor + filas del sav
 - Nota para T3: la columna "golpes" de la seccion 2 sigue suponiendo una barra de golpes 1.0, que en Balanced ya no se alcanza golpeando (maximo ~0.6 por dia mas lo que quede del anterior); la ventaja de quebrar sobre cuidar es ahora menor de lo que muestra esa columna. Revisar esa columna o su supuesto en T3.
 
 ### T3 Quebrar pesa mucho mas que cuidar
-- [ ] Evidencia (seccion 2, "Cuidar contra quebrar", nivel igual al lider):
+Ruta: escritor delegado (modulo puro nuevo + pegamento del motor + filas del save + config + tarjeta + generador de la hoja + docs: varios archivos no triviales).
+- [x] Evidencia (hoja de `7bf8750`; antes de T1) (seccion 2, "Cuidar contra quebrar", nivel igual al lider):
   - normal: cuidado medio (+12) 72 contra quebrado 95, ventaja de quebrar +23; dias 90 %: 2 cuidando, 1 quebrando.
   - normal unico: 47 contra 80, ventaja +33; 4 contra 2 dias.
   - honourable unico: 27 contra 40, ventaja +13; 8 contra 5 dias.
   - "El bono de cuidado maximo (+20) vale 44% de lo que vale el estres pleno de un normal (+45)."
-- [ ] Propuesta: bonus por cuidarlo que **crece con dias seguidos cuidado** (racha guardada con el personaje, se corta si un dia no esta sano + alimentado + vida plena). Bonus = sorteo estable del dia entre min y max + `caredForStreakPerDay` x dias de racha, tope `caredForStreakMax`. Valores iniciales a calibrar con T1, p.ej. +3/dia hasta +15, de modo que una semana de cuidado iguale aprox. al estres pleno de un normal. Todo sembrado con `DailySeed`; nada re-tirable.
+- [x] Propuesta: bonus por cuidarlo que **crece con dias seguidos cuidado** (racha guardada con el personaje, se corta si un dia no esta sano + alimentado + vida plena). Bonus = sorteo estable del dia entre min y max + `caredForStreakPerDay` x dias de racha, tope `caredForStreakMax`. Valores iniciales a calibrar con T1, p.ej. +3/dia hasta +15, de modo que una semana de cuidado iguale aprox. al estres pleno de un normal. Todo sembrado con `DailySeed`; nada re-tirable.
+
+- [x] Maqueta primero (`0118ce0`): la fila de la tarjeta "Lo cuidaste +21% (racha 3 dias)" (estado `caredForStreak` de `ui-mockup/js/data.js`, `caredRow` de `ui-mockup/js/readout.js`, tabla de `readout.html`, item 6 del README de la maqueta).
+- [x] Hecho (`e4b8b5b`, solo Balanced; Cheat sin cambios): modulo puro `src/care_streak_rules.cpp/.h` y el lado del motor `src/care_streak.cpp/.h`.
+  - **Racha** = dias de juego mantenidos seguidos **antes** de hoy (`CareStreakDays`): un dia se mantiene si cada avistaje de ese dia lo encontro sano + alimentado + vida plena (`IsFullyCaredFor`). Un avistaje que no cumple vuelve la racha a 0 en el momento; un dia sin ningun avistaje la corta (en la duda, esperar: la regla del reloj de encierro). Dia = `DayIndexFromHours` (el de `DailySeed`): nada se re-tira con clics.
+  - **Bonus** = sorteo estable del dia (sin cambios) + `CareStreakBonus` = `submissionCaredForStreakPerDay` (3, rango 0..10) x dias, tope `submissionCaredForStreakMax` (15, rango 0..40; racha plena a los 5 dias). Solo con cuidado de hoy y clave (`route_cage`); los dias van en `ChanceInputs::careStreakDays` (tarjeta y log, `JoinChance` no los lee).
+  - **Avistajes**: el barrido de `hail.cpp` (cada preso en tu jaula, `NoteCareState`, lee `ReadFullyCaredFor`) y cada decision de la jaula (`GatherCageExtra` en modo decidir); el peek de la tarjeta solo lee.
+  - **Save**: tres filas nuevas de `saved_ints` (`total_recruit.care_streak_day` = dia + 1, `care_streak_days`, `care_streak_kept`). Save viejo sin filas = racha 0. `load_boundary` lo vacia (`ForgetAllCareStreaks`).
+  - **Tarjeta**: la fila "LO CUIDASTE" dice "+21% (racha 3 dias)" con racha (clave nueva `readout.caredForStreak` en la plantilla `messages.json`; el valor empieza en 2/5 del ancho para que entre). Log: `[chance] ... caredFor=+N(streak Dd)`; con `probeOnClick`, `<preso> [care] streak A -> B days (day D, cared for | not cared for: reset)`.
+  - Claves nuevas solo agregadas a la plantilla `TotalRecruit/config.json`, clamp en `LoadConfig` con las constantes del modulo.
+- [x] Pruebas: RED con los cuerpos vacios: 31 checks en `care_streak_rules`, `route_decisions` y `readout_model` (60/63 suites, 31/73424 fallos); GREEN tras implementar: 63/63 suites, 0/73424 fallos. DLL compila.
+- [x] Hoja regenerada sobre `e4b8b5b`. Los "dias 90%" de la seccion 2 ahora se calculan dia por dia (`CageDaysTo90`), con la racha creciendo en las columnas de cuidado; las demas columnas no cambian. "Cuidar contra quebrar" gana la columna **una semana** (sorteo medio +12 + racha plena +15 = +27):
+
+  | Temperamento | Unico | cuidado medio | una semana | quebrado | ventaja de quebrar (antes, sobre cuidado medio) | ventaja ahora (sobre una semana) | dias 90% cuidando antes / despues |
+  |---|---|---|---|---|---|---|---|
+  | fearful | no | 82 | 95 | 95 | +13 | +0 | 2 / 2 |
+  | normal | no | 62 | 77 | 80 | +18 | +3 | 3 / 3 |
+  | brave | no | 47 | 62 | 53 | +6 | -9 | 4 / 4 |
+  | honourable | no | 42 | 57 | 46 | +4 | -11 | 5 / 4 |
+  | fearful | si | 57 | 72 | 75 | +18 | +3 | 3 / 3 |
+  | normal | si | 37 | 52 | 55 | +18 | +3 | 5 / 5 |
+  | brave | si | 22 | 37 | 28 | +6 | -9 | 10 / 7 |
+  | honourable | si | 17 | 32 | 21 | +4 | -11 | 13 / 8 |
+
+  Criterio de aceptacion cumplido: una semana de cuidado de un normal (77) queda a 3 puntos de quebrarlo (80). Nivel +0, dias de sano / cuidado medio (tabla de arriba) / quebrado: fearful 2/2/1, normal 4/3/2, brave 6/4/4, honourable 7/**4**/4 (antes 7/5/4). Quebrado y sano sin cambios.
+- Desvio a revisar (T6 o con el usuario): honorable cuidado queda en 4 dias contra el objetivo 6 (fuera de +-1; antes 5, en el borde) y en valiente y honorable cuidar una semana ya vale mas que quebrarlos (-9 / -11), porque el cuidado no se divide por la resolucion y el estres si. Coherente con el lore (el honorable responde al cuidado), pero la palanca para volver a 5-6 dias seria el sorteo (`submissionCaredForBonusMin/Max`) o una racha mas lenta, no T3.
+- La columna "golpes" de la seccion 2 sigue suponiendo una barra de golpes 1.0 (nota de T2): sin cambio en T3.
 
 ### T4 El tiempo en jaula ya no cuenta
 - [ ] Evidencia: el catalogo de `JoinChance` (seccion 1) no tiene termino de tiempo; la hoja no muestra ningun numero por dias encerrado. Los dias de las tablas salen solo de repetir la tirada diaria con el mismo estado.
@@ -184,6 +211,7 @@ Pasos de cierre: QA en juego -> merge de `feat/balanced-tuning` a `main` -> push
 - 2026-10-06: rama mergeada en `main` (`b87d0b2`) y borrada. T5 hecho por priority-one B; T7 casi hecho (ver arriba). `b8ca98c`: la hoja compila contra los enfriamientos al minuto, suma la seccion 6 (animal enjaulado golpeado) y se regenero sobre `3fb81b2`.
 - 2026-10-07: T1 hecho (`8b9081d`): tabla objetivo acordada, base de nivel 35 y estres pleno 30; hoja regenerada.
 - 2026-10-07: T2 hecho (`aedc3b4`): rendimiento decreciente 0.7 y tope diario 0.35 del estres por golpes en Balanced, guardados con el personaje; hoja regenerada (seccion 3); QA 12.32 S13-S18.
+- 2026-10-07: T3 hecho (`0118ce0` maqueta, `e4b8b5b` regla + motor + save + tarjeta): racha de cuidado +3/dia hasta +15, guardada con el personaje; hoja regenerada (seccion 2, una semana de cuidado de un normal 77 contra quebrado 80); QA 12.33 C9-C15.
 
 ## Proximo paso
-Mod Hub quitado (`odd/tasks/remove-mod-hub.md`, 2026-10-07): las claves nuevas van solo a `config.json`. T2 hecho; sigue **T3** (cuidar contra quebrar, con la nota de la columna "golpes"), luego T4, T6 y lo que queda de T7.
+Mod Hub quitado (`odd/tasks/remove-mod-hub.md`, 2026-10-07): las claves nuevas van solo a `config.json`. T2 y T3 hechos; sigue **T4** (resignacion por dias encerrado), luego T6 (con el desvio de honorable cuidado de T3) y lo que queda de T7.

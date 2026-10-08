@@ -147,6 +147,19 @@ sortear. Un maximo menor que el minimo cuenta como el minimo. Se ve en la tarjet
 y en la ventana ("Lo cuidaste +12%") y en el log `[chance] ... caredFor=+N`. Una
 clave `easyHoursCaged` vieja en el config se ignora.
 
+*Racha de cuidado (balanced-tuning T3, solo Balanced):* el bonus por cuidarlo crece
+con los dias seguidos de cuidado. Cada dia de juego seguido en que el preso se vio
+sin heridas, comido y con la salud llena (el de hoy no cuenta hasta que termina)
+suma `submissionCaredForStreakPerDay` (3, rango 0..10) al sorteo del dia, hasta
+`submissionCaredForStreakMax` (15, rango 0..40: la racha plena llega a los 5 dias).
+Un solo avistaje herido, con hambre o sin la salud llena vuelve la racha a 0, y un
+dia de juego sin ningun avistaje (el jugador lejos) la corta. La racha se mide con el
+reloj de juego (`DayIndexFromHours`), asi que ningun clic la cambia; se guarda con el
+personaje (tres filas de `saved_ints`) y un save viejo arranca en 0. Se ve en la
+tarjeta ("Lo cuidaste +21% (racha 3 dias)") y en el log `[chance] ...
+caredFor=+N(streak Dd)`. Con los numeros por defecto, una semana de cuidado de un
+normal de igual nivel (77 %) queda a 3 puntos de quebrarlo (80 %).
+
 **R2.1 — El nivel da chance, no permiso.** *(P1)*
 Hoy el nivel es una puerta: pasado cierto hueco no te escucha, y con ventaja
 enorme se somete solo. Debe convertirse en una probabilidad que participe del

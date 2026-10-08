@@ -1,7 +1,7 @@
 # Hoja de balance (Balanced, config por defecto)
 
 > **Generado, no editar a mano.** Programa: `tests/balance_sheet/main.cpp`, que llama a las funciones puras REALES de `src/` con `Config()` por defecto.
-> Reglas de `src/` en el commit `6a08e0e`.
+> Reglas de `src/` en el commit `e4b8b5b`.
 > Regenerar:
 >
 > ```bash
@@ -25,7 +25,7 @@ Supuestos comunes: lider del grupo nivel 40; la tirada de unirse se sortea una v
 | Situacion: jaula | `intimidationBonus` | fijo | 15 | 15 |
 | Situacion: field-yield | `fieldYieldBonus` - lealtad | 10 (militar/ley: -25) | -15 | 10 |
 | Situacion: rescate | `rescueBaseBonus` + curado x `rescueHealWeight` | 25 + 30 x curado(0..1) | 25 | 55 |
-| Cuidado (jaula) | `CaredForBonus` | sorteo diario estable, solo sano+alimentado+vida plena | 5 | 20 |
+| Cuidado (jaula) | `CaredForBonus` + `CareStreakBonus` | sorteo diario estable 5..20 + racha: +3 por dia seguido cuidado (sin contar hoy), tope +15; solo sano+alimentado+vida plena | 5 | 35 |
 | Rencor | `grudgePenalty` | fijo (honorable/valiente/amable: rechazo absoluto) | -20 | 0 |
 | Unico | `uniquePenalty` | fijo | -25 | 0 |
 
@@ -66,57 +66,59 @@ estres = clamp01(hambre x 0.50 + heridas x 0.35 + cansancio x 0.15 + golpes x 1.
 
 ## 2. Jaula: probabilidad diaria de unirse (Balanced)
 
-Lider 40. Intimidacion +15 siempre. Columnas: **sano** = estres 0 sin bono (referencia; en el juego un preso sano, alimentado y a vida plena SIEMPRE tiene el bono de cuidado); **cuid. min/max** = sano + bono 5 / 20; **hambre** = lleno 0; **herido** = worstDamage 0.8; **H+H+C** = hambre + herido + agotado (estres 0.93); **golpes** = barra de golpes 1.0, por lo demas sano (sin bono: los golpes hieren); **quebrado** = todo junto (estres 1.0). Entre parentesis: dias hasta 90% acumulado.
+Lider 40. Intimidacion +15 siempre. Columnas: **sano** = estres 0 sin bono (referencia; en el juego un preso sano, alimentado y a vida plena SIEMPRE tiene el bono de cuidado); **cuid. min/max** = sano + bono 5 / 20; **hambre** = lleno 0; **herido** = worstDamage 0.8; **H+H+C** = hambre + herido + agotado (estres 0.93); **golpes** = barra de golpes 1.0, por lo demas sano (sin bono: los golpes hieren); **quebrado** = todo junto (estres 1.0). La chance es la del primer dia. Entre parentesis: dias hasta 90% acumulado manteniendo ese estado; en las columnas de cuidado eso incluye la racha que crece cada dia (+3 por dia seguido, tope +15, `CareStreakBonus`).
 
 | Temperamento | Unico | Nivel NPC | sano | cuid. min | cuid. max | hambre | herido | H+H+C | golpes | quebrado |
 |---|---|---|---|---|---|---|---|---|---|---|
 | fearful | no | 20 (-20) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) | 95 (1) |
 | fearful | no | 40 (+0) | 70 (2) | 75 (2) | 90 (1) | 94 (1) | 83 (2) | 95 (1) | 95 (1) | 95 (1) |
 | fearful | no | 60 (+20) | 40 (5) | 45 (4) | 60 (3) | 64 (3) | 53 (4) | 70 (2) | 70 (2) | 70 (2) |
-| fearful | no | 90 (+50) | 37 (5) | 42 (5) | 57 (3) | 61 (3) | 50 (4) | 67 (3) | 67 (3) | 67 (3) |
+| fearful | no | 90 (+50) | 37 (5) | 42 (4) | 57 (3) | 61 (3) | 50 (4) | 67 (3) | 67 (3) | 67 (3) |
 | normal | no | 20 (-20) | 80 (2) | 85 (2) | 95 (1) | 95 (1) | 88 (2) | 95 (1) | 95 (1) | 95 (1) |
 | normal | no | 40 (+0) | 50 (4) | 55 (3) | 70 (2) | 65 (3) | 58 (3) | 77 (2) | 80 (2) | 80 (2) |
-| normal | no | 60 (+20) | 20 (11) | 25 (9) | 40 (5) | 35 (6) | 28 (8) | 47 (4) | 50 (4) | 50 (4) |
-| normal | no | 90 (+50) | 17 (13) | 22 (10) | 37 (5) | 32 (6) | 25 (9) | 44 (4) | 47 (4) | 47 (4) |
+| normal | no | 60 (+20) | 20 (11) | 25 (6) | 40 (4) | 35 (6) | 28 (8) | 47 (4) | 50 (4) | 50 (4) |
+| normal | no | 90 (+50) | 17 (13) | 22 (7) | 37 (5) | 32 (6) | 25 (9) | 44 (4) | 47 (4) | 47 (4) |
 | brave | no | 20 (-20) | 65 (3) | 70 (2) | 85 (2) | 74 (2) | 70 (2) | 82 (2) | 83 (2) | 83 (2) |
-| brave | no | 40 (+0) | 35 (6) | 40 (5) | 55 (3) | 44 (4) | 40 (5) | 52 (4) | 53 (4) | 53 (4) |
-| brave | no | 60 (+20) | 5 (45) | 10 (22) | 25 (9) | 14 (16) | 10 (22) | 22 (10) | 23 (9) | 23 (9) |
-| brave | no | 90 (+50) | 5 (45) | 7 (32) | 22 (10) | 11 (20) | 7 (32) | 19 (11) | 20 (11) | 20 (11) |
+| brave | no | 40 (+0) | 35 (6) | 40 (4) | 55 (3) | 44 (4) | 40 (5) | 52 (4) | 53 (4) | 53 (4) |
+| brave | no | 60 (+20) | 5 (45) | 10 (10) | 25 (6) | 14 (16) | 10 (22) | 22 (10) | 23 (9) | 23 (9) |
+| brave | no | 90 (+50) | 5 (45) | 7 (12) | 22 (7) | 11 (20) | 7 (32) | 19 (11) | 20 (11) | 20 (11) |
 | honourable | no | 20 (-20) | 60 (3) | 65 (3) | 80 (2) | 68 (3) | 64 (3) | 75 (2) | 76 (2) | 76 (2) |
-| honourable | no | 40 (+0) | 30 (7) | 35 (6) | 50 (4) | 38 (5) | 34 (6) | 45 (4) | 46 (4) | 46 (4) |
-| honourable | no | 60 (+20) | 5 (45) | 5 (45) | 20 (11) | 8 (28) | 5 (45) | 15 (15) | 16 (14) | 16 (14) |
-| honourable | no | 90 (+50) | 5 (45) | 5 (45) | 17 (13) | 5 (45) | 5 (45) | 12 (19) | 13 (17) | 13 (17) |
+| honourable | no | 40 (+0) | 30 (7) | 35 (5) | 50 (4) | 38 (5) | 34 (6) | 45 (4) | 46 (4) | 46 (4) |
+| honourable | no | 60 (+20) | 5 (45) | 5 (13) | 20 (7) | 8 (28) | 5 (45) | 15 (15) | 16 (14) | 16 (14) |
+| honourable | no | 90 (+50) | 5 (45) | 5 (15) | 17 (8) | 5 (45) | 5 (45) | 12 (19) | 13 (17) | 13 (17) |
 | fearful | si | 20 (-20) | 75 (2) | 80 (2) | 95 (1) | 95 (1) | 88 (2) | 95 (1) | 95 (1) | 95 (1) |
 | fearful | si | 40 (+0) | 45 (4) | 50 (4) | 65 (3) | 69 (2) | 58 (3) | 75 (2) | 75 (2) | 75 (2) |
-| fearful | si | 60 (+20) | 15 (15) | 20 (11) | 35 (6) | 39 (5) | 28 (8) | 45 (4) | 45 (4) | 45 (4) |
-| fearful | si | 90 (+50) | 12 (19) | 17 (13) | 32 (6) | 36 (6) | 25 (9) | 42 (5) | 42 (5) | 42 (5) |
+| fearful | si | 60 (+20) | 15 (15) | 20 (7) | 35 (5) | 39 (5) | 28 (8) | 45 (4) | 45 (4) | 45 (4) |
+| fearful | si | 90 (+50) | 12 (19) | 17 (8) | 32 (5) | 36 (6) | 25 (9) | 42 (5) | 42 (5) | 42 (5) |
 | normal | si | 20 (-20) | 55 (3) | 60 (3) | 75 (2) | 70 (2) | 63 (3) | 82 (2) | 85 (2) | 85 (2) |
-| normal | si | 40 (+0) | 25 (9) | 30 (7) | 45 (4) | 40 (5) | 33 (6) | 52 (4) | 55 (3) | 55 (3) |
-| normal | si | 60 (+20) | 5 (45) | 5 (45) | 15 (15) | 10 (22) | 5 (45) | 22 (10) | 25 (9) | 25 (9) |
-| normal | si | 90 (+50) | 5 (45) | 5 (45) | 12 (19) | 7 (32) | 5 (45) | 19 (11) | 22 (10) | 22 (10) |
+| normal | si | 40 (+0) | 25 (9) | 30 (6) | 45 (4) | 40 (5) | 33 (6) | 52 (4) | 55 (3) | 55 (3) |
+| normal | si | 60 (+20) | 5 (45) | 5 (17) | 15 (9) | 10 (22) | 5 (45) | 22 (10) | 25 (9) | 25 (9) |
+| normal | si | 90 (+50) | 5 (45) | 5 (21) | 12 (10) | 7 (32) | 5 (45) | 19 (11) | 22 (10) | 22 (10) |
 | brave | si | 20 (-20) | 40 (5) | 45 (4) | 60 (3) | 49 (4) | 45 (4) | 57 (3) | 58 (3) | 58 (3) |
-| brave | si | 40 (+0) | 10 (22) | 15 (15) | 30 (7) | 19 (11) | 15 (15) | 27 (8) | 28 (8) | 28 (8) |
-| brave | si | 60 (+20) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
-| brave | si | 90 (+50) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
-| honourable | si | 20 (-20) | 35 (6) | 40 (5) | 55 (3) | 43 (5) | 39 (5) | 50 (4) | 51 (4) | 51 (4) |
-| honourable | si | 40 (+0) | 5 (45) | 10 (22) | 25 (9) | 13 (17) | 9 (25) | 20 (11) | 21 (10) | 21 (10) |
-| honourable | si | 60 (+20) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
-| honourable | si | 90 (+50) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
+| brave | si | 40 (+0) | 10 (22) | 15 (9) | 30 (6) | 19 (11) | 15 (15) | 27 (8) | 28 (8) | 28 (8) |
+| brave | si | 60 (+20) | 5 (45) | 5 (45) | 5 (17) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
+| brave | si | 90 (+50) | 5 (45) | 5 (45) | 5 (21) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
+| honourable | si | 20 (-20) | 35 (6) | 40 (4) | 55 (3) | 43 (5) | 39 (5) | 50 (4) | 51 (4) | 51 (4) |
+| honourable | si | 40 (+0) | 5 (45) | 10 (10) | 25 (6) | 13 (17) | 9 (25) | 20 (11) | 21 (10) | 21 (10) |
+| honourable | si | 60 (+20) | 5 (45) | 5 (45) | 5 (25) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
+| honourable | si | 90 (+50) | 5 (45) | 5 (45) | 5 (34) | 5 (45) | 5 (45) | 5 (45) | 5 (45) | 5 (45) |
 
 ### Cuidar contra quebrar (mismo NPC, nivel igual al lider)
 
-| Temperamento | Unico | cuidado medio (+12) | quebrado | ventaja de quebrar | dias 90% cuidando | dias 90% quebrando |
-|---|---|---|---|---|---|---|
-| fearful | no | 82 | 95 | +13 | 2 | 1 |
-| normal | no | 62 | 80 | +18 | 3 | 2 |
-| brave | no | 47 | 53 | +6 | 4 | 4 |
-| honourable | no | 42 | 46 | +4 | 5 | 4 |
-| fearful | si | 57 | 75 | +18 | 3 | 2 |
-| normal | si | 37 | 55 | +18 | 5 | 3 |
-| brave | si | 22 | 28 | +6 | 10 | 8 |
-| honourable | si | 17 | 21 | +4 | 13 | 10 |
+**cuidado medio** = el sorteo medio (+12) sin racha (primer dia); **una semana** = el sorteo medio + la racha plena (+15, desde 5 dias seguidos: `CareStreakBonus`); **ventaja** = quebrado menos una semana de cuidado. "dias 90% cuidando" cuenta la racha creciendo dia a dia desde 0.
 
-El bono de cuidado maximo (+20) vale 66% de lo que vale el estres pleno de un normal (+30).
+| Temperamento | Unico | cuidado medio (+12) | una semana (+27) | quebrado | ventaja de quebrar | dias 90% cuidando | dias 90% quebrando |
+|---|---|---|---|---|---|---|---|
+| fearful | no | 82 | 95 | 95 | +0 | 2 | 1 |
+| normal | no | 62 | 77 | 80 | +3 | 3 | 2 |
+| brave | no | 47 | 62 | 53 | -9 | 4 | 4 |
+| honourable | no | 42 | 57 | 46 | -11 | 4 | 4 |
+| fearful | si | 57 | 72 | 75 | +3 | 3 | 2 |
+| normal | si | 37 | 52 | 55 | +3 | 5 | 3 |
+| brave | si | 22 | 37 | 28 | -9 | 7 | 8 |
+| honourable | si | 17 | 32 | 21 | -11 | 8 | 10 |
+
+El bono de cuidado maximo (+35: sorteo +20 y racha +15) vale 116% de lo que vale el estres pleno de un normal (+30).
 
 ### Que pasa cuando la tirada de la jaula FALLA (`DecideCage`, tabla de monedas)
 

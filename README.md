@@ -84,8 +84,12 @@ spot. Looking after a prisoner still helps: one who is unhurt, fed and at full
 health gets a **cared-for bonus** on the join roll, drawn once per NPC per game
 day between `submissionCaredForBonusMin` (5) and `submissionCaredForBonusMax` (20),
 so clicking or reloading never redraws it. The card and the recruit window show
-it as "Lo cuidaste +12%". The cage is decided by stress, personality, level and
-the other currencies. A leftover `easyHoursCaged` key in your `config.json` is
+it as "Lo cuidaste +12%". The bonus grows with a **care streak**: every game day
+in a row the prisoner was seen cared for adds +3 (`submissionCaredForStreakPerDay`),
+up to +15 (`submissionCaredForStreakMax`) after five days; one sighting hurt, hungry
+or below full health resets it, a whole game day away from the prisoner breaks it,
+and it is saved with the character. The card then reads "+21% (racha 3 dias)".
+The cage is decided by stress, personality, level and the other currencies. A leftover `easyHoursCaged` key in your `config.json` is
 ignored.
 
 **Price.** Quotes follow one calibrated curve by the recruit's own level, at
