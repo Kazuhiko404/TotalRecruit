@@ -166,4 +166,4 @@ Pasos de cierre: QA en juego -> merge de `feat/balanced-tuning` a `main` -> push
 - 2026-10-07: T1 hecho (`8b9081d`): tabla objetivo acordada, base de nivel 35 y estres pleno 30; hoja regenerada.
 
 ## Proximo paso
-Quitar el Mod Hub (pedido del usuario 2026-10-07, `odd/tasks/remove-mod-hub.md`), asi T2-T4 no agregan filas al hub; despues T2, T3, T4, T6 y lo que queda de T7.
+Mod Hub quitado (`odd/tasks/remove-mod-hub.md`, 2026-10-07): las claves nuevas van solo a `config.json`. Sigue T2, T3, T4, T6 y lo que queda de T7.
