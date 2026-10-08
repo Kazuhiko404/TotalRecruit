@@ -2,6 +2,7 @@
 #include "body_rules.h"
 #include "cared_for_rules.h"
 #include "care_streak_rules.h"
+#include "care_join_rules.h"
 #include "resignation_rules.h"
 
 namespace totalrecruit
@@ -80,14 +81,26 @@ namespace
 {
 // What a caged person says once the currency table has sent them to "care".
 // Animals never get here: DecideCage hands them to DecideAnimal first.
-Verdict CareVerdict(Verdict v, const CoreFacts& core)
+// Cared for, they join only once the care streak is long enough
+// (care_join_rules.h, balanced-tuning T6); short of it, the reason says how many
+// more cared-for days it takes.
+Verdict CareVerdict(Verdict v, const CoreFacts& core, int careStreakDays, const Submission& sub)
 {
     const bool cared = !core.starving && !core.wounded;
 
     if (cared)
     {
-        v.willJoin = true;
-        v.reasonKey = Reason_CaredFor;
+        const int missing = CareJoinDaysMissing(careStreakDays, sub);
+        if (missing == 0)
+        {
+            v.willJoin = true;
+            v.reasonKey = Reason_CaredFor;
+        }
+        else
+        {
+            v.careDaysMissing = missing;
+            v.reasonKey = Reason_CaredForNotYet;
+        }
     }
     else if (core.starving && core.wounded)
     {
@@ -206,7 +219,7 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
         break;
 
     case Currency_Care:
-        v = CareVerdict(v, core);
+        v = CareVerdict(v, core, extra.careStreakDays, config.submission);
         break;
 
 

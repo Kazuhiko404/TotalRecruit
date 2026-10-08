@@ -198,10 +198,17 @@ void OutOfRangeIsEmpty()
     CHECK(std::strlen(ReadoutLineDefaultText(9999)) == 0);
     CHECK(std::strlen(ReadoutLineMessageKey(9999)) == 0);
 }
+void TheCareNotYetLineCarriesTheDays()
+{
+    const char* name = "catalog: the card's cared-for-not-yet line names the missing days ({need}, T6)";
+    CHECK(std::string(ReadoutLineMessageKey((int)Reason_CaredForNotYet)) == "readout.line.cared.notYet");
+    CHECK(std::string(ReadoutLineDefaultText((int)Reason_CaredForNotYet)).find("{need}") != std::string::npos);
+}
 } // namespace
 
 void RunReadoutCatalogTests()
 {
+    TheCareNotYetLineCarriesTheDays();
     EveryReasonHasARowPlusTheCardsOwnLines();
     TheDuelRecordLinesCarryTheCounts();
     TheDuelChanceLinesCarryTheChance();

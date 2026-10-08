@@ -16,6 +16,7 @@
 #include "cage_command_rules.h"
 #include "cared_for_rules.h"
 #include "care_streak_rules.h"
+#include "care_join_rules.h"
 #include "resignation_rules.h"
 #include "chance_rules.h"
 #include "cheat_waits.h"
@@ -406,12 +407,31 @@ void PrintCageMatrix(const Config& c)
     std::printf("\n");
 }
 
+// A reason's built-in text with the cared-for days still missing filled in ({days}).
+std::string ReasonText(const Verdict& v)
+{
+    std::string text = ReasonDefaultText(v.reasonKey);
+    const std::string token = "{days}";
+    const std::string::size_type at = text.find(token);
+    if (at != std::string::npos)
+    {
+        char days[16];
+        sprintf_s(days, sizeof(days), "%d", v.careDaysMissing);
+        text.replace(at, token.size(), days);
+    }
+    return text;
+}
+
 void PrintCageVerdicts(const Config& c)
 {
+    const int joinStreak = CareJoinStreakDaysNeeded(c.submission);
     std::printf("### Que pasa cuando la tirada de la jaula FALLA (`DecideCage`, tabla de monedas)\n\n");
     std::printf("Preso sano, alimentado, vida plena, nivel igual al lider, bolsillo conocido en 0 cats, clave cuya tirada falla. "
-                "`se une` = se une igual aunque la tirada fallo.\n\n");
-    std::printf("| Temperamento | Arquetipo | Unico | Moneda | Se une | Motivo |\n|---|---|---|---|---|---|\n");
+                "`se une` = se une igual aunque la tirada fallo. **Racha** = dias seguidos cuidado antes de hoy "
+                "(`CareStreakDays`); la moneda care une solo desde una racha de %d (`submissionCareJoinStreakDays`, "
+                "`care_join_rules`), asi que sus filas salen dos veces: racha 0 y racha %d.\n\n",
+                joinStreak, joinStreak);
+    std::printf("| Temperamento | Arquetipo | Unico | Racha | Moneda | Se une | Motivo |\n|---|---|---|---|---|---|---|\n");
     const CharKey key = FailingKey(c);
     const Temperament temps[] = { Temperament_Fearful, Temperament_Normal, Temperament_Brave,
                                   Temperament_Honorable, Temperament_WarmKind, Temperament_ColdCruel };
@@ -437,10 +457,18 @@ void PrintCageVerdicts(const Config& c)
                 extra.care = extra.roll;
                 extra.purse.known = true;
                 extra.purse.cats = 0;
-                const Verdict v = DecideCage(core, extra, c);
-                std::printf("| %s | %s | %s | %s | %s | %s |\n", TempName(temps[ti]), ArchName(archs[ai]),
-                            u == 1 ? "si" : "no", CurrencyName(v.currency), v.willJoin ? "**si**" : "no",
-                            ReasonDefaultText(v.reasonKey));
+                for (int pass = 0; pass < 2; ++pass)
+                {
+                    extra.careStreakDays = pass == 0 ? 0 : joinStreak;
+                    const Verdict v = DecideCage(core, extra, c);
+                    if (pass == 1 && (v.currency != Currency_Care || joinStreak == 0))
+                    {
+                        break;   // only the care rows depend on the streak
+                    }
+                    std::printf("| %s | %s | %s | %d | %s | %s | %s |\n", TempName(temps[ti]), ArchName(archs[ai]),
+                                u == 1 ? "si" : "no", extra.careStreakDays, CurrencyName(v.currency),
+                                v.willJoin ? "**si**" : "no", ReasonText(v).c_str());
+                }
             }
         }
     }

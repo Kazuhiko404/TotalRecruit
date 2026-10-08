@@ -126,6 +126,11 @@ enum ReasonKey
     // instead of "one of your cages" (route_cheat.cpp). Last, so no index shifts.
     Reason_CheatNeedsAnyCage,
 
+    // Balanced cage (balanced-tuning T6, care_join_rules.h): cared for, but the care
+    // streak is still short of careJoinStreakDays; Verdict::careDaysMissing says by
+    // how many days. Last, so no index shifts.
+    Reason_CaredForNotYet,
+
     // Not a reason: the number of them, for tables indexed by one.
     Reason_Count
 };
@@ -181,6 +186,9 @@ struct Verdict
     // it from there once they are recruited.
     bool temporary;
     int temporaryDays;
+    // Reason_CaredForNotYet: the cared-for days still missing before care alone
+    // makes them join (care_join_rules.h CareJoinDaysMissing). 0 otherwise.
+    int careDaysMissing;
 
     Verdict()
         : willJoin(false),
@@ -203,7 +211,8 @@ struct Verdict
           allyLevel(0),
           allyDiscountPercent(0),
           temporary(false),
-          temporaryDays(0)
+          temporaryDays(0),
+          careDaysMissing(0)
     {
     }
 };

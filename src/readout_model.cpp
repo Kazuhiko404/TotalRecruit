@@ -136,6 +136,13 @@ ReadoutLineView PrimaryLine(const ReadoutInput& in)
         // Starving them is only on offer for someone in the player's own cage.
         return LineFor(kLineFieldYieldBeatAgain, in);
     }
+    if (key == Reason_CaredForNotYet)
+    {
+        // Cared for, the care streak still short (care_join_rules.h): the days left.
+        ReadoutLineView line = LineFor((int)key, in);
+        line.need = in.verdict.careDaysMissing;
+        return line;
+    }
     if (in.verdict.allyTiered && in.verdict.currency == Currency_Cats)
     {
         // A Balanced ally's price is a friend's price: the card says so.
@@ -269,8 +276,13 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
     }
 
     v.primary = PrimaryLine(in);
-    v.primary.food = v.foodPct;
-    v.primary.need = v.foodNeededPct;
+    // The stomach's numbers belong to an animal's line; any other line keeps the
+    // numbers PrimaryLine gave it (the cared-for days still missing, T6).
+    if (v.showFood)
+    {
+        v.primary.food = v.foodPct;
+        v.primary.need = v.foodNeededPct;
+    }
 
     // A challengeable ally (duel_challenge_rules.h): the head-to-head duel record,
     // when the second line is still free.

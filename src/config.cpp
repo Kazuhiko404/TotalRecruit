@@ -6,6 +6,7 @@
 #include "animal_beating_rules.h"
 #include "beating_daily_rules.h"
 #include "care_streak_rules.h"
+#include "care_join_rules.h"
 #include "resignation_rules.h"
 #include "head_notice_rules.h"
 #include "preset_rules.h"
@@ -431,6 +432,7 @@ std::vector<Field> ConfigFields(Config& c)
     AddInt(f, "submissionCaredForBonusMax", &c.submission.caredForBonusMax);
     AddInt(f, "submissionCaredForStreakPerDay", &c.submission.caredForStreakPerDay);
     AddInt(f, "submissionCaredForStreakMax", &c.submission.caredForStreakMax);
+    AddInt(f, "submissionCareJoinStreakDays", &c.submission.careJoinStreakDays);
     AddInt(f, "submissionResignationPerDay", &c.submission.resignationPerDay);
     AddInt(f, "submissionResignationMax", &c.submission.resignationMax);
     AddInt(f, "submissionFieldYieldLoyaltyPenalty", &c.submission.fieldYieldLoyaltyPenalty);
@@ -594,6 +596,8 @@ void LoadConfig(const std::string& modDirectory)
     // The care streak on top of it (care_streak_rules.h).
     ClampInt(&g_config.submission.caredForStreakPerDay, kCareStreakPerDayMin, kCareStreakPerDayMax);
     ClampInt(&g_config.submission.caredForStreakMax, kCareStreakMaxMin, kCareStreakMaxMax);
+    // The streak care needs before it joins on its own (care_join_rules.h).
+    ClampInt(&g_config.submission.careJoinStreakDays, kCareJoinStreakDaysMin, kCareJoinStreakDaysMax);
     // Resignation by full days caged (resignation_rules.h).
     ClampInt(&g_config.submission.resignationPerDay, kResignationPerDayMin, kResignationPerDayMax);
     ClampInt(&g_config.submission.resignationMax, kResignationMaxMin, kResignationMaxMax);

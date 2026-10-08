@@ -1642,13 +1642,78 @@ void TheHurtAndHungryWantCare()
 
 void TheKindAreCaredForAndJoin()
 {
-    const char* name = "cage: an honourable prisoner who is fed and healed joins";
+    const char* name = "cage: an honourable prisoner fed and healed for a 4-day streak joins";
     CoreFacts core = Prisoner();
     core.temperament = Temperament_Honorable;
-    const Verdict v = DecideCage(core, FailingTheRoll(core), kConfig);
+    CageExtra extra = FailingTheRoll(core);
+    extra.careStreakDays = 4;   // balanced-tuning T6: care joins from the streak on
+    const Verdict v = DecideCage(core, extra, kConfig);
     CHECK(v.willJoin);
     CHECK(v.currency == Currency_Care);
     CHECK(v.reasonKey == Reason_CaredFor);
+    CHECK(v.careDaysMissing == 0);
+}
+
+// balanced-tuning T6: care alone no longer joins on the first cared-for day.
+void CareJoinsOnlyAfterTheStreak()
+{
+    const char* name = "cage: care joins on a failed roll only from a 4-day care streak";
+    CoreFacts core = Prisoner();
+    core.temperament = Temperament_Honorable;
+    CageExtra extra = FailingTheRoll(core);
+
+    extra.careStreakDays = 0;
+    Verdict v = DecideCage(core, extra, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.currency == Currency_Care);
+    CHECK(v.reasonKey == Reason_CaredForNotYet);
+    CHECK(v.careDaysMissing == 4);
+
+    extra.careStreakDays = 3;
+    v = DecideCage(core, extra, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.reasonKey == Reason_CaredForNotYet);
+    CHECK(v.careDaysMissing == 1);
+
+    extra.careStreakDays = 4;
+    v = DecideCage(core, extra, kConfig);
+    CHECK(v.willJoin);
+    CHECK(v.reasonKey == Reason_CaredFor);
+
+    // The warm and kind follow the same rule.
+    core.temperament = Temperament_WarmKind;
+    extra.careStreakDays = 2;
+    v = DecideCage(core, extra, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.reasonKey == Reason_CaredForNotYet);
+    CHECK(v.careDaysMissing == 2);
+}
+
+void ZeroCareStreakDaysIsTheOldJoin()
+{
+    const char* name = "cage: submissionCareJoinStreakDays 0 restores the join on the first cared-for day";
+    Config config;
+    config.submission.careJoinStreakDays = 0;
+    CoreFacts core = Prisoner();
+    core.temperament = Temperament_Honorable;
+    const Verdict v = DecideCage(core, FailingTheRoll(core), config);
+    CHECK(v.willJoin);
+    CHECK(v.reasonKey == Reason_CaredFor);
+    CHECK(v.careDaysMissing == 0);
+}
+
+void TheStreakDoesNotHealTheHurt()
+{
+    const char* name = "cage: a long care streak does not make a hurt or hungry prisoner join";
+    CoreFacts core = Prisoner();
+    core.temperament = Temperament_Honorable;
+    core.starving = true;
+    CageExtra extra = FailingTheRoll(core);
+    extra.careStreakDays = 9;
+    const Verdict v = DecideCage(core, extra, kConfig);
+    CHECK(!v.willJoin);
+    CHECK(v.reasonKey == Reason_Starving);
+    CHECK(v.careDaysMissing == 0);
 }
 
 CoreFacts CagedAnimal(float hunger)
@@ -2066,6 +2131,9 @@ void RunRouteDecisionsTests()
     AStarvingSlaveStillFollowsWithoutFood();
     TheHurtAndHungryWantCare();
     TheKindAreCaredForAndJoin();
+    CareJoinsOnlyAfterTheStreak();
+    ZeroCareStreakDaysIsTheOldJoin();
+    TheStreakDoesNotHealTheHurt();
     AnAnimalInTheCageIsTamedByTheSameBar();
     ACagedUnfedAnimalIsNotTamedByTime();
     AnimalsAreNeverIntimidated();

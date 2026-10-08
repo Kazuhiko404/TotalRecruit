@@ -630,6 +630,19 @@ void TheCareStreakRidesWithTheCaredForBonus()
     CHECK(BuildReadout(noRoll, kConfig).careStreakDays == 0);
 }
 
+void ACareStreakShortOfTheJoinSaysTheDaysMissing()
+{
+    const char* name = "card: cared for but short of the care streak, the line carries the missing days (T6)";
+    ReadoutInput in = Input(Route_Cage, Reason_CaredForNotYet);
+    in.verdict.currency = Currency_Care;
+    in.verdict.careDaysMissing = 2;
+    const ReadoutView v = BuildReadout(in, kConfig);
+    CHECK(v.visible);
+    CHECK(v.primary.id == (int)Reason_CaredForNotYet);
+    CHECK(v.primary.need == 2);
+    CHECK(v.primary.tone != ReadoutTone_Good);
+}
+
 void StressTermsMakeStressFromState()
 {
     const char* name = "stress terms: their clamped sum is StressFromState";
@@ -689,5 +702,6 @@ void RunReadoutModelTests()
     TheCaredForBonusIsShownWithTheChance();
     TheCareStreakRidesWithTheCaredForBonus();
     ResignationIsShownWithTheChance();
+    ACareStreakShortOfTheJoinSaysTheDaysMissing();
     StressTermsMakeStressFromState();
 }

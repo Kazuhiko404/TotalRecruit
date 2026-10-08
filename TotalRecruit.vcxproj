@@ -157,6 +157,7 @@
     <ClCompile Include="src\cheat_waits.cpp" />
     <ClCompile Include="src\cared_for_rules.cpp" />
     <ClCompile Include="src\care_streak_rules.cpp" />
+    <ClCompile Include="src\care_join_rules.cpp" />
     <ClCompile Include="src\care_streak.cpp" />
     <ClCompile Include="src\resignation_rules.cpp" />
     <ClCompile Include="src\insistence_rules.cpp" />
@@ -255,6 +256,7 @@
     <ClInclude Include="src\cheat_waits.h" />
     <ClInclude Include="src\cared_for_rules.h" />
     <ClInclude Include="src\care_streak_rules.h" />
+    <ClInclude Include="src\care_join_rules.h" />
     <ClInclude Include="src\care_streak.h" />
     <ClInclude Include="src\resignation_rules.h" />
     <ClInclude Include="src\insistence_rules.h" />

@@ -98,6 +98,7 @@
     <ClCompile Include="..\..\src\cheat_waits.cpp" />
     <ClCompile Include="..\..\src\cared_for_rules.cpp" />
     <ClCompile Include="..\..\src\care_streak_rules.cpp" />
+    <ClCompile Include="..\..\src\care_join_rules.cpp" />
     <ClCompile Include="..\..\src\resignation_rules.cpp" />
     <ClCompile Include="..\..\src\cooldown_minutes.cpp" />
     <ClCompile Include="..\..\src\wait_format.cpp" />

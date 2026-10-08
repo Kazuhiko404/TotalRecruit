@@ -61,6 +61,14 @@ void TheTableHasOneRowPerKeyInEnumOrder()
     }
 }
 
+void TheCareNotYetReasonCarriesTheDays()
+{
+    const char* name = "catalog: cared for but short of the streak names the missing days ({days}, T6)";
+    CHECK(ReasonMessageKey(Reason_CaredForNotYet, "") == "reason.cared.notYet");
+    CHECK(Has(ReasonDefaultText(Reason_CaredForNotYet), "{days}"));
+    CHECK(RefusalToneFor(Reason_CaredForNotYet) == RefusalTone_Default);
+}
+
 void EveryReasonHasAKeyAndAText()
 {
     const char* name = "catalog: every reason has a messages.json key and a built-in text";
@@ -211,4 +219,5 @@ void RunReasonCatalogTests()
     EachToneHasItsReasons();
     RewordingAMessageCannotChangeTheTone();
     NoReasonThatIsNotARefusalCarriesATone();
+    TheCareNotYetReasonCarriesTheDays();
 }

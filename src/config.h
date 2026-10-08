@@ -278,6 +278,11 @@ struct Submission
     // clamped to 0..10 and 0..40.
     int caredForStreakPerDay;
     int caredForStreakMax;
+    // When care alone makes a caged honourable or warm/kind prisoner join after a
+    // failed roll (balanced-tuning T6, care_join_rules.h): only once the care streak
+    // reaches careJoinStreakDays kept days. 0 = as soon as they are cared for (the
+    // old behaviour). Clamped to 0..30.
+    int careJoinStreakDays;
     // Resignation (balanced-tuning T4, resignation_rules.h): every full game day
     // in the player's cage (the saved hold clock) adds resignationPerDay to the
     // Balanced cage roll, up to resignationMax, divided by resolve like stress and
@@ -372,6 +377,7 @@ struct Submission
           caredForBonusMax(20),
           caredForStreakPerDay(3),
           caredForStreakMax(15),
+          careJoinStreakDays(4),
           resignationPerDay(1),
           resignationMax(10),
           fieldYieldLoyaltyPenalty(25),

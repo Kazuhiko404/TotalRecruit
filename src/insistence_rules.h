@@ -47,6 +47,7 @@
 //   no       AnimalOwned, TameWounded, TameHungry, TameNotFed
 //                                 animals: owned, heal first, feed first
 //   no       RejectCooldown       the player rejected them: its own lockout
+//   no       CaredForNotYet       cared for, the care streak still short: keep it up
 //
 // A reason added to verdict.h later is a no until it is classified here: a missed
 // row costs the pestering penalty, never a lockout the player did not earn.

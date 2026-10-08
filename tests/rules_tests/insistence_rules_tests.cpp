@@ -77,6 +77,7 @@ void InstructionsDoNotCount()
     const char* name = "insistence: a 'do this first' (cage, wait, feed, pay) never counts";
     CHECK(!ReasonCountsAsInsistence(Reason_CheatNeedsCage));
     CHECK(!ReasonCountsAsInsistence(Reason_CheatNeedsAnyCage));
+    CHECK(!ReasonCountsAsInsistence(Reason_CaredForNotYet));
     CHECK(!ReasonCountsAsInsistence(Reason_CheatWaiting));
     CHECK(!ReasonCountsAsInsistence(Reason_CatsAsk));
     CHECK(!ReasonCountsAsInsistence(Reason_TameWounded));

@@ -90,6 +90,7 @@ const Suite kSuites[] = {
     { "cheat_waits", RunCheatWaitsTests },
     { "cared_for_rules", RunCaredForRulesTests },
     { "care_streak_rules", RunCareStreakRulesTests },
+    { "care_join_rules", RunCareJoinRulesTests },
     { "resignation_rules", RunResignationRulesTests },
     { "insistence_rules", RunInsistenceRulesTests },
     { "healing_ledger", RunHealingLedgerTests },

@@ -1197,6 +1197,9 @@
       ],
       "animal": [
         "alimentado y curado: confía en ti"
+      ],
+      "notYet": [
+        "alimentado y curado: le faltan {days} días de buen trato"
       ]
     },
     "starving": [
@@ -1323,7 +1326,8 @@
       "freed": "Seguira a quien lo libero",
       "cared": {
         "person": "Alimentado y curado: se une",
-        "animal": "Alimentado y curado: confia en ti"
+        "animal": "Alimentado y curado: confia en ti",
+        "notYet": "Cuidado: le faltan {need} dias de trato"
       },
       "starving": "Hambriento: dale de comer",
       "wounded": "Herido: curalo",

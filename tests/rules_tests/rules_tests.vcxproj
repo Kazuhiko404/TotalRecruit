@@ -91,6 +91,7 @@
     <ClCompile Include="cheat_waits_tests.cpp" />
     <ClCompile Include="cared_for_rules_tests.cpp" />
     <ClCompile Include="care_streak_rules_tests.cpp" />
+    <ClCompile Include="care_join_rules_tests.cpp" />
     <ClCompile Include="resignation_rules_tests.cpp" />
     <ClCompile Include="insistence_rules_tests.cpp" />
     <ClCompile Include="healing_ledger_tests.cpp" />
@@ -162,6 +163,7 @@
     <ClCompile Include="..\..\src\cheat_waits.cpp" />
     <ClCompile Include="..\..\src\cared_for_rules.cpp" />
     <ClCompile Include="..\..\src\care_streak_rules.cpp" />
+    <ClCompile Include="..\..\src\care_join_rules.cpp" />
     <ClCompile Include="..\..\src\resignation_rules.cpp" />
     <ClCompile Include="..\..\src\insistence_rules.cpp" />
     <ClCompile Include="..\..\src\healing_ledger.cpp" />
