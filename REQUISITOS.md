@@ -160,6 +160,19 @@ tarjeta ("Lo cuidaste +21% (racha 3 dias)") y en el log `[chance] ...
 caredFor=+N(streak Dd)`. Con los numeros por defecto, una semana de cuidado de un
 normal de igual nivel (77 %) queda a 3 puntos de quebrarlo (80 %).
 
+*Resignacion (balanced-tuning T4, solo Balanced):* el tiempo encerrado vuelve a
+contar, poco y con tope, como un termino mas de la tirada (nunca como veredicto).
+Cada dia de juego completo en tu jaula, leido del reloj de encierro guardado
+(`total_recruit.hold_start_hour`), suma `submissionResignationPerDay` (1, rango
+0..5) hasta `submissionResignationMax` (10, rango 0..30), dividido por la
+resolucion como el estres y las derrotas (valiente tope +6, honorable +5; un
+cobarde llega a +10 a los 6 dias y no pasa del tope). Sin reloj (el barrido aun no
+lo vio) vale 0; sacarlo de la jaula reinicia el reloj. Se ve en la tarjeta
+("Resignado +7%") y en el log `[chance] ... resigned=+N`. Con +2 por dia un
+valiente sano bajaba de 6 a 5 dias hasta el 90 % (objetivo 7) y un honorable de 7 a
+6 (objetivo 9), por eso el valor por defecto es +1: con el, ningun dia de la tabla
+objetivo cambia para los no unicos.
+
 **R2.1 — El nivel da chance, no permiso.** *(P1)*
 Hoy el nivel es una puerta: pasado cierto hueco no te escucha, y con ventaja
 enorme se somete solo. Debe convertirse en una probabilidad que participe del

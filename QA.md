@@ -937,7 +937,7 @@ Con `"probeOnClick": true` y los valores por defecto (descansos de 1 h; base 0,0
 
 ### 12.33 Dos presets, esperas de Cheat de 1 minuto y horas de jaula guardadas (v1-presets-close)
 
-Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat), H (horas de jaula guardadas) y C (bonus por cuidarlo, jaula de Balanced sin atajos).
+Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat), H (horas de jaula guardadas), C (bonus por cuidarlo y su racha, jaula de Balanced sin atajos) y R (resignacion por dias encerrado).
 
 | # | Que hacer | Esperado | Linea del log |
 |---|---|---|---|
@@ -965,6 +965,12 @@ Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat), H (horas de
 | C13 | Con racha 3, guardar, salir de Kenshi, abrir y cargar ese save | La misma racha tras la carga | `caredFor=+M(streak 3d)` |
 | C14 | Con racha, alejarse del preso un dia de juego entero (fuera del radio del barrido) y volver | La racha se corta: un dia sin verlo no cuenta | `caredFor=+N(streak 0d)` |
 | C15 | Cheat (`"preset": 0`) | Sin racha: Cheat no tira la chance ni registra avistajes | sin lineas `[care]` |
+| R1 | Resignacion (balanced-tuning T4). Balanced: un preso normal en tu jaula hace menos de 1 dia de juego; Hablar | Sin fila `RESIGNADO` | `[chance] ... resigned=+0` |
+| R2 | El mismo preso con 3 dias de juego completos en la jaula | Fila `RESIGNADO +3%` bajo la chance (y bajo `LO CUIDASTE` si la hay); la chance ya lo incluye y no se une solo | `[chance] ... resigned=+3 ... -> M%` |
+| R3 | 10 dias o mas (normal); un valiente y un honorable 14 dias o mas | Tope: normal +10, valiente +6, honorable +5; un cobarde llega a +10 a los 6 dias | `resigned=+10` / `+6` / `+5` |
+| R4 | Con 3 dias, guardar, salir de Kenshi, abrir y cargar ese save | El mismo +3 (el reloj de encierro se guarda) | `resigned=+3` y sin `[hold] clock started` nuevo para el |
+| R5 | Sacarlo de la jaula y volverlo a encerrar | Vuelve a 0: el reloj empieza de nuevo | `[hold] clock started: seen in your cage` y `resigned=+0` |
+| R6 | Cheat (`"preset": 0`) | Sin fila `RESIGNADO`: Cheat no tira la chance | sin `resigned=` |
 
 ### 12.34 Animales: duelo, 2/2 en Balanced y cura/derrota en Cheat (animal-duel-submission)
 

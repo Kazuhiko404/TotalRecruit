@@ -89,6 +89,11 @@ in a row the prisoner was seen cared for adds +3 (`submissionCaredForStreakPerDa
 up to +15 (`submissionCaredForStreakMax`) after five days; one sighting hurt, hungry
 or below full health resets it, a whole game day away from the prisoner breaks it,
 and it is saved with the character. The card then reads "+21% (racha 3 dias)".
+Time held counts a little again as **resignation**: every full game day in your
+cage adds +1 (`submissionResignationPerDay`), up to +10 (`submissionResignationMax`),
+divided by resolve like stress (a brave prisoner tops out at +6, an honourable one
+at +5). It is read from the saved hold clock and shown as "Resignado +7%"; it is one
+more term of the roll, never a verdict.
 The cage is decided by stress, personality, level and the other currencies. A leftover `easyHoursCaged` key in your `config.json` is
 ignored.
 

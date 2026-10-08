@@ -150,8 +150,27 @@ Ruta: escritor delegado (modulo puro nuevo + pegamento del motor + filas del sav
 - La columna "golpes" de la seccion 2 sigue suponiendo una barra de golpes 1.0 (nota de T2): sin cambio en T3.
 
 ### T4 El tiempo en jaula ya no cuenta
-- [ ] Evidencia: el catalogo de `JoinChance` (seccion 1) no tiene termino de tiempo; la hoja no muestra ningun numero por dias encerrado. Los dias de las tablas salen solo de repetir la tirada diaria con el mismo estado.
-- [ ] Propuesta: termino de **resignacion** por dia encerrado, leido del reloj de retencion persistido (`total_recruit.hold_start_hour`): `+resignationPerDay` por dia completo (p.ej. 2, rango 0..5), tope `resignationMax` (p.ej. 15, rango 0..30), dividido por la resolucion como estres y derrotas. Modulo puro `resignation_rules`; fila nueva en la hoja y en la tarjeta ("Resignado +N%") con maqueta primero.
+Ruta: escritor delegado (modulo puro nuevo + lectura del reloj de encierro + config + tarjeta + generador de la hoja + docs: varios archivos no triviales).
+- [x] Evidencia: el catalogo de `JoinChance` (seccion 1) no tiene termino de tiempo; la hoja no muestra ningun numero por dias encerrado. Los dias de las tablas salen solo de repetir la tirada diaria con el mismo estado.
+- [x] Propuesta: termino de **resignacion** por dia encerrado, leido del reloj de retencion persistido (`total_recruit.hold_start_hour`): `+resignationPerDay` por dia completo (p.ej. 2, rango 0..5), tope `resignationMax` (p.ej. 15, rango 0..30), dividido por la resolucion como estres y derrotas. Modulo puro `resignation_rules`; fila nueva en la hoja y en la tarjeta ("Resignado +N%") con maqueta primero.
+- [x] Maqueta primero (`17e67f5`): estado `resigned` de `ui-mockup/js/data.js` (preso normal 7 dias, "Resignado +7%"), `resignedRow` de `ui-mockup/js/readout.js`, fila de la tabla de `readout.html`, item 6 del README de la maqueta.
+- [x] Hecho (`2a0246b`, solo Balanced; Cheat sin cambios): modulo puro `src/resignation_rules.cpp/.h`.
+  - `FullDaysHeld` = dias de juego completos del reloj de encierro guardado (`total_recruit.hold_start_hour`); `ResignationChance` = min(dias x `submissionResignationPerDay`, `submissionResignationMax`) / `ResolveMultiplier`, truncado y nunca sobre el tope (un cobarde no lo pasa).
+  - `GatherCageExtra` lee las horas con `PeekHoursHeld` en los dos modos (`CageExtra::hoursHeld`; el barrido arranca el reloj, nada se acuña); `route_cage` pone el termino en `ChanceInputs::resignation`, que `JoinChance` suma. Solo la ruta de la jaula lo llena; las demas rutas lo dejan en 0.
+  - Tarjeta: fila "RESIGNADO +N%" bajo la chance (y bajo "LO CUIDASTE"), clave nueva `readout.resigned` en la plantilla `messages.json`. Log: `[chance] ... resigned=+N`.
+  - Claves nuevas solo agregadas a la plantilla `TotalRecruit/config.json`, clamp en `LoadConfig` con las constantes del modulo (0..5 y 0..30).
+- [x] Valores elegidos: **+1 por dia, tope 10** (el pedido arrancaba en +2/10). Con +2/10 la hoja (seccion 2, nivel +0) daba valiente sano 5 dias (objetivo 7: mas rapido que objetivo - 1) y honorable sano 6 (antes 7, objetivo 9); con +1/10 ningun dia de los no unicos cambia: fearful 2/2/1, normal 4/3/2, brave 6/4/4, honourable 7/4/4 (sano / cuidado medio / quebrado). Bajar el tope (+2/5) tambien cumplia, pero concentra todo en 3 dias; +1/10 sigue sumando hasta el dia 10, que es lo que pide "el tiempo cuenta".
+- [x] Pruebas: RED con los cuerpos vacios: 22 checks en `resignation_rules`, `route_decisions` y `readout_model` (61/64 suites, 22/73466 fallos); GREEN tras implementar: 64/64 suites, 0/73466 fallos. DLL compila.
+- [x] Hoja regenerada sobre `2a0246b`: fila nueva "Resignacion (jaula)" en el catalogo (seccion 1), tabla nueva "Resignacion por dias encerrado" y los "dias 90%" de la seccion 2 cuentan la resignacion que crece un dia completo por tirada.
+
+  | Temperamento | 0 dias | 3 dias | 7 dias | 14 dias |
+  |---|---|---|---|---|
+  | fearful | +0 (70) | +5 (75) | +10 (80) | +10 (80) |
+  | normal | +0 (50) | +3 (53) | +7 (57) | +10 (60) |
+  | brave | +0 (35) | +1 (36) | +4 (39) | +6 (41) |
+  | honourable | +0 (30) | +1 (31) | +3 (33) | +5 (35) |
+
+  (termino y chance de un preso sano sin bono, nivel +0, no unico). Dias 90% que cambiaron, solo unicos a nivel +0 (sano / cuid. min / quebrado): normal 9/7/3 -> 8/5/3, brave 22/15/8 -> 16/8/7, honourable 45/22/10 -> 25/10/9, fearful 4/4/2 -> 4/3/2. El unico honorable quebrado queda en 9 (objetivo ~10).
 
 ### T5 Restos de Cheat
 - [x] Hecho por priority-one B (`9b0466a`, `cooldown_minutes` + `wait_format`). Hoja regenerada (seccion 5): rechazo y duelo perdido empezados a las 10.25 h terminan en el minuto 616 (1 min despues); las etiquetas dicen " (1 min)", "Golpear (1 min)", "Noquear (1 min)". Antes: terminaban a las 11 h (45 min despues) y decian "(1 h)".
@@ -212,6 +231,7 @@ Pasos de cierre: QA en juego -> merge de `feat/balanced-tuning` a `main` -> push
 - 2026-10-07: T1 hecho (`8b9081d`): tabla objetivo acordada, base de nivel 35 y estres pleno 30; hoja regenerada.
 - 2026-10-07: T2 hecho (`aedc3b4`): rendimiento decreciente 0.7 y tope diario 0.35 del estres por golpes en Balanced, guardados con el personaje; hoja regenerada (seccion 3); QA 12.32 S13-S18.
 - 2026-10-07: T3 hecho (`0118ce0` maqueta, `e4b8b5b` regla + motor + save + tarjeta): racha de cuidado +3/dia hasta +15, guardada con el personaje; hoja regenerada (seccion 2, una semana de cuidado de un normal 77 contra quebrado 80); QA 12.33 C9-C15.
+- 2026-10-07: T4 hecho (`17e67f5` maqueta, `2a0246b` regla + reloj + tarjeta): resignacion +1 por dia completo encerrado hasta +10, / resolucion; hoja regenerada (catalogo, tabla de resignacion, dias de la seccion 2); QA 12.33 R1-R6.
 
 ## Proximo paso
-Mod Hub quitado (`odd/tasks/remove-mod-hub.md`, 2026-10-07): las claves nuevas van solo a `config.json`. T2 y T3 hechos; sigue **T4** (resignacion por dias encerrado), luego T6 (con el desvio de honorable cuidado de T3) y lo que queda de T7.
+Mod Hub quitado (`odd/tasks/remove-mod-hub.md`, 2026-10-07): las claves nuevas van solo a `config.json`. T2, T3 y T4 hechos; sigue **T6** (revisar con el usuario, con numeros de la hoja; sumar el desvio de T3: honorable cuidado 4 dias contra 6, y cuidar una semana ya supera a quebrar en valiente y honorable), luego lo que queda de T7. QA en juego de 12.33 C9-C15 y R1-R6.
