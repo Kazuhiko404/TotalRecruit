@@ -1,7 +1,7 @@
 # Hoja de balance (Balanced, config por defecto)
 
 > **Generado, no editar a mano.** Programa: `tests/balance_sheet/main.cpp`, que llama a las funciones puras REALES de `src/` con `Config()` por defecto.
-> Reglas de `src/` en el commit `2a0246b`.
+> Reglas de `src/` en el commit `4174d04`.
 > Regenerar:
 >
 > ```bash
@@ -138,58 +138,64 @@ El bono de cuidado maximo (+35: sorteo +20 y racha +15) vale 116% de lo que vale
 
 ### Que pasa cuando la tirada de la jaula FALLA (`DecideCage`, tabla de monedas)
 
-Preso sano, alimentado, vida plena, nivel igual al lider, bolsillo conocido en 0 cats, clave cuya tirada falla. `se une` = se une igual aunque la tirada fallo.
+Preso sano, alimentado, vida plena, nivel igual al lider, bolsillo conocido en 0 cats, clave cuya tirada falla. `se une` = se une igual aunque la tirada fallo. **Racha** = dias seguidos cuidado antes de hoy (`CareStreakDays`); la moneda care une solo desde una racha de 4 (`submissionCareJoinStreakDays`, `care_join_rules`), asi que sus filas salen dos veces: racha 0 y racha 4.
 
-| Temperamento | Arquetipo | Unico | Moneda | Se une | Motivo |
-|---|---|---|---|---|---|
-| fearful | other | no | cats | no | pide {cats} cats y tienes {purse} |
-| fearful | bandit | no | cats | no | pide {cats} cats y tienes {purse} |
-| fearful | military | no | submission | no | sigue desafiante: déjalo con hambre o hérelo |
-| fearful | slave | no | freedom | **si** | seguirá a quien lo liberó |
-| normal | other | no | cats | no | pide {cats} cats y tienes {purse} |
-| normal | bandit | no | cats | no | pide {cats} cats y tienes {purse} |
-| normal | military | no | submission | no | sigue desafiante: déjalo con hambre o hérelo |
-| normal | slave | no | freedom | **si** | seguirá a quien lo liberó |
-| brave | other | no | submission | no | sigue desafiante: déjalo con hambre o hérelo |
-| brave | bandit | no | cats | no | pide {cats} cats y tienes {purse} |
-| brave | military | no | submission | no | sigue desafiante: déjalo con hambre o hérelo |
-| brave | slave | no | freedom | **si** | seguirá a quien lo liberó |
-| honourable | other | no | care | **si** | alimentado y curado: se unirá |
-| honourable | bandit | no | care | **si** | alimentado y curado: se unirá |
-| honourable | military | no | care | **si** | alimentado y curado: se unirá |
-| honourable | slave | no | freedom | **si** | seguirá a quien lo liberó |
-| warm/kind | other | no | care | **si** | alimentado y curado: se unirá |
-| warm/kind | bandit | no | care | **si** | alimentado y curado: se unirá |
-| warm/kind | military | no | care | **si** | alimentado y curado: se unirá |
-| warm/kind | slave | no | freedom | **si** | seguirá a quien lo liberó |
-| cold/cruel | other | no | cats | no | pide {cats} cats y tienes {purse} |
-| cold/cruel | bandit | no | cats | no | pide {cats} cats y tienes {purse} |
-| cold/cruel | military | no | submission | no | sigue desafiante: déjalo con hambre o hérelo |
-| cold/cruel | slave | no | freedom | **si** | seguirá a quien lo liberó |
-| fearful | other | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| fearful | bandit | si | cats | no | pide {cats} cats y tienes {purse} |
-| fearful | military | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| fearful | slave | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| normal | other | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| normal | bandit | si | cats | no | pide {cats} cats y tienes {purse} |
-| normal | military | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| normal | slave | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| brave | other | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| brave | bandit | si | cats | no | pide {cats} cats y tienes {purse} |
-| brave | military | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| brave | slave | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| honourable | other | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| honourable | bandit | si | cats | no | pide {cats} cats y tienes {purse} |
-| honourable | military | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| honourable | slave | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| warm/kind | other | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| warm/kind | bandit | si | cats | no | pide {cats} cats y tienes {purse} |
-| warm/kind | military | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| warm/kind | slave | si | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
-| cold/cruel | other | si | cats | no | pide {cats} cats y tienes {purse} |
-| cold/cruel | bandit | si | cats | no | pide {cats} cats y tienes {purse} |
-| cold/cruel | military | si | cats | no | pide {cats} cats y tienes {purse} |
-| cold/cruel | slave | si | cats | no | pide {cats} cats y tienes {purse} |
+| Temperamento | Arquetipo | Unico | Racha | Moneda | Se une | Motivo |
+|---|---|---|---|---|---|---|
+| fearful | other | no | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| fearful | bandit | no | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| fearful | military | no | 0 | submission | no | sigue desafiante: déjalo con hambre o hérelo |
+| fearful | slave | no | 0 | freedom | **si** | seguirá a quien lo liberó |
+| normal | other | no | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| normal | bandit | no | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| normal | military | no | 0 | submission | no | sigue desafiante: déjalo con hambre o hérelo |
+| normal | slave | no | 0 | freedom | **si** | seguirá a quien lo liberó |
+| brave | other | no | 0 | submission | no | sigue desafiante: déjalo con hambre o hérelo |
+| brave | bandit | no | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| brave | military | no | 0 | submission | no | sigue desafiante: déjalo con hambre o hérelo |
+| brave | slave | no | 0 | freedom | **si** | seguirá a quien lo liberó |
+| honourable | other | no | 0 | care | no | alimentado y curado: le faltan 4 días de buen trato |
+| honourable | other | no | 4 | care | **si** | alimentado y curado: se unirá |
+| honourable | bandit | no | 0 | care | no | alimentado y curado: le faltan 4 días de buen trato |
+| honourable | bandit | no | 4 | care | **si** | alimentado y curado: se unirá |
+| honourable | military | no | 0 | care | no | alimentado y curado: le faltan 4 días de buen trato |
+| honourable | military | no | 4 | care | **si** | alimentado y curado: se unirá |
+| honourable | slave | no | 0 | freedom | **si** | seguirá a quien lo liberó |
+| warm/kind | other | no | 0 | care | no | alimentado y curado: le faltan 4 días de buen trato |
+| warm/kind | other | no | 4 | care | **si** | alimentado y curado: se unirá |
+| warm/kind | bandit | no | 0 | care | no | alimentado y curado: le faltan 4 días de buen trato |
+| warm/kind | bandit | no | 4 | care | **si** | alimentado y curado: se unirá |
+| warm/kind | military | no | 0 | care | no | alimentado y curado: le faltan 4 días de buen trato |
+| warm/kind | military | no | 4 | care | **si** | alimentado y curado: se unirá |
+| warm/kind | slave | no | 0 | freedom | **si** | seguirá a quien lo liberó |
+| cold/cruel | other | no | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| cold/cruel | bandit | no | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| cold/cruel | military | no | 0 | submission | no | sigue desafiante: déjalo con hambre o hérelo |
+| cold/cruel | slave | no | 0 | freedom | **si** | seguirá a quien lo liberó |
+| fearful | other | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| fearful | bandit | si | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| fearful | military | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| fearful | slave | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| normal | other | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| normal | bandit | si | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| normal | military | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| normal | slave | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| brave | other | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| brave | bandit | si | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| brave | military | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| brave | slave | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| honourable | other | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| honourable | bandit | si | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| honourable | military | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| honourable | slave | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| warm/kind | other | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| warm/kind | bandit | si | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| warm/kind | military | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| warm/kind | slave | si | 0 | submission | no | no hay dinero que compre lo que cree: el hambre y las heridas harán el trabajo |
+| cold/cruel | other | si | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| cold/cruel | bandit | si | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| cold/cruel | military | si | 0 | cats | no | pide {cats} cats y tienes {purse} |
+| cold/cruel | slave | si | 0 | cats | no | pide {cats} cats y tienes {purse} |
 
 ## 3. Estres por golpes (Golpear / Noquear)
 

@@ -965,6 +965,10 @@ Con `"probeOnClick": true`. Casos P (presets), W (esperas de Cheat), H (horas de
 | C13 | Con racha 3, guardar, salir de Kenshi, abrir y cargar ese save | La misma racha tras la carga | `caredFor=+M(streak 3d)` |
 | C14 | Con racha, alejarse del preso un dia de juego entero (fuera del radio del barrido) y volver | La racha se corta: un dia sin verlo no cuenta | `caredFor=+N(streak 0d)` |
 | C15 | Cheat (`"preset": 0`) | Sin racha: Cheat no tira la chance ni registra avistajes | sin lineas `[care]` |
+| C16 | La moneda cuidado pide racha (balanced-tuning T6). Balanced: un preso **honorable** (o bondadoso) no unico, sano, comido y con la salud llena, con racha 3; Hablar con una tirada que falla | **No** se une: la ventana dice "alimentado y curado: le faltan 1 dias de buen trato" y la tarjeta "Cuidado: le faltan 1 dias de trato" | `[chance] ... caredFor=+M(streak 3d) ... -> P%` y `Refused <preso> (cuidados): alimentado y curado: le faltan 1 días de buen trato` |
+| C17 | El mismo preso al dia siguiente, con racha 4 | Se une aunque la tirada falle: "alimentado y curado: se unirá" | `caredFor=+M(streak 4d)` y ningun `Refused` para el |
+| C18 | Racha 0 (primer dia cuidado) | "le faltan 4 dias de buen trato"; herido o con hambre sigue pidiendo comida o cura (C4) | `Refused <preso> (cuidados): ... le faltan 4 días ...` |
+| C19 | Poner `"submissionCareJoinStreakDays": 0` en el `config.json` desplegado, abrir y repetir C18 | Vuelve la regla vieja: se une con racha 0 | sin `Refused` para el |
 | R1 | Resignacion (balanced-tuning T4). Balanced: un preso normal en tu jaula hace menos de 1 dia de juego; Hablar | Sin fila `RESIGNADO` | `[chance] ... resigned=+0` |
 | R2 | El mismo preso con 3 dias de juego completos en la jaula | Fila `RESIGNADO +3%` bajo la chance (y bajo `LO CUIDASTE` si la hay); la chance ya lo incluye y no se une solo | `[chance] ... resigned=+3 ... -> M%` |
 | R3 | 10 dias o mas (normal); un valiente y un honorable 14 dias o mas | Tope: normal +10, valiente +6, honorable +5; un cobarde llega a +10 a los 6 dias | `resigned=+10` / `+6` / `+5` |

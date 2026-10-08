@@ -70,7 +70,7 @@ Ruta: inline (dos defaults + pruebas de caracterizacion; sin regla nueva).
   | cobarde | 2 | 1-2 | 1 |
   | normal | 4 | 3 | 2 |
   | valiente | 7 | 5 | 3 |
-  | honorable | 9 | 6 | 4 |
+  | honorable | 9 | 4 (antes 6; corregido en T6) | 4 |
   | unico honorable | - | - | ~10 |
 
 - [x] Hallazgo que cambio la palanca: con base 45 + intimidacion 15, un normal sano ya estaba en 60 (3 dias) sin tocarlo, asi que bajar solo resolucion/estres no alcanzaba sin anular el estres. La palanca es la base, no el estres.
@@ -177,7 +177,19 @@ Ruta: escritor delegado (modulo puro nuevo + lectura del reloj de encierro + con
 - [x] Propuesta original (cumplida con minutos de juego en lugar de decimas de hora): guardar los enfriamientos de rechazo y duelo en sub-hora (decimas de hora, como `hold_start_hour`), y etiquetar en minutos cuando la espera es menor a 1 h ("Golpear (1 min)"). Claves de `messages.json` nuevas; maqueta del boton primero.
 
 ### T6 Otros desbalances visibles en la hoja
-- [ ] Revisar con el usuario, solo con numeros de la hoja:
+Ruta: escritor delegado (modulo puro nuevo + motivo nuevo + config + tarjeta + generador de la hoja + docs: varios archivos no triviales).
+- [x] Revisado con el usuario el 2026-10-07, punto por punto (abajo la lista original con los numeros):
+  - **Moneda care**: cambia. Solo une con la tirada fallida desde una racha de cuidado de 4 dias (`submissionCareJoinStreakDays`, 0..30; 0 = la regla vieja).
+  - **Esclavos (freedom)**: se queda. El esclavo sigue a quien lo libero; es el lore de Kenshi.
+  - **Nivel satura rapido**: se queda. La base 35 de T1 ya arreglo la saturacion que importaba.
+  - **Unicos fuertes inalcanzables en la jaula**: se queda. Esos se ganan por duelo.
+  - **Field-yield casi seguro**: se queda. T1 lo arreglo (normal con 2 derrotas 77).
+  - **Desvio de T3** (honorable cuidado 4 dias contra 6; cuidar le gana a quebrar en valiente y honorable): se queda, es lore (el honorable responde al cuidado). La tabla objetivo de T1 pasa a honorable cuidado 4.
+- [x] Maqueta primero (`a69cb6d`): estado `caredNotYet` de `ui-mockup/js/data.js` ("Cuidado: le faltan 2 dias de trato"), fila "Main line" de `readout.html`, item 6 del README de la maqueta.
+- [x] Hecho (`4174d04`, solo Balanced; Cheat sin cambios): modulo puro `src/care_join_rules.cpp/.h` (`CareJoinStreakDaysNeeded`, `CareJoinDaysMissing`). `route_cage` `CareVerdict` lee `CageExtra::careStreakDays` (la racha de T3, ya llegaba a la jaula): sin faltantes `Reason_CaredFor` (se une); si no, motivo nuevo `Reason_CaredForNotYet` (ultimo del enum) con `Verdict::careDaysMissing`. Claves nuevas solo agregadas: `submissionCareJoinStreakDays` (4) en la plantilla `config.json` con clamp en `LoadConfig`; `reason.cared.notYet` ("alimentado y curado: le faltan {days} dias de buen trato") y `readout.line.cared.notYet` ("Cuidado: le faltan {need} dias de trato") en la plantilla `messages.json`. La tarjeta solo pone los numeros de la barriga en la linea si muestra la barriga (antes los pisaba siempre; sin barriga eran 0 igual). Log: `Refused <preso> (cuidados): alimentado y curado: le faltan N dias de buen trato`.
+- [x] Pruebas: RED con el modulo vacio y `route_cage` sin cambiar: 18 checks en `care_join_rules`, `route_decisions` y `readout_model` (62/65 suites, 18/73521 fallos); GREEN: 65/65 suites, 0/73521 fallos. La caracterizacion `TheKindAreCaredForAndJoin` ahora le da racha 4. DLL compila.
+- [x] Hoja regenerada sobre `4174d04`: la tabla "Que pasa cuando la tirada de la jaula FALLA" gana la columna **Racha**; las filas care salen dos veces: racha 0 (honourable y warm/kind no unicos: "se une: no", "le faltan 4 dias de buen trato") y racha 4 ("se une: si", "se unira"). La seccion 2 no cambia (sus dias solo cuentan la tirada).
+- Lista original revisada, solo con numeros de la hoja:
   - **Moneda "care" une aunque la tirada falle** (seccion 2, "Que pasa cuando la tirada de la jaula FALLA"): honourable y warm/kind no unicos, sanos y alimentados, "se une: si" en todos los arquetipos. En la practica salta la columna "dias 90%" de honourable (cuidado 52, 4 dias). Confirmar si es intencional despues de P4.
   - **Esclavos**: moneda "freedom" une siempre en no unicos, sea cual sea la tirada.
   - **Nivel satura rapido**: a -20 niveles fearful y normal ya estan en 90-95 sano al dia 1; a +30 el termino ya vale el piso 2.
@@ -232,6 +244,7 @@ Pasos de cierre: QA en juego -> merge de `feat/balanced-tuning` a `main` -> push
 - 2026-10-07: T2 hecho (`aedc3b4`): rendimiento decreciente 0.7 y tope diario 0.35 del estres por golpes en Balanced, guardados con el personaje; hoja regenerada (seccion 3); QA 12.32 S13-S18.
 - 2026-10-07: T3 hecho (`0118ce0` maqueta, `e4b8b5b` regla + motor + save + tarjeta): racha de cuidado +3/dia hasta +15, guardada con el personaje; hoja regenerada (seccion 2, una semana de cuidado de un normal 77 contra quebrado 80); QA 12.33 C9-C15.
 - 2026-10-07: T4 hecho (`17e67f5` maqueta, `2a0246b` regla + reloj + tarjeta): resignacion +1 por dia completo encerrado hasta +10, / resolucion; hoja regenerada (catalogo, tabla de resignacion, dias de la seccion 2); QA 12.33 R1-R6.
+- 2026-10-07: T6 hecho (`a69cb6d` maqueta, `4174d04` regla + config + motivo + tarjeta): la moneda care une con la tirada fallida solo desde una racha de cuidado de 4 dias; lo demas de T6 se queda por decision del usuario; tabla objetivo honorable cuidado 6 -> 4; hoja regenerada (tabla de la tirada fallida con racha 0 y 4); QA 12.33 C16-C19.
 
 ## Proximo paso
-Mod Hub quitado (`odd/tasks/remove-mod-hub.md`, 2026-10-07): las claves nuevas van solo a `config.json`. T2, T3 y T4 hechos; sigue **T6** (revisar con el usuario, con numeros de la hoja; sumar el desvio de T3: honorable cuidado 4 dias contra 6, y cuidar una semana ya supera a quebrar en valiente y honorable), luego lo que queda de T7. QA en juego de 12.33 C9-C15 y R1-R6.
+T7 resolucion por especie; QA en juego (12.33 C9-C19 y R1-R6).

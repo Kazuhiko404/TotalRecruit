@@ -173,6 +173,21 @@ valiente sano bajaba de 6 a 5 dias hasta el 90 % (objetivo 7) y un honorable de 
 6 (objetivo 9), por eso el valor por defecto es +1: con el, ningun dia de la tabla
 objetivo cambia para los no unicos.
 
+*La moneda cuidado pide racha (balanced-tuning T6, solo Balanced; decidido por el
+usuario el 2026-10-07):* cuando la tirada diaria falla, la tabla de monedas manda a
+los honorables y a los bondadosos (no unicos) a la moneda **cuidado**. Antes, sano y
+comido bastaba para que se unieran igual, saltando los dias de la tirada. Ahora el
+cuidado solo los une cuando su racha de cuidado (dias seguidos antes de hoy, la de
+arriba) llega a `submissionCareJoinStreakDays` (4, rango 0..30; `care_join_rules`).
+Por debajo no se unen y el motivo dice cuanto falta: "alimentado y curado: le faltan
+N dias de buen trato" (`reason.cared.notYet`; en la tarjeta "Cuidado: le faltan N
+dias de trato", `readout.line.cared.notYet`). Con 0 vuelve la regla vieja (se une
+apenas esta cuidado). La tirada sigue corriendo cada dia con su bonus; herido o con
+hambre siguen pidiendo comida o cura como siempre. Con la racha medida antes de hoy,
+un preso cuidado sin pausa se une por cuidado a mas tardar el quinto dia. Lo demas
+de la tabla no cambia: el esclavo sigue a quien lo libero (moneda libertad) y los
+unicos fuertes se ganan por duelo.
+
 **R2.1 — El nivel da chance, no permiso.** *(P1)*
 Hoy el nivel es una puerta: pasado cierto hueco no te escucha, y con ventaja
 enorme se somete solo. Debe convertirse en una probabilidad que participe del

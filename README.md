@@ -89,6 +89,11 @@ in a row the prisoner was seen cared for adds +3 (`submissionCaredForStreakPerDa
 up to +15 (`submissionCaredForStreakMax`) after five days; one sighting hurt, hungry
 or below full health resets it, a whole game day away from the prisoner breaks it,
 and it is saved with the character. The card then reads "+21% (racha 3 dias)".
+When the roll fails, an honourable or warm/kind prisoner (not unique) is won by
+care, but only after a **4-day care streak** (`submissionCareJoinStreakDays`, 0..30;
+0 brings back the old join on the first cared-for day). Short of it they stay, and
+the reason says how many cared-for days are missing ("le faltan 2 dias de buen
+trato").
 Time held counts a little again as **resignation**: every full game day in your
 cage adds +1 (`submissionResignationPerDay`), up to +10 (`submissionResignationMax`),
 divided by resolve like stress (a brave prisoner tops out at +6, an honourable one
