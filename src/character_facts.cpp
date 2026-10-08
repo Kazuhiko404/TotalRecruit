@@ -22,6 +22,7 @@
 #include "submission_tracker.h"
 #include "npc_level.h"
 #include "beating_stress.h"
+#include "care_streak.h"
 
 #include <kenshi/CharacterAnimal.h>
 #include <kenshi/CharStats.h>
@@ -587,6 +588,22 @@ void GatherCoreFacts(Character* character, CoreFacts* out)
     *out = f;
 }
 
+bool ReadFullyCaredFor(Character* character, bool* out)
+{
+    Condition condition;
+    if (!SafeReadCondition(character, &condition))
+    {
+        return false;
+    }
+    const Config& config = GetConfig();
+    const bool wounded = IsWounded(condition.unconscious, condition.dying, condition.health,
+                                   config.prices.woundedThreshold);
+    const bool starving = IsStarving(condition.starving, condition.hunger,
+                                     config.prices.hungerThreshold);
+    *out = IsFullyCaredFor(wounded, starving, condition.health);
+    return true;
+}
+
 CheatFacts GatherCheatFacts(Character* character, GatherMode mode)
 {
     const Config& config = GetConfig();
@@ -746,6 +763,14 @@ CageExtra GatherCageExtra(Character* character, const CoreFacts& core, GatherMod
     else
     {
         extra.care = PeekRollKey(character);
+    }
+    // The care streak (care_streak.h, balanced-tuning T3): a decision records today's
+    // sighting first, a peek only reads. A person only: an animal is tamed by food.
+    if (!core.animal && extra.care.haveKey)
+    {
+        extra.careStreakDays = CareStreakDaysFor(
+            extra.care.key, extra.care.dayIndex, mode == Gather_Decide,
+            IsFullyCaredFor(core.wounded, core.starving, core.health));
     }
     extra.purse = ReadPurse();
     // Standing is not a factor in the cage: neither the chance nor the price reads it.

@@ -2,6 +2,7 @@
 #include "hail.h"
 #include "rules.h"
 #include "hold_tracking.h"
+#include "care_streak.h"
 #include "npc_speech.h"
 #include "char_key_reader.h"
 #include "defeats.h"
@@ -126,6 +127,12 @@ void SweepForHails(bool hailing)
         // the cage starts the prisoner's hold clock and a sighting outside it
         // ends it, so a released-and-recaged prisoner starts over.
         const bool caged = NoteCageState(npc);
+        // A prisoner in the player's cage: today's sighting for the care streak
+        // (care_streak.h, Balanced only).
+        if (caged)
+        {
+            NoteCareState(npc);
+        }
 
         // Already looking at them: someone the player put down who is back on
         // their feet re-arms the next knockout (defeat_episode_rules). Reads the

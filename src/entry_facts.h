@@ -239,9 +239,14 @@ struct CageExtra
     // `roll` on a click; on a peek the id the character already has (PeekRollKey),
     // which `roll` never carries there, so the card shows the bonus a click uses.
     RollFact care;
+    // Balanced: the prisoner's care streak (care_streak_rules.h CareStreakDays) for
+    // care.dayIndex, 0 with no key or no record.
+    int careStreakDays;
     PurseFact purse;
     PriceInputs price;
     HaggleFact haggle;
     AnimalExtra animal;
+
+    CageExtra() : careStreakDays(0) {}
 };
 } // namespace totalrecruit

@@ -93,6 +93,12 @@ bool IsOwnedAnimal(Character* character);
 // tiers off or with unreadable traits.
 bool IsTieredAllyAtRest(Character* character);
 
+// Whether this character is unhurt, fed and at full health right now
+// (body_rules.h IsFullyCaredFor over the same reads and thresholds as
+// GatherCoreFacts). False when the body cannot be read. For the care streak's
+// sweep (care_streak.h), which must not run the whole core survey.
+bool ReadFullyCaredFor(Character* character, bool* out);
+
 // The submission event's reject cooldown (submission_tracker.h): true while it
 // runs for this character, with the hours left in `outHoursLeft` (may be NULL).
 // Read without minting an id: a character never rejected has none to find.

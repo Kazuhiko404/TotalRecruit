@@ -339,8 +339,11 @@ void LayoutUnguarded(const ReadoutView& view, const ReadoutTexts& texts, bool co
     {
         SetText(c.caredLabel, texts.caredForLabel);
         SetText(c.caredValue, texts.caredForValue);
-        Place(c.caredLabel, x, y, inner / 2, kLabelH);
-        Place(c.caredValue, x + inner / 2, y, inner - inner / 2, kLabelH);
+        // A care streak makes the value longer ("+21% (racha 3 dias)"): it starts
+        // further left, the label "LO CUIDASTE" still fits before it.
+        const int split = view.careStreakDays > 0 ? inner * 2 / 5 : inner / 2;
+        Place(c.caredLabel, x, y, split, kLabelH);
+        Place(c.caredValue, x + split, y, inner - split, kLabelH);
         y += kLabelH + gap;
     }
 

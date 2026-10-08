@@ -5,6 +5,7 @@
 #include "beat_strike_rules.h"
 #include "animal_beating_rules.h"
 #include "beating_daily_rules.h"
+#include "care_streak_rules.h"
 #include "head_notice_rules.h"
 #include "preset_rules.h"
 
@@ -427,6 +428,8 @@ std::vector<Field> ConfigFields(Config& c)
     AddInt(f, "submissionFieldYieldBonus", &c.submission.fieldYieldBonus);
     AddInt(f, "submissionCaredForBonusMin", &c.submission.caredForBonusMin);
     AddInt(f, "submissionCaredForBonusMax", &c.submission.caredForBonusMax);
+    AddInt(f, "submissionCaredForStreakPerDay", &c.submission.caredForStreakPerDay);
+    AddInt(f, "submissionCaredForStreakMax", &c.submission.caredForStreakMax);
     AddInt(f, "submissionFieldYieldLoyaltyPenalty", &c.submission.fieldYieldLoyaltyPenalty);
     AddFloat(f, "submissionStressFromHunger", &c.submission.stressFromHunger);
     AddFloat(f, "submissionStressFromWounds", &c.submission.stressFromWounds);
@@ -585,6 +588,9 @@ void LoadConfig(const std::string& modDirectory)
     ClampFloat(&g_config.offer.failCalmSeconds, 0.0f, 600.0f);
     ClampInt(&g_config.submission.caredForBonusMin, 0, 50);
     ClampInt(&g_config.submission.caredForBonusMax, 0, 50);
+    // The care streak on top of it (care_streak_rules.h).
+    ClampInt(&g_config.submission.caredForStreakPerDay, kCareStreakPerDayMin, kCareStreakPerDayMax);
+    ClampInt(&g_config.submission.caredForStreakMax, kCareStreakMaxMin, kCareStreakMaxMax);
     for (int i = 0; i < Temperament_Count; ++i)
     {
         ClampInt(&g_config.chance.personality[i], -100, 100);

@@ -8,6 +8,7 @@
 #include "duel_challenge_rules.h"
 #include "beating_stress.h"
 #include "hold_tracking.h"
+#include "care_streak.h"
 
 namespace totalrecruit
 {
@@ -33,6 +34,9 @@ const SavedIntField kFields[] = {
     { "total_recruit.beating_day_blows", &SavedBeatingDayBlows, &RestoreSavedBeatingDayBlows },
     { "total_recruit.beating_day_gained", &SavedBeatingDayGained, &RestoreSavedBeatingDayGained },
     { "total_recruit.hold_start_hour", &SavedHoldStart, &RestoreSavedHoldStart },
+    { "total_recruit.care_streak_day", &SavedCareStreakDay, &RestoreSavedCareStreakDay },
+    { "total_recruit.care_streak_days", &SavedCareStreakDays, &RestoreSavedCareStreakDays },
+    { "total_recruit.care_streak_kept", &SavedCareStreakKept, &RestoreSavedCareStreakKept },
 };
 } // namespace
 

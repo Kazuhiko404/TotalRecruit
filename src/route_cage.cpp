@@ -1,6 +1,7 @@
 #include "route_decisions.h"
 #include "body_rules.h"
 #include "cared_for_rules.h"
+#include "care_streak_rules.h"
 
 namespace totalrecruit
 {
@@ -153,10 +154,17 @@ Verdict DecideCage(const CoreFacts& core, const CageExtra& extra, const Config& 
         in.situation    = config.chance.intimidationBonus;
         // Looked after -- unhurt, fed, at full health -- argues for joining; it no
         // longer decides on its own (v1-presets-close P4). The day's draw, stable
-        // per NPC per game day (cared_for_rules.h).
-        in.caredFor     = CaredForBonus(IsFullyCaredFor(core.wounded, core.starving, core.health),
-                                        extra.care.haveKey, extra.care.key, extra.care.dayIndex,
-                                        config.submission);
+        // per NPC per game day (cared_for_rules.h), plus the care streak: days in a
+        // row of it (care_streak_rules.h, balanced-tuning T3). Both need today's care
+        // and a key, so a hurt prisoner or a keyless peek gets neither.
+        const bool caredFor = IsFullyCaredFor(core.wounded, core.starving, core.health);
+        in.caredFor     = CaredForBonus(caredFor, extra.care.haveKey, extra.care.key,
+                                        extra.care.dayIndex, config.submission);
+        if (caredFor && extra.care.haveKey)
+        {
+            in.careStreakDays = extra.careStreakDays > 0 ? extra.careStreakDays : 0;
+            in.caredFor      += CareStreakBonus(in.careStreakDays, config.submission);
+        }
 
         const int chance = JoinChance(in, config.chance, config.submission);
         v.rolled = true;

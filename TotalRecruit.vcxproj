@@ -156,6 +156,8 @@
     <ClCompile Include="src\preset_rules.cpp" />
     <ClCompile Include="src\cheat_waits.cpp" />
     <ClCompile Include="src\cared_for_rules.cpp" />
+    <ClCompile Include="src\care_streak_rules.cpp" />
+    <ClCompile Include="src\care_streak.cpp" />
     <ClCompile Include="src\insistence_rules.cpp" />
     <ClCompile Include="src\healing_ledger.cpp" />
     <ClCompile Include="src\animal_healing.cpp" />
@@ -251,6 +253,8 @@
     <ClInclude Include="src\preset_rules.h" />
     <ClInclude Include="src\cheat_waits.h" />
     <ClInclude Include="src\cared_for_rules.h" />
+    <ClInclude Include="src\care_streak_rules.h" />
+    <ClInclude Include="src\care_streak.h" />
     <ClInclude Include="src\insistence_rules.h" />
     <ClInclude Include="src\healing_ledger.h" />
     <ClInclude Include="src\animal_healing.h" />

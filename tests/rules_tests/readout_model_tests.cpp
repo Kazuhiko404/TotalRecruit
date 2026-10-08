@@ -595,6 +595,26 @@ void TheCaredForBonusIsShownWithTheChance()
     CHECK(BuildReadout(noRoll, kConfig).caredForPct == 0);
 }
 
+void TheCareStreakRidesWithTheCaredForBonus()
+{
+    const char* name = "card: the care streak days ride with the cared-for bonus (T3)";
+    ReadoutInput in = Input(Route_Cage, Reason_CatsAsk);
+    in.verdict.rolled = true;
+    in.verdict.chancePercent = 79;
+    in.verdict.chanceInputs.caredFor = 21;
+    in.verdict.chanceInputs.careStreakDays = 3;
+    ReadoutView v = BuildReadout(in, kConfig);
+    CHECK(v.caredForPct == 21);
+    CHECK(v.careStreakDays == 3);
+    // No bonus, no streak on the card.
+    in.verdict.chanceInputs.caredFor = 0;
+    CHECK(BuildReadout(in, kConfig).careStreakDays == 0);
+    ReadoutInput noRoll = Input(Route_Cage, Reason_CatsAsk);
+    noRoll.verdict.chanceInputs.caredFor = 21;
+    noRoll.verdict.chanceInputs.careStreakDays = 3;
+    CHECK(BuildReadout(noRoll, kConfig).careStreakDays == 0);
+}
+
 void StressTermsMakeStressFromState()
 {
     const char* name = "stress terms: their clamped sum is StressFromState";
@@ -652,5 +672,6 @@ void RunReadoutModelTests()
     ATemporaryMemberShowsTheDaysLeft();
     NoCageWaitLineAnyMore();
     TheCaredForBonusIsShownWithTheChance();
+    TheCareStreakRidesWithTheCaredForBonus();
     StressTermsMakeStressFromState();
 }

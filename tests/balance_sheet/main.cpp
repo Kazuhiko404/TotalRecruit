@@ -15,6 +15,7 @@
 #include "beating_stress_rules.h"
 #include "cage_command_rules.h"
 #include "cared_for_rules.h"
+#include "care_streak_rules.h"
 #include "chance_rules.h"
 #include "cheat_waits.h"
 #include "config.h"
@@ -150,6 +151,28 @@ int CageChance(const Config& c, Temperament t, bool unique, int npcLevel, float 
     return JoinChance(in, c.chance, c.submission);
 }
 
+// Days until the cumulative join probability reaches 90% when the prisoner is kept
+// in the same state day after day: the roll is drawn once per game day, and what
+// grows with the days held is applied to day d (1 = the first roll): the care
+// streak (CareStreakBonus of d - 1 kept days, care_streak_rules.h) when
+// `careDraw` >= 0, on top of that day's draw. -1 when 400 days are not enough.
+int CageDaysTo90(const Config& c, Temperament t, bool unique, int npcLevel, float hunger,
+                 float worst, float rested, float beaten, int careDraw, int defeats)
+{
+    double stillOut = 1.0;
+    for (int day = 1; day <= 400; ++day)
+    {
+        const int cared = careDraw >= 0 ? careDraw + CareStreakBonus(day - 1, c.submission) : 0;
+        const int chance = CageChance(c, t, unique, npcLevel, hunger, worst, rested, beaten, cared, defeats);
+        stillOut *= 1.0 - (double)chance / 100.0;
+        if (stillOut <= 0.1 + 1e-9)
+        {
+            return day;
+        }
+    }
+    return -1;
+}
+
 // A persisted id whose day-0 join roll fails at the ceiling, so DecideCage falls
 // through to the currency table (the rules_tests KeyRolling idea).
 CharKey FailingKey(const Config& c)
@@ -214,9 +237,12 @@ void PrintTermCatalogue(const Config& c)
                 s.fieldYieldBonus, s.fieldYieldLoyaltyPenalty, s.fieldYieldBonus - s.fieldYieldLoyaltyPenalty, s.fieldYieldBonus);
     std::printf("| Situacion: rescate | `rescueBaseBonus` + curado x `rescueHealWeight` | %d + %.0f x curado(0..1) | %d | %d |\n",
                 c.rescueBaseBonus, c.rescueHealWeight, c.rescueBaseBonus, c.rescueBaseBonus + (int)c.rescueHealWeight);
-    std::printf("| Cuidado (jaula) | `CaredForBonus` | sorteo diario estable, solo sano+alimentado+vida plena | %d | %d |\n",
+    std::printf("| Cuidado (jaula) | `CaredForBonus` + `CareStreakBonus` | sorteo diario estable %d..%d + racha: +%d por dia "
+                "seguido cuidado (sin contar hoy), tope +%d; solo sano+alimentado+vida plena | %d | %d |\n",
+                s.caredForBonusMin, s.caredForBonusMax, s.caredForStreakPerDay, s.caredForStreakMax,
                 CaredForBonusFromSeed(0u, s.caredForBonusMin, s.caredForBonusMax),
-                CaredForBonusFromSeed((unsigned int)(s.caredForBonusMax - s.caredForBonusMin), s.caredForBonusMin, s.caredForBonusMax));
+                CaredForBonusFromSeed((unsigned int)(s.caredForBonusMax - s.caredForBonusMin), s.caredForBonusMin, s.caredForBonusMax)
+                    + CareStreakBonus(1000, s));
     std::printf("| Rencor | `grudgePenalty` | fijo (honorable/valiente/amable: rechazo absoluto) | -%d | 0 |\n", ch.grudgePenalty);
     std::printf("| Unico | `uniquePenalty` | fijo | -%d | 0 |\n\n", ch.uniquePenalty);
 
@@ -269,9 +295,11 @@ void PrintCageMatrix(const Config& c)
                 "sano, alimentado y a vida plena SIEMPRE tiene el bono de cuidado); **cuid. min/max** = sano + bono %d / %d; "
                 "**hambre** = lleno 0; **herido** = worstDamage 0.8; **H+H+C** = hambre + herido + agotado (estres %.2f); "
                 "**golpes** = barra de golpes 1.0, por lo demas sano (sin bono: los golpes hieren); **quebrado** = todo junto (estres 1.0). "
-                "Entre parentesis: dias hasta 90%% acumulado.\n\n",
+                "La chance es la del primer dia. Entre parentesis: dias hasta 90%% acumulado manteniendo ese estado; en las columnas "
+                "de cuidado eso incluye la racha que crece cada dia (+%d por dia seguido, tope +%d, `CareStreakBonus`).\n\n",
                 kLeader, c.chance.intimidationBonus, s.caredForBonusMin, s.caredForBonusMax,
-                StressFromState(kHungerEmpty, kWoundHigh, kExhausted, 0.0f, s));
+                StressFromState(kHungerEmpty, kWoundHigh, kExhausted, 0.0f, s),
+                s.caredForStreakPerDay, s.caredForStreakMax);
     std::printf("| Temperamento | Unico | Nivel NPC | sano | cuid. min | cuid. max | hambre | herido | H+H+C | golpes | quebrado |\n");
     std::printf("|---|---|---|---|---|---|---|---|---|---|---|\n");
     const Temperament temps[] = { Temperament_Fearful, Temperament_Normal, Temperament_Brave, Temperament_Honorable };
@@ -295,33 +323,53 @@ void PrintCageMatrix(const Config& c)
                     CageChance(c, t, unique, lv, kHungerFull, 0.0f, kRested, 1.0f, 0, 0),
                     CageChance(c, t, unique, lv, kHungerEmpty, kWoundHigh, kExhausted, 1.0f, 0, 0),
                 };
+                const int days[] = {
+                    CageDaysTo90(c, t, unique, lv, kHungerFull, 0.0f, kRested, 0.0f, -1, 0),
+                    CageDaysTo90(c, t, unique, lv, kHungerFull, 0.0f, kRested, 0.0f, s.caredForBonusMin, 0),
+                    CageDaysTo90(c, t, unique, lv, kHungerFull, 0.0f, kRested, 0.0f, s.caredForBonusMax, 0),
+                    CageDaysTo90(c, t, unique, lv, kHungerEmpty, 0.0f, kRested, 0.0f, -1, 0),
+                    CageDaysTo90(c, t, unique, lv, kHungerFull, kWoundHigh, kRested, 0.0f, -1, 0),
+                    CageDaysTo90(c, t, unique, lv, kHungerEmpty, kWoundHigh, kExhausted, 0.0f, -1, 0),
+                    CageDaysTo90(c, t, unique, lv, kHungerFull, 0.0f, kRested, 1.0f, -1, 0),
+                    CageDaysTo90(c, t, unique, lv, kHungerEmpty, kWoundHigh, kExhausted, 1.0f, -1, 0),
+                };
                 std::printf("| %s | %s | %d (%+d) |", TempName(t), unique ? "si" : "no", lv, lv - kLeader);
                 for (int k = 0; k < 8; ++k)
                 {
-                    std::printf(" %d (%d) |", cells[k], DaysTo90(cells[k]));
+                    std::printf(" %d (%d) |", cells[k], days[k]);
                 }
                 std::printf("\n");
             }
         }
     }
 
+    const int careMid = (s.caredForBonusMin + s.caredForBonusMax) / 2;
+    const int week = CareStreakBonus(1000, s);
     std::printf("\n### Cuidar contra quebrar (mismo NPC, nivel igual al lider)\n\n");
-    std::printf("| Temperamento | Unico | cuidado medio (+%d) | quebrado | ventaja de quebrar | dias 90%% cuidando | dias 90%% quebrando |\n|---|---|---|---|---|---|---|\n",
-                (s.caredForBonusMin + s.caredForBonusMax) / 2);
+    std::printf("**cuidado medio** = el sorteo medio (+%d) sin racha (primer dia); **una semana** = el sorteo medio + la racha "
+                "plena (+%d, desde %d dias seguidos: `CareStreakBonus`); **ventaja** = quebrado menos una semana de cuidado. "
+                "\"dias 90%% cuidando\" cuenta la racha creciendo dia a dia desde 0.\n\n",
+                careMid, week, s.caredForStreakPerDay > 0 ? (week + s.caredForStreakPerDay - 1) / s.caredForStreakPerDay : 0);
+    std::printf("| Temperamento | Unico | cuidado medio (+%d) | una semana (+%d) | quebrado | ventaja de quebrar | "
+                "dias 90%% cuidando | dias 90%% quebrando |\n|---|---|---|---|---|---|---|---|\n",
+                careMid, careMid + week);
     for (int u = 0; u < 2; ++u)
     {
         for (int ti = 0; ti < 4; ++ti)
         {
             const Temperament t = temps[ti];
-            const int care = CageChance(c, t, u == 1, kLeader, kHungerFull, 0.0f, kRested, 0.0f,
-                                        (s.caredForBonusMin + s.caredForBonusMax) / 2, 0);
+            const int care = CageChance(c, t, u == 1, kLeader, kHungerFull, 0.0f, kRested, 0.0f, careMid, 0);
+            const int careWeek = CageChance(c, t, u == 1, kLeader, kHungerFull, 0.0f, kRested, 0.0f, careMid + week, 0);
             const int broken = CageChance(c, t, u == 1, kLeader, kHungerEmpty, kWoundHigh, kExhausted, 1.0f, 0, 0);
-            std::printf("| %s | %s | %d | %d | %+d | %d | %d |\n", TempName(t), u == 1 ? "si" : "no", care, broken,
-                        broken - care, DaysTo90(care), DaysTo90(broken));
+            std::printf("| %s | %s | %d | %d | %d | %+d | %d | %d |\n", TempName(t), u == 1 ? "si" : "no", care, careWeek,
+                        broken, broken - careWeek,
+                        CageDaysTo90(c, t, u == 1, kLeader, kHungerFull, 0.0f, kRested, 0.0f, careMid, 0),
+                        CageDaysTo90(c, t, u == 1, kLeader, kHungerEmpty, kWoundHigh, kExhausted, 1.0f, -1, 0));
         }
     }
-    std::printf("\nEl bono de cuidado maximo (+%d) vale %d%% de lo que vale el estres pleno de un normal (+%d).\n\n",
-                s.caredForBonusMax, s.caredForBonusMax * 100 / ChanceFromStress(1.0f, Temperament_Normal, s),
+    std::printf("\nEl bono de cuidado maximo (+%d: sorteo +%d y racha +%d) vale %d%% de lo que vale el estres pleno de un normal (+%d).\n\n",
+                s.caredForBonusMax + week, s.caredForBonusMax, week,
+                (s.caredForBonusMax + week) * 100 / ChanceFromStress(1.0f, Temperament_Normal, s),
                 ChanceFromStress(1.0f, Temperament_Normal, s));
 }
 

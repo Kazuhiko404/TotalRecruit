@@ -16,6 +16,7 @@
 #include "haggle_ledger.h"
 #include "cage_commands.h"
 #include "beating_stress.h"
+#include "care_streak.h"
 #include "feeding_ledger.h"
 #include "healing_ledger.h"
 #include "submission_director.h"
@@ -79,6 +80,7 @@ void ResetSessionState()
     ResetTalkStates();
     ForgetAllDefeats();
     ForgetAllBeatingStress();
+    ForgetAllCareStreaks();
     ForgetAllPlayerMeals();
     ForgetAllPlayerHealing();
     ForgetAllSubmissionMemory();

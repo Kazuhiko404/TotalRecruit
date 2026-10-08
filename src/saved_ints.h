@@ -47,6 +47,13 @@
 //                                  hold_tracking.h  the game hour (tenths) the
 //                                                  prisoner's hold in the player's
 //                                                  cage started; 0 when not held
+//   total_recruit.care_streak_day  care_streak.h   Balanced: the game day (+1; 0 =
+//                                                  none) of the prisoner's latest
+//                                                  care sighting (care_streak_rules.h)
+//   total_recruit.care_streak_days care_streak.h   kept cared-for days in a row
+//                                                  before that day
+//   total_recruit.care_streak_kept care_streak.h   1 when every sighting that day
+//                                                  found them cared for
 //
 // Strings ride the same hooks through saved_strings.h.
 //

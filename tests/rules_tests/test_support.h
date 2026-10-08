@@ -62,6 +62,7 @@ void RunMenuAnchorTests();
 void RunPresetRulesTests();
 void RunCheatWaitsTests();
 void RunCaredForRulesTests();
+void RunCareStreakRulesTests();
 void RunInsistenceRulesTests();
 void RunHealingLedgerTests();
 void RunDuelNarrationRulesTests();

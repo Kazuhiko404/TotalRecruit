@@ -23,7 +23,8 @@ struct ReadoutTexts
     std::string beatenLegend;
     std::string chanceLabel;
     std::string chanceValue;
-    // The cared-for row under the chance: "LO CUIDASTE" and "+12%".
+    // The cared-for row under the chance: "LO CUIDASTE" and "+12%", or with a care
+    // streak "+21% (racha 3 dias)".
     std::string caredForLabel;
     std::string caredForValue;
     std::string defeatsLabel;

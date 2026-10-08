@@ -89,6 +89,7 @@ const Suite kSuites[] = {
     { "preset_rules", RunPresetRulesTests },
     { "cheat_waits", RunCheatWaitsTests },
     { "cared_for_rules", RunCaredForRulesTests },
+    { "care_streak_rules", RunCareStreakRulesTests },
     { "insistence_rules", RunInsistenceRulesTests },
     { "healing_ledger", RunHealingLedgerTests },
     { "duel_narration_rules", RunDuelNarrationRulesTests },

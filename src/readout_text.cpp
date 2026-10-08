@@ -62,6 +62,15 @@ ReadoutTexts BuildReadoutTexts(const ReadoutView& view, const std::string& name,
     char cared[16] = { 0 };
     _snprintf_s(cared, sizeof(cared), _TRUNCATE, "+%d%%", view.caredForPct);
     t.caredForValue = cared;
+    if (view.careStreakDays > 0)
+    {
+        // The care streak inside that bonus (care_streak_rules.h): "+21% (racha 3 dias)".
+        LineArgs streak;
+        streak.chance = view.caredForPct;
+        streak.need = view.careStreakDays;
+        t.caredForValue = FillLine(Say("readout.caredForStreak", "+{chance}% (racha {need} dias)", NULL),
+                                   streak);
+    }
 
     t.defeatsLabel = Say("readout.defeats", "DERROTAS", NULL);
     char frac[24] = { 0 };

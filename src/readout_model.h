@@ -145,6 +145,9 @@ struct ReadoutView
     // The cared-for bonus inside chancePct (Balanced cage, cared_for_rules.h); 0 hides
     // the "Lo cuidaste +N%" row.
     int caredForPct;
+    // The care streak inside that bonus (care_streak_rules.h), in game days; above 0
+    // the row reads "+21% (racha 3 dias)". 0 whenever caredForPct is 0.
+    int careStreakDays;
 
     bool showDefeats;
     int defeats;
@@ -165,7 +168,7 @@ struct ReadoutView
     ReadoutView()
         : visible(false), route(ReadoutRoute_Free), showStress(false), stressPct(0),
           hungerPts(0), woundsPts(0), tiredPts(0), beatenPts(0), showChance(false),
-          chancePct(0), caredForPct(0),
+          chancePct(0), caredForPct(0), careStreakDays(0),
           showDefeats(false), defeats(0), defeatsNeeded(0), showFood(false),
           foodPct(0), foodNeededPct(0), primary(), secondary(), held()
     {

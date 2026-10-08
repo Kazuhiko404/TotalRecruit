@@ -272,6 +272,12 @@ struct Submission
     // means the min. Whole percent.
     int caredForBonusMin;
     int caredForBonusMax;
+    // The care streak (balanced-tuning T3, care_streak_rules.h): every game day in
+    // a row the prisoner was kept unhurt, fed and at full health adds
+    // caredForStreakPerDay to that bonus, up to caredForStreakMax. Whole percent;
+    // clamped to 0..10 and 0..40.
+    int caredForStreakPerDay;
+    int caredForStreakMax;
     // What loyalty to a standing organisation (military, law enforcement) takes
     // off the field-yield roll. A penalty, not a refusal: in the open world they
     // cannot be bought, but being beaten is the one argument they still hear.
@@ -358,6 +364,8 @@ struct Submission
           fieldYieldBonus(10),
           caredForBonusMin(5),
           caredForBonusMax(20),
+          caredForStreakPerDay(3),
+          caredForStreakMax(15),
           fieldYieldLoyaltyPenalty(25),
           stressFromHunger(0.5f),
           stressFromWounds(0.35f),

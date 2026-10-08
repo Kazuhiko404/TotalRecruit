@@ -246,6 +246,9 @@ ReadoutView BuildReadout(const ReadoutInput& in, const Config& config)
         // The Balanced cage's cared-for bonus already inside that chance
         // (cared_for_rules.h): "Lo cuidaste +12%" under the bar.
         v.caredForPct = in.verdict.chanceInputs.caredFor > 0 ? in.verdict.chanceInputs.caredFor : 0;
+        // The care streak inside it (care_streak_rules.h): "(racha 3 dias)".
+        v.careStreakDays = v.caredForPct > 0 && in.verdict.chanceInputs.careStreakDays > 0
+                               ? in.verdict.chanceInputs.careStreakDays : 0;
     }
 
     const bool personDefeats = person && (stressRoute || in.core.defeats > 0);

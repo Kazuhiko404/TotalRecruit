@@ -1229,6 +1229,7 @@
     "beaten": "Golpes",
     "chance": "CHANCE",
     "caredFor": "LO CUIDASTE",
+    "caredForStreak": "+{chance}% (racha {need} dias)",
     "defeats": "DERROTAS",
     "food": "BARRIGA",
     "route": {

@@ -1474,6 +1474,38 @@ void ACaredForPrisonerGetsTheBonusInTheRoll()
     CHECK(DecideCage(core, extra, kConfig).chanceInputs.caredFor == bonus);
 }
 
+void ACareStreakAddsToTheCaredForBonus()
+{
+    const char* name = "cage: the care streak adds +3 a day to the cared-for bonus, up to +15 (T3)";
+    const CoreFacts core = Prisoner();
+    CageExtra extra = FailingTheRoll(core);
+    const int draw = CaredForBonus(true, true, extra.care.key, extra.care.dayIndex,
+                                   kConfig.submission);
+    CHECK(DecideCage(core, extra, kConfig).chanceInputs.careStreakDays == 0);
+    extra.careStreakDays = 2;
+    Verdict v = DecideCage(core, extra, kConfig);
+    CHECK(v.chanceInputs.caredFor == draw + 6);
+    CHECK(v.chanceInputs.careStreakDays == 2);
+    extra.careStreakDays = 9;
+    v = DecideCage(core, extra, kConfig);
+    CHECK(v.chanceInputs.caredFor == draw + 15);
+    CHECK(v.chanceInputs.careStreakDays == 9);
+    CHECK(v.chancePercent == JoinChance(v.chanceInputs, kConfig.chance, kConfig.submission));
+
+    // Not cared for today: neither the draw nor the streak.
+    CoreFacts hurt = Prisoner();
+    hurt.wounded = true;
+    CageExtra hurtExtra = FailingTheRoll(hurt);
+    hurtExtra.careStreakDays = 5;
+    const Verdict h = DecideCage(hurt, hurtExtra, kConfig);
+    CHECK(h.chanceInputs.caredFor == 0);
+    CHECK(h.chanceInputs.careStreakDays == 0);
+    // No key to seed from: no bonus at all.
+    CageExtra unkeyed = InCage();
+    unkeyed.careStreakDays = 5;
+    CHECK(DecideCage(Prisoner(), unkeyed, kConfig).chanceInputs.caredFor == 0);
+}
+
 void AHurtOrHungryPrisonerGetsNoCaredForBonus()
 {
     const char* name = "cage: wounded, starving or below full health means no cared-for bonus";
@@ -2000,6 +2032,7 @@ void RunRouteDecisionsTests()
     ACageRouteSwitchedOffIsDisabled();
     ACaredForPrisonerGetsTheBonusInTheRoll();
     AHurtOrHungryPrisonerGetsNoCaredForBonus();
+    ACareStreakAddsToTheCaredForBonus();
     ALongHeldHealthyPrisonerStillRolls();
     IntimidationIsAStrongArgumentNotAVerdict();
     TheCageRollCountsTheGrudgeAndTheName();
